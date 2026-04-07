@@ -278,6 +278,14 @@
             text-overflow: ellipsis;
             width: 100%;
             line-height: 1;
+            cursor: pointer;
+            transition: white-space 0.2s;
+        }
+
+        #location-name.expanded {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
         }
 
         #weather-summary {
@@ -290,6 +298,14 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: pointer;
+            transition: white-space 0.2s;
+        }
+
+        #weather-summary.expanded {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
         }
 
         #current-time-display {
@@ -332,9 +348,11 @@
 
         @media (max-width: 600px) {
             #top-panel {
-                height: 150px;
-                padding: 0 5px;
+                height: auto;
+                min-height: 160px;
+                padding: 10px 5px;
                 gap: 5px;
+                padding-bottom: 15px;
             }
             .top-panel-info {
                 left: 55px;
@@ -360,7 +378,7 @@
                 gap: 6px;
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
-                height: 100%;
+                height: auto;
                 padding: 8px 0;
                 align-items: center;
             }
@@ -370,6 +388,7 @@
                 flex-direction: column;
                 justify-content: flex-start;
                 padding-top: 2px;
+                min-height: 45px;
             }
             .data-label {
                 font-size: 0.7rem;
@@ -377,6 +396,7 @@
             }
             .data-value {
                 font-size: 1rem !important;
+                cursor: pointer;
             }
             .data-card:first-child {
                 min-width: 0;
@@ -401,10 +421,7 @@
                 transform: none;
             }
             .info-icon {
-                display: inline-flex;
-                width: 12px;
-                height: 12px;
-                font-size: 0.7rem;
+                display: none;
             }
         }
 
@@ -444,18 +461,19 @@
             top: 120%; /* Back to appearing below */
             left: 50%;
             transform: translateX(-50%);
-            background: var(--card-bg);
-            color: var(--text-primary);
+            background: rgba(15, 23, 42, 0.75); /* Oscuro con opacidad */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: white;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 0.75rem;
-            border: 1px solid var(--grid-color); /* Reverted accent border */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0,0,0,0.8);
             z-index: 5000; /* Keeps it above everything else */
             display: none;
             min-width: 200px;
             pointer-events: none;
-            backdrop-filter: blur(8px);
         }
 
         .info-icon:hover .custom-tooltip {
@@ -487,9 +505,10 @@
 
         #scroll-container::-webkit-scrollbar { display: none; }
 
-        #canvas-wrapper {
-            position: relative;
-            height: 100%;
+        canvas {
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         canvas { display: block; }
@@ -553,7 +572,9 @@
             color: white;
             border: none;
             height: 30px;
-            width: 60px;
+            width: auto;
+            min-width: 40px;
+            padding: 0 10px;
             border-radius: 15px;
             cursor: pointer;
             font-weight: 700;
@@ -562,7 +583,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 1px;
             transition: width 0.2s, padding 0.2s;
             left: 0;
             transform: translate3d(0, 0, 0) translateX(-50%);
@@ -781,19 +802,12 @@
             scrollLeft: 0
         };
 
-        const mainCanvas = document.getElementById('main-canvas');
-        const mainCtx = mainCanvas.getContext('2d');
-        const minimapCanvas = document.getElementById('minimap-canvas');
-        const minimapCtx = minimapCanvas.getContext('2d');
-        const scrollContainer = document.getElementById('scroll-container');
-        const minimapViewport = document.getElementById('minimap-viewport');
-        const themeToggle = document.getElementById('theme-toggle');
-        const locationInput = document.getElementById('location-input');
-        const suggestionsBox = document.getElementById('suggestions');
-        const searchBtn = document.getElementById('search-btn');
-        const geoBtn = document.getElementById('geo-btn');
-
+        let mainCanvas, mainCtx, minimapCanvas, minimapCtx;
+        let offscreenCanvas, offscreenCtx;
+        let scrollContainer, minimapViewport, themeToggle, locationInput, suggestionsBox, searchBtn, geoBtn;
         let searchTimeout = null;
+        let ticking = false;
+        const PIXELS_PER_MM = 10;
 
         /**
          * INICIALIZACIÓN
@@ -802,6 +816,23 @@
         window.addEventListener('resize', handleResize);
 
         async function init() {
+            mainCanvas = document.getElementById('main-canvas');
+            mainCtx = mainCanvas.getContext('2d', { alpha: false });
+            
+            offscreenCanvas = document.createElement('canvas');
+            offscreenCtx = offscreenCanvas.getContext('2d', { alpha: false });
+            
+            minimapCanvas = document.getElementById('minimap-canvas');
+            minimapCtx = minimapCanvas.getContext('2d', { alpha: false });
+            
+            scrollContainer = document.getElementById('scroll-container');
+            minimapViewport = document.getElementById('minimap-viewport');
+            themeToggle = document.getElementById('theme-toggle');
+            locationInput = document.getElementById('location-input');
+            suggestionsBox = document.getElementById('suggestions');
+            searchBtn = document.getElementById('search-btn');
+            geoBtn = document.getElementById('geo-btn');
+
             try {
                 // Mobile toggles
                 const toggleSearchBtn = document.getElementById('toggle-search-btn');
@@ -886,6 +917,131 @@ locationInput.addEventListener('input', () => {
                         }
                     }
                 }, 10000);
+
+                // Minimap drag and drop
+                let isMinimapDragging = false;
+                const minimapContainer = document.getElementById('minimap-container');
+
+                if (minimapContainer) {
+                    minimapContainer.addEventListener('mousedown', (e) => {
+                        isMinimapDragging = true;
+                        handleMinimapClick(e);
+                    });
+
+                    minimapContainer.addEventListener('touchstart', (e) => {
+                        isMinimapDragging = true;
+                        handleMinimapClick(e.touches[0]);
+                    });
+                }
+
+                window.addEventListener('mousemove', (e) => {
+                    if (isMinimapDragging) handleMinimapClick(e);
+                });
+
+                window.addEventListener('mouseup', () => {
+                    isMinimapDragging = false;
+                });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (isMinimapDragging) handleMinimapClick(e.touches[0]);
+                });
+
+                window.addEventListener('touchend', () => {
+                    isMinimapDragging = false;
+                });
+
+                // Scroll and Drag events
+                scrollContainer.addEventListener('mousedown', (e) => {
+                    state.isDragging = true;
+                    state.startX = e.pageX - scrollContainer.offsetLeft;
+                    state.scrollLeft = scrollContainer.scrollLeft;
+                    scrollContainer.style.cursor = 'grabbing';
+                });
+
+                scrollContainer.addEventListener('touchstart', (e) => {
+                    state.isDragging = true;
+                    state.startX = e.touches[0].pageX - scrollContainer.offsetLeft;
+                    state.scrollLeft = scrollContainer.scrollLeft;
+                });
+
+                scrollContainer.addEventListener('mousemove', (e) => {
+                    const rect = mainCanvas.getBoundingClientRect();
+                    state.hoverX = (e.clientX - rect.left);
+
+                    if (state.isDragging) {
+                        e.preventDefault();
+                        const x = e.pageX - scrollContainer.offsetLeft;
+                        const walk = (x - state.startX) * 1.5;
+                        scrollContainer.scrollLeft = state.scrollLeft - walk;
+                    }
+                    
+                    render();
+                });
+
+                scrollContainer.addEventListener('touchmove', (e) => {
+                    if (state.isDragging) {
+                        const x = e.touches[0].pageX - scrollContainer.offsetLeft;
+                        const walk = (x - state.startX) * 1.5;
+                        scrollContainer.scrollLeft = state.scrollLeft - walk;
+                    }
+                });
+
+                scrollContainer.addEventListener('mouseup', () => {
+                    state.isDragging = false;
+                    scrollContainer.style.cursor = 'default';
+                });
+
+                scrollContainer.addEventListener('touchend', () => {
+                    state.isDragging = false;
+                });
+
+                scrollContainer.addEventListener('mouseleave', () => {
+                    state.isDragging = false;
+                    state.hoverX = null;
+                    scrollContainer.style.cursor = 'default';
+                    render();
+                });
+
+                scrollContainer.addEventListener('scroll', () => {
+                    if (!ticking) {
+                        window.requestAnimationFrame(() => {
+                            mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
+                            render();
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                });
+
+                // Eventos de expansión de texto
+                document.getElementById('location-name').addEventListener('click', function() {
+                    this.classList.toggle('expanded');
+                });
+                document.getElementById('weather-summary').addEventListener('click', function() {
+                    this.classList.toggle('expanded');
+                });
+
+                // Tooltips en móvil al tocar el valor
+                document.querySelectorAll('.data-value').forEach(val => {
+                    val.addEventListener('click', (e) => {
+                        if (window.innerWidth < 600) {
+                            const tooltip = val.querySelector('.custom-tooltip');
+                            if (tooltip) {
+                                const isVisible = tooltip.style.display === 'block';
+                                // Cerrar otros tooltips
+                                document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = 'none');
+                                tooltip.style.display = isVisible ? 'none' : 'block';
+                                e.stopPropagation();
+                            }
+                        }
+                    });
+                });
+
+                document.addEventListener('click', () => {
+                    if (window.innerWidth < 600) {
+                        document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = 'none');
+                    }
+                });
 
                 await useMyLocation();
             } catch (err) {
@@ -1282,15 +1438,21 @@ locationInput.addEventListener('input', () => {
          * RENDERIZADO
          */
         function render() {
+            if (!state.hourlyData.length) return;
             drawMain();
+            
+            // Copy offscreen to main
+            mainCtx.clearRect(0, 0, mainCanvas.width / state.dpr, mainCanvas.height / state.dpr);
+            mainCtx.drawImage(offscreenCanvas, 0, 0, offscreenCanvas.width / state.dpr, offscreenCanvas.height / state.dpr);
+            
             drawMinimap();
             updateTopPanel();
         }
 
         function drawMain() {
-            const ctx = mainCtx;
-            const w = mainCanvas.width / state.dpr;
-            const h = mainCanvas.height / state.dpr;
+            const ctx = offscreenCtx;
+            const w = offscreenCanvas.width / state.dpr;
+            const h = offscreenCanvas.height / state.dpr;
             const styles = getComputedStyle(document.documentElement);
 
             ctx.clearRect(0, 0, w, h);
@@ -1594,7 +1756,7 @@ locationInput.addEventListener('input', () => {
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 if (d.precip > 0) {
-                    const barH = Math.min(h, (d.precip / 10) * h);
+                    const barH = Math.min(h, d.precip * PIXELS_PER_MM);
                     ctx.fillRect(i * PIXELS_PER_HOUR + 5, h - barH, PIXELS_PER_HOUR - 10, barH);
                 }
             }
@@ -2053,16 +2215,13 @@ locationInput.addEventListener('input', () => {
                     ctx.lineTo(x, h);
                     ctx.stroke();
                     
-                    // Etiqueta del día (3 primeras letras + fecha DD/MM)
+                    // Etiqueta del día (3 primeras letras)
                     ctx.setLineDash([]);
                     ctx.fillStyle = '#666666'; // Siempre modo claro
                     ctx.globalAlpha = 0.8;
                     ctx.font = 'bold 9px Inter';
                     ctx.textAlign = 'left';
-                    const dateObj = new Date(d.time);
-                    const day = dateObj.toLocaleDateString('es-ES', { day: '2-digit', timeZone: state.timezone });
-                    const month = dateObj.toLocaleDateString('es-ES', { month: '2-digit', timeZone: state.timezone });
-                    const dayName = `${d.localDayShort} ${day}/${month}`;
+                    const dayName = d.localDayShort;
                     ctx.shadowColor = 'white';
                     ctx.shadowBlur = 4;
                     ctx.fillText(dayName, x + 5, 12);
@@ -2114,7 +2273,7 @@ locationInput.addEventListener('input', () => {
             ctx.fillStyle = '#1976d288'; // Siempre modo claro
             state.hourlyData.forEach((d, i) => {
                 if (d.precip > 0) {
-                    const barH = Math.min(h, (d.precip / 10) * h);
+                    const barH = Math.min(h, d.precip * PIXELS_PER_MM);
                     ctx.fillRect(i * step, h - barH, step, barH);
                 }
             });
@@ -2494,10 +2653,14 @@ locationInput.addEventListener('input', () => {
             mainCanvas.style.width = containerW + 'px';
             mainCanvas.style.height = containerH + 'px';
             
+            offscreenCanvas.width = containerW * state.dpr;
+            offscreenCanvas.height = containerH * state.dpr;
+            
             // Sync position
             mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
 
             mainCtx.scale(state.dpr, state.dpr);
+            offscreenCtx.scale(state.dpr, state.dpr);
             
             minimapCanvas.width = window.innerWidth * state.dpr;
             minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
@@ -2522,100 +2685,6 @@ locationInput.addEventListener('input', () => {
             state.hoverX = null; 
             render();
         }
-
-        scrollContainer.addEventListener('mousedown', (e) => {
-            state.isDragging = true;
-            state.startX = e.pageX - scrollContainer.offsetLeft;
-            state.scrollLeft = scrollContainer.scrollLeft;
-            scrollContainer.style.cursor = 'grabbing';
-        });
-
-        scrollContainer.addEventListener('touchstart', (e) => {
-            state.isDragging = true;
-            state.startX = e.touches[0].pageX - scrollContainer.offsetLeft;
-            state.scrollLeft = scrollContainer.scrollLeft;
-        });
-
-        scrollContainer.addEventListener('mousemove', (e) => {
-            const rect = mainCanvas.getBoundingClientRect();
-            state.hoverX = (e.clientX - rect.left);
-
-            if (state.isDragging) {
-                e.preventDefault();
-                const x = e.pageX - scrollContainer.offsetLeft;
-                const walk = (x - state.startX) * 1.5;
-                scrollContainer.scrollLeft = state.scrollLeft - walk;
-            }
-            
-            render();
-        });
-
-        scrollContainer.addEventListener('touchmove', (e) => {
-            if (state.isDragging) {
-                const x = e.touches[0].pageX - scrollContainer.offsetLeft;
-                const walk = (x - state.startX) * 1.5;
-                scrollContainer.scrollLeft = state.scrollLeft - walk;
-                // No llamamos a render aquí porque el evento 'scroll' ya lo hará
-            }
-        });
-
-        scrollContainer.addEventListener('mouseup', () => {
-            state.isDragging = false;
-            scrollContainer.style.cursor = 'default';
-        });
-
-        scrollContainer.addEventListener('touchend', () => {
-            state.isDragging = false;
-        });
-
-        scrollContainer.addEventListener('mouseleave', () => {
-            state.isDragging = false;
-            state.hoverX = null;
-            scrollContainer.style.cursor = 'default';
-            render();
-        });
-
-        let ticking = false;
-        scrollContainer.addEventListener('scroll', () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
-                    render();
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        });
-        
-        // Minimap drag and drop
-        let isMinimapDragging = false;
-        const minimapContainer = document.getElementById('minimap-container');
-
-        minimapContainer.addEventListener('mousedown', (e) => {
-            isMinimapDragging = true;
-            handleMinimapClick(e);
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isMinimapDragging) handleMinimapClick(e);
-        });
-
-        window.addEventListener('mouseup', () => {
-            isMinimapDragging = false;
-        });
-
-        minimapContainer.addEventListener('touchstart', (e) => {
-            isMinimapDragging = true;
-            handleMinimapClick(e.touches[0]);
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (isMinimapDragging) handleMinimapClick(e.touches[0]);
-        });
-
-        window.addEventListener('touchend', () => {
-            isMinimapDragging = false;
-        });
 
         function handleMinimapClick(e) {
             const rect = minimapCanvas.getBoundingClientRect();
