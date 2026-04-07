@@ -99,52 +99,18 @@
             margin-left: auto;
         }
 
-        @media (max-width: 600px) {
-            #controls-bar {
-                padding: 8px 15px;
-                gap: 10px;
-            }
-            .mobile-toggles {
-                display: flex;
-            }
-            .controls-left {
-                width: 100%;
-                min-width: 0;
-                order: 3;
-                gap: 10px;
-                display: none; /* Hidden unless search or legend active */
-            }
-            .controls-left.has-active {
-                display: flex;
-            }
-            .search-box {
-                display: none;
-                width: 100%;
-                max-width: none;
-            }
-            .search-box.active {
-                display: flex;
-            }
-            .legend {
-                display: none;
-                width: 100%;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
-                padding: 10px;
-                background: var(--input-bg);
-                border-radius: 8px;
-            }
-            .legend.active {
-                display: flex;
-            }
-            .controls-right {
-                margin-left: auto;
-                width: auto;
-                order: 2;
-            }
+        #close-raw {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            background: var(--accent-temp);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
         }
-
         .search-box {
             display: flex;
             gap: 5px;
@@ -461,23 +427,30 @@
             top: 120%; /* Back to appearing below */
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.75); /* Oscuro con opacidad */
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: #1e293b; /* Solid dark background for better readability */
             color: white;
             padding: 12px;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            border: 1px solid #334155;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
             z-index: 5000; /* Keeps it above everything else */
             display: none;
-            min-width: 200px;
+            min-width: 220px;
             pointer-events: none;
+            line-height: 1.4;
         }
 
-        .info-icon:hover .custom-tooltip {
+        .info-icon:hover .custom-tooltip,
+        .location-group:hover .custom-tooltip {
             display: block;
+        }
+
+        [data-theme="light"] .custom-tooltip {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         #pollen-radar {
@@ -644,6 +617,52 @@
             cursor: pointer;
             font-weight: bold;
         }
+
+        @media (max-width: 600px) {
+            #controls-bar {
+                padding: 8px 15px;
+                gap: 10px;
+            }
+            .mobile-toggles {
+                display: flex;
+            }
+            .controls-left {
+                width: 100%;
+                min-width: 0;
+                order: 3;
+                gap: 10px;
+                display: none; /* Hidden unless search or legend active */
+            }
+            .controls-left.has-active {
+                display: flex;
+            }
+            .search-box {
+                display: none;
+                width: 100%;
+                max-width: none;
+            }
+            .search-box.active {
+                display: flex;
+            }
+            .legend {
+                display: none;
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                padding: 10px;
+                background: var(--input-bg);
+                border-radius: 8px;
+            }
+            .legend.active {
+                display: flex;
+            }
+            .controls-right {
+                margin-left: auto;
+                width: auto;
+                order: 2;
+            }
+        }
     </style>
 </head>
 <body>
@@ -697,6 +716,10 @@
             <div class="location-group">
                 <div id="location-name">Cargando...</div>
                 <div id="weather-summary">--</div>
+                <div class="custom-tooltip" id="location-tooltip">
+                    <strong id="tt-location">Ubicación</strong><br>
+                    <span id="tt-summary">Resumen del tiempo</span>
+                </div>
             </div>
             <div id="current-time-display">
                 <div class="time-main">--:--</div>
@@ -845,10 +868,6 @@
                     toggleSearchBtn.addEventListener('click', () => {
                         const isActive = searchBox.classList.toggle('active');
                         toggleSearchBtn.classList.toggle('active', isActive);
-                        if (isActive) {
-                            legend.classList.remove('active');
-                            toggleLegendBtn.classList.remove('active');
-                        }
                         controlsLeft.classList.toggle('has-active', searchBox.classList.contains('active') || legend.classList.contains('active'));
                     });
                 }
@@ -857,10 +876,6 @@
                     toggleLegendBtn.addEventListener('click', () => {
                         const isActive = legend.classList.toggle('active');
                         toggleLegendBtn.classList.toggle('active', isActive);
-                        if (isActive) {
-                            searchBox.classList.remove('active');
-                            toggleSearchBtn.classList.remove('active');
-                        }
                         controlsLeft.classList.toggle('has-active', searchBox.classList.contains('active') || legend.classList.contains('active'));
                     });
                 }
@@ -1578,7 +1593,7 @@ locationInput.addEventListener('input', () => {
 
         function drawDayNames(ctx, w, h, styles) {
             ctx.save();
-            ctx.fillStyle = 'rgba(0,0,0,0.06)'; // Siempre modo claro
+            ctx.fillStyle = 'rgba(0,0,0,0.15)'; // Increased opacity for better visibility
             ctx.font = '900 80px Inter';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -1753,11 +1768,32 @@ locationInput.addEventListener('input', () => {
             const startIdx = Math.max(0, Math.floor(scrollContainer.scrollLeft / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((scrollContainer.scrollLeft + scrollContainer.clientWidth) / PIXELS_PER_HOUR) + 5);
             
+            const maxH = h * 0.9;
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 if (d.precip > 0) {
-                    const barH = Math.min(h, d.precip * PIXELS_PER_MM);
-                    ctx.fillRect(i * PIXELS_PER_HOUR + 5, h - barH, PIXELS_PER_HOUR - 10, barH);
+                    let barH = d.precip * PIXELS_PER_MM;
+                    const x = i * PIXELS_PER_HOUR + 5;
+                    const bw = PIXELS_PER_HOUR - 10;
+                    
+                    if (barH > maxH) {
+                        // Broken axis logic
+                        ctx.fillRect(x, h - maxH, bw, maxH);
+                        // Draw zigzag
+                        ctx.save();
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        const zy = h - maxH + 15;
+                        ctx.moveTo(x, zy);
+                        ctx.lineTo(x + bw/4, zy - 5);
+                        ctx.lineTo(x + bw*3/4, zy + 5);
+                        ctx.lineTo(x + bw, zy);
+                        ctx.stroke();
+                        ctx.restore();
+                    } else {
+                        ctx.fillRect(x, h - barH, bw, barH);
+                    }
                 }
             }
         }
@@ -2075,9 +2111,9 @@ locationInput.addEventListener('input', () => {
                 const viewportEnd = viewportStart + scrollContainer.clientWidth;
                 
                 if (nowX >= viewportStart && nowX <= viewportEnd && Math.abs(nowX - referenceX) > 5) {
-                    ctx.strokeStyle = 'rgba(255, 77, 77, 0.5)';
+                    ctx.strokeStyle = '#ff4d4d'; // Brighter red
                     ctx.setLineDash([5, 5]);
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = 2; // Thicker
                     ctx.beginPath();
                     ctx.moveTo(nowX, 0);
                     ctx.lineTo(nowX, h);
@@ -2152,9 +2188,28 @@ locationInput.addEventListener('input', () => {
                 // 2. Sensación Térmica
                 drawPoint(normalizeY(apparent, -20, 40, h), '#8b0000', apparent.toFixed(1), '°C');
 
-                // 3. Precipitación
-                const barH = Math.min(h, (precip / 10) * h);
-                drawPoint(h - barH, '#1976d2', precip.toFixed(1), 'mm');
+                // 3. Precipitación (Intersection logic: use the value of the bar the cursor is over)
+                const closestData = progress < 0.5 ? d1 : d2;
+                const pVal = closestData.precip;
+                
+                const maxH = h * 0.9;
+                let barH = pVal * PIXELS_PER_MM;
+                const isBroken = barH > maxH;
+                const visualH = Math.min(maxH, barH);
+                const barY = h - visualH;
+
+                ctx.save();
+                ctx.fillStyle = '#1976d2';
+                ctx.font = 'bold 11px Inter';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = 'white';
+                ctx.shadowBlur = 3;
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'white';
+                const pText = pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
+                ctx.strokeText(pText, activeX, barY - 5);
+                ctx.fillText(pText, activeX, barY - 5);
+                ctx.restore();
 
                 // 4. Probabilidad de Precipitación (Intersección exacta con curva Bezier cúbica)
                 const getProbY = (val) => h - (h * (val / 100));
@@ -2271,10 +2326,24 @@ locationInput.addEventListener('input', () => {
 
             // Precipitación en minimapa
             ctx.fillStyle = '#1976d288'; // Siempre modo claro
+            const maxMinimapH = h * 0.9;
             state.hourlyData.forEach((d, i) => {
                 if (d.precip > 0) {
-                    const barH = Math.min(h, d.precip * PIXELS_PER_MM);
-                    ctx.fillRect(i * step, h - barH, step, barH);
+                    let barH = d.precip * PIXELS_PER_MM;
+                    if (barH > maxMinimapH) {
+                        ctx.fillRect(i * step, h - maxMinimapH, step, maxMinimapH);
+                        // Sutil zigzag en minimapa
+                        ctx.save();
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(i * step, h - maxMinimapH + 2);
+                        ctx.lineTo(i * step + step, h - maxMinimapH + 4);
+                        ctx.stroke();
+                        ctx.restore();
+                    } else {
+                        ctx.fillRect(i * step, h - barH, step, barH);
+                    }
                 }
             });
 
@@ -2315,9 +2384,9 @@ locationInput.addEventListener('input', () => {
                 if (now >= startTime && now <= endTime) {
                     const nowX = ((now - startTime) / (endTime - startTime)) * w;
                     ctx.save();
-                    ctx.strokeStyle = '#d32f2f'; // Rojo como el botón "Ahora"
+                    ctx.strokeStyle = '#ff4d4d'; // Rojo más vivo
                     ctx.setLineDash([3, 3]);
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 2; // Más gruesa
                     ctx.beginPath();
                     ctx.moveTo(nowX, 0);
                     ctx.lineTo(nowX, h);
@@ -2635,6 +2704,10 @@ locationInput.addEventListener('input', () => {
             timeDisplay.querySelector('.date-sub').innerText = isToday ? `HOY, ${dateStr}` : dateStr;
             
             document.getElementById('weather-summary').innerText = getWeatherDescription(d.weatherCode);
+            
+            // Update location tooltip
+            document.getElementById('tt-location').innerText = state.locationName;
+            document.getElementById('tt-summary').innerText = getWeatherDescription(d.weatherCode);
         }
 
         function handleResize() {
