@@ -36,7 +36,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            user-select: none;
+            user-select: auto;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -332,34 +332,34 @@
 
         @media (max-width: 600px) {
             #top-panel {
-                height: 130px;
+                height: 150px;
                 padding: 0 5px;
                 gap: 5px;
             }
             .top-panel-info {
                 left: 55px;
-                width: 100px;
+                width: 110px;
                 top: 0;
                 bottom: 8px;
                 padding-top: 20px; /* Added 20px top padding */
             }
             #location-name {
-                font-size: 0.75rem;
+                font-size: 0.8rem;
             }
             #weather-summary {
-                font-size: 0.5rem;
-            }
-            #current-time-display .time-main {
                 font-size: 0.7rem;
             }
+            #current-time-display .time-main {
+                font-size: 0.8rem;
+            }
             #current-time-display .date-sub {
-                font-size: 0.45rem;
+                font-size: 0.7rem;
             }
             .top-panel-metrics {
-                margin-left: 105px;
-                gap: 4px;
+                margin-left: 115px;
+                gap: 6px;
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 height: 100%;
                 padding: 8px 0;
                 align-items: center;
@@ -372,39 +372,39 @@
                 padding-top: 2px;
             }
             .data-label {
-                font-size: 0.45rem;
+                font-size: 0.7rem;
                 margin-bottom: 0;
             }
             .data-value {
-                font-size: 0.9rem !important;
+                font-size: 1rem !important;
             }
             .data-card:first-child {
                 min-width: 0;
             }
             .data-card:first-child .data-value {
-                font-size: 1rem !important;
+                font-size: 1.1rem !important;
             }
             #val-apparent {
-                font-size: 0.5rem !important;
+                font-size: 0.7rem !important;
                 margin-top: 0;
             }
             .data-card:not(:first-child) {
                 opacity: 0.9;
             }
-            .data-card:nth-child(4n) .custom-tooltip {
+            .data-card:nth-child(3n) .custom-tooltip {
                 left: auto;
                 right: 0;
                 transform: none;
             }
-            .data-card:nth-child(4n-3) .custom-tooltip {
+            .data-card:nth-child(3n-2) .custom-tooltip {
                 left: 0;
                 transform: none;
             }
             .info-icon {
-                display: inline-flex; /* Enabled for mobile */
+                display: inline-flex;
                 width: 12px;
                 height: 12px;
-                font-size: 0.5rem;
+                font-size: 0.7rem;
             }
         }
 
@@ -423,7 +423,7 @@
         }
 
         .info-icon {
-            font-size: 0.6rem;
+            font-size: 0.7rem;
             vertical-align: super;
             cursor: help;
             margin-left: 2px;
@@ -482,6 +482,7 @@
             overflow-y: hidden;
             position: relative;
             scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
 
         #scroll-container::-webkit-scrollbar { display: none; }
@@ -750,10 +751,18 @@
         /**
          * CONFIGURACIÓN Y ESTADO
          */
-        const PIXELS_PER_HOUR = 60; // Aumentado para dar espacio a los valores de temperatura
+        let PIXELS_PER_HOUR = window.innerWidth < 600 ? 40 : 60;
         const CHART_HEIGHT = 250;
         const MINIMAP_HEIGHT = 80;
         const DEFAULT_COORDS = { lat: 40.4167, lon: -3.70325, name: "Madrid" };
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+        
+        const getDPR = () => {
+            const dpr = window.devicePixelRatio || 1;
+            return window.innerWidth < 600 ? Math.min(dpr, 2) : dpr;
+        };
+        
+        let weatherCache = new Map();
         
         let state = {
             lat: null,
@@ -763,7 +772,7 @@
             sunData: {},
             hoverX: null,
             isFetching: false,
-            dpr: window.devicePixelRatio || 1,
+            dpr: getDPR(),
             theme: 'dark',
             rawForecast: null,
             rawAQI: null,
@@ -835,15 +844,27 @@
                 if (nowBtn) nowBtn.addEventListener('click', centerOnCurrentTime);
                 
                 // Suggestions logic
-                locationInput.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    const query = locationInput.value.trim();
-                    if (query.length < 2) {
-                        suggestionsBox.style.display = 'none';
-                        return;
-                    }
-                    searchTimeout = setTimeout(() => fetchSuggestions(query), 300);
-                });
+                let lastQuery = ""; // Variable para evitar repetir la misma búsqueda
+
+locationInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    const query = locationInput.value.trim().toLowerCase();
+
+    // 1. Aumentamos el mínimo a 3 caracteres
+    if (query.length < 3) {
+        suggestionsBox.style.display = 'none';
+        return;
+    }
+
+    // 2. Si la búsqueda es idéntica a la anterior, no hacemos nada
+    if (query === lastQuery) return;
+
+    // 3. Aumentamos el delay a 500ms
+    searchTimeout = setTimeout(async () => {
+        lastQuery = query; // Actualizamos la última consulta
+        await fetchSuggestions(query);
+    }, 500);
+});
 
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.search-box') && !e.target.closest('.mobile-toggles')) {
@@ -1041,7 +1062,75 @@
         /**
          * CARGA DE DATOS
          */
+        function generateMockData(pastDays, forecastDays) {
+            const now = Math.floor(Date.now() / 1000);
+            const start = now - (pastDays * 24 * 3600);
+            const end = now + (forecastDays * 24 * 3600);
+            
+            const times = [];
+            for (let t = start; t <= end; t += 3600) {
+                times.push(t);
+            }
+            
+            const hourlyCount = times.length;
+            const mockForecast = {
+                timezone: "UTC",
+                hourly: {
+                    time: times,
+                    temperature_2m: Array.from({length: hourlyCount}, (_, i) => 15 + 10 * Math.sin(i / 12) + Math.random() * 2),
+                    apparent_temperature: Array.from({length: hourlyCount}, (_, i) => 13 + 10 * Math.sin(i / 12) + Math.random() * 2),
+                    precipitation: Array.from({length: hourlyCount}, () => Math.random() > 0.9 ? Math.random() * 2 : 0),
+                    precipitation_probability: Array.from({length: hourlyCount}, () => Math.floor(Math.random() * 30)),
+                    cloudcover: Array.from({length: hourlyCount}, () => Math.floor(Math.random() * 100)),
+                    wind_speed_10m: Array.from({length: hourlyCount}, () => 5 + Math.random() * 15),
+                    weather_code: Array.from({length: hourlyCount}, () => 0)
+                },
+                daily: {
+                    time: [],
+                    sunrise: [],
+                    sunset: []
+                }
+            };
+            
+            for (let d = -pastDays; d <= forecastDays; d++) {
+                const dayStart = Math.floor(new Date().setHours(0,0,0,0) / 1000) + (d * 24 * 3600);
+                mockForecast.daily.time.push(dayStart);
+                mockForecast.daily.sunrise.push(dayStart + 6 * 3600);
+                mockForecast.daily.sunset.push(dayStart + 18 * 3600);
+            }
+            
+            const mockAQI = {
+                hourly: {
+                    time: times,
+                    european_aqi: Array.from({length: hourlyCount}, () => 20 + Math.floor(Math.random() * 30)),
+                    alder_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5),
+                    birch_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5),
+                    grass_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5),
+                    mugwort_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5),
+                    olive_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5),
+                    ragweed_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5)
+                }
+            };
+            
+            return { forecastData: mockForecast, aqiData: mockAQI };
+        }
+
         async function fetchWeatherData(pastDays, forecastDays) {
+            const cacheKey = `${state.lat.toFixed(4)},${state.lon.toFixed(4)},${pastDays},${forecastDays}`;
+            const now = Date.now();
+
+            if (weatherCache.has(cacheKey)) {
+                const cached = weatherCache.get(cacheKey);
+                if (now - cached.timestamp < CACHE_DURATION) {
+                    console.log("Usando datos en caché para:", cacheKey);
+                    state.rawForecast = cached.forecastData;
+                    state.rawAQI = cached.aqiData;
+                    processData(cached.forecastData, cached.aqiData);
+                    handleResize();
+                    return;
+                }
+            }
+
             if (state.isFetching) return;
             state.isFetching = true;
 
@@ -1068,6 +1157,13 @@
                     throw new Error(forecastData.reason || aqiData.reason || "Error de API");
                 }
 
+                // Guardar en caché
+                weatherCache.set(cacheKey, {
+                    timestamp: now,
+                    forecastData,
+                    aqiData
+                });
+
                 state.rawForecast = forecastData;
                 state.rawAQI = aqiData;
 
@@ -1076,10 +1172,33 @@
             } catch (err) {
                 clearTimeout(timeoutId);
                 console.error("fetchWeatherData error:", err);
-                if (err.name === 'AbortError') {
-                    showError("La solicitud tardó demasiado. Reintenta.");
+                
+                // Fallback: Si hay datos en caché (aunque estén expirados), los usamos
+                if (weatherCache.has(cacheKey)) {
+                    console.warn("API falló, usando datos expirados de la caché");
+                    const cached = weatherCache.get(cacheKey);
+                    state.rawForecast = cached.forecastData;
+                    state.rawAQI = cached.aqiData;
+                    
+                    if (!state.locationName.endsWith('*')) {
+                        state.locationName += '*';
+                        updateLocationUI();
+                    }
+                    
+                    processData(cached.forecastData, cached.aqiData);
+                    handleResize();
                 } else {
-                    showError("Error al conectar con el servicio meteorológico.");
+                    // Fallback: Si no hay nada en caché, generamos datos simulados
+                    console.warn("API falló y no hay caché, generando datos simulados");
+                    const mock = generateMockData(pastDays, forecastDays);
+                    state.rawForecast = mock.forecastData;
+                    state.rawAQI = mock.aqiData;
+                    
+                    state.locationName = "Ninguna";
+                    updateLocationUI();
+                    
+                    processData(mock.forecastData, mock.aqiData);
+                    handleResize();
                 }
             } finally {
                 state.isFetching = false;
@@ -1176,6 +1295,10 @@
 
             ctx.clearRect(0, 0, w, h);
             
+            ctx.save();
+            // Translate to account for scroll position
+            ctx.translate(-scrollContainer.scrollLeft, 0);
+            
             // Fondo soleado
             drawSunnyBackground(ctx, w, h, styles, true);
 
@@ -1188,6 +1311,8 @@
             drawTemperature(ctx, h, styles);
             drawAxes(ctx, w, h, styles);
             drawCursor(ctx, h, styles);
+            
+            ctx.restore();
         }
 
         function drawSunnyBackground(ctx, w, h, styles, drawSunIcon) {
@@ -1197,7 +1322,8 @@
             
             ctx.save();
             ctx.fillStyle = skyColor;
-            ctx.fillRect(0, 0, w, h);
+            // Fill the visible area
+            ctx.fillRect(scrollContainer.scrollLeft, 0, w, h);
             
             if (drawSunIcon) {
                 const startIdx = Math.max(0, Math.floor(scrollContainer.scrollLeft / PIXELS_PER_HOUR) - 5);
@@ -1263,10 +1389,12 @@
             ctx.strokeStyle = '#e0e0e0'; // Siempre modo claro
             ctx.lineWidth = 1;
             ctx.beginPath();
+            const xStart = scrollContainer.scrollLeft;
+            const xEnd = xStart + scrollContainer.clientWidth;
             for (let temp = -20; temp <= 40; temp += 10) {
                 const y = normalizeY(temp, -20, 40, h);
-                ctx.moveTo(0, y);
-                ctx.lineTo(w, y);
+                ctx.moveTo(xStart, y);
+                ctx.lineTo(xEnd, y);
             }
             ctx.stroke();
 
@@ -1296,28 +1424,37 @@
             const startIdx = Math.max(0, Math.floor(scrollContainer.scrollLeft / PIXELS_PER_HOUR) - 24);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((scrollContainer.scrollLeft + scrollContainer.clientWidth) / PIXELS_PER_HOUR) + 24);
 
-            let currentDayStart = -1;
-            for (let i = 0; i < state.hourlyData.length; i++) {
+            // Find the actual start of the day for the current visible range
+            let dayStart = 0;
+            for (let i = Math.max(0, startIdx); i >= 0; i--) {
+                if (state.hourlyData[i].localHour === 0) {
+                    dayStart = i;
+                    break;
+                }
+            }
+
+            let currentDayStart = dayStart;
+            for (let i = dayStart + 1; i < endIdx + 24 && i < state.hourlyData.length; i++) {
                 const d = state.hourlyData[i];
-                if (d.localHour === 0 || i === 0) {
-                    if (currentDayStart !== -1) {
-                        const midX = (currentDayStart + (i - 1 - currentDayStart) / 2) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
-                        // Solo dibujar si está cerca del viewport
-                        if (midX > scrollContainer.scrollLeft - 500 && midX < scrollContainer.scrollLeft + scrollContainer.clientWidth + 500) {
-                            const dayName = state.hourlyData[currentDayStart].localDayName;
-                            ctx.fillText(dayName, midX, h / 2);
-                        }
-                    }
+                if (d.localHour === 0) {
+                    const midX = (currentDayStart + (i - 1 - currentDayStart) / 2) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
+                    const dayName = state.hourlyData[currentDayStart].localDayName;
+                    ctx.fillText(dayName, midX, h / 2);
                     currentDayStart = i;
                 }
             }
-            // Last day
-            if (currentDayStart !== -1) {
-                const midX = (currentDayStart + (state.hourlyData.length - 1 - currentDayStart) / 2) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
-                if (midX > scrollContainer.scrollLeft - 500 && midX < scrollContainer.scrollLeft + scrollContainer.clientWidth + 500) {
-                    const dayName = state.hourlyData[currentDayStart].localDayName;
-                    ctx.fillText(dayName, midX, h / 2);
+            // Último día visible
+            if (currentDayStart !== -1 && currentDayStart < endIdx + 24) {
+                let nextDayStart = state.hourlyData.length;
+                for (let i = currentDayStart + 1; i < state.hourlyData.length; i++) {
+                    if (state.hourlyData[i].localHour === 0) {
+                        nextDayStart = i;
+                        break;
+                    }
                 }
+                const midX = (currentDayStart + (nextDayStart - 1 - currentDayStart) / 2) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
+                const dayName = state.hourlyData[currentDayStart].localDayName;
+                ctx.fillText(dayName, midX, h / 2);
             }
             ctx.restore();
         }
@@ -1334,17 +1471,24 @@
             
             ctx.fillStyle = cloudGrad;
             
-            const points = state.hourlyData.map((d, i) => ({
-                x: i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2,
-                y: h - (h * (d.clouds / 100))
-            }));
+            const startIdx = Math.max(0, Math.floor(scrollContainer.scrollLeft / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((scrollContainer.scrollLeft + scrollContainer.clientWidth) / PIXELS_PER_HOUR) + 5);
+            
+            const points = [];
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                points.push({
+                    x: i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2,
+                    y: h - (h * (d.clouds / 100))
+                });
+            }
 
             if (points.length < 2) return;
 
             // Función para crear el camino ondulado con puffiness dinámico y suavizado total
             const createPuffyPath = (pathCtx, offset = 0, basePuffScale = 12) => {
                 const getPuff = (idx) => {
-                    const cloudVal = state.hourlyData[idx].clouds;
+                    const cloudVal = state.hourlyData[idx + startIdx].clouds;
                     return (cloudVal / 100) * basePuffScale;
                 };
 
@@ -2335,18 +2479,32 @@
         }
 
         function handleResize() {
+            PIXELS_PER_HOUR = window.innerWidth < 600 ? 40 : 60;
+            state.dpr = getDPR();
+
+            const containerW = scrollContainer.clientWidth;
             const containerH = scrollContainer.clientHeight;
             const totalWidth = state.hourlyData.length * PIXELS_PER_HOUR;
-            mainCanvas.width = totalWidth * state.dpr;
+            
+            const canvasWrapper = document.getElementById('canvas-wrapper');
+            if (canvasWrapper) canvasWrapper.style.width = totalWidth + 'px';
+
+            mainCanvas.width = containerW * state.dpr;
             mainCanvas.height = containerH * state.dpr;
-            mainCanvas.style.width = totalWidth + 'px';
+            mainCanvas.style.width = containerW + 'px';
             mainCanvas.style.height = containerH + 'px';
+            
+            // Sync position
+            mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
+
             mainCtx.scale(state.dpr, state.dpr);
+            
             minimapCanvas.width = window.innerWidth * state.dpr;
             minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
             minimapCanvas.style.width = window.innerWidth + 'px';
             minimapCanvas.style.height = MINIMAP_HEIGHT + 'px';
             minimapCtx.scale(state.dpr, state.dpr);
+            
             render();
         }
 
@@ -2421,6 +2579,7 @@
         scrollContainer.addEventListener('scroll', () => {
             if (!ticking) {
                 window.requestAnimationFrame(() => {
+                    mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
                     render();
                     ticking = false;
                 });
