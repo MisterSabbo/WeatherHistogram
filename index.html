@@ -2,7 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <title>Weather Histogram</title>
     <style>
         :root {
@@ -46,8 +51,12 @@
             color: var(--text-primary);
             overflow: hidden;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         /* Barra de Controles */
@@ -154,6 +163,7 @@
             border-radius: 6px;
             flex: 1;
             outline: none;
+            font-size: 16px;
         }
 
         button {
@@ -1020,7 +1030,7 @@ locationInput.addEventListener('input', () => {
                 scrollContainer.addEventListener('scroll', () => {
                     if (!ticking) {
                         window.requestAnimationFrame(() => {
-                            mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
+                            mainCanvas.style.transform = `translate3d(${scrollContainer.scrollLeft}px, 0, 0)`;
                             render();
                             ticking = false;
                         });
@@ -2730,7 +2740,7 @@ locationInput.addEventListener('input', () => {
             offscreenCanvas.height = containerH * state.dpr;
             
             // Sync position
-            mainCanvas.style.transform = `translateX(${scrollContainer.scrollLeft}px)`;
+            mainCanvas.style.transform = `translate3d(${scrollContainer.scrollLeft}px, 0, 0)`;
 
             mainCtx.scale(state.dpr, state.dpr);
             offscreenCtx.scale(state.dpr, state.dpr);
@@ -2781,6 +2791,14 @@ locationInput.addEventListener('input', () => {
             if (loader) loader.style.display = 'none';
             const statusText = document.getElementById('status-text');
             if (statusText) statusText.style.display = 'none';
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
         }
     </script>
 </body>
