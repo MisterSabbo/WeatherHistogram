@@ -1,10 +1,12 @@
-const CACHE_NAME = 'weather-histogram-v2';
+const CACHE_NAME = 'weather-histogram-v3';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap'
+  './manifest.json'
 ];
+
+// Recursos que deben ser cacheados agresivamente (Cache-First)
+const STATIC_ASSETS = /\.(js|css|png|jpg|jpeg|svg|woff2)$/;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -29,6 +31,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // No cachear peticiones a las APIs de clima (Network-First)
+  if (url.hostname.includes('open-meteo.com')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   // Solo manejar peticiones GET
   if (event.request.method !== 'GET') return;
 
@@ -40,14 +52,14 @@ self.addEventListener('fetch', (event) => {
             cache.put(event.request, networkResponse.clone());
           }
           return networkResponse;
-        }).catch(() => {
-          // Si falla la red y no hay cache, no podemos hacer mucho más
-          return cachedResponse;
-        });
+        }).catch(() => cachedResponse);
 
-        // Estrategia Stale-While-Revalidate: 
-        // Retorna la respuesta cacheada si existe, pero actualiza en segundo plano.
-        // Si no hay cache, espera a la red.
+        // Estrategia para assets estáticos: Cache-First con actualización en background
+        if (STATIC_ASSETS.test(url.pathname)) {
+          return cachedResponse || fetchPromise;
+        }
+
+        // Estrategia Stale-While-Revalidate para el resto
         return cachedResponse || fetchPromise;
       });
     })
