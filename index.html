@@ -526,12 +526,19 @@
 
         /* Minimapa Inferior */
         #minimap-container {
-            height: 80px;
+            height: calc(80px + env(safe-area-inset-bottom));
             background: #ffffff;
             border-top: 1px solid #e0e0e0;
             position: relative;
             cursor: pointer;
-            overflow: hidden; /* Para recortar el sombreado del viewport */
+            overflow: hidden;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        #minimap-canvas {
+            display: block;
+            width: 100%;
+            height: 80px;
         }
 
         #minimap-viewport {
@@ -863,6 +870,7 @@
         };
 
         let minimapCanvas, minimapCtx;
+        let minimapCacheCanvas = null;
         let tiles = [];
         const TILE_WIDTH = 1024;
         let scrollContainer, minimapViewport, themeToggle, locationInput, suggestionsBox, searchBtn, geoBtn;
@@ -1141,6 +1149,7 @@ locationInput.addEventListener('input', () => {
                     }
                 });
 
+                handleResize();
                 await useMyLocation();
             } catch (err) {
                 console.error("Initialization error:", err);
@@ -1253,6 +1262,7 @@ locationInput.addEventListener('input', () => {
                 }
                 
                 centerOnCurrentTime();
+                drawMinimap();
                 render();
             } catch (err) {
                 console.error("Error in loadWeather:", err);
@@ -1603,8 +1613,20 @@ locationInput.addEventListener('input', () => {
                 }
             }
             
-            drawMinimap();
+            updateMinimapViewport();
             updateTopPanel();
+        }
+
+        function updateMinimapViewport() {
+            if (!state.hourlyData.length) return;
+            
+            const visibleRatio = scrollContainer.clientWidth / (state.hourlyData.length * PIXELS_PER_HOUR);
+            const scrollRatio = scrollContainer.scrollLeft / (state.hourlyData.length * PIXELS_PER_HOUR);
+            
+            minimapViewport.style.width = (visibleRatio * 100) + '%';
+            minimapViewport.style.left = (scrollRatio * 100) + '%';
+            
+            updateNowButtonPosition();
         }
 
         function drawSunnyBackground(ctx, viewX, viewW, h, styles, drawSunIcon) {
@@ -2410,22 +2432,33 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawMinimap() {
-            const ctx = minimapCtx;
-            const w = minimapCanvas.width / state.dpr;
-            const h = minimapCanvas.height / state.dpr;
-            const styles = getComputedStyle(document.documentElement);
-
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
+            if (!state.hourlyData.length) return;
+            
+            const w = window.innerWidth;
+            const h = 80;
+            const dpr = state.dpr;
+            
+            // Create or update cache canvas
+            if (!minimapCacheCanvas) {
+                minimapCacheCanvas = document.createElement('canvas');
+            }
+            
+            if (minimapCacheCanvas.width !== w * dpr || minimapCacheCanvas.height !== h * dpr) {
+                minimapCacheCanvas.width = w * dpr;
+                minimapCacheCanvas.height = h * dpr;
+            }
+            
+            const ctx = minimapCacheCanvas.getContext('2d');
+            ctx.save();
+            ctx.scale(dpr, dpr);
             ctx.clearRect(0, 0, w, h);
+            
+            const step = w / state.hourlyData.length;
             
             // Fondo soleado en minimapa (sin sol)
             const skyColor = '#fffde7'; // Siempre modo claro
             ctx.fillStyle = skyColor;
             ctx.fillRect(0, 0, w, h);
-
-            const step = w / state.hourlyData.length;
 
             // Divisiones de días y etiquetas
             ctx.save();
@@ -2479,7 +2512,6 @@ locationInput.addEventListener('input', () => {
                     const midX = (p1.x + p2.x) / 2;
                     const midY = (p1.y + p2.y) / 2;
                     
-                    // Una pompa por tramo en el minimapa por espacio
                     const cpX = (p1.x + midX) / 2;
                     const cpY = Math.min(p1.y, midY) - 3;
                     ctx.quadraticCurveTo(cpX, cpY, midX, midY);
@@ -2494,27 +2526,14 @@ locationInput.addEventListener('input', () => {
                 ctx.fill();
             }
 
-            // Precipitación en minimapa - Escala ajustada para el minimapa
-            ctx.fillStyle = '#1976d288'; // Siempre modo claro
+            // Precipitación
+            ctx.fillStyle = '#1976d288';
             const maxMinimapH = h * 0.9;
-            const minimapPixelsPerMm = maxMinimapH / 20; // 20mm es el máximo visual en minimapa
+            const minimapPixelsPerMm = maxMinimapH / 20;
             state.hourlyData.forEach((d, i) => {
                 if (d.precip > 0) {
                     let barH = d.precip * minimapPixelsPerMm;
-                    if (barH > maxMinimapH) {
-                        ctx.fillRect(i * step, h - maxMinimapH, step, maxMinimapH);
-                        // Sutil zigzag en minimapa
-                        ctx.save();
-                        ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(i * step, h - maxMinimapH + 2);
-                        ctx.lineTo(i * step + step, h - maxMinimapH + 4);
-                        ctx.stroke();
-                        ctx.restore();
-                    } else {
-                        ctx.fillRect(i * step, h - barH, step, barH);
-                    }
+                    ctx.fillRect(i * step, h - Math.min(barH, maxMinimapH), step, Math.min(barH, maxMinimapH));
                 }
             });
 
@@ -2534,8 +2553,8 @@ locationInput.addEventListener('input', () => {
                 ctx.restore();
             }
 
-            // Temperatura en minimapa
-            ctx.strokeStyle = '#d32f2f'; // Siempre modo claro
+            // Temperatura
+            ctx.strokeStyle = '#d32f2f';
             ctx.lineWidth = 1;
             ctx.beginPath();
             state.hourlyData.forEach((d, i) => {
@@ -2555,9 +2574,9 @@ locationInput.addEventListener('input', () => {
                 if (now >= startTime && now <= endTime) {
                     const nowX = ((now - startTime) / (endTime - startTime)) * w;
                     ctx.save();
-                    ctx.strokeStyle = '#ff4d4d'; // Rojo más vivo
+                    ctx.strokeStyle = '#ff4d4d';
                     ctx.setLineDash([3, 3]);
-                    ctx.lineWidth = 2; // Más gruesa
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.moveTo(nowX, 0);
                     ctx.lineTo(nowX, h);
@@ -2565,13 +2584,19 @@ locationInput.addEventListener('input', () => {
                     ctx.restore();
                 }
             }
+            ctx.restore();
 
-            const visibleRatio = scrollContainer.clientWidth / (state.hourlyData.length * PIXELS_PER_HOUR);
-            const scrollRatio = scrollContainer.scrollLeft / (state.hourlyData.length * PIXELS_PER_HOUR);
-            minimapViewport.style.width = (visibleRatio * 100) + '%';
-            minimapViewport.style.left = (scrollRatio * 100) + '%';
+            // Transfer cache to main minimap canvas
+            if (minimapCanvas.width !== w * dpr || minimapCanvas.height !== h * dpr) {
+                minimapCanvas.width = w * dpr;
+                minimapCanvas.height = h * dpr;
+                minimapCanvas.style.width = w + 'px';
+                minimapCanvas.style.height = h + 'px';
+            }
+            minimapCtx.clearRect(0, 0, w, h);
+            minimapCtx.drawImage(minimapCacheCanvas, 0, 0, w * dpr, h * dpr, 0, 0, w * dpr, h * dpr);
             
-            updateNowButtonPosition();
+            updateMinimapViewport();
         }
 
         let lastNowBtnX = -1;
@@ -2938,6 +2963,7 @@ locationInput.addEventListener('input', () => {
             minimapCtx.resetTransform();
             minimapCtx.scale(state.dpr, state.dpr);
             
+            drawMinimap();
             render();
         }
 
