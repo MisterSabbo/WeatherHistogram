@@ -504,13 +504,22 @@
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            image-rendering: -webkit-optimize-contrast; /* Help with sharpness on iOS */
         }
 
-        canvas {
+        #canvas-wrapper {
+            position: relative;
+            height: 100%;
+            min-height: 250px;
+            width: 100%;
+        }
+
+        #main-canvas {
             display: block;
             position: absolute;
             top: 0;
             left: 0;
+            touch-action: pan-y; /* Allow vertical scroll, but horizontal is handled by container */
         }
 
         /* Minimapa Inferior */
@@ -866,13 +875,13 @@
 
         async function init() {
             mainCanvas = document.getElementById('main-canvas');
-            mainCtx = mainCanvas.getContext('2d', { alpha: false });
+            mainCtx = mainCanvas.getContext('2d', { alpha: true });
             
             offscreenCanvas = document.createElement('canvas');
-            offscreenCtx = offscreenCanvas.getContext('2d', { alpha: false });
+            offscreenCtx = offscreenCanvas.getContext('2d', { alpha: true });
             
             minimapCanvas = document.getElementById('minimap-canvas');
-            minimapCtx = minimapCanvas.getContext('2d', { alpha: false });
+            minimapCtx = minimapCanvas.getContext('2d', { alpha: true });
             
             scrollContainer = document.getElementById('scroll-container');
             minimapViewport = document.getElementById('minimap-viewport');
@@ -1520,7 +1529,7 @@ locationInput.addEventListener('input', () => {
             const w = offscreenCanvas.width / state.dpr;
             const h = offscreenCanvas.height / state.dpr;
             const styles = getComputedStyle(document.documentElement);
-            const scrollX = scrollContainer.scrollLeft;
+            const scrollX = Math.floor(scrollContainer.scrollLeft);
 
             ctx.clearRect(0, 0, w, h);
             
@@ -2278,12 +2287,14 @@ locationInput.addEventListener('input', () => {
 
                 state.labelRects = []; // Reset para este frame
 
-                // 1. Temperatura (con Sensación Térmica opcional entre paréntesis)
-                const tempText = `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)`;
+                // 1. Temperatura (con Sensación Térmica opcional entre paréntesis si la diferencia es >= 1)
+                const diff = Math.abs(temp - apparent);
+                const showApparent = diff >= 1;
+                const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
                 drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
 
-                // 2. Sensación Térmica (Solo el punto, sin etiqueta de texto propia)
-                drawPoint(normalizeY(apparent, -20, 40, h), '#8b0000', null, '');
+                // 2. Sensación Térmica (Eliminado completamente por petición del usuario)
+                // drawPoint(normalizeY(apparent, -20, 40, h), '#8b0000', null, '');
 
                 // 3. Precipitación (Intersection logic: use the value of the bar the cursor is over)
                 const closestData = progress < 0.5 ? d1 : d2;
