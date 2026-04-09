@@ -441,7 +441,7 @@
             vertical-align: super;
             cursor: help;
             margin-left: 2px;
-            opacity: 0.6;
+            opacity: 0.9;
             background: var(--input-bg);
             border-radius: 50%;
             width: 14px;
@@ -530,7 +530,6 @@
             position: absolute;
             top: 0;
             left: 0;
-            touch-action: pan-y; /* Allow vertical scroll, but horizontal is handled by container */
         }
 
         /* Minimapa Inferior */
@@ -1065,21 +1064,17 @@ locationInput.addEventListener('input', () => {
                     isMinimapDragging = false;
                 });
 
-                // Scroll and Drag events
-                scrollContainer.addEventListener('mousedown', (e) => {
+                // Scroll and Drag events (Desktop only)
+                scrollContainer.addEventListener('pointerdown', (e) => {
+                    if (e.pointerType !== 'mouse') return;
                     state.isDragging = true;
                     state.startX = e.pageX - scrollContainer.offsetLeft;
                     state.scrollLeft = scrollContainer.scrollLeft;
                     scrollContainer.style.cursor = 'grabbing';
                 });
 
-                scrollContainer.addEventListener('touchstart', (e) => {
-                    state.isDragging = true;
-                    state.startX = e.touches[0].pageX - scrollContainer.offsetLeft;
-                    state.scrollLeft = scrollContainer.scrollLeft;
-                }, { passive: true });
-
-                scrollContainer.addEventListener('mousemove', (e) => {
+                scrollContainer.addEventListener('pointermove', (e) => {
+                    if (e.pointerType !== 'mouse') return;
                     if (state.isDragging) e.preventDefault();
                     if (!ticking) {
                         const rect = scrollContainer.getBoundingClientRect();
@@ -1106,34 +1101,14 @@ locationInput.addEventListener('input', () => {
                     }
                 });
 
-                scrollContainer.addEventListener('touchmove', (e) => {
-                    if (state.isDragging && !ticking) {
-                        const touchX = e.touches[0].pageX;
-                        const offsetLeft = scrollContainer.offsetLeft;
-
-                        window.requestAnimationFrame(() => {
-                            const x = touchX - offsetLeft;
-                            if (Math.abs(x - state.startX) > 3) {
-                                const walk = (x - state.startX) * 1.5;
-                                scrollContainer.scrollLeft = state.scrollLeft - walk;
-                            }
-                            // El render se dispara por el evento 'scroll' que se genera al cambiar scrollLeft
-                            ticking = false;
-                        });
-                        ticking = true;
-                    }
-                }, { passive: true });
-
-                scrollContainer.addEventListener('mouseup', () => {
+                scrollContainer.addEventListener('pointerup', (e) => {
+                    if (e.pointerType !== 'mouse') return;
                     state.isDragging = false;
                     scrollContainer.style.cursor = 'default';
                 });
 
-                scrollContainer.addEventListener('touchend', () => {
-                    state.isDragging = false;
-                });
-
-                scrollContainer.addEventListener('mouseleave', () => {
+                scrollContainer.addEventListener('pointerleave', (e) => {
+                    if (e.pointerType !== 'mouse') return;
                     state.isDragging = false;
                     state.hoverX = null;
                     scrollContainer.style.cursor = 'default';
