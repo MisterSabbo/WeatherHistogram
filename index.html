@@ -526,13 +526,14 @@
 
         /* Minimapa Inferior */
         #minimap-container {
-            height: calc(80px + env(safe-area-inset-bottom));
+            height: 80px;
             background: #fffde7;
             border-top: 1px solid #e0e0e0;
             position: relative;
             cursor: pointer;
             overflow: hidden;
-            padding-bottom: env(safe-area-inset-bottom);
+            flex-shrink: 0;
+            margin-bottom: env(safe-area-inset-bottom);
         }
 
         #minimap-canvas {
@@ -587,7 +588,7 @@
             color: white;
             border: none;
             height: 30px;
-            width: auto;
+            width: max-content;
             min-width: 40px;
             padding: 0 10px;
             border-radius: 15px;
@@ -598,10 +599,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1px;
-            transition: width 0.2s, padding 0.2s;
+            gap: 4px;
+            transition: padding 0.2s;
             white-space: nowrap;
-            overflow: hidden;
+            flex-shrink: 0;
         }
 
         #now-btn.mini {
@@ -815,12 +816,14 @@
 
     <div id="chart-area" style="position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f5f5f5;">
         <div id="reference-line" style="position: absolute; left: 60px; top: 0; bottom: 0; width: 2px; background: rgba(0,0,0,0.4); z-index: 10; pointer-events: none;"></div>
+        <canvas id="fixed-overlay-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20;"></canvas>
         <main id="scroll-container">
             <div id="canvas-wrapper">
+                <div id="now-line" style="position: absolute; top: 0; bottom: 0; width: 0px; border-left: 2px dashed #ff4d4d; pointer-events: none; z-index: 10;"></div>
                 <div id="now-btn-track" style="position: absolute; top: 10px; left: 0; width: 100%; height: 0; pointer-events: none; display: flex; z-index: 500;">
                     <div id="now-btn-spacer" style="width: 0px; flex-shrink: 0;"></div>
-                    <div style="position: sticky; left: 35px; right: 35px; width: 0; display: flex; justify-content: center;">
-                        <button id="now-btn" title="Ir al momento actual" style="pointer-events: auto; transform: translateX(-50%);">
+                    <div style="position: sticky; left: 40px; right: 40px; width: 0; display: flex; justify-content: center; overflow: visible;">
+                        <button id="now-btn" title="Ir al momento actual" style="pointer-events: auto;">
                             <span style="font-size: 0.9rem;">📍</span>
                             <span class="btn-text">AHORA</span>
                         </button>
@@ -890,6 +893,9 @@
             
             minimapCanvas = document.getElementById('minimap-canvas');
             minimapCtx = minimapCanvas.getContext('2d', { alpha: true });
+            
+            fixedOverlayCanvas = document.getElementById('fixed-overlay-canvas');
+            fixedOverlayCtx = fixedOverlayCanvas.getContext('2d');
             
             scrollContainer = document.getElementById('scroll-container');
             minimapViewport = document.getElementById('minimap-viewport');
@@ -1592,9 +1598,6 @@ locationInput.addEventListener('input', () => {
             drawTemperature(ctx, xOffset, w, h, styles);
             drawAxes(ctx, xOffset, w, h, styles);
             
-            // Dibujamos el cursor y las líneas de guía (ahora y referencia)
-            drawCursor(ctx, xOffset, w, h, styles);
-            
             ctx.restore();
             tile.lastDrawn = Date.now();
         }
@@ -1615,6 +1618,7 @@ locationInput.addEventListener('input', () => {
             
             updateMinimapViewport();
             updateTopPanel();
+            drawFixedOverlay();
         }
 
         function updateMinimapViewport() {
@@ -2228,201 +2232,6 @@ locationInput.addEventListener('input', () => {
             ctx.restore();
         }
 
-        function drawCursor(ctx, viewX, viewW, h, styles) {
-            const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
-            
-            ctx.save();
-            
-            // Línea de guía para "Ahora"
-            if (state.hourlyData.length > 0) {
-                const now = Date.now();
-                const startTime = state.hourlyData[0].time;
-                const nowX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-                
-                const viewportStart = Math.floor(scrollContainer.scrollLeft);
-                const viewportEnd = viewportStart + scrollContainer.clientWidth;
-                
-                if (nowX >= viewportStart && nowX <= viewportEnd && Math.abs(nowX - referenceX) > 5) {
-                    ctx.strokeStyle = '#ff4d4d'; // Brighter red
-                    ctx.setLineDash([5, 5]);
-                    ctx.lineWidth = 2; // Thicker
-                    ctx.beginPath();
-                    ctx.moveTo(nowX, 0);
-                    ctx.lineTo(nowX, h);
-                    ctx.stroke();
-                }
-            }
-            
-            // Círculos indicadores en la línea de referencia fija (Intersección exacta corregida)
-            const activeX = referenceX;
-            
-            // Cálculo de índice basado en midpoints (x = i * PPH + PPH/2)
-            const floatIndex = (activeX - PIXELS_PER_HOUR / 2) / PIXELS_PER_HOUR;
-            const index = Math.floor(floatIndex);
-            const progress = floatIndex - index;
-            
-            if (index >= 0 && index < state.hourlyData.length - 1) {
-                const d1 = state.hourlyData[index];
-                const d2 = state.hourlyData[index + 1];
-                
-                const interpolate = (v1, v2) => v1 + (v2 - v1) * progress;
-                
-                const temp = interpolate(d1.temp, d2.temp);
-                const apparent = interpolate(d1.apparent, d2.apparent);
-                const clouds = interpolate(d1.clouds, d2.clouds);
-                const precip = interpolate(d1.precip, d2.precip);
-                const precipProb = interpolate(d1.precipProb, d2.precipProb);
-
-                ctx.setLineDash([]);
-                ctx.font = 'bold 10px Inter';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1.5;
-
-                const drawPoint = (y, color, value, unit, shape = 'circle') => {
-                    // El punto va en la Y exacta
-                    ctx.fillStyle = color;
-                    ctx.beginPath();
-                    if (shape === 'circle') {
-                        ctx.arc(activeX, y, 4, 0, Math.PI * 2);
-                    } else if (shape === 'diamond') {
-                        ctx.moveTo(activeX, y - 5);
-                        ctx.lineTo(activeX + 5, y);
-                        ctx.lineTo(activeX, y + 5);
-                        ctx.lineTo(activeX - 5, y);
-                        ctx.closePath();
-                    }
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // No mostrar valores de 0 o muy cercanos a 0 para evitar ruido y solapamientos
-                    // Excepción: si el valor es un string (como el caso de temperatura combinada), lo mostramos siempre
-                    if (value !== null && (typeof value === 'string' || Math.abs(value) > 0.01)) {
-                        // El texto tiene margen de seguridad de 10px
-                        let constrainedY = Math.max(10, Math.min(h - 10, y));
-                        const text = ` ${value}${unit}`;
-                        
-                        ctx.save();
-                        ctx.font = 'bold 11px Inter';
-                        const textMetrics = ctx.measureText(text);
-                        const bgW = textMetrics.width + 8;
-                        const bgH = 16;
-                        
-                        // Sistema de detección de colisiones simple para etiquetas en la línea vertical
-                        if (!state.labelRects) state.labelRects = [];
-                        
-                        let rect = {
-                            x: activeX + 4,
-                            y: constrainedY - bgH / 2,
-                            w: bgW,
-                            h: bgH
-                        };
-
-                        // Si colisiona con una etiqueta anterior, desplazamos hacia abajo
-                        let attempts = 0;
-                        while (state.labelRects.some(r => 
-                            rect.x < r.x + r.w &&
-                            rect.x + rect.w > r.x &&
-                            rect.y < r.y + r.h &&
-                            rect.y + rect.h > r.y
-                        ) && attempts < 5) {
-                            rect.y += bgH + 2;
-                            constrainedY += bgH + 2;
-                            attempts++;
-                        }
-                        
-                        state.labelRects.push(rect);
-
-                        // Fondo sólido para legibilidad extrema
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
-                        ctx.beginPath();
-                        ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 4);
-                        ctx.fill();
-                        ctx.strokeStyle = color;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-
-                        ctx.fillStyle = color;
-                        ctx.fillText(text, activeX + 6, constrainedY);
-                        ctx.restore();
-                    }
-                };
-
-                state.labelRects = []; // Reset para este frame
-
-                // 1. Temperatura (con Sensación Térmica opcional entre paréntesis si la diferencia es >= 1)
-                const diff = Math.abs(temp - apparent);
-                const showApparent = diff >= 1;
-                const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
-                drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
-
-                // 2. Sensación Térmica (Eliminado completamente por petición del usuario)
-                // drawPoint(normalizeY(apparent, -20, 40, h), '#8b0000', null, '');
-
-                // 3. Precipitación (Intersection logic: use the value of the bar the cursor is over)
-                const closestData = progress < 0.5 ? d1 : d2;
-                const pVal = closestData.precip;
-                
-                if (pVal > 0.01) {
-                    const maxH = h * 0.9;
-                    let barH = pVal * PIXELS_PER_MM;
-                    const isBroken = barH > maxH;
-                    const visualH = Math.min(maxH, barH);
-                    const barY = h - visualH;
-
-                    ctx.save();
-                    ctx.font = 'bold 11px Inter';
-                    ctx.textAlign = 'center';
-                    const pText = pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
-                    const pMetrics = ctx.measureText(pText);
-                    const pBgW = pMetrics.width + 10;
-                    const pBgH = 16;
-                    
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    ctx.beginPath();
-                    ctx.roundRect(activeX - pBgW/2, barY - 5 - pBgH, pBgW, pBgH, 4);
-                    ctx.fill();
-                    ctx.strokeStyle = '#1976d2';
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#1976d2';
-                    ctx.fillText(pText, activeX, barY - 5 - pBgH/2 + 4);
-                    ctx.restore();
-                }
-
-                // 4. Probabilidad de Precipitación (Intersección exacta con curva Bezier cúbica)
-                const getProbY = (val) => h - (h * (val / 100));
-                const py1 = getProbY(d1.precipProb);
-                const py2 = getProbY(d2.precipProb);
-                const t = progress;
-                // Fórmula de Bezier cúbica con P1=P0 y P2=P3 (como en drawPrecipitationProbability)
-                const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
-                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond');
-
-                // 5. Nubes (Intersección exacta con curva cuadrática)
-                const getY = (d) => h - (h * (d.clouds / 100));
-                const y1 = getY(d1);
-                const y2 = getY(d2);
-                const midY = (y1 + y2) / 2;
-                
-                let cloudY;
-                if (progress < 0.5) {
-                    const t = progress * 2;
-                    const cpY = Math.min(y1, midY) - 10;
-                    cloudY = (1-t)*(1-t)*y1 + 2*(1-t)*t*cpY + t*t*midY;
-                } else {
-                    const t = (progress - 0.5) * 2;
-                    const cpY = Math.min(midY, y2) - 10;
-                    cloudY = (1-t)*(1-t)*midY + 2*(1-t)*t*cpY + t*t*y2;
-                }
-                drawPoint(cloudY, '#475569', Math.round(clouds), '%');
-            }
-            
-            ctx.restore();
-        }
-
         function drawMinimap() {
             if (!state.hourlyData.length) return;
             
@@ -2595,10 +2404,186 @@ locationInput.addEventListener('input', () => {
         let lastNowBtnX = -1;
         let lastNowBtnMini = null;
 
+        function drawFixedOverlay() {
+            if (!state.hourlyData.length) return;
+            
+            const w = fixedOverlayCanvas.clientWidth;
+            const h = fixedOverlayCanvas.clientHeight;
+            
+            fixedOverlayCtx.clearRect(0, 0, w, h);
+            
+            const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
+            const activeX = referenceX;
+            const drawX = 60; // Fixed position on screen
+            
+            // Cálculo de índice basado en midpoints (x = i * PPH + PPH/2)
+            const floatIndex = (activeX - PIXELS_PER_HOUR / 2) / PIXELS_PER_HOUR;
+            const index = Math.floor(floatIndex);
+            const progress = floatIndex - index;
+            
+            if (index >= 0 && index < state.hourlyData.length - 1) {
+                const d1 = state.hourlyData[index];
+                const d2 = state.hourlyData[index + 1];
+                
+                const interpolate = (v1, v2) => v1 + (v2 - v1) * progress;
+                
+                const temp = interpolate(d1.temp, d2.temp);
+                const apparent = interpolate(d1.apparent, d2.apparent);
+                const clouds = interpolate(d1.clouds, d2.clouds);
+                const precip = interpolate(d1.precip, d2.precip);
+                const precipProb = interpolate(d1.precipProb, d2.precipProb);
+
+                fixedOverlayCtx.save();
+                fixedOverlayCtx.setLineDash([]);
+                fixedOverlayCtx.font = 'bold 10px Inter';
+                fixedOverlayCtx.textAlign = 'left';
+                fixedOverlayCtx.textBaseline = 'middle';
+                fixedOverlayCtx.strokeStyle = '#fff';
+                fixedOverlayCtx.lineWidth = 1.5;
+
+                const drawPoint = (y, color, value, unit, shape = 'circle') => {
+                    // El punto va en la Y exacta
+                    fixedOverlayCtx.fillStyle = color;
+                    fixedOverlayCtx.beginPath();
+                    if (shape === 'circle') {
+                        fixedOverlayCtx.arc(drawX, y, 4, 0, Math.PI * 2);
+                    } else if (shape === 'diamond') {
+                        fixedOverlayCtx.moveTo(drawX, y - 5);
+                        fixedOverlayCtx.lineTo(drawX + 5, y);
+                        fixedOverlayCtx.lineTo(drawX, y + 5);
+                        fixedOverlayCtx.lineTo(drawX - 5, y);
+                        fixedOverlayCtx.closePath();
+                    }
+                    fixedOverlayCtx.fill();
+                    fixedOverlayCtx.stroke();
+                    
+                    // No mostrar valores de 0 o muy cercanos a 0 para evitar ruido y solapamientos
+                    if (value !== null && (typeof value === 'string' || Math.abs(value) > 0.01)) {
+                        // El texto tiene margen de seguridad de 10px
+                        let constrainedY = Math.max(10, Math.min(h - 10, y));
+                        const text = ` ${value}${unit}`;
+                        
+                        fixedOverlayCtx.save();
+                        fixedOverlayCtx.font = 'bold 11px Inter';
+                        const textMetrics = fixedOverlayCtx.measureText(text);
+                        const bgW = textMetrics.width + 8;
+                        const bgH = 16;
+                        
+                        // Sistema de detección de colisiones simple para etiquetas en la línea vertical
+                        if (!state.labelRects) state.labelRects = [];
+                        
+                        let rect = {
+                            x: drawX + 4,
+                            y: constrainedY - bgH / 2,
+                            w: bgW,
+                            h: bgH
+                        };
+
+                        // Si colisiona con una etiqueta anterior, desplazamos hacia abajo
+                        let attempts = 0;
+                        while (state.labelRects.some(r => 
+                            rect.x < r.x + r.w &&
+                            rect.x + rect.w > r.x &&
+                            rect.y < r.y + r.h &&
+                            rect.y + rect.h > r.y
+                        ) && attempts < 5) {
+                            rect.y += bgH + 2;
+                            constrainedY += bgH + 2;
+                            attempts++;
+                        }
+                        
+                        state.labelRects.push(rect);
+
+                        // Fondo sólido para legibilidad extrema
+                        fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+                        fixedOverlayCtx.beginPath();
+                        fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, 4);
+                        fixedOverlayCtx.fill();
+                        fixedOverlayCtx.strokeStyle = color;
+                        fixedOverlayCtx.lineWidth = 0.5;
+                        fixedOverlayCtx.stroke();
+
+                        fixedOverlayCtx.fillStyle = color;
+                        fixedOverlayCtx.fillText(text, drawX + 6, constrainedY);
+                        fixedOverlayCtx.restore();
+                    }
+                };
+
+                state.labelRects = []; // Reset para este frame
+
+                // 1. Temperatura
+                const diff = Math.abs(temp - apparent);
+                const showApparent = diff >= 1;
+                const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
+                drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
+
+                // 3. Precipitación
+                const closestData = progress < 0.5 ? d1 : d2;
+                const pVal = closestData.precip;
+                
+                if (pVal > 0.01) {
+                    const maxH = h * 0.9;
+                    let barH = pVal * PIXELS_PER_MM;
+                    const isBroken = barH > maxH;
+                    const visualH = Math.min(maxH, barH);
+                    const barY = h - visualH;
+
+                    fixedOverlayCtx.save();
+                    fixedOverlayCtx.font = 'bold 11px Inter';
+                    fixedOverlayCtx.textAlign = 'center';
+                    const pText = pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
+                    const pMetrics = fixedOverlayCtx.measureText(pText);
+                    const pBgW = pMetrics.width + 10;
+                    const pBgH = 16;
+                    
+                    fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    fixedOverlayCtx.beginPath();
+                    fixedOverlayCtx.roundRect(drawX - pBgW/2, barY - 5 - pBgH, pBgW, pBgH, 4);
+                    fixedOverlayCtx.fill();
+                    fixedOverlayCtx.strokeStyle = '#1976d2';
+                    fixedOverlayCtx.lineWidth = 0.5;
+                    fixedOverlayCtx.stroke();
+
+                    fixedOverlayCtx.fillStyle = '#1976d2';
+                    fixedOverlayCtx.fillText(pText, drawX, barY - 5 - pBgH/2 + 4);
+                    fixedOverlayCtx.restore();
+                }
+
+                // 4. Probabilidad de Precipitación
+                const getProbY = (val) => h - (h * (val / 100));
+                const py1 = getProbY(d1.precipProb);
+                const py2 = getProbY(d2.precipProb);
+                const t = progress;
+                const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
+                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond');
+
+                // 5. Nubes
+                const getY = (d) => h - (h * (d.clouds / 100));
+                const y1 = getY(d1);
+                const y2 = getY(d2);
+                const midY = (y1 + y2) / 2;
+                
+                let cloudY;
+                if (progress < 0.5) {
+                    const t = progress * 2;
+                    const cpY = Math.min(y1, midY) - 10;
+                    cloudY = (1-t)*(1-t)*y1 + 2*(1-t)*t*cpY + t*t*midY;
+                } else {
+                    const t = (progress - 0.5) * 2;
+                    const cpY = Math.min(midY, y2) - 10;
+                    cloudY = (1-t)*(1-t)*midY + 2*(1-t)*t*cpY + t*t*y2;
+                }
+                drawPoint(cloudY, '#475569', Math.round(clouds), '%');
+                
+                fixedOverlayCtx.restore();
+            }
+        }
+
         function updateNowButtonPosition() {
             if (state.hourlyData.length === 0) return;
             const nowBtn = document.getElementById('now-btn');
             const spacer = document.getElementById('now-btn-spacer');
+            const nowLine = document.getElementById('now-line');
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
             
@@ -2606,6 +2591,12 @@ locationInput.addEventListener('input', () => {
             const nowX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
             
             spacer.style.width = nowX + 'px';
+            
+            const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
+            if (nowLine) {
+                nowLine.style.left = nowX + 'px';
+                nowLine.style.display = Math.abs(nowX - referenceX) > 5 ? 'block' : 'none';
+            }
             
             // Posición relativa al viewport del scroll
             const viewportX = nowX - scrollContainer.scrollLeft;
@@ -2942,6 +2933,12 @@ locationInput.addEventListener('input', () => {
             minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
             minimapCanvas.style.width = window.innerWidth + 'px';
             minimapCanvas.style.height = MINIMAP_HEIGHT + 'px';
+            
+            const chartArea = document.getElementById('chart-area');
+            fixedOverlayCanvas.width = chartArea.clientWidth * state.dpr;
+            fixedOverlayCanvas.height = chartArea.clientHeight * state.dpr;
+            fixedOverlayCtx.resetTransform();
+            fixedOverlayCtx.scale(state.dpr, state.dpr);
             
             drawMinimap();
             render();
