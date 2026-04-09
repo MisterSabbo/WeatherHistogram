@@ -14,17 +14,17 @@
     <title>Weather Histogram</title>
     <style>
         :root {
-            /* Dark Mode (Default) */
-            --bg-color: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --accent-temp: #ff4d4d;
-            --accent-precip: #3399ff;
+            /* Dark Mode (Default) - Discord Style */
+            --bg-color: #2B2D31;
+            --card-bg: #313338;
+            --text-primary: #F2F3F5;
+            --text-secondary: #B5BAC1;
+            --accent-temp: #f43f5e;
+            --accent-precip: #3b82f6;
             --accent-cloud: #808080;
-            --grid-color: #222222;
-            --overlay-bg: rgba(0,0,0,0.8);
-            --input-bg: #2a2a2a;
+            --grid-color: #1E1F22;
+            --overlay-bg: rgba(30, 31, 34, 0.8);
+            --input-bg: #1E1F22;
         }
 
         [data-theme="light"] {
@@ -405,9 +405,6 @@
                 font-size: 0.7rem !important;
                 margin-top: 0;
             }
-            .data-card:not(:first-child) {
-                opacity: 0.9;
-            }
             .data-card:nth-child(3n) .custom-tooltip {
                 left: auto;
                 right: 0;
@@ -441,7 +438,6 @@
             vertical-align: super;
             cursor: help;
             margin-left: 2px;
-            opacity: 0.9;
             background: var(--input-bg);
             border-radius: 50%;
             width: 14px;
@@ -458,12 +454,12 @@
             top: 120%; /* Back to appearing below */
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9); /* Slate 900 with 0.9 opacity */
+            background: rgba(15, 23, 42, 0.9); 
             color: #f8fafc; /* Slate 50 */
             padding: 12px 16px;
             border-radius: 10px;
             font-size: 0.8rem;
-            border: 1px solid rgba(51, 65, 85, 0.9);
+            border: 1px solid rgba(51, 65, 85, 1);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
             z-index: 5000; /* Keeps it above everything else */
             display: none;
@@ -474,15 +470,20 @@
             -webkit-backdrop-filter: blur(12px);
         }
 
-        .info-icon:hover .custom-tooltip,
-        .location-group:hover .custom-tooltip {
+        #location-tooltip {
+            top: auto;
+            bottom: auto;
+            left: 120%;
+        }
+
+        .info-icon:hover .custom-tooltip {
             display: block;
         }
 
         [data-theme="light"] .custom-tooltip {
             background: rgba(255, 255, 255, 0.9);
             color: #0f172a;
-            border: 1px solid rgba(226, 232, 240, 0.9);
+            border: 1px solid rgba(226, 232, 240, 1);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
         }
 
@@ -735,21 +736,41 @@
             </div>
             
             <div class="legend" id="legend">
-                <div class="legend-item">
+                <div class="legend-item" title="Temperatura">
                     <div class="legend-color" style="background: #d32f2f; border: 1px solid white;"></div>
-                    <span>Temperatura</span>
+                    <span>🌡️</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" title="Precipitación">
                     <div class="legend-color" style="background: #1976d2;"></div>
-                    <span>Precipitación</span>
+                    <span>🌊</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" title="Prob. Lluvia">
                     <div class="legend-color" style="background: #0288d1; height: 2px; margin-top: 4px;"></div>
-                    <span>Prob. Lluvia</span>
+                    <span>☔</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" title="Nubes">
                     <div class="legend-color" style="background: #9e9e9e; opacity: 0.5;"></div>
-                    <span>Nubes</span>
+                    <span>☁️</span>
+                </div>
+                <div class="legend-item" title="Viento">
+                    <div class="legend-color" style="background: #757575; height: 2px; margin-top: 4px;"></div>
+                    <span>💨</span>
+                </div>
+                <div class="legend-item" title="Humedad">
+                    <div class="legend-color" style="background: #00acc1; height: 2px; margin-top: 4px;"></div>
+                    <span>💧</span>
+                </div>
+                <div class="legend-item" title="Presión">
+                    <div class="legend-color" style="background: #795548; height: 2px; margin-top: 4px;"></div>
+                    <span>⏲️</span>
+                </div>
+                <div class="legend-item" title="Índice UV">
+                    <div class="legend-color" style="background: #fbc02d; height: 2px; margin-top: 4px;"></div>
+                    <span>☀️</span>
+                </div>
+                <div class="legend-item" title="Visibilidad">
+                    <div class="legend-color" style="background: #43a047; height: 2px; margin-top: 4px;"></div>
+                    <span>👁️</span>
                 </div>
             </div>
         </div>
@@ -777,16 +798,16 @@
 
         <div class="top-panel-metrics">
             <div class="data-card">
-                <div class="data-label">Temp / ST</div>
+                <div class="data-label">🌡️ Temp / ST</div>
                 <div class="data-value" id="val-temp" style="font-size: 1.3rem;">--<span class="data-unit">°C</span></div>
                 <div class="data-label" id="val-apparent" style="font-size: 0.6rem; margin-top: 1px;">ST: --°C</div>
             </div>
             <div class="data-card">
-                <div class="data-label">Viento</div>
+                <div class="data-label">💨 Viento</div>
                 <div class="data-value" id="val-wind" style="font-size: 1.3rem;">--<span class="data-unit">km/h</span></div>
             </div>
             <div class="data-card">
-                <div class="data-label">AQI</div>
+                <div class="data-label">🍃 AQI</div>
                 <div class="data-value" id="val-aqi" style="font-size: 1rem;">
                     <span class="aqi-text">--</span>
                     <span class="info-icon">i
@@ -795,7 +816,7 @@
                 </div>
             </div>
             <div class="data-card">
-                <div class="data-label">Polen</div>
+                <div class="data-label">🌻 Polen</div>
                 <div class="data-value" id="val-pollen" style="font-size: 1rem;">
                     <span class="pollen-text">--</span>
                     <span class="info-icon">i
@@ -808,15 +829,15 @@
                 </div>
             </div>
             <div class="data-card">
-                <div class="data-label">Lluvia</div>
+                <div class="data-label">🌊 Lluvia</div>
                 <div class="data-value" id="val-precip" style="font-size: 1.3rem;">--<span class="data-unit">mm</span></div>
             </div>
             <div class="data-card">
-                <div class="data-label">Prob. Lluvia</div>
+                <div class="data-label">💧 Prob. Lluvia</div>
                 <div class="data-value" id="val-precip-prob" style="font-size: 1.3rem;">--<span class="data-unit">%</span></div>
             </div>
             <div class="data-card">
-                <div class="data-label">Nubes</div>
+                <div class="data-label">☁️ Nubes</div>
                 <div class="data-value" id="val-clouds" style="font-size: 1.3rem;">--<span class="data-unit">%</span></div>
             </div>
         </div>
@@ -991,25 +1012,24 @@ locationInput.addEventListener('input', () => {
                     el.addEventListener('mouseenter', () => {
                         if (window.innerWidth >= 600) {
                             const tt = el.querySelector('.custom-tooltip');
-                            if (tt) {
-                                // For location-group, only show if text is truncated
+                            if (tt) 
+                            // For location-group, only show if text is truncated
                                 if (el.classList.contains('location-group')) {
                                     const locName = document.getElementById('location-name');
                                     const summary = document.getElementById('weather-summary');
-                                    const isTruncated = (locName.offsetWidth < locName.scrollWidth) || (summary.offsetWidth < summary.scrollWidth);
+                                    const isTruncated = (locName.scrollWidth > locName.clientWidth) || (summary.scrollWidth > summary.clientWidth);
                                     if (isTruncated) {
                                         tt.style.display = 'block';
                                     }
                                 } else {
                                     tt.style.display = 'block';
                                 }
-                            }
                         }
                     });
                     el.addEventListener('mouseleave', () => {
                         if (window.innerWidth >= 600) {
                             const tt = el.querySelector('.custom-tooltip');
-                            if (tt) tt.style.display = 'none';
+                            if (tt) tt.style.display = '';
                         }
                     });
                 });
@@ -1024,14 +1044,13 @@ locationInput.addEventListener('input', () => {
                                 if (val.classList.contains('location-group')) {
                                     const locName = document.getElementById('location-name');
                                     const summary = document.getElementById('weather-summary');
-                                    const isTruncated = (locName.offsetWidth < locName.scrollWidth) || (summary.offsetWidth < summary.scrollWidth);
+                                    const isTruncated = (locName.scrollWidth > locName.clientWidth) || (summary.scrollWidth > summary.clientWidth);
                                     if (!isTruncated) return;
                                 }
-
                                 const isVisible = tooltip.style.display === 'block';
                                 // Cerrar otros tooltips
-                                document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = 'none');
-                                tooltip.style.display = isVisible ? 'none' : 'block';
+                                document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = '');
+                                tooltip.style.display = isVisible ? '' : 'block';
                                 e.stopPropagation();
                             }
                         }
@@ -1159,7 +1178,7 @@ locationInput.addEventListener('input', () => {
 
                 document.addEventListener('click', () => {
                     if (window.innerWidth < 600) {
-                        document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = 'none');
+                        document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = '');
                     }
                 });
 
@@ -1235,16 +1254,7 @@ locationInput.addEventListener('input', () => {
                 const pos = await getPosition();
                 state.lat = pos.coords.latitude;
                 state.lon = pos.coords.longitude;
-                
-                // Reverse geocoding to get the real name
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${state.lat}&lon=${state.lon}&zoom=10`);
-                    const data = await res.json();
-                    state.locationName = data.name || data.address.city || data.address.town || data.address.village || "Mi ubicación";
-                } catch (e) {
-                    console.warn("Reverse geocoding failed", e);
-                    state.locationName = "Mi ubicación";
-                }
+                state.locationName = "Mi ubicación";
             } catch (err) {
                 console.warn("Geolocation failed, using default", err);
                 state.lat = DEFAULT_COORDS.lat;
@@ -1448,7 +1458,7 @@ locationInput.addEventListener('input', () => {
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             try {
-                const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,weather_code&daily=sunrise,sunset&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
+                const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
                 const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&hourly=european_aqi,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
 
                 const [forecastRes, aqiRes] = await Promise.all([
@@ -1535,7 +1545,9 @@ locationInput.addEventListener('input', () => {
 
             if (daily && daily.time) {
                 daily.time.forEach((t, i) => {
-                    const dateStr = new Date(t * 1000).toISOString().split('T')[0];
+                    // Use local date string to match hourly data lookup
+                    const dateObj = new Date(t * 1000);
+                    const dateStr = dateObj.toLocaleDateString('en-CA', { timeZone: state.timezone });
                     state.sunData[dateStr] = {
                         sunrise: daily.sunrise[i] * 1000,
                         sunset: daily.sunset[i] * 1000
@@ -1554,7 +1566,13 @@ locationInput.addEventListener('input', () => {
                 // Usamos la fecha local de la ciudad para buscar datos de sol
                 const dateStr = dateObj.toLocaleDateString('en-CA', { timeZone: state.timezone });
                 const sun = state.sunData[dateStr];
-                let isNight = sun ? (timestamp < sun.sunrise || timestamp > sun.sunset) : false;
+                let isNight = false;
+                if (sun) {
+                    // Consider it night if the hour is strictly before sunrise or strictly after sunset
+                    // We check the hour's midpoint to be safe
+                    const hourMidpoint = timestamp + 1800000; // +30 mins
+                    isNight = hourMidpoint < sun.sunrise || hourMidpoint > sun.sunset;
+                }
 
                 const pollen = {
                     alder: (aqiHourly.alder_pollen && aqiHourly.alder_pollen[i]) || 0,
@@ -1577,6 +1595,10 @@ locationInput.addEventListener('input', () => {
                     precipProb: hourly.precipitation_probability ? hourly.precipitation_probability[i] : 0,
                     clouds: hourly.cloudcover[i],
                     wind: hourly.wind_speed_10m[i],
+                    humidity: hourly.relative_humidity_2m ? hourly.relative_humidity_2m[i] : 0,
+                    pressure: hourly.surface_pressure ? hourly.surface_pressure[i] : 1013,
+                    uv: hourly.uv_index ? hourly.uv_index[i] : 0,
+                    visibility: hourly.visibility ? hourly.visibility[i] : 10000,
                     weatherCode: hourly.weather_code[i],
                     aqi: aqiHourly.european_aqi ? aqiHourly.european_aqi[i] : null,
                     pollen: maxPollen,
@@ -1591,6 +1613,79 @@ locationInput.addEventListener('input', () => {
         /**
          * RENDERIZADO
          */
+        function drawWeatherPhenomena(ctx, viewX, viewW, h) {
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 2);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 2);
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                const x = i * PIXELS_PER_HOUR;
+                const code = d.weatherCode;
+                
+                // Niebla (45, 48)
+                if (code === 45 || code === 48) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+                    ctx.lineWidth = 1;
+                    for (let j = 0; j < 5; j++) {
+                        const y = h * (0.2 + j * 0.15);
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x + PIXELS_PER_HOUR, y + Math.sin(i + j) * 5);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+                
+                // Tormenta (95, 96, 99)
+                if (code >= 95) {
+                    if (i % 4 === 0) { // Solo algunos rayos para no saturar
+                        ctx.save();
+                        ctx.strokeStyle = '#fde047';
+                        ctx.lineWidth = 1.5;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#fde047';
+                        const startX = x + PIXELS_PER_HOUR / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(startX, 20);
+                        ctx.lineTo(startX - 10, 40);
+                        ctx.lineTo(startX + 5, 40);
+                        ctx.lineTo(startX - 5, 65);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
+                
+                // Granizo (77, 96, 99)
+                if (code === 77 || code === 96 || code === 99) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    for (let j = 0; j < 8; j++) {
+                        const hX = x + Math.random() * PIXELS_PER_HOUR;
+                        const hY = Math.random() * h;
+                        ctx.beginPath();
+                        ctx.arc(hX, hY, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // Nieve (71, 73, 75, 85, 86)
+                if ((code >= 71 && code <= 75) || code === 85 || code === 86) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    for (let j = 0; j < 12; j++) {
+                        const sX = x + Math.random() * PIXELS_PER_HOUR;
+                        const sY = Math.random() * h;
+                        ctx.beginPath();
+                        ctx.arc(sX, sY, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            }
+        }
+
         function drawTile(tile) {
             const ctx = tile.ctx;
             const xOffset = tile.index * TILE_WIDTH;
@@ -1612,6 +1707,17 @@ locationInput.addEventListener('input', () => {
             drawClouds(ctx, xOffset, w, h, styles);
             drawPrecipitation(ctx, xOffset, w, h, styles);
             drawPrecipitationProbability(ctx, xOffset, w, h, styles);
+            
+            // Weather Phenomena
+            drawWeatherPhenomena(ctx, xOffset, w, h);
+            
+            // New Weather Layers
+            drawHumidity(ctx, xOffset, w, h, styles);
+            drawWind(ctx, xOffset, w, h, styles);
+            drawPressure(ctx, xOffset, w, h, styles);
+            drawUVIndex(ctx, xOffset, w, h, styles);
+            drawVisibility(ctx, xOffset, w, h, styles);
+            
             drawTemperature(ctx, xOffset, w, h, styles);
             drawAxes(ctx, xOffset, w, h, styles);
             
@@ -1660,17 +1766,18 @@ locationInput.addEventListener('input', () => {
             ctx.fillStyle = skyColor;
             ctx.fillRect(viewX, 0, viewW, h);
             
-            if (drawSunIcon) {
-                const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
-                const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-                
-                for (let i = startIdx; i < endIdx; i++) {
-                    const d = state.hourlyData[i];
-                    if (d.localHour === 12) {
-                        const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+            if (drawSunIcon && state.hourlyData.length > 0) {
+                const startTime = state.hourlyData[0].time;
+                Object.keys(state.sunData).forEach(dateStr => {
+                    const sun = state.sunData[dateStr];
+                    // Sun midpoint (noon-ish)
+                    const midpoint = (sun.sunrise + sun.sunset) / 2;
+                    const x = ((midpoint - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                    
+                    if (x >= viewX - 100 && x <= viewX + viewW + 100) {
                         drawSun(ctx, x, h * 0.25, sunColor, rayColor);
                     }
-                }
+                });
             }
             ctx.restore();
         }
@@ -1711,15 +1818,80 @@ locationInput.addEventListener('input', () => {
             ctx.restore();
         }
 
+        function drawMoon(ctx, x, y, moonColor, glowColor) {
+            const radius = 20;
+            ctx.save();
+            // Resplandor
+            const grad = ctx.createRadialGradient(x, y, radius, x, y, radius + 40);
+            grad.addColorStop(0, 'rgba(144, 202, 249, 0.2)');
+            grad.addColorStop(1, 'rgba(144, 202, 249, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 40, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Luna (Creciente) dibujada con path para evitar destination-out
+            ctx.fillStyle = moonColor;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = glowColor;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0.2 * Math.PI, 1.8 * Math.PI);
+            ctx.quadraticCurveTo(x + radius * 0.5, y, x + radius * Math.cos(0.2 * Math.PI), y + radius * Math.sin(0.2 * Math.PI));
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
         function drawNightOverlay(ctx, viewX, viewW, h) {
-            ctx.fillStyle = 'rgba(0, 0, 100, 0.05)'; // Siempre modo claro
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
             
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
+                const prevD = state.hourlyData[i - 1];
+                const nextD = state.hourlyData[i + 1];
+                
+                const x = i * PIXELS_PER_HOUR;
+                const w = PIXELS_PER_HOUR + 0.5;
+
                 if (d.isNight) {
-                    ctx.fillRect(i * PIXELS_PER_HOUR, 0, PIXELS_PER_HOUR, h);
+                    if (prevD && !prevD.isNight) {
+                        // Sunset transition (Dusk) - Softer orange
+                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        grad.addColorStop(0, '#fffde7');
+                        grad.addColorStop(0.5, '#ffedd5'); // Softer Orange
+                        grad.addColorStop(1, '#e9d5ff');
+                        ctx.fillStyle = grad;
+                    } else if (nextD && !nextD.isNight) {
+                        // Sunrise transition (Dawn) - Softer orange
+                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        grad.addColorStop(0, '#e9d5ff');
+                        grad.addColorStop(0.5, '#ffedd5'); // Softer Orange
+                        grad.addColorStop(1, '#fffde7');
+                        ctx.fillStyle = grad;
+                    } else {
+                        ctx.fillStyle = '#e9d5ff'; // Darker violet
+                    }
+                    ctx.fillRect(x, 0, w, h);
+                }
+            }
+
+            // Draw Moon at midpoints
+            if (state.hourlyData.length > 0) {
+                const startTime = state.hourlyData[0].time;
+                const sortedDates = Object.keys(state.sunData).sort();
+                for (let i = 0; i < sortedDates.length; i++) {
+                    const currentSun = state.sunData[sortedDates[i]];
+                    const nextSun = state.sunData[sortedDates[i+1]];
+                    
+                    if (nextSun) {
+                        // Moon midpoint is between sunset today and sunrise tomorrow
+                        const midpoint = (currentSun.sunset + nextSun.sunrise) / 2;
+                        const x = ((midpoint - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                        if (x >= viewX - 50 && x <= viewX + viewW + 50) {
+                            drawMoon(ctx, x, h * 0.25, '#f5f5f5', '#90caf9');
+                        }
+                    }
                 }
             }
         }
@@ -2073,6 +2245,103 @@ locationInput.addEventListener('input', () => {
             ctx.restore();
         }
 
+        function drawHumidity(ctx, viewX, viewW, h, styles) {
+            const color = 'rgba(0, 188, 212, 0.3)'; // Cyan soft
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                const y = h - (h * (d.humidity / 100));
+                if (i === startIdx) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawWind(ctx, viewX, viewW, h, styles) {
+            const color = 'rgba(158, 158, 158, 0.4)'; // Grey soft
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                // Normalize wind (0-100 km/h)
+                const y = h - (h * (Math.min(100, d.wind) / 100));
+                if (i === startIdx) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawPressure(ctx, viewX, viewW, h, styles) {
+            const color = 'rgba(121, 85, 72, 0.3)'; // Brown soft
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                // Normalize pressure (950-1050 hPa)
+                const y = normalizeY(d.pressure, 950, 1050, h);
+                if (i === startIdx) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawUVIndex(ctx, viewX, viewW, h, styles) {
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (d.uv > 0) {
+                    const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                    // UV 0-12
+                    const y = h - (h * (Math.min(12, d.uv) / 12) * 0.3); // Bottom 30%
+                    
+                    ctx.fillStyle = d.uv > 8 ? '#d32f2f' : (d.uv > 5 ? '#f57c00' : '#fbc02d');
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawVisibility(ctx, viewX, viewW, h, styles) {
+            const color = 'rgba(76, 175, 80, 0.2)'; // Green soft
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+            
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                const x = i * PIXELS_PER_HOUR;
+                // Visibility 0-24000m
+                const barH = (d.visibility / 24000) * 20; // 20px max height at bottom
+                ctx.fillRect(x, h - barH, PIXELS_PER_HOUR, barH);
+            }
+        }
+
         function drawTemperature(ctx, viewX, viewW, h, styles) {
             const color = '#d32f2f'; // Siempre modo claro
             const apparentColor = '#8b0000'; // Rojo oscuro para sensación térmica
@@ -2207,17 +2476,17 @@ locationInput.addEventListener('input', () => {
                 ctx.strokeStyle = 'white';
                 const label = hours.toString().padStart(2, '0');
                 
-                ctx.strokeText(label, x, h - 10);
+                ctx.strokeText(label, x, 20);
                 ctx.fillStyle = '#666666';
-                ctx.fillText(label, x, h - 10);
+                ctx.fillText(label, x, 20);
                 ctx.restore();
                 
                 // Ticks pequeños para todas las horas
                 ctx.strokeStyle = '#666666';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(x, h);
-                ctx.lineTo(x, h - 8);
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 8);
                 ctx.stroke();
             }
 
@@ -2257,11 +2526,7 @@ locationInput.addEventListener('input', () => {
             const h = 80;
             const dpr = state.dpr;
             
-            // Create or update cache canvas
-            if (!minimapCacheCanvas) {
-                minimapCacheCanvas = document.createElement('canvas');
-            }
-            
+            if (!minimapCacheCanvas) minimapCacheCanvas = document.createElement('canvas');
             if (minimapCacheCanvas.width !== w * dpr || minimapCacheCanvas.height !== h * dpr) {
                 minimapCacheCanvas.width = w * dpr;
                 minimapCacheCanvas.height = h * dpr;
@@ -2274,148 +2539,138 @@ locationInput.addEventListener('input', () => {
             
             const step = w / state.hourlyData.length;
             
-            // Fondo soleado en minimapa (sin sol)
-            const skyColor = '#fffde7'; // Siempre modo claro
-            ctx.fillStyle = skyColor;
+            // 1. Background (Day/Night)
+            ctx.fillStyle = '#fffde7'; // Day
             ctx.fillRect(0, 0, w, h);
+            
+            ctx.fillStyle = '#f3e8ff'; // Night
+            state.hourlyData.forEach((d, i) => {
+                if (d.isNight) {
+                    ctx.fillRect(i * step, 0, step + 0.5, h);
+                }
+            });
 
-            // Divisiones de días y etiquetas
+            // 2. Grid & Day Labels
             ctx.save();
             state.hourlyData.forEach((d, i) => {
                 if (d.localHour === 0) {
                     const x = i * step;
-                    ctx.strokeStyle = '#e0e0e0'; // Siempre modo claro
-                    ctx.setLineDash([2, 2]);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(x, 0);
                     ctx.lineTo(x, h);
                     ctx.stroke();
                     
-                    // Etiqueta del día (3 primeras letras)
-                    ctx.setLineDash([]);
-                    ctx.fillStyle = '#666666'; // Siempre modo claro
-                    ctx.globalAlpha = 0.8;
+                    ctx.fillStyle = '#666666';
                     ctx.font = 'bold 9px Inter';
-                    ctx.textAlign = 'left';
-                    const dayName = d.localDayShort;
-                    ctx.shadowColor = 'white';
-                    ctx.shadowBlur = 4;
-                    ctx.fillText(dayName, x + 5, 12);
-                    ctx.shadowBlur = 0;
-                    ctx.globalAlpha = 1.0;
+                    ctx.fillText(d.localDayShort, x + 4, 12);
                 }
             });
             ctx.restore();
 
-            // Nubes en minimapa (suaves y nubosas con gradiente)
-            const mCloudGrad = ctx.createLinearGradient(0, h, 0, 0);
-            mCloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-            mCloudGrad.addColorStop(1, 'rgba(71, 85, 105, 0.8)');
-            
-            ctx.fillStyle = mCloudGrad;
-            
-            const mPoints = state.hourlyData.map((d, i) => ({
-                x: i * step,
-                y: h - (h * (d.clouds / 100))
-            }));
+            // 3. Layers (Simplified for minimap)
+            // Clouds
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
+            ctx.beginPath();
+            state.hourlyData.forEach((d, i) => {
+                const x = i * step + step / 2;
+                const y = h - (h * (d.clouds / 100));
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.lineTo(w, h);
+            ctx.lineTo(0, h);
+            ctx.fill();
 
-            if (mPoints.length >= 2) {
-                ctx.beginPath();
-                ctx.moveTo(0, h);
-                ctx.lineTo(mPoints[0].x, mPoints[0].y);
-                
-                for (let i = 0; i < mPoints.length - 1; i++) {
-                    const p1 = mPoints[i];
-                    const p2 = mPoints[i + 1];
-                    const midX = (p1.x + p2.x) / 2;
-                    const midY = (p1.y + p2.y) / 2;
-                    
-                    const cpX = (p1.x + midX) / 2;
-                    const cpY = Math.min(p1.y, midY) - 3;
-                    ctx.quadraticCurveTo(cpX, cpY, midX, midY);
-                    
-                    const cpX2 = (midX + p2.x) / 2;
-                    const cpY2 = Math.min(midY, p2.y) - 3;
-                    ctx.quadraticCurveTo(cpX2, cpY2, p2.x, p2.y);
-                }
-                
-                ctx.lineTo(w, h);
-                ctx.closePath();
-                ctx.fill();
-            }
-
-            // Precipitación
-            ctx.fillStyle = '#1976d288';
-            const maxMinimapH = h * 0.9;
-            const minimapPixelsPerMm = maxMinimapH / 20;
+            // Precipitation
+            ctx.fillStyle = 'rgba(25, 118, 210, 0.4)';
             state.hourlyData.forEach((d, i) => {
                 if (d.precip > 0) {
-                    let barH = d.precip * minimapPixelsPerMm;
-                    ctx.fillRect(i * step, h - Math.min(barH, maxMinimapH), step, Math.min(barH, maxMinimapH));
+                    const x = i * step;
+                    const barH = Math.min(h, d.precip * 5);
+                    ctx.fillRect(x, h - barH, step, barH);
                 }
             });
 
-            // Probabilidad de precipitación en minimapa
-            if (state.hourlyData.length >= 2) {
-                ctx.save();
-                ctx.beginPath();
-                state.hourlyData.forEach((d, i) => {
-                    const x = i * step;
-                    const y = h - (h * (d.precipProb / 100));
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                ctx.strokeStyle = '#0288d1';
-                ctx.lineWidth = 0.8;
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            // Temperatura
+            // Temperature Line
             ctx.strokeStyle = '#d32f2f';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             state.hourlyData.forEach((d, i) => {
-                const x = i * step;
+                const x = i * step + step / 2;
                 const y = normalizeY(d.temp, -20, 40, h);
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             });
             ctx.stroke();
 
-            // Línea de "Ahora" en minimapa
-            if (state.hourlyData.length > 0) {
-                const now = Date.now();
-                const startTime = state.hourlyData[0].time;
-                const endTime = state.hourlyData[state.hourlyData.length - 1].time;
-                
-                if (now >= startTime && now <= endTime) {
-                    const nowX = ((now - startTime) / (endTime - startTime)) * w;
-                    ctx.save();
-                    ctx.strokeStyle = '#ff4d4d';
-                    ctx.setLineDash([3, 3]);
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(nowX, 0);
-                    ctx.lineTo(nowX, h);
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
-            ctx.restore();
+            // Humidity Line
+            ctx.strokeStyle = 'rgba(0, 172, 193, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            state.hourlyData.forEach((d, i) => {
+                const x = i * step + step / 2;
+                const y = h - (h * (d.humidity / 100));
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
 
-            // Transfer cache to main minimap canvas
-            if (minimapCanvas.width !== w * dpr || minimapCanvas.height !== h * dpr) {
-                minimapCanvas.width = w * dpr;
-                minimapCanvas.height = h * dpr;
-                minimapCanvas.style.width = w + 'px';
-                minimapCanvas.style.height = h + 'px';
-            }
+            // Wind Line
+            ctx.strokeStyle = 'rgba(117, 117, 117, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            state.hourlyData.forEach((d, i) => {
+                const x = i * step + step / 2;
+                const y = h - (h * (Math.min(100, d.wind) / 100));
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Pressure Line
+            ctx.strokeStyle = 'rgba(121, 85, 72, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            state.hourlyData.forEach((d, i) => {
+                const x = i * step + step / 2;
+                const y = normalizeY(d.pressure, 950, 1050, h);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // UV Line
+            ctx.strokeStyle = 'rgba(251, 192, 45, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            state.hourlyData.forEach((d, i) => {
+                const x = i * step + step / 2;
+                const y = h - (h * (Math.min(12, d.uv) / 12) * 0.3);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Visibility Line
+            ctx.strokeStyle = 'rgba(67, 160, 71, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            state.hourlyData.forEach((d, i) => {
+                const x = i * step + step / 2;
+                const y = h - (d.visibility / 24000) * 20;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            ctx.restore();
+            
+            // Draw to main minimap canvas
             minimapCtx.resetTransform();
             minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
             minimapCtx.drawImage(minimapCacheCanvas, 0, 0);
-            
             updateMinimapViewport();
         }
 
@@ -2450,6 +2705,11 @@ locationInput.addEventListener('input', () => {
                 const clouds = interpolate(d1.clouds, d2.clouds);
                 const precip = interpolate(d1.precip, d2.precip);
                 const precipProb = interpolate(d1.precipProb, d2.precipProb);
+                const wind = interpolate(d1.wind, d2.wind);
+                const humidity = interpolate(d1.humidity, d2.humidity);
+                const pressure = interpolate(d1.pressure, d2.pressure);
+                const uv = interpolate(d1.uv, d2.uv);
+                const visibility = interpolate(d1.visibility, d2.visibility);
 
                 fixedOverlayCtx.save();
                 fixedOverlayCtx.setLineDash([]);
@@ -2471,6 +2731,8 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.lineTo(drawX, y + 5);
                         fixedOverlayCtx.lineTo(drawX - 5, y);
                         fixedOverlayCtx.closePath();
+                    } else if (shape === 'square') {
+                        fixedOverlayCtx.rect(drawX - 3, y - 3, 6, 6);
                     }
                     fixedOverlayCtx.fill();
                     fixedOverlayCtx.stroke();
@@ -2504,9 +2766,9 @@ locationInput.addEventListener('input', () => {
                             rect.x + rect.w > r.x &&
                             rect.y < r.y + r.h &&
                             rect.y + rect.h > r.y
-                        ) && attempts < 5) {
-                            rect.y += bgH + 2;
-                            constrainedY += bgH + 2;
+                        ) && attempts < 15) {
+                            rect.y += bgH + 1;
+                            constrainedY += bgH + 1;
                             attempts++;
                         }
                         
@@ -2535,7 +2797,26 @@ locationInput.addEventListener('input', () => {
                 const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
                 drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
 
-                // 3. Precipitación
+                // 2. Viento
+                drawPoint(h - (h * (Math.min(100, wind) / 100)), '#757575', `💨 ${wind.toFixed(1)}`, ' km/h', 'square');
+
+                // 3. Humedad
+                drawPoint(h - (h * (humidity / 100)), '#00acc1', `💧 ${Math.round(humidity)}`, '%');
+
+                // 4. Presión
+                drawPoint(normalizeY(pressure, 950, 1050, h), '#795548', `⏲️ ${Math.round(pressure)}`, ' hPa');
+
+                // 5. UV Index
+                if (uv > 0.1) {
+                    drawPoint(h - (h * (Math.min(12, uv) / 12) * 0.3), '#fbc02d', `☀️ ${uv.toFixed(1)}`, ' UV');
+                }
+
+                // 6. Visibilidad
+                if (visibility < 24000) {
+                    drawPoint(h - (visibility / 24000) * 40 - 10, '#43a047', `👁️ ${(visibility / 1000).toFixed(1)}`, ' km');
+                }
+
+                // 7. Precipitación
                 const closestData = progress < 0.5 ? d1 : d2;
                 const pVal = closestData.precip;
                 
@@ -2549,7 +2830,7 @@ locationInput.addEventListener('input', () => {
                     fixedOverlayCtx.save();
                     fixedOverlayCtx.font = 'bold 11px Inter';
                     fixedOverlayCtx.textAlign = 'center';
-                    const pText = pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
+                    const pText = '🌊 ' + pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
                     const pMetrics = fixedOverlayCtx.measureText(pText);
                     const pBgW = pMetrics.width + 10;
                     const pBgH = 16;
@@ -2567,15 +2848,15 @@ locationInput.addEventListener('input', () => {
                     fixedOverlayCtx.restore();
                 }
 
-                // 4. Probabilidad de Precipitación
+                // 8. Probabilidad de Precipitación
                 const getProbY = (val) => h - (h * (val / 100));
                 const py1 = getProbY(d1.precipProb);
                 const py2 = getProbY(d2.precipProb);
                 const t = progress;
                 const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
-                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond');
+                drawPoint(probY, '#0288d1', `☔ ${Math.round(precipProb)}`, '%', 'diamond');
 
-                // 5. Nubes
+                // 9. Nubes
                 const getY = (d) => h - (h * (d.clouds / 100));
                 const y1 = getY(d1);
                 const y2 = getY(d2);
@@ -2591,7 +2872,7 @@ locationInput.addEventListener('input', () => {
                     const cpY = Math.min(midY, y2) - 10;
                     cloudY = (1-t)*(1-t)*midY + 2*(1-t)*t*cpY + t*t*y2;
                 }
-                drawPoint(cloudY, '#475569', Math.round(clouds), '%');
+                drawPoint(cloudY, '#475569', `☁️ ${Math.round(clouds)}`, '%');
                 
                 fixedOverlayCtx.restore();
             }
@@ -2913,6 +3194,7 @@ locationInput.addEventListener('input', () => {
         }
 
         function handleResize() {
+            if (!scrollContainer) return;
             PIXELS_PER_HOUR = window.innerWidth < 600 ? 40 : 60;
             state.dpr = getDPR();
 
