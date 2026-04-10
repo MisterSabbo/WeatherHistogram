@@ -236,7 +236,7 @@
             display: flex;
             align-items: center;
             border-bottom: 1px solid var(--grid-color);
-            height: 100px;
+            height: 110px; /* Increased height */
             position: relative;
             gap: 20px;
         }
@@ -244,9 +244,9 @@
         .top-panel-info {
             position: absolute;
             left: 60px;
-            top: 0; /* Aligned with metrics top */
-            bottom: 10px;
-            padding-top: 20px; /* Added 20px top padding */
+            top: 0;
+            bottom: 15px; /* Increased bottom spacing */
+            padding-top: 15px; /* Adjusted top padding */
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
@@ -346,17 +346,17 @@
         @media (max-width: 600px) {
             #top-panel {
                 height: auto;
-                min-height: 160px;
+                min-height: 170px; /* Slightly increased */
                 padding: 10px 5px;
                 gap: 5px;
-                padding-bottom: 15px;
+                padding-bottom: 20px; /* Increased bottom padding */
             }
             .top-panel-info {
                 left: 55px;
                 width: 110px;
                 top: 0;
-                bottom: 8px;
-                padding-top: 20px; /* Added 20px top padding */
+                bottom: 12px; /* Increased bottom spacing */
+                padding-top: 15px;
             }
             #location-name {
                 font-size: 0.8rem;
@@ -454,7 +454,7 @@
             top: 120%; /* Back to appearing below */
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9); 
+            background: rgba(15, 23, 42, 0.9);
             color: #f8fafc; /* Slate 50 */
             padding: 12px 16px;
             border-radius: 10px;
@@ -516,7 +516,14 @@
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
             image-rendering: -webkit-optimize-contrast; /* Help with sharpness on iOS */
+        }
+
+        #fixed-overlay-canvas {
+            will-change: transform;
+            pointer-events: none;
         }
 
         #canvas-wrapper {
@@ -734,7 +741,7 @@
                 <button id="search-btn">Buscar</button>
                 <button id="geo-btn" title="Usar mi ubicación" style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--grid-color);">📍</button>
             </div>
-            
+
             <div class="legend" id="legend">
                 <div class="legend-item" title="Temperatura">
                     <div class="legend-color" style="background: #d32f2f; border: 1px solid white;"></div>
@@ -836,8 +843,8 @@
                 <div class="data-value" id="val-clouds" style="font-size: 1.3rem;">--<span class="data-unit">%</span></div>
             </div>
         </div>
-        <div id="sun-markers-container" style="position: absolute; bottom: 0; left: 60px; right: 0; height: 30px; pointer-events: none; overflow: hidden; z-index: 10;">
-            <div id="sun-markers-inner" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;"></div>
+        <div id="sun-markers-container" style="position: absolute; bottom: 5px; left: 60px; right: 0; height: 35px; pointer-events: none; overflow: hidden; z-index: 10;">
+            <div id="sun-markers-inner" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; will-change: transform;"></div>
         </div>
     </header>
 
@@ -875,13 +882,13 @@
         const MINIMAP_HEIGHT = 80;
         const DEFAULT_COORDS = { lat: 40.4167, lon: -3.70325, name: "Madrid" };
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-        
+
         const getDPR = () => {
             return Math.min(window.devicePixelRatio || 1, 2);
         };
-        
+
         let weatherCache = new Map();
-        
+
         let state = {
             lat: null,
             lon: null,
@@ -917,13 +924,13 @@
         async function init() {
             // mainCanvas ya no se usa como un único canvas gigante, sino que usaremos tiles.
             // Pero mantendremos la referencia para compatibilidad si es necesario o la eliminamos.
-            
+
             minimapCanvas = document.getElementById('minimap-canvas');
             minimapCtx = minimapCanvas.getContext('2d', { alpha: true });
-            
+
             fixedOverlayCanvas = document.getElementById('fixed-overlay-canvas');
             fixedOverlayCtx = fixedOverlayCanvas.getContext('2d');
-            
+
             scrollContainer = document.getElementById('scroll-container');
             minimapViewport = document.getElementById('minimap-viewport');
             themeToggle = document.getElementById('theme-toggle');
@@ -971,10 +978,10 @@
                 searchBtn.addEventListener('click', handleSearch);
                 geoBtn.addEventListener('click', () => useMyLocation(true));
                 locationInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSearch(); });
-                
+
                 const nowBtn = document.getElementById('now-btn');
                 if (nowBtn) nowBtn.addEventListener('click', centerOnCurrentTime);
-                
+
                 // Suggestions logic
                 let lastQuery = ""; // Variable para evitar repetir la misma búsqueda
 
@@ -1010,7 +1017,7 @@ locationInput.addEventListener('input', () => {
                     el.addEventListener('mouseenter', () => {
                         if (window.innerWidth >= 600) {
                             const tt = el.querySelector('.custom-tooltip');
-                            if (tt) 
+                            if (tt)
                             // For location-group, only show if text is truncated
                                 if (el.classList.contains('location-group')) {
                                     const locName = document.getElementById('location-name');
@@ -1060,7 +1067,7 @@ locationInput.addEventListener('input', () => {
                     const overlay = document.getElementById('overlay');
                     if (overlay && !overlay.classList.contains('hidden') && document.getElementById('error-msg').style.display !== 'block') {
                         console.warn("Loading taking too long, forcing overlay hide");
-                        // No lo ocultamos automáticamente por si realmente está cargando, 
+                        // No lo ocultamos automáticamente por si realmente está cargando,
                         // pero mostramos un botón de "Saltar" si pasan 10 segundos
                         const statusText = document.getElementById('status-text');
                         if (statusText && statusText.innerText === "Cargando datos...") {
@@ -1130,7 +1137,7 @@ locationInput.addEventListener('input', () => {
                                     scrollContainer.scrollLeft = state.scrollLeft - walk;
                                 }
                             }
-                            
+
                             render();
                             ticking = false;
                         });
@@ -1153,18 +1160,16 @@ locationInput.addEventListener('input', () => {
                 });
 
                 scrollContainer.addEventListener('scroll', () => {
-                    // Update NOW button synchronously for zero-lag on iOS
-                    updateNowButtonPosition();
-                    
                     if (!ticking) {
                         window.requestAnimationFrame(() => {
+                            updateNowButtonPosition();
                             drawFixedOverlay();
                             render();
                             ticking = false;
                         });
                         ticking = true;
                     }
-                });
+                }, { passive: true });
 
                 // Eventos de expansión de texto
                 document.getElementById('location-name').addEventListener('click', function() {
@@ -1254,7 +1259,7 @@ locationInput.addEventListener('input', () => {
                 const pos = await getPosition();
                 state.lat = pos.coords.latitude;
                 state.lon = pos.coords.longitude;
-                
+
                 // Reverse geocoding
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${state.lat}&lon=${state.lon}&format=json`);
@@ -1289,11 +1294,11 @@ locationInput.addEventListener('input', () => {
             statusText.style.display = 'block';
             loader.style.display = 'block';
             errorMsg.style.display = 'none';
-            
+
             try {
                 state.hourlyData = [];
                 await fetchWeatherData(7, 7);
-                
+
                 // Forzamos ocultar si llegamos aquí sin errores fatales
                 if (errorMsg.style.display !== 'block') {
                     overlay.classList.add('hidden');
@@ -1301,7 +1306,7 @@ locationInput.addEventListener('input', () => {
                     // Si hay un error mostrado, nos aseguramos que el loader se quite
                     if (loader) loader.style.display = 'none';
                 }
-                
+
                 centerOnCurrentTime();
                 drawMinimap();
                 render();
@@ -1394,12 +1399,12 @@ locationInput.addEventListener('input', () => {
             const now = Math.floor(Date.now() / 1000);
             const start = now - (pastDays * 24 * 3600);
             const end = now + (forecastDays * 24 * 3600);
-            
+
             const times = [];
             for (let t = start; t <= end; t += 3600) {
                 times.push(t);
             }
-            
+
             const hourlyCount = times.length;
             const mockForecast = {
                 timezone: "UTC",
@@ -1419,14 +1424,14 @@ locationInput.addEventListener('input', () => {
                     sunset: []
                 }
             };
-            
+
             for (let d = -pastDays; d <= forecastDays; d++) {
                 const dayStart = Math.floor(new Date().setHours(0,0,0,0) / 1000) + (d * 24 * 3600);
                 mockForecast.daily.time.push(dayStart);
                 mockForecast.daily.sunrise.push(dayStart + 6 * 3600);
                 mockForecast.daily.sunset.push(dayStart + 18 * 3600);
             }
-            
+
             const mockAQI = {
                 hourly: {
                     time: times,
@@ -1439,7 +1444,7 @@ locationInput.addEventListener('input', () => {
                     ragweed_pollen: Array.from({length: hourlyCount}, () => Math.random() * 5)
                 }
             };
-            
+
             return { forecastData: mockForecast, aqiData: mockAQI };
         }
 
@@ -1473,14 +1478,14 @@ locationInput.addEventListener('input', () => {
                     fetch(forecastUrl, { signal: controller.signal }),
                     fetch(aqiUrl, { signal: controller.signal })
                 ]);
-                
+
                 clearTimeout(timeoutId);
-                
+
                 if (!forecastRes.ok || !aqiRes.ok) throw new Error("Error en la respuesta de la API");
 
                 const forecastData = await forecastRes.json();
                 const aqiData = await aqiRes.json();
-                
+
                 if (forecastData.error || aqiData.error) {
                     throw new Error(forecastData.reason || aqiData.reason || "Error de API");
                 }
@@ -1500,19 +1505,19 @@ locationInput.addEventListener('input', () => {
             } catch (err) {
                 clearTimeout(timeoutId);
                 console.error("fetchWeatherData error:", err);
-                
+
                 // Fallback: Si hay datos en caché (aunque estén expirados), los usamos
                 if (weatherCache.has(cacheKey)) {
                     console.warn("API falló, usando datos expirados de la caché");
                     const cached = weatherCache.get(cacheKey);
                     state.rawForecast = cached.forecastData;
                     state.rawAQI = cached.aqiData;
-                    
+
                     if (!state.locationName.endsWith('*')) {
                         state.locationName += '*';
                         updateLocationUI();
                     }
-                    
+
                     processData(cached.forecastData, cached.aqiData);
                     handleResize();
                 } else {
@@ -1521,10 +1526,10 @@ locationInput.addEventListener('input', () => {
                     const mock = generateMockData(pastDays, forecastDays);
                     state.rawForecast = mock.forecastData;
                     state.rawAQI = mock.aqiData;
-                    
+
                     state.locationName = "Ninguna";
                     updateLocationUI();
-                    
+
                     processData(mock.forecastData, mock.aqiData);
                     handleResize();
                 }
@@ -1540,7 +1545,7 @@ locationInput.addEventListener('input', () => {
             const hourly = forecastData.hourly;
             const daily = forecastData.daily;
             const aqiHourly = aqiData.hourly;
-            
+
             // Validar zona horaria
             let tz = forecastData.timezone;
             try {
@@ -1570,7 +1575,7 @@ locationInput.addEventListener('input', () => {
             const newHourly = hourly.time.map((t, i) => {
                 const timestamp = t * 1000;
                 const dateObj = new Date(timestamp);
-                
+
                 // Usamos la fecha local de la ciudad para buscar datos de sol
                 const dateStr = dateObj.toLocaleDateString('en-CA', { timeZone: state.timezone });
                 const sun = state.sunData[dateStr];
@@ -1627,12 +1632,12 @@ locationInput.addEventListener('input', () => {
         function drawWeatherPhenomena(ctx, viewX, viewW, h) {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 2);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 2);
-            
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR;
                 const code = d.weatherCode;
-                
+
                 // Niebla (45, 48)
                 if (code === 45 || code === 48) {
                     ctx.save();
@@ -1647,7 +1652,7 @@ locationInput.addEventListener('input', () => {
                     }
                     ctx.restore();
                 }
-                
+
                 // Tormenta (95, 96, 99)
                 if (code >= 95) {
                     if (i % 4 === 0) { // Solo algunos rayos para no saturar
@@ -1666,7 +1671,7 @@ locationInput.addEventListener('input', () => {
                         ctx.restore();
                     }
                 }
-                
+
                 // Granizo (77, 96, 99)
                 if (code === 77 || code === 96 || code === 99) {
                     ctx.save();
@@ -1698,9 +1703,34 @@ locationInput.addEventListener('input', () => {
                 // Manga de viento (rachas > 35)
                 if (d.gusts > 35) {
                     ctx.save();
-                    ctx.font = '14px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('🎏', x + PIXELS_PER_HOUR / 2, h - 10);
+                    ctx.strokeStyle = '#64748b';
+                    ctx.lineWidth = 1.5;
+                    const centerX = x + PIXELS_PER_HOUR / 2;
+                    const centerY = h - 25;
+                    
+                    // Palo
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 6, centerY + 12);
+                    ctx.lineTo(centerX - 6, centerY - 10);
+                    ctx.stroke();
+                    
+                    // Manga
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 6, centerY - 8);
+                    ctx.lineTo(centerX + 12, centerY - 4);
+                    ctx.lineTo(centerX + 12, centerY + 4);
+                    ctx.lineTo(centerX - 6, centerY + 8);
+                    ctx.closePath();
+                    ctx.stroke();
+                    
+                    // Franjas
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - 6.5);
+                    ctx.lineTo(centerX, centerY + 6.5);
+                    ctx.moveTo(centerX + 6, centerY - 5.5);
+                    ctx.lineTo(centerX + 6, centerY + 5.5);
+                    ctx.stroke();
+                    
                     ctx.restore();
                 }
 
@@ -1728,48 +1758,69 @@ locationInput.addEventListener('input', () => {
             const w = TILE_WIDTH;
             const h = scrollContainer.clientHeight;
             const styles = getComputedStyle(document.documentElement);
-            
+
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            
+
             ctx.clearRect(0, 0, w, h);
             ctx.save();
             ctx.translate(-xOffset, 0);
-            
+
             drawSunnyBackground(ctx, xOffset, w, h, styles, true);
             drawNightOverlay(ctx, xOffset, w, h);
             drawGrid(ctx, xOffset, w, h, styles);
             drawDayNames(ctx, xOffset, w, h, styles);
             drawClouds(ctx, xOffset, w, h, styles);
+            drawUVSegments(ctx, xOffset, w, h); // Add UV segments
             drawPrecipitation(ctx, xOffset, w, h, styles);
             drawPrecipitationProbability(ctx, xOffset, w, h, styles);
-            
+
             // Weather Phenomena
             drawWeatherPhenomena(ctx, xOffset, w, h);
-            
+
             drawTemperature(ctx, xOffset, w, h, styles);
             drawNightShadow(ctx, xOffset, w, h);
             drawAxes(ctx, xOffset, w, h, styles);
-            
+
             ctx.restore();
             tile.lastDrawn = Date.now();
         }
 
+        function drawUVSegments(ctx, viewX, viewW, h) {
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 2);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 2);
+
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (d.uv >= 1) {
+                    const x = i * PIXELS_PER_HOUR;
+                    let color = '#4caf50'; // Low (1-2)
+                    if (d.uv >= 3 && d.uv < 6) color = '#fbc02d'; // Moderate (3-5)
+                    else if (d.uv >= 6 && d.uv < 8) color = '#f57c00'; // High (6-7)
+                    else if (d.uv >= 8 && d.uv < 11) color = '#d32f2f'; // Very High (8-10)
+                    else if (d.uv >= 11) color = '#7b1fa2'; // Extreme (11+)
+
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, 0, PIXELS_PER_HOUR + 0.5, 2);
+                }
+            }
+        }
+
         function render() {
             if (!state.hourlyData.length) return;
-            
+
             const scrollX = Math.floor(scrollContainer.scrollLeft);
             const viewportW = scrollContainer.clientWidth;
             // Add a 1-tile buffer on both sides to prevent blank areas during fast scrolling
             const startTile = Math.max(0, Math.floor(scrollX / TILE_WIDTH) - 1);
             const endTile = Math.floor((scrollX + viewportW) / TILE_WIDTH) + 1;
-            
+
             for (let i = startTile; i <= endTile; i++) {
                 if (tiles[i]) {
                     drawTile(tiles[i]);
                 }
             }
-            
+
             updateMinimapViewport();
             updateTopPanel();
             drawFixedOverlay();
@@ -1777,13 +1828,13 @@ locationInput.addEventListener('input', () => {
 
         function updateMinimapViewport() {
             if (!state.hourlyData.length) return;
-            
+
             const visibleRatio = scrollContainer.clientWidth / (state.hourlyData.length * PIXELS_PER_HOUR);
             const scrollRatio = scrollContainer.scrollLeft / (state.hourlyData.length * PIXELS_PER_HOUR);
-            
+
             minimapViewport.style.width = (visibleRatio * 100) + '%';
             minimapViewport.style.left = (scrollRatio * 100) + '%';
-            
+
             updateNowButtonPosition();
         }
 
@@ -1791,11 +1842,11 @@ locationInput.addEventListener('input', () => {
             const skyColor = '#fffde7'; // Siempre modo claro
             const sunColor = '#fdd835';
             const rayColor = '#fff59d';
-            
+
             ctx.save();
             ctx.fillStyle = skyColor;
             ctx.fillRect(viewX, 0, viewW, h);
-            
+
             if (drawSunIcon && state.hourlyData.length > 0) {
                 const startTime = state.hourlyData[0].time;
                 Object.keys(state.sunData).forEach(dateStr => {
@@ -1803,7 +1854,7 @@ locationInput.addEventListener('input', () => {
                     // Sun midpoint (noon-ish)
                     const midpoint = (sun.sunrise + sun.sunset) / 2;
                     const x = ((midpoint - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-                    
+
                     if (x >= viewX - 100 && x <= viewX + viewW + 100) {
                         drawSun(ctx, x, h * 0.25, sunColor, rayColor);
                     }
@@ -1816,7 +1867,7 @@ locationInput.addEventListener('input', () => {
             const radius = 25;
             const rayCount = 12;
             const rayLength = 20;
-            
+
             ctx.save();
             // Resplandor
             const grad = ctx.createRadialGradient(x, y, radius, x, y, radius + 50);
@@ -1837,7 +1888,7 @@ locationInput.addEventListener('input', () => {
                 ctx.lineTo(x + Math.cos(angle) * (radius + 8 + rayLength), y + Math.sin(angle) * (radius + 8 + rayLength));
                 ctx.stroke();
             }
-            
+
             // Sol
             ctx.fillStyle = sunColor;
             ctx.shadowBlur = 15;
@@ -1868,19 +1919,19 @@ locationInput.addEventListener('input', () => {
             ctx.arc(x, y, radius, 0.2 * Math.PI, 1.8 * Math.PI);
             ctx.quadraticCurveTo(x + radius * 0.5, y, x + radius * Math.cos(0.2 * Math.PI), y + radius * Math.sin(0.2 * Math.PI));
             ctx.fill();
-            
+
             ctx.restore();
         }
 
         function drawNightOverlay(ctx, viewX, viewW, h) {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const prevD = state.hourlyData[i - 1];
                 const nextD = state.hourlyData[i + 1];
-                
+
                 const x = i * PIXELS_PER_HOUR;
                 const w = PIXELS_PER_HOUR + 0.5;
 
@@ -1913,7 +1964,7 @@ locationInput.addEventListener('input', () => {
                 for (let i = 0; i < sortedDates.length; i++) {
                     const currentSun = state.sunData[sortedDates[i]];
                     const nextSun = state.sunData[sortedDates[i+1]];
-                    
+
                     if (nextSun) {
                         // Moon midpoint is between sunset today and sunrise tomorrow
                         const midpoint = (currentSun.sunset + nextSun.sunrise) / 2;
@@ -1943,7 +1994,7 @@ locationInput.addEventListener('input', () => {
             ctx.strokeStyle = 'rgba(0,0,0,0.08)'; // Siempre modo claro
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 if (d.localHour === 0) {
@@ -1961,7 +2012,7 @@ locationInput.addEventListener('input', () => {
             ctx.font = '900 80px Inter';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            
+
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 24);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 24);
 
@@ -2002,19 +2053,19 @@ locationInput.addEventListener('input', () => {
 
         function drawClouds(ctx, viewX, viewW, h, styles) {
             const cloudColor = '#9e9e9e'; // Siempre modo claro
-            
+
             // Gradiente vertical: más rico y con un toque azulado en las sombras
             const cloudGrad = ctx.createLinearGradient(0, h, 0, 0);
-            cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.2)'); 
+            cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
             cloudGrad.addColorStop(0.4, 'rgba(226, 232, 240, 0.5)');
             cloudGrad.addColorStop(0.8, 'rgba(100, 116, 139, 0.7)');
-            cloudGrad.addColorStop(1, 'rgba(51, 65, 85, 0.85)'); 
-            
+            cloudGrad.addColorStop(1, 'rgba(51, 65, 85, 0.85)');
+
             ctx.fillStyle = cloudGrad;
-            
+
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             const points = [];
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
@@ -2034,12 +2085,12 @@ locationInput.addEventListener('input', () => {
                 };
 
                 pathCtx.moveTo(points[0].x, points[0].y + offset);
-                
+
                 for (let i = 0; i < points.length - 1; i++) {
                     const p1 = points[i];
                     const p2 = points[i + 1];
                     const puff = (getPuff(i) + getPuff(i + 1)) / 2;
-                    
+
                     // Si no hay nubes, dibujamos línea recta suave
                     if (puff < 0.5) {
                         pathCtx.lineTo(p2.x, p2.y + offset);
@@ -2048,17 +2099,17 @@ locationInput.addEventListener('input', () => {
 
                     const midX = (p1.x + p2.x) / 2;
                     const midY = (p1.y + p2.y) / 2 + offset;
-                    
+
                     // Para que sea "puffy" pero sin aristas, dividimos cada hora en dos pompas
                     // y nos aseguramos de que las tangentes en los puntos de unión sean horizontales.
-                    
+
                     // Pompa 1: p1 -> mid
                     const cp1x = p1.x + (midX - p1.x) * 0.5;
                     const cp1y = p1.y + offset - puff;
                     const cp2x = midX - (midX - p1.x) * 0.5;
                     const cp2y = midY - puff;
                     pathCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, midX, midY);
-                    
+
                     // Pompa 2: mid -> p2
                     const cp3x = midX + (p2.x - midX) * 0.5;
                     const cp3y = midY - puff;
@@ -2094,12 +2145,12 @@ locationInput.addEventListener('input', () => {
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            createPuffyPath(ctx, 12, 8); 
+            createPuffyPath(ctx, 12, 8);
             ctx.stroke();
-            
+
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
             ctx.beginPath();
-            createPuffyPath(ctx, 25, 6); 
+            createPuffyPath(ctx, 25, 6);
             ctx.stroke();
             ctx.restore();
 
@@ -2108,7 +2159,7 @@ locationInput.addEventListener('input', () => {
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            createPuffyPath(ctx, -1, 13); 
+            createPuffyPath(ctx, -1, 13);
             ctx.stroke();
             ctx.restore();
 
@@ -2131,7 +2182,7 @@ locationInput.addEventListener('input', () => {
             ctx.fillStyle = '#1976d2'; // Siempre modo claro
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             const maxH = h * 0.9;
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
@@ -2139,7 +2190,7 @@ locationInput.addEventListener('input', () => {
                     let barH = d.precip * PIXELS_PER_MM;
                     const x = i * PIXELS_PER_HOUR + 5;
                     const bw = PIXELS_PER_HOUR - 10;
-                    
+
                     if (barH > maxH) {
                         // Broken axis logic
                         ctx.fillRect(x, h - maxH, bw, maxH);
@@ -2168,7 +2219,7 @@ locationInput.addEventListener('input', () => {
         function drawPrecipitationProbability(ctx, viewX, viewW, h, styles) {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             if (state.hourlyData.length < 2) return;
 
             // Helper to get color based on weather code
@@ -2213,14 +2264,14 @@ locationInput.addEventListener('input', () => {
 
             ctx.save();
             ctx.beginPath();
-            
+
             // Dibujamos la silueta
             let first = true;
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
                 const y = h - (h * (d.precipProb / 100));
-                
+
                 if (first) {
                     ctx.moveTo(x, y);
                     first = false;
@@ -2238,12 +2289,12 @@ locationInput.addEventListener('input', () => {
             // Cerramos para el relleno
             const lastX = (endIdx - 1) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
             const firstX = startIdx * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-            
+
             ctx.save();
             ctx.lineTo(lastX, h);
             ctx.lineTo(firstX, h);
             ctx.closePath();
-            
+
             // Relleno con patrón (usamos el de lluvia por defecto para todo el área)
             ctx.fillStyle = cachedRainPattern;
             ctx.fill();
@@ -2255,7 +2306,7 @@ locationInput.addEventListener('input', () => {
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
-            
+
             // Añadimos puntos en cada hora si la probabilidad es > 0
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
@@ -2279,12 +2330,12 @@ locationInput.addEventListener('input', () => {
             const color = 'rgba(0, 188, 212, 0.3)'; // Cyan soft
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]);
-            
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
@@ -2300,11 +2351,11 @@ locationInput.addEventListener('input', () => {
             const color = 'rgba(158, 158, 158, 0.4)'; // Grey soft
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = 1.5;
-            
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
@@ -2320,10 +2371,10 @@ locationInput.addEventListener('input', () => {
             const color = '#d32f2f'; // Siempre modo claro
             const apparentColor = '#8b0000'; // Rojo oscuro para sensación térmica
             const textColor = '#1a1a1a'; // Siempre modo claro
-            
+
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             // Sombreado entre temperatura y sensación térmica
             ctx.fillStyle = 'rgba(139, 0, 0, 0.2)';
             for (let i = startIdx; i < Math.min(endIdx, state.hourlyData.length - 1); i++) {
@@ -2331,17 +2382,17 @@ locationInput.addEventListener('input', () => {
                 const nextD = state.hourlyData[i+1];
                 const diff1 = Math.abs(d.temp - d.apparent);
                 const diff2 = Math.abs(nextD.temp - nextD.apparent);
-                
+
                 if (diff1 >= 1 || diff2 >= 1) {
                     const x1 = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
                     const x2 = (i + 1) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-                    
+
                     const y1_t = normalizeY(d.temp, -20, 40, h);
                     const y1_a = normalizeY(diff1 >= 1 ? d.apparent : d.temp, -20, 40, h);
-                    
+
                     const y2_t = normalizeY(nextD.temp, -20, 40, h);
                     const y2_a = normalizeY(diff2 >= 1 ? nextD.apparent : nextD.temp, -20, 40, h);
-                    
+
                     ctx.beginPath();
                     ctx.moveTo(x1, y1_t);
                     ctx.lineTo(x2, y2_t);
@@ -2367,8 +2418,8 @@ locationInput.addEventListener('input', () => {
 
                 const prev = state.hourlyData[i-1];
                 const next = state.hourlyData[i+1];
-                const shouldDraw = diff >= 1 || 
-                                 (prev && Math.abs(prev.temp - prev.apparent) >= 1) || 
+                const shouldDraw = diff >= 1 ||
+                                 (prev && Math.abs(prev.temp - prev.apparent) >= 1) ||
                                  (next && Math.abs(next.temp - next.apparent) >= 1);
 
                 if (shouldDraw) {
@@ -2409,12 +2460,12 @@ locationInput.addEventListener('input', () => {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
                 const y = normalizeY(d.temp, -20, 40, h);
-                
+
                 ctx.fillStyle = color;
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Sombra para legibilidad (Halo blanco más fuerte)
                 ctx.save();
                 ctx.shadowColor = 'white';
@@ -2431,16 +2482,16 @@ locationInput.addEventListener('input', () => {
         function drawNightShadow(ctx, viewX, viewW, h) {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 if (d.isNight) {
                     const x = i * PIXELS_PER_HOUR;
                     const w = PIXELS_PER_HOUR + 0.5;
-                    
+
                     const prevIsDay = i > 0 && !state.hourlyData[i-1].isNight;
                     const nextIsDay = i < state.hourlyData.length - 1 && !state.hourlyData[i+1].isNight;
-                    
+
                     if (prevIsDay) {
                         const grad = ctx.createLinearGradient(x, 0, x + w, 0);
                         grad.addColorStop(0, 'rgba(0, 0, 20, 0)');
@@ -2454,7 +2505,7 @@ locationInput.addEventListener('input', () => {
                     } else {
                         ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
                     }
-                    
+
                     ctx.fillRect(x, 0, w, h);
                 }
             }
@@ -2465,7 +2516,7 @@ locationInput.addEventListener('input', () => {
             ctx.fillStyle = '#666666'; // Siempre modo claro
             ctx.font = 'bold 10px Inter';
             ctx.textAlign = 'center';
-            
+
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
@@ -2473,23 +2524,19 @@ locationInput.addEventListener('input', () => {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
                 const label = d.localHour.toString().padStart(2, '0');
-                
+
                 // Sombra para legibilidad
                 ctx.save();
                 ctx.shadowColor = 'white';
                 ctx.shadowBlur = 3;
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = 'white';
-                
+
                 // Top labels
                 ctx.strokeText(label, x, 20);
                 ctx.fillStyle = '#666666';
                 ctx.fillText(label, x, 20);
-                
-                // Bottom labels
-                ctx.strokeText(label + 'h', x, h - 5);
-                ctx.fillText(label + 'h', x, h - 5);
-                
+
                 ctx.restore();
             }
             ctx.restore();
@@ -2497,28 +2544,28 @@ locationInput.addEventListener('input', () => {
 
         function drawMinimap() {
             if (!state.hourlyData.length) return;
-            
+
             const w = window.innerWidth;
             const h = 80;
             const dpr = state.dpr;
-            
+
             if (!minimapCacheCanvas) minimapCacheCanvas = document.createElement('canvas');
             if (minimapCacheCanvas.width !== w * dpr || minimapCacheCanvas.height !== h * dpr) {
                 minimapCacheCanvas.width = w * dpr;
                 minimapCacheCanvas.height = h * dpr;
             }
-            
+
             const ctx = minimapCacheCanvas.getContext('2d');
             ctx.save();
             ctx.scale(dpr, dpr);
             ctx.clearRect(0, 0, w, h);
-            
+
             const step = w / state.hourlyData.length;
-            
+
             // 1. Background (Day/Night)
             ctx.fillStyle = '#fffde7'; // Day
             ctx.fillRect(0, 0, w, h);
-            
+
             ctx.fillStyle = '#f3e8ff'; // Night
             state.hourlyData.forEach((d, i) => {
                 if (d.isNight) {
@@ -2537,7 +2584,7 @@ locationInput.addEventListener('input', () => {
                     ctx.moveTo(x, 0);
                     ctx.lineTo(x, h);
                     ctx.stroke();
-                    
+
                     ctx.fillStyle = '#666666';
                     ctx.font = 'bold 9px Inter';
                     ctx.fillText(d.localDayShort, x + 4, 12);
@@ -2602,14 +2649,14 @@ locationInput.addEventListener('input', () => {
                     else if (d.uv >= 6 && d.uv < 8) color = '#f57c00'; // High (6-7)
                     else if (d.uv >= 8 && d.uv < 11) color = '#d32f2f'; // Very High (8-10)
                     else if (d.uv >= 11) color = '#7b1fa2'; // Extreme (11+)
-                    
+
                     ctx.fillStyle = color;
                     ctx.fillRect(x, 0, step + 0.5, 2);
                 }
             });
 
             ctx.restore();
-            
+
             // Draw to main minimap canvas
             minimapCtx.resetTransform();
             minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
@@ -2622,27 +2669,27 @@ locationInput.addEventListener('input', () => {
 
         function drawFixedOverlay() {
             if (!state.hourlyData.length) return;
-            
+
             const w = fixedOverlayCanvas.clientWidth;
             const h = scrollContainer.clientHeight; // Use scrollContainer height to match tiles
-            
+
             fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.clientWidth, fixedOverlayCanvas.clientHeight);
-            
+
             const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
             const activeX = referenceX;
             const drawX = 60; // Fixed position on screen
-            
+
             // Cálculo de índice basado en midpoints (x = i * PPH + PPH/2)
             const floatIndex = (activeX - PIXELS_PER_HOUR / 2) / PIXELS_PER_HOUR;
             const index = Math.floor(floatIndex);
             const progress = floatIndex - index;
-            
+
             if (index >= 0 && index < state.hourlyData.length - 1) {
                 const d1 = state.hourlyData[index];
                 const d2 = state.hourlyData[index + 1];
-                
+
                 const interpolate = (v1, v2) => v1 + (v2 - v1) * progress;
-                
+
                 const temp = interpolate(d1.temp, d2.temp);
                 const apparent = interpolate(d1.apparent, d2.apparent);
                 const clouds = interpolate(d1.clouds, d2.clouds);
@@ -2664,7 +2711,7 @@ locationInput.addEventListener('input', () => {
 
                 const drawPoint = (y, color, value, unit, shape = 'circle') => {
                     if (y >= h - 5) return; // No dibujar si está en el fondo
-                    
+
                     // El punto va en la Y exacta
                     fixedOverlayCtx.fillStyle = color;
                     fixedOverlayCtx.beginPath();
@@ -2681,22 +2728,22 @@ locationInput.addEventListener('input', () => {
                     }
                     fixedOverlayCtx.fill();
                     fixedOverlayCtx.stroke();
-                    
+
                     // No mostrar valores de 0 o muy cercanos a 0 para evitar ruido y solapamientos
                     if (value !== null && (typeof value === 'string' || Math.abs(value) > 0.01)) {
                         // El texto tiene margen de seguridad de 10px
                         let constrainedY = Math.max(10, Math.min(h - 10, y));
                         const text = ` ${value}${unit}`;
-                        
+
                         fixedOverlayCtx.save();
                         fixedOverlayCtx.font = 'bold 11px Inter';
                         const textMetrics = fixedOverlayCtx.measureText(text);
                         const bgW = textMetrics.width + 8;
                         const bgH = 16;
-                        
+
                         // Sistema de detección de colisiones simple para etiquetas en la línea vertical
                         if (!state.labelRects) state.labelRects = [];
-                        
+
                         let rect = {
                             x: drawX + 4,
                             y: constrainedY - bgH / 2,
@@ -2713,7 +2760,7 @@ locationInput.addEventListener('input', () => {
                         // Si colisiona con una etiqueta anterior, desplazamos hacia abajo
                         let attempts = 0;
                         let direction = 1;
-                        while (state.labelRects.some(r => 
+                        while (state.labelRects.some(r =>
                             rect.x < r.x + r.w &&
                             rect.x + rect.w > r.x &&
                             rect.y < r.y + r.h &&
@@ -2724,7 +2771,7 @@ locationInput.addEventListener('input', () => {
                             constrainedY += (bgH + 1) * direction;
                             attempts++;
                         }
-                        
+
                         // Check overlap with NOW button
                         const nowBtn = document.getElementById('now-btn');
                         if (nowBtn) {
@@ -2735,12 +2782,12 @@ locationInput.addEventListener('input', () => {
                                 }
                             }
                         }
-                        
+
                         if (rect.y < 0 || rect.y + rect.h > h) {
                             fixedOverlayCtx.restore();
                             return; // Skip if pushed out of bounds
                         }
-                        
+
                         state.labelRects.push(rect);
 
                         // Fondo sólido para legibilidad extrema
@@ -2771,7 +2818,7 @@ locationInput.addEventListener('input', () => {
                 // 4. Precipitación
                 const closestData = progress < 0.5 ? d1 : d2;
                 const pVal = closestData.precip;
-                
+
                 if (pVal > 0.01) {
                     const maxH = h * 0.9;
                     let barH = pVal * PIXELS_PER_MM;
@@ -2786,7 +2833,7 @@ locationInput.addEventListener('input', () => {
                     const pMetrics = fixedOverlayCtx.measureText(pText);
                     const pBgW = pMetrics.width + 10;
                     const pBgH = 16;
-                    
+
                     fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
                     fixedOverlayCtx.beginPath();
                     fixedOverlayCtx.roundRect(drawX - pBgW/2, barY - 5 - pBgH, pBgW, pBgH, 4);
@@ -2814,7 +2861,7 @@ locationInput.addEventListener('input', () => {
                 const y2 = getY(d2);
                 const midY = (y1 + y2) / 2;
                 const puff = ((d1.clouds / 100) * 12 + (d2.clouds / 100) * 12) / 2;
-                
+
                 let cloudY;
                 if (puff < 0.5) {
                     cloudY = y1 + (y2 - y1) * progress;
@@ -2832,7 +2879,7 @@ locationInput.addEventListener('input', () => {
                     }
                 }
                 drawPoint(cloudY, '#475569', `☁️ ${Math.round(clouds)}`, '%');
-                
+
                 // 9. UV Index Interaction
                 const currentUV = d1.uv;
                 if (currentUV >= 1) {
@@ -2852,16 +2899,16 @@ locationInput.addEventListener('input', () => {
                         const d = state.hourlyData[i];
                         const x = i * PIXELS_PER_HOUR - scrollContainer.scrollLeft;
                         const w = PIXELS_PER_HOUR + 0.5;
-                        
+
                         let color = '#4caf50';
                         let text = 'Bajo';
                         if (d.uv >= 3 && d.uv < 6) { color = '#fbc02d'; text = 'Medio'; }
                         else if (d.uv >= 6 && d.uv < 8) { color = '#f57c00'; text = 'Alto'; }
                         else if (d.uv >= 8 && d.uv < 11) { color = '#d32f2f'; text = 'Muy Alto'; }
                         else if (d.uv >= 11) { color = '#7b1fa2'; text = 'Extremo'; }
-                        
+
                         fixedOverlayCtx.fillStyle = color;
-                        
+
                         // Round corners for the first and last segments of the block
                         const uvH = 30; // Expanded height
                         if (i === blockStart && i === blockEnd) {
@@ -2879,7 +2926,7 @@ locationInput.addEventListener('input', () => {
                         } else {
                             fixedOverlayCtx.fillRect(x, 0, w, uvH);
                         }
-                        
+
                         // Draw text inside if it's the hovered hour
                         if (i === Math.round(floatIndex)) {
                             fixedOverlayCtx.fillStyle = '#fff';
@@ -2888,7 +2935,7 @@ locationInput.addEventListener('input', () => {
                             fixedOverlayCtx.textBaseline = 'middle';
                             fixedOverlayCtx.fillText(`${d.uv.toFixed(1)} ${text}`, x + w/2, 10);
                         }
-                        
+
                         // Redraw hour tick to be in front
                         fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
                         fixedOverlayCtx.font = 'bold 9px Inter';
@@ -2905,20 +2952,20 @@ locationInput.addEventListener('input', () => {
         function updateSunMarkers() {
             const container = document.getElementById('sun-markers-inner');
             if (!container || state.hourlyData.length === 0) return;
-            
+
             container.innerHTML = '';
             const startTime = state.hourlyData[0].time;
-            
+
             Object.keys(state.sunData).forEach(dateStr => {
                 const sun = state.sunData[dateStr];
-                
-                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR;
-                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR;
-                
+
+                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+
                 const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
                 const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-                
-                const createMarker = (x, time, icon) => {
+
+                const createMarker = (x, time, type) => {
                     const el = document.createElement('div');
                     el.style.position = 'absolute';
                     el.style.left = x + 'px';
@@ -2933,13 +2980,17 @@ locationInput.addEventListener('input', () => {
                     el.style.flexDirection = 'column';
                     el.style.alignItems = 'center';
                     el.style.lineHeight = '1.2';
-                    
-                    el.innerHTML = `<span style="font-size: 12px;">${icon}</span><span>${time}</span>`;
+
+                    const iconSvg = type === 'sunrise' 
+                        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 22 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`
+                        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V2"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m16 22-4-4-4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`;
+
+                    el.innerHTML = `<span style="margin-bottom: 2px;">${iconSvg}</span><span>${time}</span>`;
                     return el;
                 };
-                
-                container.appendChild(createMarker(sunriseX, sunriseTime, '🌅'));
-                container.appendChild(createMarker(sunsetX, sunsetTime, '🌇'));
+
+                container.appendChild(createMarker(sunriseX, sunriseTime, 'sunrise'));
+                container.appendChild(createMarker(sunsetX, sunsetTime, 'sunset'));
             });
         }
 
@@ -2950,27 +3001,27 @@ locationInput.addEventListener('input', () => {
             const nowLine = document.getElementById('now-line');
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
-            
+
             // Posición X real en el canvas
             const nowX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-            
+
             spacer.style.width = nowX + 'px';
-            
+
             const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
             if (nowLine) {
                 nowLine.style.left = nowX + 'px';
                 nowLine.style.display = Math.abs(nowX - referenceX) > 5 ? 'block' : 'none';
             }
-            
+
             const sunMarkersInner = document.getElementById('sun-markers-inner');
             if (sunMarkersInner) {
-                sunMarkersInner.style.transform = `translateX(${-scrollContainer.scrollLeft}px)`;
+                sunMarkersInner.style.transform = `translate3d(${-scrollContainer.scrollLeft}px, 0, 0)`;
             }
-            
+
             // Posición relativa al viewport del scroll
             const viewportX = nowX - scrollContainer.scrollLeft;
             const viewportWidth = scrollContainer.clientWidth;
-            
+
             let isMini = false;
             if (viewportX < 40 || viewportX > viewportWidth - 40) {
                 isMini = true;
@@ -3016,9 +3067,9 @@ locationInput.addEventListener('input', () => {
                 5: { t: 'Muy Pobre', r: 'Mantenga las ventanas cerradas y evite salir.' },
                 6: { t: 'Extremo', r: 'Alerta de salud: evite cualquier actividad al aire libre.' }
             };
-            
-            return { 
-                text: map[level]?.t || 'Desconocido', 
+
+            return {
+                text: map[level]?.t || 'Desconocido',
                 rec: map[level]?.r || '',
                 val: aqi
             };
@@ -3083,7 +3134,7 @@ locationInput.addEventListener('input', () => {
             ];
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             // Dibujar fondo (hexágono)
             ctx.strokeStyle = 'rgba(128,128,128,0.4)';
             ctx.lineWidth = 1;
@@ -3118,12 +3169,12 @@ locationInput.addEventListener('input', () => {
                 const angle = (Math.PI / 3) * i - Math.PI / 2;
                 const x = centerX + (radius + 22) * Math.cos(angle);
                 const y = centerY + (radius + 22) * Math.sin(angle);
-                
+
                 // Ajuste fino de posición para que no se salgan
                 let offsetY = 4;
                 if (i === 0) offsetY = -2; // Arriba
                 if (i === 3) offsetY = 10; // Abajo
-                
+
                 ctx.fillText(p.name.substring(0, 5), x, y + offsetY);
             });
 
@@ -3155,12 +3206,12 @@ locationInput.addEventListener('input', () => {
         function updateTopPanel() {
             const referenceX = scrollContainer.scrollLeft + 60;
             const activeX = referenceX;
-            
+
             // Cálculo de índice basado en midpoints (x = i * PPH + PPH/2)
             const floatIndex = (activeX - PIXELS_PER_HOUR / 2) / PIXELS_PER_HOUR;
             const index = Math.floor(floatIndex);
             const progress = floatIndex - index;
-            
+
             let d;
             let interpolatedData = {};
 
@@ -3168,7 +3219,7 @@ locationInput.addEventListener('input', () => {
                 const d1 = state.hourlyData[index];
                 const d2 = state.hourlyData[index + 1];
                 const interpolate = (v1, v2) => v1 + (v2 - v1) * progress;
-                
+
                 interpolatedData = {
                     temp: interpolate(d1.temp, d2.temp).toFixed(1),
                     apparent: interpolate(d1.apparent, d2.apparent).toFixed(1),
@@ -3211,11 +3262,11 @@ locationInput.addEventListener('input', () => {
 
             document.getElementById('val-temp').innerHTML = `${currentData.temp}<span class="data-unit">°C</span>`;
             document.getElementById('val-apparent').innerText = `ST: ${currentData.apparent}°C`;
-            
+
             // Wind Compass logic
             const windVal = document.getElementById('val-wind');
             if (windVal) windVal.innerHTML = `${currentData.wind}<span class="data-unit">km/h</span>`;
-            
+
             const arrow = document.getElementById('wind-arrow');
             if (arrow) {
                 arrow.style.transform = `rotate(${currentData.windDir}deg)`;
@@ -3228,7 +3279,7 @@ locationInput.addEventListener('input', () => {
                 arrow.firstElementChild.style.borderBottomColor = windColor;
                 document.getElementById('wind-compass').style.borderColor = windColor;
             }
-            
+
             // AQI
             const aqiInfo = getAQIInfo(currentData.aqi);
             document.querySelector('#val-aqi .aqi-text').innerText = aqiInfo.text;
@@ -3242,7 +3293,7 @@ locationInput.addEventListener('input', () => {
                     <div style="font-size:0.7rem; line-height:1.4; opacity:0.9;">${aqiInfo.rec}</div>
                 </div>
             `;
-            
+
             // Polen
             const pollenText = getPollenText(currentData.pollen);
             document.querySelector('#val-pollen .pollen-text').innerText = pollenText;
@@ -3255,27 +3306,27 @@ locationInput.addEventListener('input', () => {
             document.getElementById('val-precip').innerHTML = `${currentData.precip}<span class="data-unit">mm</span>`;
             document.getElementById('val-precip-prob').innerHTML = `${currentData.precipProb}<span class="data-unit">%</span>`;
             document.getElementById('val-clouds').innerHTML = `${currentData.clouds}<span class="data-unit">%</span>`;
-            
+
             // Calculamos el tiempo exacto basado en la posición X para mostrar minutos precisos
             const startTime = state.hourlyData[0].time;
             const exactTime = startTime + ((activeX - PIXELS_PER_HOUR / 2) / PIXELS_PER_HOUR) * 3600000;
             const date = new Date(exactTime);
             const today = new Date();
-            const isToday = date.getDate() === today.getDate() && 
-                            date.getMonth() === today.getMonth() && 
+            const isToday = date.getDate() === today.getDate() &&
+                            date.getMonth() === today.getMonth() &&
                             date.getFullYear() === today.getFullYear();
-            
+
             const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-            const dateStr = date.toLocaleString('es-ES', { 
+            const dateStr = date.toLocaleString('es-ES', {
                 weekday: 'short', day: 'numeric', month: 'short', timeZone: state.timezone
             }).toUpperCase();
 
             const timeDisplay = document.getElementById('current-time-display');
             timeDisplay.querySelector('.time-main').innerText = timeStr;
             timeDisplay.querySelector('.date-sub').innerText = isToday ? `HOY, ${dateStr}` : dateStr;
-            
+
             document.getElementById('weather-summary').innerText = getWeatherDescription(d.weatherCode);
-            
+
             // Update location tooltip
             document.getElementById('tt-location').innerText = state.locationName;
             document.getElementById('tt-summary').innerText = getWeatherDescription(d.weatherCode);
@@ -3288,18 +3339,18 @@ locationInput.addEventListener('input', () => {
 
             const containerH = scrollContainer.clientHeight;
             const totalWidth = state.hourlyData.length * PIXELS_PER_HOUR;
-            
+
             const canvasWrapper = document.getElementById('canvas-wrapper');
             if (canvasWrapper) {
                 canvasWrapper.style.width = totalWidth + 'px';
-                
+
                 // Tiling logic
                 const numTiles = Math.ceil(totalWidth / TILE_WIDTH);
-                
+
                 // Cleanup old tiles
                 tiles.forEach(t => t.canvas.remove());
                 tiles = [];
-                
+
                 for (let i = 0; i < numTiles; i++) {
                     const canvas = document.createElement('canvas');
                     canvas.width = TILE_WIDTH * state.dpr;
@@ -3310,7 +3361,7 @@ locationInput.addEventListener('input', () => {
                     canvas.style.left = (i * TILE_WIDTH) + 'px';
                     canvas.style.top = '0';
                     canvasWrapper.appendChild(canvas);
-                    
+
                     const ctx = canvas.getContext('2d', { alpha: true });
                     ctx.scale(state.dpr, state.dpr);
                     tiles.push({ canvas, ctx, index: i, lastDrawn: 0 });
@@ -3321,13 +3372,13 @@ locationInput.addEventListener('input', () => {
             minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
             minimapCanvas.style.width = window.innerWidth + 'px';
             minimapCanvas.style.height = MINIMAP_HEIGHT + 'px';
-            
+
             const chartArea = document.getElementById('chart-area');
             fixedOverlayCanvas.width = chartArea.clientWidth * state.dpr;
             fixedOverlayCanvas.height = chartArea.clientHeight * state.dpr;
             fixedOverlayCtx.resetTransform();
             fixedOverlayCtx.scale(state.dpr, state.dpr);
-            
+
             drawMinimap();
             render();
         }
@@ -3336,14 +3387,14 @@ locationInput.addEventListener('input', () => {
             if (state.hourlyData.length === 0) return;
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
-            
+
             // Calculamos la posición X exacta para el momento actual
             // (ms transcurridos / ms por hora) * pixeles por hora + offset inicial del primer punto
             const exactX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-            
+
             // Centramos exactX en la línea de referencia fija (scrollLeft + 60)
             scrollContainer.scrollLeft = exactX - 60;
-            state.hoverX = null; 
+            state.hoverX = null;
             render();
         }
 
@@ -3359,7 +3410,7 @@ locationInput.addEventListener('input', () => {
             const errDiv = document.getElementById('error-msg');
             errDiv.innerHTML = `
                 <div style="margin-bottom: 15px;">${msg}</div>
-                <button onclick="document.getElementById('overlay').classList.add('hidden')" 
+                <button onclick="document.getElementById('overlay').classList.add('hidden')"
                         style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
                     Cerrar y ver app
                 </button>
