@@ -833,6 +833,9 @@
                 <div class="data-value" id="val-clouds" style="font-size: 1.3rem;">--<span class="data-unit">%</span></div>
             </div>
         </div>
+        <div id="sun-markers-container" style="position: absolute; bottom: 0; left: 60px; right: 0; height: 30px; pointer-events: none; overflow: hidden; z-index: 10;">
+            <div id="sun-markers-inner" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;"></div>
+        </div>
     </header>
 
     <div id="chart-area" style="position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f5f5f5;">
@@ -1147,12 +1150,12 @@ locationInput.addEventListener('input', () => {
                 });
 
                 scrollContainer.addEventListener('scroll', () => {
-                    // Update fixed overlay and NOW button synchronously for zero-lag on iOS
-                    drawFixedOverlay();
+                    // Update NOW button synchronously for zero-lag on iOS
                     updateNowButtonPosition();
                     
                     if (!ticking) {
                         window.requestAnimationFrame(() => {
+                            drawFixedOverlay();
                             render();
                             ticking = false;
                         });
@@ -1460,7 +1463,7 @@ locationInput.addEventListener('input', () => {
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             try {
-                const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
+                const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
                 const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&hourly=european_aqi,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
 
                 const [forecastRes, aqiRes] = await Promise.all([
@@ -1597,6 +1600,7 @@ locationInput.addEventListener('input', () => {
                     precipProb: hourly.precipitation_probability ? hourly.precipitation_probability[i] : 0,
                     clouds: hourly.cloudcover[i],
                     wind: hourly.wind_speed_10m[i],
+                    gusts: hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i],
                     humidity: hourly.relative_humidity_2m ? hourly.relative_humidity_2m[i] : 0,
                     pressure: hourly.surface_pressure ? hourly.surface_pressure[i] : 1013,
                     uv: hourly.uv_index ? hourly.uv_index[i] : 0,
@@ -1610,6 +1614,7 @@ locationInput.addEventListener('input', () => {
             });
 
             state.hourlyData = newHourly.sort((a, b) => a.time - b.time);
+            updateSunMarkers();
         }
 
         /**
@@ -1685,6 +1690,31 @@ locationInput.addEventListener('input', () => {
                     }
                     ctx.restore();
                 }
+
+                // Viento fuerte (sostenido > 25)
+                if (d.wind > 25) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(150, 150, 150, 0.4)';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([10, 5, 20, 10]);
+                    for (let j = 0; j < 3; j++) {
+                        const y = h * (0.3 + j * 0.2) + Math.sin(i * 0.5) * 10;
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x + PIXELS_PER_HOUR, y);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+                
+                // Manga de viento (rachas > 35)
+                if (d.gusts > 35) {
+                    ctx.save();
+                    ctx.font = '14px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🎏', x + PIXELS_PER_HOUR / 2, h - 10);
+                    ctx.restore();
+                }
             }
         }
 
@@ -1715,7 +1745,6 @@ locationInput.addEventListener('input', () => {
             
             // New Weather Layers
             drawHumidity(ctx, xOffset, w, h, styles);
-            drawWind(ctx, xOffset, w, h, styles);
             
             drawTemperature(ctx, xOffset, w, h, styles);
             drawNightShadow(ctx, xOffset, w, h);
@@ -2402,12 +2431,29 @@ locationInput.addEventListener('input', () => {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
             
-            ctx.fillStyle = 'rgba(0, 0, 20, 0.15)'; // Sombra oscura
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 if (d.isNight) {
                     const x = i * PIXELS_PER_HOUR;
                     const w = PIXELS_PER_HOUR + 0.5;
+                    
+                    const prevIsDay = i > 0 && !state.hourlyData[i-1].isNight;
+                    const nextIsDay = i < state.hourlyData.length - 1 && !state.hourlyData[i+1].isNight;
+                    
+                    if (prevIsDay) {
+                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        grad.addColorStop(0, 'rgba(0, 0, 20, 0)');
+                        grad.addColorStop(1, 'rgba(0, 0, 20, 0.15)');
+                        ctx.fillStyle = grad;
+                    } else if (nextIsDay) {
+                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        grad.addColorStop(0, 'rgba(0, 0, 20, 0.15)');
+                        grad.addColorStop(1, 'rgba(0, 0, 20, 0)');
+                        ctx.fillStyle = grad;
+                    } else {
+                        ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                    }
+                    
                     ctx.fillRect(x, 0, w, h);
                 }
             }
@@ -2478,33 +2524,6 @@ locationInput.addEventListener('input', () => {
                     ctx.stroke();
                 }
             }
-
-            // Iconos de Sol/Luna (Amanecer/Atardecer)
-            ctx.font = '14px Inter';
-            Object.keys(state.sunData).forEach(dateStr => {
-                const sun = state.sunData[dateStr];
-                const startTime = state.hourlyData[0].time;
-                
-                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
-                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
-
-                if (sunriseX >= viewX && sunriseX <= viewX + viewW) {
-                    const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-                    ctx.fillStyle = '#666666';
-                    ctx.font = '9px Inter';
-                    ctx.fillText(sunriseTime, sunriseX, 28);
-                    ctx.font = '14px Inter';
-                    ctx.fillText('☀️', sunriseX, 12);
-                }
-                if (sunsetX >= viewX && sunsetX <= viewX + viewW) {
-                    const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-                    ctx.fillStyle = '#666666';
-                    ctx.font = '9px Inter';
-                    ctx.fillText(sunsetTime, sunsetX, 28);
-                    ctx.font = '14px Inter';
-                    ctx.fillText('🌙', sunsetX, 12);
-                }
-            });
             ctx.restore();
         }
 
@@ -2606,18 +2625,6 @@ locationInput.addEventListener('input', () => {
             });
             ctx.stroke();
 
-            // Wind Line
-            ctx.strokeStyle = 'rgba(117, 117, 117, 0.4)';
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            state.hourlyData.forEach((d, i) => {
-                const x = i * step + step / 2;
-                const y = h - (h * (Math.min(100, d.wind) / 100));
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
             // UV Segments
             state.hourlyData.forEach((d, i) => {
                 if (d.uv >= 1) {
@@ -2649,9 +2656,9 @@ locationInput.addEventListener('input', () => {
             if (!state.hourlyData.length) return;
             
             const w = fixedOverlayCanvas.clientWidth;
-            const h = fixedOverlayCanvas.clientHeight;
+            const h = scrollContainer.clientHeight; // Use scrollContainer height to match tiles
             
-            fixedOverlayCtx.clearRect(0, 0, w, h);
+            fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.clientWidth, fixedOverlayCanvas.clientHeight);
             
             const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
             const activeX = referenceX;
@@ -2773,6 +2780,7 @@ locationInput.addEventListener('input', () => {
 
                         fixedOverlayCtx.fillStyle = color;
                         // Centrado perfecto del texto dentro del rect
+                        fixedOverlayCtx.textBaseline = 'middle';
                         fixedOverlayCtx.fillText(text, rect.x + 4, rect.y + rect.h / 2);
                         fixedOverlayCtx.restore();
                     }
@@ -2786,11 +2794,16 @@ locationInput.addEventListener('input', () => {
                 const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
                 drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
 
-                // 2. Viento
-                drawPoint(h - (h * (Math.min(100, wind) / 100)), '#757575', `💨 ${wind.toFixed(1)}`, ' km/h', 'square');
-
-                // 3. Humedad
+                // 2. Humedad
                 drawPoint(h - (h * (humidity / 100)), '#00acc1', `💧 ${Math.round(humidity)}`, '%');
+
+                // 3. Viento / Rachas
+                const gusts = interpolate(d1.gusts, d2.gusts);
+                if (gusts > 35) {
+                    drawPoint(h - 15, '#757575', `🎏 ${gusts.toFixed(1)}`, ' km/h', 'square');
+                } else {
+                    drawPoint(h - 15, '#757575', `💨 ${wind.toFixed(1)}`, ' km/h', 'square');
+                }
 
                 // 4. Precipitación
                 const closestData = progress < 0.5 ? d1 : d2;
@@ -2885,7 +2898,23 @@ locationInput.addEventListener('input', () => {
                         else if (d.uv >= 11) { color = '#7b1fa2'; text = 'Extremo'; }
                         
                         fixedOverlayCtx.fillStyle = color;
-                        fixedOverlayCtx.fillRect(x, 0, w, 16); // Taller segment
+                        
+                        // Round corners for the first and last segments of the block
+                        if (i === blockStart && i === blockEnd) {
+                            fixedOverlayCtx.beginPath();
+                            fixedOverlayCtx.roundRect(x, 0, w, 16, [0, 0, 4, 4]);
+                            fixedOverlayCtx.fill();
+                        } else if (i === blockStart) {
+                            fixedOverlayCtx.beginPath();
+                            fixedOverlayCtx.roundRect(x, 0, w, 16, [0, 0, 0, 4]);
+                            fixedOverlayCtx.fill();
+                        } else if (i === blockEnd) {
+                            fixedOverlayCtx.beginPath();
+                            fixedOverlayCtx.roundRect(x, 0, w, 16, [0, 0, 4, 0]);
+                            fixedOverlayCtx.fill();
+                        } else {
+                            fixedOverlayCtx.fillRect(x, 0, w, 16);
+                        }
                         
                         // Draw text inside if it's the hovered hour
                         if (i === index || (i === index + 1 && progress > 0.5)) {
@@ -2898,12 +2927,61 @@ locationInput.addEventListener('input', () => {
                                 fixedOverlayCtx.fillText(`${d.uv.toFixed(1)} ${text}`, x + w/2, 8);
                             }
                         }
+                        
+                        // Redraw hour tick to be in front
+                        fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                        fixedOverlayCtx.lineWidth = 1;
+                        fixedOverlayCtx.beginPath();
+                        fixedOverlayCtx.moveTo(x, 0);
+                        fixedOverlayCtx.lineTo(x, 8);
+                        fixedOverlayCtx.stroke();
                     }
                     fixedOverlayCtx.restore();
                 }
 
                 fixedOverlayCtx.restore();
             }
+        }
+
+        function updateSunMarkers() {
+            const container = document.getElementById('sun-markers-inner');
+            if (!container || state.hourlyData.length === 0) return;
+            
+            container.innerHTML = '';
+            const startTime = state.hourlyData[0].time;
+            
+            Object.keys(state.sunData).forEach(dateStr => {
+                const sun = state.sunData[dateStr];
+                
+                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
+                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
+                
+                const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
+                const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
+                
+                const createMarker = (x, time, icon) => {
+                    const el = document.createElement('div');
+                    el.style.position = 'absolute';
+                    el.style.left = x + 'px';
+                    el.style.bottom = '0px';
+                    el.style.transform = 'translateX(-50%)';
+                    el.style.textAlign = 'center';
+                    el.style.color = '#666666';
+                    el.style.fontFamily = 'Inter, sans-serif';
+                    el.style.fontSize = '10px';
+                    el.style.fontWeight = 'bold';
+                    el.style.display = 'flex';
+                    el.style.flexDirection = 'column';
+                    el.style.alignItems = 'center';
+                    el.style.lineHeight = '1.2';
+                    
+                    el.innerHTML = `<span style="font-size: 12px;">${icon}</span><span>${time}</span>`;
+                    return el;
+                };
+                
+                container.appendChild(createMarker(sunriseX, sunriseTime, '☀️'));
+                container.appendChild(createMarker(sunsetX, sunsetTime, '🌙'));
+            });
         }
 
         function updateNowButtonPosition() {
@@ -2923,6 +3001,11 @@ locationInput.addEventListener('input', () => {
             if (nowLine) {
                 nowLine.style.left = nowX + 'px';
                 nowLine.style.display = Math.abs(nowX - referenceX) > 5 ? 'block' : 'none';
+            }
+            
+            const sunMarkersInner = document.getElementById('sun-markers-inner');
+            if (sunMarkersInner) {
+                sunMarkersInner.style.transform = `translateX(${-scrollContainer.scrollLeft}px)`;
             }
             
             // Posición relativa al viewport del scroll
