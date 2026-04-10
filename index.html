@@ -742,7 +742,7 @@
                 </div>
                 <div class="legend-item" title="Precipitación">
                     <div class="legend-color" style="background: #1976d2;"></div>
-                    <span>🌊</span>
+                    <span>🌧️</span>
                 </div>
                 <div class="legend-item" title="Prob. Lluvia">
                     <div class="legend-color" style="background: #0288d1; height: 2px; margin-top: 4px;"></div>
@@ -760,17 +760,9 @@
                     <div class="legend-color" style="background: #00acc1; height: 2px; margin-top: 4px;"></div>
                     <span>💧</span>
                 </div>
-                <div class="legend-item" title="Presión">
-                    <div class="legend-color" style="background: #795548; height: 2px; margin-top: 4px;"></div>
-                    <span>⏲️</span>
-                </div>
                 <div class="legend-item" title="Índice UV">
                     <div class="legend-color" style="background: #fbc02d; height: 2px; margin-top: 4px;"></div>
                     <span>☀️</span>
-                </div>
-                <div class="legend-item" title="Visibilidad">
-                    <div class="legend-color" style="background: #43a047; height: 2px; margin-top: 4px;"></div>
-                    <span>👁️</span>
                 </div>
             </div>
         </div>
@@ -971,7 +963,7 @@
                 // Theme setup
                 themeToggle.addEventListener('click', toggleTheme);
                 searchBtn.addEventListener('click', handleSearch);
-                geoBtn.addEventListener('click', useMyLocation);
+                geoBtn.addEventListener('click', () => useMyLocation(true));
                 locationInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSearch(); });
                 
                 const nowBtn = document.getElementById('now-btn');
@@ -1231,20 +1223,22 @@ locationInput.addEventListener('input', () => {
             suggestionsBox.style.display = 'block';
         }
 
-        async function useMyLocation() {
-            const savedLocation = localStorage.getItem('last_weather_location');
-            if (savedLocation) {
-                try {
-                    const loc = JSON.parse(savedLocation);
-                    state.lat = loc.lat;
-                    state.lon = loc.lon;
-                    state.locationName = loc.name;
-                    updateLocationUI();
-                    closeMobilePanels();
-                    await loadWeather();
-                    return;
-                } catch (e) {
-                    localStorage.removeItem('last_weather_location');
+        async function useMyLocation(force = false) {
+            if (!force) {
+                const savedLocation = localStorage.getItem('last_weather_location');
+                if (savedLocation) {
+                    try {
+                        const loc = JSON.parse(savedLocation);
+                        state.lat = loc.lat;
+                        state.lon = loc.lon;
+                        state.locationName = loc.name;
+                        updateLocationUI();
+                        closeMobilePanels();
+                        await loadWeather();
+                        return;
+                    } catch (e) {
+                        localStorage.removeItem('last_weather_location');
+                    }
                 }
             }
 
@@ -1254,7 +1248,15 @@ locationInput.addEventListener('input', () => {
                 const pos = await getPosition();
                 state.lat = pos.coords.latitude;
                 state.lon = pos.coords.longitude;
-                state.locationName = "Mi ubicación";
+                
+                // Reverse geocoding
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${state.lat}&lon=${state.lon}&format=json`);
+                    const data = await res.json();
+                    state.locationName = data.address.city || data.address.town || data.address.village || data.address.county || "Ubicación actual";
+                } catch (e) {
+                    state.locationName = "Ubicación actual";
+                }
             } catch (err) {
                 console.warn("Geolocation failed, using default", err);
                 state.lat = DEFAULT_COORDS.lat;
@@ -1714,11 +1716,9 @@ locationInput.addEventListener('input', () => {
             // New Weather Layers
             drawHumidity(ctx, xOffset, w, h, styles);
             drawWind(ctx, xOffset, w, h, styles);
-            drawPressure(ctx, xOffset, w, h, styles);
-            drawUVIndex(ctx, xOffset, w, h, styles);
-            drawVisibility(ctx, xOffset, w, h, styles);
             
             drawTemperature(ctx, xOffset, w, h, styles);
+            drawNightShadow(ctx, xOffset, w, h);
             drawAxes(ctx, xOffset, w, h, styles);
             
             ctx.restore();
@@ -2286,62 +2286,6 @@ locationInput.addEventListener('input', () => {
             ctx.stroke();
         }
 
-        function drawPressure(ctx, viewX, viewW, h, styles) {
-            const color = 'rgba(121, 85, 72, 0.3)'; // Brown soft
-            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
-            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
-            ctx.beginPath();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
-            
-            for (let i = startIdx; i < endIdx; i++) {
-                const d = state.hourlyData[i];
-                const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-                // Normalize pressure (950-1050 hPa)
-                const y = normalizeY(d.pressure, 950, 1050, h);
-                if (i === startIdx) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-        }
-
-        function drawUVIndex(ctx, viewX, viewW, h, styles) {
-            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
-            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
-            for (let i = startIdx; i < endIdx; i++) {
-                const d = state.hourlyData[i];
-                if (d.uv > 0) {
-                    const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-                    // UV 0-12
-                    const y = h - (h * (Math.min(12, d.uv) / 12) * 0.3); // Bottom 30%
-                    
-                    ctx.fillStyle = d.uv > 8 ? '#d32f2f' : (d.uv > 5 ? '#f57c00' : '#fbc02d');
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-
-        function drawVisibility(ctx, viewX, viewW, h, styles) {
-            const color = 'rgba(76, 175, 80, 0.2)'; // Green soft
-            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
-            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-            
-            ctx.beginPath();
-            ctx.fillStyle = color;
-            
-            for (let i = startIdx; i < endIdx; i++) {
-                const d = state.hourlyData[i];
-                const x = i * PIXELS_PER_HOUR;
-                // Visibility 0-24000m
-                const barH = (d.visibility / 24000) * 20; // 20px max height at bottom
-                ctx.fillRect(x, h - barH, PIXELS_PER_HOUR, barH);
-            }
-        }
-
         function drawTemperature(ctx, viewX, viewW, h, styles) {
             const color = '#d32f2f'; // Siempre modo claro
             const apparentColor = '#8b0000'; // Rojo oscuro para sensación térmica
@@ -2454,6 +2398,21 @@ locationInput.addEventListener('input', () => {
             }
         }
 
+        function drawNightShadow(ctx, viewX, viewW, h) {
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+            
+            ctx.fillStyle = 'rgba(0, 0, 20, 0.15)'; // Sombra oscura
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (d.isNight) {
+                    const x = i * PIXELS_PER_HOUR;
+                    const w = PIXELS_PER_HOUR + 0.5;
+                    ctx.fillRect(x, 0, w, h);
+                }
+            }
+        }
+
         function drawAxes(ctx, viewX, viewW, h, styles) {
             ctx.save();
             ctx.fillStyle = '#666666'; // Siempre modo claro
@@ -2463,31 +2422,61 @@ locationInput.addEventListener('input', () => {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
+            // Draw UV Segments at the top
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (d.uv >= 1) {
+                    const x = i * PIXELS_PER_HOUR;
+                    const w = PIXELS_PER_HOUR + 0.5;
+                    
+                    let color = '#4caf50'; // Low (1-2)
+                    if (d.uv >= 3 && d.uv < 6) color = '#fbc02d'; // Moderate (3-5)
+                    else if (d.uv >= 6 && d.uv < 8) color = '#f57c00'; // High (6-7)
+                    else if (d.uv >= 8 && d.uv < 11) color = '#d32f2f'; // Very High (8-10)
+                    else if (d.uv >= 11) color = '#7b1fa2'; // Extreme (11+)
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, 0, w, 4);
+                }
+            }
+
+            const sunEventsX = [];
+            Object.keys(state.sunData).forEach(dateStr => {
+                const sun = state.sunData[dateStr];
+                const startTime = state.hourlyData[0].time;
+                sunEventsX.push(((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2);
+                sunEventsX.push(((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2);
+            });
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
                 const hours = d.localHour;
                 
-                // Sombra para legibilidad sobre lluvia (Halo blanco)
-                ctx.save();
-                ctx.shadowColor = 'white';
-                ctx.shadowBlur = 3;
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = 'white';
-                const label = hours.toString().padStart(2, '0');
+                const overlaps = sunEventsX.some(sx => Math.abs(sx - x) < 25);
                 
-                ctx.strokeText(label, x, 20);
-                ctx.fillStyle = '#666666';
-                ctx.fillText(label, x, 20);
-                ctx.restore();
-                
-                // Ticks pequeños para todas las horas
-                ctx.strokeStyle = '#666666';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, 8);
-                ctx.stroke();
+                if (!overlaps) {
+                    // Sombra para legibilidad sobre lluvia (Halo blanco)
+                    ctx.save();
+                    ctx.shadowColor = 'white';
+                    ctx.shadowBlur = 3;
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'white';
+                    const label = hours.toString().padStart(2, '0');
+                    
+                    ctx.strokeText(label, x, 20);
+                    ctx.fillStyle = '#666666';
+                    ctx.fillText(label, x, 20);
+                    ctx.restore();
+                    
+                    // Ticks pequeños para todas las horas
+                    ctx.strokeStyle = '#666666';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, 8);
+                    ctx.stroke();
+                }
             }
 
             // Iconos de Sol/Luna (Amanecer/Atardecer)
@@ -2499,21 +2488,21 @@ locationInput.addEventListener('input', () => {
                 const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
                 const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
 
-                if (sunriseX >= scrollContainer.scrollLeft && sunriseX <= scrollContainer.scrollLeft + scrollContainer.clientWidth) {
+                if (sunriseX >= viewX && sunriseX <= viewX + viewW) {
                     const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
                     ctx.fillStyle = '#666666';
                     ctx.font = '9px Inter';
-                    ctx.fillText(sunriseTime, sunriseX, h - 35);
+                    ctx.fillText(sunriseTime, sunriseX, 28);
                     ctx.font = '14px Inter';
-                    ctx.fillText('☀️', sunriseX, h - 15);
+                    ctx.fillText('☀️', sunriseX, 12);
                 }
-                if (sunsetX >= scrollContainer.scrollLeft && sunsetX <= scrollContainer.scrollLeft + scrollContainer.clientWidth) {
+                if (sunsetX >= viewX && sunsetX <= viewX + viewW) {
                     const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
                     ctx.fillStyle = '#666666';
                     ctx.font = '9px Inter';
-                    ctx.fillText(sunsetTime, sunsetX, h - 35);
+                    ctx.fillText(sunsetTime, sunsetX, 28);
                     ctx.font = '14px Inter';
-                    ctx.fillText('🌙', sunsetX, h - 15);
+                    ctx.fillText('🌙', sunsetX, 12);
                 }
             });
             ctx.restore();
@@ -2629,41 +2618,20 @@ locationInput.addEventListener('input', () => {
             });
             ctx.stroke();
 
-            // Pressure Line
-            ctx.strokeStyle = 'rgba(121, 85, 72, 0.4)';
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
+            // UV Segments
             state.hourlyData.forEach((d, i) => {
-                const x = i * step + step / 2;
-                const y = normalizeY(d.pressure, 950, 1050, h);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (d.uv >= 1) {
+                    const x = i * step;
+                    let color = '#4caf50'; // Low (1-2)
+                    if (d.uv >= 3 && d.uv < 6) color = '#fbc02d'; // Moderate (3-5)
+                    else if (d.uv >= 6 && d.uv < 8) color = '#f57c00'; // High (6-7)
+                    else if (d.uv >= 8 && d.uv < 11) color = '#d32f2f'; // Very High (8-10)
+                    else if (d.uv >= 11) color = '#7b1fa2'; // Extreme (11+)
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, 0, step + 0.5, 2);
+                }
             });
-            ctx.stroke();
-
-            // UV Line
-            ctx.strokeStyle = 'rgba(251, 192, 45, 0.4)';
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            state.hourlyData.forEach((d, i) => {
-                const x = i * step + step / 2;
-                const y = h - (h * (Math.min(12, d.uv) / 12) * 0.3);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            // Visibility Line
-            ctx.strokeStyle = 'rgba(67, 160, 71, 0.4)';
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            state.hourlyData.forEach((d, i) => {
-                const x = i * step + step / 2;
-                const y = h - (d.visibility / 24000) * 20;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
 
             ctx.restore();
             
@@ -2720,6 +2688,8 @@ locationInput.addEventListener('input', () => {
                 fixedOverlayCtx.lineWidth = 1.5;
 
                 const drawPoint = (y, color, value, unit, shape = 'circle') => {
+                    if (y >= h - 5) return; // No dibujar si está en el fondo
+                    
                     // El punto va en la Y exacta
                     fixedOverlayCtx.fillStyle = color;
                     fixedOverlayCtx.beginPath();
@@ -2761,15 +2731,33 @@ locationInput.addEventListener('input', () => {
 
                         // Si colisiona con una etiqueta anterior, desplazamos hacia abajo
                         let attempts = 0;
+                        let direction = 1;
                         while (state.labelRects.some(r => 
                             rect.x < r.x + r.w &&
                             rect.x + rect.w > r.x &&
                             rect.y < r.y + r.h &&
                             rect.y + rect.h > r.y
-                        ) && attempts < 15) {
-                            rect.y += bgH + 1;
-                            constrainedY += bgH + 1;
+                        ) && attempts < 20) {
+                            if (rect.y + bgH * 2 > h) direction = -1;
+                            rect.y += (bgH + 1) * direction;
+                            constrainedY += (bgH + 1) * direction;
                             attempts++;
+                        }
+                        
+                        // Check overlap with NOW button
+                        const nowBtn = document.getElementById('now-btn');
+                        if (nowBtn) {
+                            const nowBtnCenter = parseFloat(nowBtn.style.transform.replace('translateX(', '').replace('px)', '')) + 35 || -999;
+                            if (Math.abs(nowBtnCenter - drawX) < 45) {
+                                if (rect.y + rect.h > h - 55) {
+                                    rect.x = drawX + 45; // Push to the right of the button
+                                }
+                            }
+                        }
+                        
+                        if (rect.y < 0 || rect.y + rect.h > h) {
+                            fixedOverlayCtx.restore();
+                            return; // Skip if pushed out of bounds
                         }
                         
                         state.labelRects.push(rect);
@@ -2784,7 +2772,8 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.stroke();
 
                         fixedOverlayCtx.fillStyle = color;
-                        fixedOverlayCtx.fillText(text, drawX + 6, constrainedY);
+                        // Centrado perfecto del texto dentro del rect
+                        fixedOverlayCtx.fillText(text, rect.x + 4, rect.y + rect.h / 2);
                         fixedOverlayCtx.restore();
                     }
                 };
@@ -2803,20 +2792,7 @@ locationInput.addEventListener('input', () => {
                 // 3. Humedad
                 drawPoint(h - (h * (humidity / 100)), '#00acc1', `💧 ${Math.round(humidity)}`, '%');
 
-                // 4. Presión
-                drawPoint(normalizeY(pressure, 950, 1050, h), '#795548', `⏲️ ${Math.round(pressure)}`, ' hPa');
-
-                // 5. UV Index
-                if (uv > 0.1) {
-                    drawPoint(h - (h * (Math.min(12, uv) / 12) * 0.3), '#fbc02d', `☀️ ${uv.toFixed(1)}`, ' UV');
-                }
-
-                // 6. Visibilidad
-                if (visibility < 24000) {
-                    drawPoint(h - (visibility / 24000) * 40 - 10, '#43a047', `👁️ ${(visibility / 1000).toFixed(1)}`, ' km');
-                }
-
-                // 7. Precipitación
+                // 4. Precipitación
                 const closestData = progress < 0.5 ? d1 : d2;
                 const pVal = closestData.precip;
                 
@@ -2830,7 +2806,7 @@ locationInput.addEventListener('input', () => {
                     fixedOverlayCtx.save();
                     fixedOverlayCtx.font = 'bold 11px Inter';
                     fixedOverlayCtx.textAlign = 'center';
-                    const pText = '🌊 ' + pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
+                    const pText = '🌧️ ' + pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
                     const pMetrics = fixedOverlayCtx.measureText(pText);
                     const pBgW = pMetrics.width + 10;
                     const pBgH = 16;
@@ -2848,7 +2824,7 @@ locationInput.addEventListener('input', () => {
                     fixedOverlayCtx.restore();
                 }
 
-                // 8. Probabilidad de Precipitación
+                // 7. Probabilidad de Precipitación
                 const getProbY = (val) => h - (h * (val / 100));
                 const py1 = getProbY(d1.precipProb);
                 const py2 = getProbY(d2.precipProb);
@@ -2856,24 +2832,76 @@ locationInput.addEventListener('input', () => {
                 const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
                 drawPoint(probY, '#0288d1', `☔ ${Math.round(precipProb)}`, '%', 'diamond');
 
-                // 9. Nubes
+                // 8. Nubes
                 const getY = (d) => h - (h * (d.clouds / 100));
                 const y1 = getY(d1);
                 const y2 = getY(d2);
                 const midY = (y1 + y2) / 2;
+                const puff = ((d1.clouds / 100) * 12 + (d2.clouds / 100) * 12) / 2;
                 
                 let cloudY;
-                if (progress < 0.5) {
-                    const t = progress * 2;
-                    const cpY = Math.min(y1, midY) - 10;
-                    cloudY = (1-t)*(1-t)*y1 + 2*(1-t)*t*cpY + t*t*midY;
+                if (puff < 0.5) {
+                    cloudY = y1 + (y2 - y1) * progress;
                 } else {
-                    const t = (progress - 0.5) * 2;
-                    const cpY = Math.min(midY, y2) - 10;
-                    cloudY = (1-t)*(1-t)*midY + 2*(1-t)*t*cpY + t*t*y2;
+                    if (progress < 0.5) {
+                        const t2 = progress * 2;
+                        const cp1y = y1 - puff;
+                        const cp2y = midY - puff;
+                        cloudY = Math.pow(1-t2, 3) * y1 + 3 * Math.pow(1-t2, 2) * t2 * cp1y + 3 * (1-t2) * t2 * t2 * cp2y + Math.pow(t2, 3) * midY;
+                    } else {
+                        const t2 = (progress - 0.5) * 2;
+                        const cp3y = midY - puff;
+                        const cp4y = y2 - puff;
+                        cloudY = Math.pow(1-t2, 3) * midY + 3 * Math.pow(1-t2, 2) * t2 * cp3y + 3 * (1-t2) * t2 * t2 * cp4y + Math.pow(t2, 3) * y2;
+                    }
                 }
                 drawPoint(cloudY, '#475569', `☁️ ${Math.round(clouds)}`, '%');
                 
+                // 9. UV Index Interaction
+                const currentUV = d1.uv;
+                if (currentUV >= 1) {
+                    // Find block bounds
+                    let blockStart = index;
+                    while (blockStart > 0 && state.hourlyData[blockStart - 1].uv >= 1) {
+                        blockStart--;
+                    }
+                    let blockEnd = index;
+                    while (blockEnd < state.hourlyData.length - 1 && state.hourlyData[blockEnd + 1].uv >= 1) {
+                        blockEnd++;
+                    }
+
+                    // Draw the highlighted block
+                    fixedOverlayCtx.save();
+                    for (let i = blockStart; i <= blockEnd; i++) {
+                        const d = state.hourlyData[i];
+                        const x = i * PIXELS_PER_HOUR - scrollContainer.scrollLeft;
+                        const w = PIXELS_PER_HOUR + 0.5;
+                        
+                        let color = '#4caf50';
+                        let text = 'Bajo';
+                        if (d.uv >= 3 && d.uv < 6) { color = '#fbc02d'; text = 'Medio'; }
+                        else if (d.uv >= 6 && d.uv < 8) { color = '#f57c00'; text = 'Alto'; }
+                        else if (d.uv >= 8 && d.uv < 11) { color = '#d32f2f'; text = 'Muy Alto'; }
+                        else if (d.uv >= 11) { color = '#7b1fa2'; text = 'Extremo'; }
+                        
+                        fixedOverlayCtx.fillStyle = color;
+                        fixedOverlayCtx.fillRect(x, 0, w, 16); // Taller segment
+                        
+                        // Draw text inside if it's the hovered hour
+                        if (i === index || (i === index + 1 && progress > 0.5)) {
+                            // Only draw text once for the active hour
+                            if (i === Math.round(floatIndex)) {
+                                fixedOverlayCtx.fillStyle = '#fff';
+                                fixedOverlayCtx.font = 'bold 9px Inter';
+                                fixedOverlayCtx.textAlign = 'center';
+                                fixedOverlayCtx.textBaseline = 'middle';
+                                fixedOverlayCtx.fillText(`${d.uv.toFixed(1)} ${text}`, x + w/2, 8);
+                            }
+                        }
+                    }
+                    fixedOverlayCtx.restore();
+                }
+
                 fixedOverlayCtx.restore();
             }
         }
