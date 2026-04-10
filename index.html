@@ -306,7 +306,7 @@
         }
 
         #current-time-display {
-            margin-top: 4px;
+            margin-top: -2px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -756,10 +756,6 @@
                     <div class="legend-color" style="background: #757575; height: 2px; margin-top: 4px;"></div>
                     <span>💨</span>
                 </div>
-                <div class="legend-item" title="Humedad">
-                    <div class="legend-color" style="background: #00acc1; height: 2px; margin-top: 4px;"></div>
-                    <span>💧</span>
-                </div>
                 <div class="legend-item" title="Índice UV">
                     <div class="legend-color" style="background: #fbc02d; height: 2px; margin-top: 4px;"></div>
                     <span>☀️</span>
@@ -794,9 +790,16 @@
                 <div class="data-value" id="val-temp" style="font-size: 1.3rem;">--<span class="data-unit">°C</span></div>
                 <div class="data-label" id="val-apparent" style="font-size: 0.6rem; margin-top: 1px;">ST: --°C</div>
             </div>
-            <div class="data-card">
+            <div class="data-card" id="wind-card">
                 <div class="data-label">💨 Viento</div>
-                <div class="data-value" id="val-wind" style="font-size: 1.3rem;">--<span class="data-unit">km/h</span></div>
+                <div id="wind-compass-container" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <div id="wind-compass" style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); position: relative; display: flex; align-items: center; justify-content: center;">
+                        <div id="wind-arrow" style="width: 2px; height: 14px; background: var(--text-primary); position: relative; transition: transform 0.5s;">
+                            <div style="position: absolute; top: -2px; left: -3px; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 6px solid var(--text-primary);"></div>
+                        </div>
+                    </div>
+                    <div class="data-value" id="val-wind" style="font-size: 0.9rem !important;">--<span class="data-unit">km/h</span></div>
+                </div>
             </div>
             <div class="data-card">
                 <div class="data-label">🍃 AQI</div>
@@ -1463,7 +1466,7 @@ locationInput.addEventListener('input', () => {
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             try {
-                const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
+                const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
                 const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&hourly=european_aqi,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
 
                 const [forecastRes, aqiRes] = await Promise.all([
@@ -1600,6 +1603,7 @@ locationInput.addEventListener('input', () => {
                     precipProb: hourly.precipitation_probability ? hourly.precipitation_probability[i] : 0,
                     clouds: hourly.cloudcover[i],
                     wind: hourly.wind_speed_10m[i],
+                    windDir: hourly.wind_direction_10m ? hourly.wind_direction_10m[i] : 0,
                     gusts: hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i],
                     humidity: hourly.relative_humidity_2m ? hourly.relative_humidity_2m[i] : 0,
                     pressure: hourly.surface_pressure ? hourly.surface_pressure[i] : 1013,
@@ -1691,28 +1695,28 @@ locationInput.addEventListener('input', () => {
                     ctx.restore();
                 }
 
-                // Viento fuerte (sostenido > 25)
-                if (d.wind > 25) {
-                    ctx.save();
-                    ctx.strokeStyle = 'rgba(150, 150, 150, 0.4)';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([10, 5, 20, 10]);
-                    for (let j = 0; j < 3; j++) {
-                        const y = h * (0.3 + j * 0.2) + Math.sin(i * 0.5) * 10;
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-                        ctx.lineTo(x + PIXELS_PER_HOUR, y);
-                        ctx.stroke();
-                    }
-                    ctx.restore();
-                }
-                
                 // Manga de viento (rachas > 35)
                 if (d.gusts > 35) {
                     ctx.save();
                     ctx.font = '14px Inter';
                     ctx.textAlign = 'center';
                     ctx.fillText('🎏', x + PIXELS_PER_HOUR / 2, h - 10);
+                    ctx.restore();
+                }
+
+                // Viento sostenido fuerte (> 25) - Líneas discontinuas
+                if (d.wind > 25) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
+                    ctx.setLineDash([5, 5]);
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (let j = 1; j < 4; j++) {
+                        const lineX = x + (PIXELS_PER_HOUR / 4) * j;
+                        ctx.moveTo(lineX, 0);
+                        ctx.lineTo(lineX, h);
+                    }
+                    ctx.stroke();
                     ctx.restore();
                 }
             }
@@ -1742,9 +1746,6 @@ locationInput.addEventListener('input', () => {
             
             // Weather Phenomena
             drawWeatherPhenomena(ctx, xOffset, w, h);
-            
-            // New Weather Layers
-            drawHumidity(ctx, xOffset, w, h, styles);
             
             drawTemperature(ctx, xOffset, w, h, styles);
             drawNightShadow(ctx, xOffset, w, h);
@@ -2468,61 +2469,28 @@ locationInput.addEventListener('input', () => {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
-            // Draw UV Segments at the top
-            for (let i = startIdx; i < endIdx; i++) {
-                const d = state.hourlyData[i];
-                if (d.uv >= 1) {
-                    const x = i * PIXELS_PER_HOUR;
-                    const w = PIXELS_PER_HOUR + 0.5;
-                    
-                    let color = '#4caf50'; // Low (1-2)
-                    if (d.uv >= 3 && d.uv < 6) color = '#fbc02d'; // Moderate (3-5)
-                    else if (d.uv >= 6 && d.uv < 8) color = '#f57c00'; // High (6-7)
-                    else if (d.uv >= 8 && d.uv < 11) color = '#d32f2f'; // Very High (8-10)
-                    else if (d.uv >= 11) color = '#7b1fa2'; // Extreme (11+)
-                    
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x, 0, w, 4);
-                }
-            }
-
-            const sunEventsX = [];
-            Object.keys(state.sunData).forEach(dateStr => {
-                const sun = state.sunData[dateStr];
-                const startTime = state.hourlyData[0].time;
-                sunEventsX.push(((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2);
-                sunEventsX.push(((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2);
-            });
-
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
-                const hours = d.localHour;
+                const label = d.localHour.toString().padStart(2, '0');
                 
-                const overlaps = sunEventsX.some(sx => Math.abs(sx - x) < 25);
+                // Sombra para legibilidad
+                ctx.save();
+                ctx.shadowColor = 'white';
+                ctx.shadowBlur = 3;
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'white';
                 
-                if (!overlaps) {
-                    // Sombra para legibilidad sobre lluvia (Halo blanco)
-                    ctx.save();
-                    ctx.shadowColor = 'white';
-                    ctx.shadowBlur = 3;
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = 'white';
-                    const label = hours.toString().padStart(2, '0');
-                    
-                    ctx.strokeText(label, x, 20);
-                    ctx.fillStyle = '#666666';
-                    ctx.fillText(label, x, 20);
-                    ctx.restore();
-                    
-                    // Ticks pequeños para todas las horas
-                    ctx.strokeStyle = '#666666';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, 8);
-                    ctx.stroke();
-                }
+                // Top labels
+                ctx.strokeText(label, x, 20);
+                ctx.fillStyle = '#666666';
+                ctx.fillText(label, x, 20);
+                
+                // Bottom labels
+                ctx.strokeText(label + 'h', x, h - 5);
+                ctx.fillText(label + 'h', x, h - 5);
+                
+                ctx.restore();
             }
             ctx.restore();
         }
@@ -2736,6 +2704,12 @@ locationInput.addEventListener('input', () => {
                             h: bgH
                         };
 
+                        // Reposition if overlaps with UV segments (top part)
+                        const currentUV = d1.uv;
+                        if (currentUV >= 1 && rect.y < 35) {
+                            rect.y = 35;
+                        }
+
                         // Si colisiona con una etiqueta anterior, desplazamos hacia abajo
                         let attempts = 0;
                         let direction = 1;
@@ -2793,17 +2767,6 @@ locationInput.addEventListener('input', () => {
                 const showApparent = diff >= 1;
                 const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
                 drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
-
-                // 2. Humedad
-                drawPoint(h - (h * (humidity / 100)), '#00acc1', `💧 ${Math.round(humidity)}`, '%');
-
-                // 3. Viento / Rachas
-                const gusts = interpolate(d1.gusts, d2.gusts);
-                if (gusts > 35) {
-                    drawPoint(h - 15, '#757575', `🎏 ${gusts.toFixed(1)}`, ' km/h', 'square');
-                } else {
-                    drawPoint(h - 15, '#757575', `💨 ${wind.toFixed(1)}`, ' km/h', 'square');
-                }
 
                 // 4. Precipitación
                 const closestData = progress < 0.5 ? d1 : d2;
@@ -2900,41 +2863,37 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.fillStyle = color;
                         
                         // Round corners for the first and last segments of the block
+                        const uvH = 30; // Expanded height
                         if (i === blockStart && i === blockEnd) {
                             fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.roundRect(x, 0, w, 16, [0, 0, 4, 4]);
+                            fixedOverlayCtx.roundRect(x, 0, w, uvH, [0, 0, 6, 6]);
                             fixedOverlayCtx.fill();
                         } else if (i === blockStart) {
                             fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.roundRect(x, 0, w, 16, [0, 0, 0, 4]);
+                            fixedOverlayCtx.roundRect(x, 0, w, uvH, [0, 0, 0, 6]);
                             fixedOverlayCtx.fill();
                         } else if (i === blockEnd) {
                             fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.roundRect(x, 0, w, 16, [0, 0, 4, 0]);
+                            fixedOverlayCtx.roundRect(x, 0, w, uvH, [0, 0, 6, 0]);
                             fixedOverlayCtx.fill();
                         } else {
-                            fixedOverlayCtx.fillRect(x, 0, w, 16);
+                            fixedOverlayCtx.fillRect(x, 0, w, uvH);
                         }
                         
                         // Draw text inside if it's the hovered hour
-                        if (i === index || (i === index + 1 && progress > 0.5)) {
-                            // Only draw text once for the active hour
-                            if (i === Math.round(floatIndex)) {
-                                fixedOverlayCtx.fillStyle = '#fff';
-                                fixedOverlayCtx.font = 'bold 9px Inter';
-                                fixedOverlayCtx.textAlign = 'center';
-                                fixedOverlayCtx.textBaseline = 'middle';
-                                fixedOverlayCtx.fillText(`${d.uv.toFixed(1)} ${text}`, x + w/2, 8);
-                            }
+                        if (i === Math.round(floatIndex)) {
+                            fixedOverlayCtx.fillStyle = '#fff';
+                            fixedOverlayCtx.font = 'bold 9px Inter';
+                            fixedOverlayCtx.textAlign = 'center';
+                            fixedOverlayCtx.textBaseline = 'middle';
+                            fixedOverlayCtx.fillText(`${d.uv.toFixed(1)} ${text}`, x + w/2, 10);
                         }
                         
                         // Redraw hour tick to be in front
-                        fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-                        fixedOverlayCtx.lineWidth = 1;
-                        fixedOverlayCtx.beginPath();
-                        fixedOverlayCtx.moveTo(x, 0);
-                        fixedOverlayCtx.lineTo(x, 8);
-                        fixedOverlayCtx.stroke();
+                        fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        fixedOverlayCtx.font = 'bold 9px Inter';
+                        fixedOverlayCtx.textAlign = 'center';
+                        fixedOverlayCtx.fillText(d.localHour.toString().padStart(2, '0') + 'h', x + w/2, 22);
                     }
                     fixedOverlayCtx.restore();
                 }
@@ -2953,8 +2912,8 @@ locationInput.addEventListener('input', () => {
             Object.keys(state.sunData).forEach(dateStr => {
                 const sun = state.sunData[dateStr];
                 
-                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
-                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR + PIXELS_PER_HOUR/2;
+                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR;
+                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR;
                 
                 const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
                 const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
@@ -2979,8 +2938,8 @@ locationInput.addEventListener('input', () => {
                     return el;
                 };
                 
-                container.appendChild(createMarker(sunriseX, sunriseTime, '☀️'));
-                container.appendChild(createMarker(sunsetX, sunsetTime, '🌙'));
+                container.appendChild(createMarker(sunriseX, sunriseTime, '🌅'));
+                container.appendChild(createMarker(sunsetX, sunsetTime, '🌇'));
             });
         }
 
@@ -3214,6 +3173,7 @@ locationInput.addEventListener('input', () => {
                     temp: interpolate(d1.temp, d2.temp).toFixed(1),
                     apparent: interpolate(d1.apparent, d2.apparent).toFixed(1),
                     wind: interpolate(d1.wind, d2.wind).toFixed(1),
+                    windDir: interpolate(d1.windDir, d2.windDir),
                     clouds: Math.round(interpolate(d1.clouds, d2.clouds)),
                     precip: interpolate(d1.precip, d2.precip).toFixed(1),
                     precipProb: Math.round(interpolate(d1.precipProb, d2.precipProb)),
@@ -3230,6 +3190,7 @@ locationInput.addEventListener('input', () => {
                     temp: d.temp.toFixed(1),
                     apparent: d.apparent.toFixed(1),
                     wind: d.wind.toFixed(1),
+                    windDir: d.windDir,
                     clouds: d.clouds,
                     precip: d.precip.toFixed(1),
                     precipProb: d.precipProb,
@@ -3250,7 +3211,23 @@ locationInput.addEventListener('input', () => {
 
             document.getElementById('val-temp').innerHTML = `${currentData.temp}<span class="data-unit">°C</span>`;
             document.getElementById('val-apparent').innerText = `ST: ${currentData.apparent}°C`;
-            document.getElementById('val-wind').innerHTML = `${currentData.wind}<span class="data-unit">km/h</span>`;
+            
+            // Wind Compass logic
+            const windVal = document.getElementById('val-wind');
+            if (windVal) windVal.innerHTML = `${currentData.wind}<span class="data-unit">km/h</span>`;
+            
+            const arrow = document.getElementById('wind-arrow');
+            if (arrow) {
+                arrow.style.transform = `rotate(${currentData.windDir}deg)`;
+                // Color based on temperature
+                let windColor = 'var(--text-primary)';
+                const t = parseFloat(currentData.temp);
+                if (t < 10) windColor = '#3b82f6'; // Cold
+                else if (t > 28) windColor = '#ef4444'; // Hot
+                arrow.style.background = windColor;
+                arrow.firstElementChild.style.borderBottomColor = windColor;
+                document.getElementById('wind-compass').style.borderColor = windColor;
+            }
             
             // AQI
             const aqiInfo = getAQIInfo(currentData.aqi);
