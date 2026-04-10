@@ -845,9 +845,6 @@
                 <div class="data-value" id="val-clouds" style="font-size: 1.3rem;">--<span class="data-unit">%</span></div>
             </div>
         </div>
-        <div id="sun-markers-container" style="position: absolute; bottom: 5px; left: 60px; right: 0; height: 35px; pointer-events: none; overflow: hidden; z-index: 10;">
-            <div id="sun-markers-inner" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; will-change: transform;"></div>
-        </div>
     </header>
 
     <div id="chart-area" style="position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f5f5f5;">
@@ -1627,7 +1624,6 @@ locationInput.addEventListener('input', () => {
             });
 
             state.hourlyData = newHourly.sort((a, b) => a.time - b.time);
-            updateSunMarkers();
         }
 
         /**
@@ -1704,36 +1700,37 @@ locationInput.addEventListener('input', () => {
                     ctx.restore();
                 }
 
-                // Manga de viento (rachas > 35)
+                // Molino de viento (rachas > 35)
                 if (d.gusts > 35) {
                     ctx.save();
                     ctx.strokeStyle = '#64748b';
                     ctx.lineWidth = 1.5;
-                    const centerX = x; // Aligned to start of hour
-                    const centerY = h - 45; // Moved up more
+                    const centerX = x; 
+                    const centerY = h - 50;
                     
-                    // Palo
+                    // Torre
                     ctx.beginPath();
-                    ctx.moveTo(centerX - 6, centerY + 30); // Even taller
-                    ctx.lineTo(centerX - 6, centerY - 20); // Even taller
+                    ctx.moveTo(centerX - 4, centerY + 35);
+                    ctx.lineTo(centerX - 2, centerY);
+                    ctx.lineTo(centerX + 2, centerY);
+                    ctx.lineTo(centerX + 4, centerY + 35);
                     ctx.stroke();
                     
-                    // Manga
-                    ctx.beginPath();
-                    ctx.moveTo(centerX - 6, centerY - 15);
-                    ctx.lineTo(centerX + 18, centerY - 8); // Even longer
-                    ctx.lineTo(centerX + 18, centerY + 8); // Even longer
-                    ctx.lineTo(centerX - 6, centerY + 15);
-                    ctx.closePath();
-                    ctx.stroke();
+                    // Aspas (3 aspas)
+                    const angle = (Date.now() / 200) % (Math.PI * 2); // Sutil rotación si se redibuja
+                    for (let j = 0; j < 3; j++) {
+                        const a = angle + (j * Math.PI * 2) / 3;
+                        ctx.beginPath();
+                        ctx.moveTo(centerX, centerY);
+                        ctx.lineTo(centerX + Math.cos(a) * 18, centerY + Math.sin(a) * 18);
+                        ctx.stroke();
+                    }
                     
-                    // Franjas
+                    // Centro
+                    ctx.fillStyle = '#64748b';
                     ctx.beginPath();
-                    ctx.moveTo(centerX + 2, centerY - 11);
-                    ctx.lineTo(centerX + 2, centerY + 11);
-                    ctx.moveTo(centerX + 10, centerY - 9);
-                    ctx.lineTo(centerX + 10, centerY + 9);
-                    ctx.stroke();
+                    ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+                    ctx.fill();
                     
                     ctx.restore();
                 }
@@ -1783,11 +1780,82 @@ locationInput.addEventListener('input', () => {
             drawWeatherPhenomena(ctx, xOffset, w, h);
 
             drawTemperature(ctx, xOffset, w, h, styles);
+            drawSunMarkersOnCanvas(ctx, xOffset, w, h);
             drawNightShadow(ctx, xOffset, w, h);
             drawAxes(ctx, xOffset, w, h, styles);
 
             ctx.restore();
             tile.lastDrawn = Date.now();
+        }
+
+        function drawSunMarkersOnCanvas(ctx, viewX, viewW, h) {
+            if (!state.hourlyData.length) return;
+            const startTime = state.hourlyData[0].time;
+            const markerColor = state.theme === 'dark' ? '#fbbf24' : '#4b5563';
+
+            ctx.save();
+            ctx.font = 'bold 10px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.lineWidth = 2;
+
+            Object.keys(state.sunData).forEach(dateStr => {
+                const sun = state.sunData[dateStr];
+                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR;
+                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR;
+
+                const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
+                const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
+
+                const drawMarker = (x, time, type) => {
+                    if (x < viewX - 50 || x > viewX + viewW + 50) return;
+
+                    ctx.save();
+                    ctx.translate(x, h - 12);
+                    ctx.strokeStyle = markerColor;
+                    ctx.fillStyle = markerColor;
+                    ctx.lineWidth = 1.5;
+
+                    // Icon (Line design)
+                    ctx.beginPath();
+                    // Ground line
+                    ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+                    
+                    // Sun semi-circle
+                    ctx.moveTo(5, 0);
+                    ctx.arc(0, 0, 5, 0, Math.PI, true);
+                    
+                    // Rays
+                    const rayLen = 4;
+                    for (let j = 0; j < 5; j++) {
+                        const a = Math.PI + (j * Math.PI) / 4;
+                        ctx.moveTo(Math.cos(a) * 7, Math.sin(a) * 7);
+                        ctx.lineTo(Math.cos(a) * (7 + rayLen), Math.sin(a) * (7 + rayLen));
+                    }
+                    
+                    if (type === 'sunrise') {
+                        // Arrow up
+                        ctx.moveTo(-2, -12); ctx.lineTo(0, -15); ctx.lineTo(2, -12);
+                        ctx.moveTo(0, -15); ctx.lineTo(0, -8);
+                    } else {
+                        // Arrow down
+                        ctx.moveTo(-2, -10); ctx.lineTo(0, -7); ctx.lineTo(2, -10);
+                        ctx.moveTo(0, -7); ctx.lineTo(0, -14);
+                    }
+                    ctx.stroke();
+
+                    // Time text
+                    ctx.font = 'bold 9px Inter';
+                    ctx.shadowColor = 'white';
+                    ctx.shadowBlur = 4;
+                    ctx.fillText(time, 0, -18);
+                    ctx.restore();
+                };
+
+                drawMarker(sunriseX, sunriseTime, 'sunrise');
+                drawMarker(sunsetX, sunsetTime, 'sunset');
+            });
+            ctx.restore();
         }
 
         function drawUVSegments(ctx, viewX, viewW, h) {
@@ -2896,116 +2964,29 @@ locationInput.addEventListener('input', () => {
 
                 // 9. UV Index Interaction
                 const currentUV = d1.uv;
-                if (currentUV >= 1) {
-                    // Find block bounds
-                    let blockStart = index;
-                    while (blockStart > 0 && state.hourlyData[blockStart - 1].uv >= 1) {
-                        blockStart--;
-                    }
-                    let blockEnd = index;
-                    while (blockEnd < state.hourlyData.length - 1 && state.hourlyData[blockEnd + 1].uv >= 1) {
-                        blockEnd++;
-                    }
+                if (currentUV >= 0.1) {
+                    let color = '#4caf50';
+                    let text = 'Bajo';
+                    if (currentUV >= 3 && currentUV < 6) { color = '#fbc02d'; text = 'Medio'; }
+                    else if (currentUV >= 6 && currentUV < 8) { color = '#f57c00'; text = 'Alto'; }
+                    else if (currentUV >= 8 && currentUV < 11) { color = '#d32f2f'; text = 'Muy Alto'; }
+                    else if (currentUV >= 11) { color = '#7b1fa2'; text = 'Extremo'; }
 
-                    // Draw the highlighted block
                     fixedOverlayCtx.save();
-                    for (let i = blockStart; i <= blockEnd; i++) {
-                        const d = state.hourlyData[i];
-                        const x = i * PIXELS_PER_HOUR - scrollContainer.scrollLeft;
-                        const w = PIXELS_PER_HOUR + 0.5;
-
-                        let color = '#4caf50';
-                        let text = 'Bajo';
-                        if (d.uv >= 3 && d.uv < 6) { color = '#fbc02d'; text = 'Medio'; }
-                        else if (d.uv >= 6 && d.uv < 8) { color = '#f57c00'; text = 'Alto'; }
-                        else if (d.uv >= 8 && d.uv < 11) { color = '#d32f2f'; text = 'Muy Alto'; }
-                        else if (d.uv >= 11) { color = '#7b1fa2'; text = 'Extremo'; }
-
-                        fixedOverlayCtx.fillStyle = color;
-
-                        // Round corners for the first and last segments of the block
-                        const uvH = 30; // Expanded height
-                        if (i === blockStart && i === blockEnd) {
-                            fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.roundRect(x, 0, w, uvH, [0, 0, 6, 6]);
-                            fixedOverlayCtx.fill();
-                        } else if (i === blockStart) {
-                            fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.roundRect(x, 0, w, uvH, [0, 0, 0, 6]);
-                            fixedOverlayCtx.fill();
-                        } else if (i === blockEnd) {
-                            fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.roundRect(x, 0, w, uvH, [0, 0, 6, 0]);
-                            fixedOverlayCtx.fill();
-                        } else {
-                            fixedOverlayCtx.fillRect(x, 0, w, uvH);
-                        }
-
-                        // Draw text inside if it's the hovered hour
-                        if (i === Math.round(floatIndex)) {
-                            fixedOverlayCtx.fillStyle = '#fff';
-                            fixedOverlayCtx.font = 'bold 9px Inter';
-                            fixedOverlayCtx.textAlign = 'center';
-                            fixedOverlayCtx.textBaseline = 'middle';
-                            fixedOverlayCtx.fillText(`${d.uv.toFixed(1)} ${text}`, x + w/2, 10);
-                        }
-
-                        // Redraw hour tick to be in front
-                        fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                        fixedOverlayCtx.font = 'bold 9px Inter';
-                        fixedOverlayCtx.textAlign = 'center';
-                        fixedOverlayCtx.fillText(d.localHour.toString().padStart(2, '0') + 'h', x + w/2, 20);
-                    }
+                    fixedOverlayCtx.font = 'bold 11px Inter';
+                    fixedOverlayCtx.textAlign = 'right';
+                    fixedOverlayCtx.textBaseline = 'middle';
+                    
+                    fixedOverlayCtx.strokeStyle = 'rgba(255,255,255,0.8)';
+                    fixedOverlayCtx.lineWidth = 3;
+                    fixedOverlayCtx.strokeText(`UV ${currentUV.toFixed(1)} (${text})`, drawX - 10, 10);
+                    fixedOverlayCtx.fillStyle = color;
+                    fixedOverlayCtx.fillText(`UV ${currentUV.toFixed(1)} (${text})`, drawX - 10, 10);
                     fixedOverlayCtx.restore();
                 }
 
                 fixedOverlayCtx.restore();
             }
-        }
-
-        function updateSunMarkers() {
-            const container = document.getElementById('sun-markers-inner');
-            if (!container || state.hourlyData.length === 0) return;
-
-            container.innerHTML = '';
-            const startTime = state.hourlyData[0].time;
-
-            Object.keys(state.sunData).forEach(dateStr => {
-                const sun = state.sunData[dateStr];
-
-                const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR;
-                const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR;
-
-                const sunriseTime = new Date(sun.sunrise).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-                const sunsetTime = new Date(sun.sunset).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-
-                const createMarker = (x, time, type) => {
-                    const el = document.createElement('div');
-                    el.style.position = 'absolute';
-                    el.style.left = x + 'px';
-                    el.style.bottom = '0px';
-                    el.style.transform = 'translate3d(-50%, 0, 0)';
-                    el.style.textAlign = 'center';
-                    el.style.color = state.theme === 'dark' ? '#fbbf24' : '#666666';
-                    el.style.fontFamily = 'Inter, sans-serif';
-                    el.style.fontSize = '10px';
-                    el.style.fontWeight = 'bold';
-                    el.style.display = 'flex';
-                    el.style.flexDirection = 'column';
-                    el.style.alignItems = 'center';
-                    el.style.lineHeight = '1.2';
-
-                    const iconSvg = type === 'sunrise' 
-                        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 22 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`
-                        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V2"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m16 22-4-4-4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`;
-
-                    el.innerHTML = `<span style="margin-bottom: 2px;">${iconSvg}</span><span>${time}</span>`;
-                    return el;
-                };
-
-                container.appendChild(createMarker(sunriseX, sunriseTime, 'sunrise'));
-                container.appendChild(createMarker(sunsetX, sunsetTime, 'sunset'));
-            });
         }
 
         function updateNowButtonPosition() {
@@ -3025,11 +3006,6 @@ locationInput.addEventListener('input', () => {
             if (nowLine) {
                 nowLine.style.left = nowX + 'px';
                 nowLine.style.display = Math.abs(nowX - referenceX) > 5 ? 'block' : 'none';
-            }
-
-            const sunMarkersInner = document.getElementById('sun-markers-inner');
-            if (sunMarkersInner) {
-                sunMarkersInner.style.transform = `translate3d(${-scrollContainer.scrollLeft}px, 0, 0)`;
             }
 
             // Posición relativa al viewport del scroll
