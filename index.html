@@ -1655,23 +1655,50 @@ locationInput.addEventListener('input', () => {
                 // Ondas de choque (rachas > 35)
                 if (d.gusts > 35) {
                     ctx.save();
-                    ctx.strokeStyle = 'rgba(100, 116, 139, 0.4)'; // Baja opacidad
+                    
+                    let color = 'rgba(100, 116, 139, 1)'; // Gris pizarra (100% opacidad)
+                    if (d.gusts > 70) {
+                        color = 'rgba(220, 38, 38, 1)'; // Rojo para rachas extremas
+                    } else if (d.gusts > 50) {
+                        color = 'rgba(234, 88, 12, 1)'; // Naranja para rachas muy fuertes
+                    }
+                    
+                    ctx.strokeStyle = color;
                     ctx.lineWidth = 1.5;
                     const centerX = x; 
                     const centerY = h - 35; // Altura aproximada de las aspas
                     
-                    // Semicírculo (onda frontal)
+                    // Semicírculo (onda frontal base)
                     ctx.beginPath();
                     ctx.arc(centerX + 2, centerY, 6, -Math.PI/2, Math.PI/2, false);
                     ctx.stroke();
 
-                    // Líneas detrás
+                    // Líneas detrás base
                     ctx.beginPath();
                     ctx.moveTo(centerX - 3, centerY - 4);
                     ctx.lineTo(centerX - 3, centerY + 4);
                     ctx.moveTo(centerX - 7, centerY - 2);
                     ctx.lineTo(centerX - 7, centerY + 2);
                     ctx.stroke();
+
+                    // Detalles adicionales según intensidad
+                    if (d.gusts > 50) {
+                        // Segunda onda frontal
+                        ctx.beginPath();
+                        ctx.arc(centerX + 6, centerY, 10, -Math.PI/2.5, Math.PI/2.5, false);
+                        ctx.stroke();
+                        // Línea extra detrás
+                        ctx.beginPath();
+                        ctx.moveTo(centerX - 11, centerY - 1);
+                        ctx.lineTo(centerX - 11, centerY + 1);
+                        ctx.stroke();
+                    }
+                    if (d.gusts > 70) {
+                        // Tercera onda frontal
+                        ctx.beginPath();
+                        ctx.arc(centerX + 10, centerY, 14, -Math.PI/3, Math.PI/3, false);
+                        ctx.stroke();
+                    }
                     
                     ctx.restore();
                 }
@@ -1732,7 +1759,7 @@ locationInput.addEventListener('input', () => {
         function drawSunMarkersOnCanvas(ctx, viewX, viewW, h) {
             if (!state.hourlyData.length) return;
             const startTime = state.hourlyData[0].time;
-            const markerColor = state.theme === 'dark' ? '#fbbf24' : '#d97706';
+            const markerColor = '#ffffff'; // Siempre blanco para contrastar con la sombra
 
             ctx.save();
             ctx.font = 'bold 10px Inter';
@@ -1757,8 +1784,8 @@ locationInput.addEventListener('input', () => {
                     ctx.fillStyle = markerColor;
                     ctx.lineWidth = 1.5;
 
-                    // Sombra fuerte para que se vea sobre cualquier fondo
-                    ctx.shadowColor = state.theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)';
+                    // Sombra fuerte y siempre negra para que se vea sobre cualquier fondo (incluso amarillo)
+                    ctx.shadowColor = 'rgba(0,0,0,0.9)';
                     ctx.shadowBlur = 4;
 
                     // Icon (Line design) - Upside down
@@ -2852,29 +2879,12 @@ locationInput.addEventListener('input', () => {
                 const closestIndex = progress < 0.5 ? index : index + 1;
                 const closestData = state.hourlyData[closestIndex];
                 if (closestData && closestData.gusts > 35) {
-                    const exactX = closestIndex * PIXELS_PER_HOUR - scrollContainer.scrollLeft;
-                    
-                    // Draw opaque shockwave
-                    fixedOverlayCtx.save();
-                    fixedOverlayCtx.strokeStyle = '#64748b'; // Opacidad completa
-                    fixedOverlayCtx.lineWidth = 2;
-                    const centerY = h - 35;
-                    
-                    fixedOverlayCtx.beginPath();
-                    fixedOverlayCtx.arc(exactX + 2, centerY, 6, -Math.PI/2, Math.PI/2, false);
-                    fixedOverlayCtx.stroke();
-
-                    fixedOverlayCtx.beginPath();
-                    fixedOverlayCtx.moveTo(exactX - 3, centerY - 4);
-                    fixedOverlayCtx.lineTo(exactX - 3, centerY + 4);
-                    fixedOverlayCtx.moveTo(exactX - 7, centerY - 2);
-                    fixedOverlayCtx.lineTo(exactX - 7, centerY + 2);
-                    fixedOverlayCtx.stroke();
-                    
-                    fixedOverlayCtx.restore();
+                    let color = '#64748b';
+                    if (closestData.gusts > 70) color = '#dc2626';
+                    else if (closestData.gusts > 50) color = '#ea580c';
 
                     // Draw text
-                    drawPoint(h - 35, '#64748b', `💨 ${closestData.gusts.toFixed(1)}`, 'km/h', 'none');
+                    drawPoint(h - 35, color, `💨 ${closestData.gusts.toFixed(1)}`, 'km/h', 'none');
                 }
 
                 // 4. Precipitación
