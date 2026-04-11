@@ -120,18 +120,6 @@
             margin-left: auto;
         }
 
-        #close-raw {
-            position: absolute;
-            top: 30px;
-            right: 40px;
-            background: var(--accent-temp);
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
         .search-box {
             display: flex;
             gap: 5px;
@@ -636,44 +624,6 @@
         #now-btn:hover {
             filter: brightness(1.1);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-
-        #raw-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 5000;
-            display: none;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        #raw-modal-content {
-            background: var(--bg-color);
-            color: var(--text-primary);
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            padding: 20px;
-            overflow: auto;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            white-space: pre-wrap;
-            border: 1px solid var(--grid-color);
-            box-sizing: border-box;
-        }
-
-        #close-raw {
-            position: absolute;
-            top: 30px;
-            right: 40px;
-            background: var(--accent-temp);
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
         }
 
         @media (max-width: 600px) {
@@ -1341,7 +1291,9 @@ locationInput.addEventListener('input', () => {
             state.theme = state.theme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', state.theme);
             themeToggle.innerText = state.theme === 'dark' ? '🌙' : '☀️';
+            tiles.forEach(t => t.drawn = false);
             render();
+            drawMinimap();
         }
 
         async function handleSearch() {
@@ -1706,18 +1658,18 @@ locationInput.addEventListener('input', () => {
                     ctx.strokeStyle = '#64748b';
                     ctx.lineWidth = 1.5;
                     const centerX = x; 
-                    const centerY = h - 50;
+                    const centerY = h - 35; // Centro de las aspas más abajo para que la base toque el suelo
                     
                     // Torre
                     ctx.beginPath();
-                    ctx.moveTo(centerX - 4, centerY + 35);
+                    ctx.moveTo(centerX - 4, h); // Base apoyada en el borde inferior
                     ctx.lineTo(centerX - 2, centerY);
                     ctx.lineTo(centerX + 2, centerY);
-                    ctx.lineTo(centerX + 4, centerY + 35);
+                    ctx.lineTo(centerX + 4, h); // Base apoyada en el borde inferior
                     ctx.stroke();
                     
                     // Aspas (3 aspas)
-                    const angle = (Date.now() / 200) % (Math.PI * 2); // Sutil rotación si se redibuja
+                    const angle = 0; // Estático para mejorar rendimiento en scroll
                     for (let j = 0; j < 3; j++) {
                         const a = angle + (j * Math.PI * 2) / 3;
                         ctx.beginPath();
@@ -1785,7 +1737,7 @@ locationInput.addEventListener('input', () => {
             drawAxes(ctx, xOffset, w, h, styles);
 
             ctx.restore();
-            tile.lastDrawn = Date.now();
+            tile.drawn = true;
         }
 
         function drawSunMarkersOnCanvas(ctx, viewX, viewW, h) {
@@ -1796,8 +1748,8 @@ locationInput.addEventListener('input', () => {
             ctx.save();
             ctx.font = 'bold 10px Inter';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.lineWidth = 2;
+            ctx.textBaseline = 'top';
+            ctx.lineWidth = 1.5;
 
             Object.keys(state.sunData).forEach(dateStr => {
                 const sun = state.sunData[dateStr];
@@ -1811,7 +1763,7 @@ locationInput.addEventListener('input', () => {
                     if (x < viewX - 50 || x > viewX + viewW + 50) return;
 
                     ctx.save();
-                    ctx.translate(x, h - 12);
+                    ctx.translate(x, 32); // Posicionado en la parte superior, debajo de las horas (y=20)
                     ctx.strokeStyle = markerColor;
                     ctx.fillStyle = markerColor;
                     ctx.lineWidth = 1.5;
@@ -1848,7 +1800,7 @@ locationInput.addEventListener('input', () => {
                     ctx.font = 'bold 9px Inter';
                     ctx.shadowColor = 'white';
                     ctx.shadowBlur = 4;
-                    ctx.fillText(time, 0, -18);
+                    ctx.fillText(time, 0, 4); // Texto debajo del icono
                     ctx.restore();
                 };
 
@@ -1888,7 +1840,7 @@ locationInput.addEventListener('input', () => {
             const endTile = Math.floor((scrollX + viewportW) / TILE_WIDTH) + 1;
 
             for (let i = startTile; i <= endTile; i++) {
-                if (tiles[i]) {
+                if (tiles[i] && !tiles[i].drawn) {
                     drawTile(tiles[i]);
                 }
             }
@@ -2756,8 +2708,8 @@ locationInput.addEventListener('input', () => {
             const activeX = referenceX;
             const drawX = 60; // Fixed position on screen
 
-            // Cálculo de índice basado en midpoints (x = i * PPH + PPH/2)
-            const floatIndex = (activeX - PIXELS_PER_HOUR / 2) / PIXELS_PER_HOUR;
+            // Cálculo de índice basado en el inicio de la hora (x = i * PPH)
+            const floatIndex = activeX / PIXELS_PER_HOUR;
             const index = Math.floor(floatIndex);
             const progress = floatIndex - index;
 
@@ -2770,13 +2722,7 @@ locationInput.addEventListener('input', () => {
                 const temp = interpolate(d1.temp, d2.temp);
                 const apparent = interpolate(d1.apparent, d2.apparent);
                 const clouds = interpolate(d1.clouds, d2.clouds);
-                const precip = interpolate(d1.precip, d2.precip);
                 const precipProb = interpolate(d1.precipProb, d2.precipProb);
-                const wind = interpolate(d1.wind, d2.wind);
-                const humidity = interpolate(d1.humidity, d2.humidity);
-                const pressure = interpolate(d1.pressure, d2.pressure);
-                const uv = interpolate(d1.uv, d2.uv);
-                const visibility = interpolate(d1.visibility, d2.visibility);
 
                 fixedOverlayCtx.save();
                 fixedOverlayCtx.setLineDash([]);
@@ -3354,7 +3300,7 @@ locationInput.addEventListener('input', () => {
 
                     const ctx = canvas.getContext('2d', { alpha: true });
                     ctx.scale(state.dpr, state.dpr);
-                    tiles.push({ canvas, ctx, index: i, lastDrawn: 0 });
+                    tiles.push({ canvas, ctx, index: i, drawn: false });
                 }
             }
 
