@@ -66,34 +66,39 @@
             try {
                 // Mobile toggles
                 const toggleSearchBtn = document.getElementById('toggle-search-btn');
-                const toggleLegendBtn = document.getElementById('toggle-legend-btn');
                 const searchBox = document.getElementById('search-box');
-                const legend = document.getElementById('legend');
                 const controlsLeft = document.querySelector('.controls-left');
 
                 if (toggleSearchBtn) {
                     toggleSearchBtn.addEventListener('click', () => {
-                        if (!searchBox.classList.contains('active')) {
-                            // Opening search, close legend
-                            legend.classList.remove('active');
-                            toggleLegendBtn.classList.remove('active');
-                        }
                         const isActive = searchBox.classList.toggle('active');
                         toggleSearchBtn.classList.toggle('active', isActive);
-                        controlsLeft.classList.toggle('has-active', searchBox.classList.contains('active') || legend.classList.contains('active'));
+                        controlsLeft.classList.toggle('has-active', isActive);
                     });
                 }
 
-                if (toggleLegendBtn) {
-                    toggleLegendBtn.addEventListener('click', () => {
-                        if (!legend.classList.contains('active')) {
-                            // Opening legend, close search
-                            searchBox.classList.remove('active');
-                            toggleSearchBtn.classList.remove('active');
+                // Location tooltip logic for mobile/desktop
+                const locationGroup = document.querySelector('.location-group');
+                if (locationGroup) {
+                    const checkOverflow = () => {
+                        const locName = document.getElementById('location-name');
+                        const summary = document.getElementById('weather-summary');
+                        const isOverflowing = (locName.scrollWidth > locName.offsetWidth) || 
+                                            (summary.scrollWidth > summary.offsetWidth);
+                        locationGroup.classList.toggle('has-overflow', isOverflowing);
+                        locationGroup.style.cursor = isOverflowing ? 'pointer' : 'default';
+                        return isOverflowing;
+                    };
+
+                    locationGroup.addEventListener('mouseenter', checkOverflow);
+                    locationGroup.addEventListener('click', (e) => {
+                        if (window.innerWidth <= 600) {
+                            locationGroup.classList.toggle('active');
+                            // Auto-hide after 3 seconds on mobile
+                            if (locationGroup.classList.contains('active')) {
+                                setTimeout(() => locationGroup.classList.remove('active'), 3000);
+                            }
                         }
-                        const isActive = legend.classList.toggle('active');
-                        toggleLegendBtn.classList.toggle('active', isActive);
-                        controlsLeft.classList.toggle('has-active', searchBox.classList.contains('active') || legend.classList.contains('active'));
                     });
                 }
 
@@ -512,7 +517,7 @@ locationInput.addEventListener('input', () => {
         function toggleTheme() {
             state.theme = state.theme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', state.theme);
-            themeToggle.innerText = state.theme === 'dark' ? '🌙' : '☀️';
+            themeToggle.innerHTML = state.theme === 'dark' ? '<span class="material-symbols-outlined">light_mode</span>' : '<span class="material-symbols-outlined">dark_mode</span>';
             tiles.forEach(t => t.drawn = false);
             render();
             drawMinimap();
@@ -555,15 +560,11 @@ locationInput.addEventListener('input', () => {
 
         function closeMobilePanels() {
             const searchBox = document.getElementById('search-box');
-            const legend = document.getElementById('legend');
             const toggleSearchBtn = document.getElementById('toggle-search-btn');
-            const toggleLegendBtn = document.getElementById('toggle-legend-btn');
             const controlsLeft = document.querySelector('.controls-left');
 
             if (searchBox) searchBox.classList.remove('active');
-            if (legend) legend.classList.remove('active');
             if (toggleSearchBtn) toggleSearchBtn.classList.remove('active');
-            if (toggleLegendBtn) toggleLegendBtn.classList.remove('active');
             if (controlsLeft) controlsLeft.classList.remove('has-active');
         }
 
@@ -828,68 +829,6 @@ locationInput.addEventListener('input', () => {
                 const x = i * PIXELS_PER_HOUR;
                 const code = d.weatherCode;
 
-                // Niebla (45, 48)
-                if (code === 45 || code === 48) {
-                    ctx.save();
-                    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-                    ctx.lineWidth = 1;
-                    for (let j = 0; j < 5; j++) {
-                        const y = h * (0.2 + j * 0.15);
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-                        ctx.lineTo(x + PIXELS_PER_HOUR, y + Math.sin(i + j) * 5);
-                        ctx.stroke();
-                    }
-                    ctx.restore();
-                }
-
-                // Tormenta (95, 96, 99)
-                if (code >= 95) {
-                    if (i % 4 === 0) { // Solo algunos rayos para no saturar
-                        ctx.save();
-                        ctx.strokeStyle = '#fde047';
-                        ctx.lineWidth = 1.5;
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#fde047';
-                        const startX = x;
-                        ctx.beginPath();
-                        ctx.moveTo(startX, 20);
-                        ctx.lineTo(startX - 10, 40);
-                        ctx.lineTo(startX + 5, 40);
-                        ctx.lineTo(startX - 5, 65);
-                        ctx.stroke();
-                        ctx.restore();
-                    }
-                }
-
-                // Granizo (77, 96, 99)
-                if (code === 77 || code === 96 || code === 99) {
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                    for (let j = 0; j < 8; j++) {
-                        const hX = x + Math.random() * PIXELS_PER_HOUR;
-                        const hY = Math.random() * h;
-                        ctx.beginPath();
-                        ctx.arc(hX, hY, 2, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                    ctx.restore();
-                }
-
-                // Nieve (71, 73, 75, 85, 86)
-                if ((code >= 71 && code <= 75) || code === 85 || code === 86) {
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    for (let j = 0; j < 12; j++) {
-                        const sX = x + Math.random() * PIXELS_PER_HOUR;
-                        const sY = Math.random() * h;
-                        ctx.beginPath();
-                        ctx.arc(sX, sY, 1.5, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                    ctx.restore();
-                }
-
                 // Ondas de choque (rachas > 35)
                 if (d.gusts > 35) {
                     ctx.save();
@@ -938,22 +877,6 @@ locationInput.addEventListener('input', () => {
                         ctx.stroke();
                     }
                     
-                    ctx.restore();
-                }
-
-                // Viento sostenido fuerte (> 25) - Líneas discontinuas
-                if (d.wind > 25) {
-                    ctx.save();
-                    ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
-                    ctx.setLineDash([5, 5]);
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    for (let j = 1; j < 4; j++) {
-                        const lineX = x + (PIXELS_PER_HOUR / 4) * j;
-                        ctx.moveTo(lineX, 0);
-                        ctx.lineTo(lineX, h);
-                    }
-                    ctx.stroke();
                     ctx.restore();
                 }
             }
@@ -1149,8 +1072,13 @@ locationInput.addEventListener('input', () => {
                         <span class="day-name">${dayName}</span>
                         <span class="day-date">${dateStr}</span>
                     </div>
-                    <span class="day-icon">${iconSVG}</span>
-                    <span class="day-temp">${Math.round(day.tempMax)}° <span class="day-temp-min">${Math.round(day.tempMin)}°</span></span>
+                    <div class="day-body">
+                        <div class="day-icon">${iconSVG}</div>
+                        <div class="day-temp-group">
+                            <span class="day-temp">${Math.round(day.tempMax)}°</span>
+                            <span class="day-temp-min">${Math.round(day.tempMin)}°</span>
+                        </div>
+                    </div>
                 `;
 
                 card.addEventListener('click', () => {
@@ -1200,6 +1128,11 @@ locationInput.addEventListener('input', () => {
                 
                 if (currentDate.getDate() === dDate.getDate() && currentDate.getMonth() === dDate.getMonth()) {
                     card.classList.add('active');
+                    
+                    // Calculate arrow position based on the hour currently in the center of the view
+                    const dayProgress = currentData.localHour / 24;
+                    card.style.setProperty('--arrow-pos', `${dayProgress * 100}%`);
+
                     // Ensure the active card is visible in the scroll container
                     const cardRect = card.getBoundingClientRect();
                     const containerRect = container.getBoundingClientRect();
@@ -1568,7 +1501,6 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawPrecipitation(ctx, viewX, viewW, h, styles) {
-            ctx.fillStyle = '#1976d2'; // Siempre modo claro
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
@@ -1580,9 +1512,91 @@ locationInput.addEventListener('input', () => {
                     const x = i * PIXELS_PER_HOUR + 5;
                     const bw = PIXELS_PER_HOUR - 10;
 
+                    const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
+                    const isThunder = [95, 96, 99].includes(d.weatherCode);
+                    
+                    let baseColor = isSnow ? 'rgba(224, 247, 250, 0.4)' : 
+                                    isThunder ? 'rgba(57, 73, 171, 0.4)' : 
+                                    'rgba(25, 118, 210, 0.4)';
+                    
+                    let strokeColor = isSnow ? 'rgba(224, 247, 250, 0.8)' : 
+                                      isThunder ? 'rgba(57, 73, 171, 0.8)' : 
+                                      'rgba(25, 118, 210, 0.8)';
+
+                    ctx.fillStyle = baseColor;
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = 1;
+
+                    let drawH = Math.min(maxH, barH);
+                    let barY = h - drawH;
+                    
+                    // Draw base rect without top border
+                    ctx.beginPath();
+                    ctx.moveTo(x, h);
+                    ctx.lineTo(x, barY);
+                    ctx.lineTo(x + bw, barY);
+                    ctx.lineTo(x + bw, h);
+                    ctx.fill();
+                    
+                    // Draw sides and bottom stroke
+                    ctx.beginPath();
+                    ctx.moveTo(x, h);
+                    ctx.lineTo(x, barY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x + bw, h);
+                    ctx.lineTo(x + bw, barY);
+                    ctx.stroke();
+
+                    // Draw custom top border
+                    ctx.save();
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = 1.5;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    if (isSnow) {
+                        // Clouds and snowflakes on top
+                        ctx.beginPath();
+                        ctx.moveTo(x, barY);
+                        ctx.bezierCurveTo(x + bw*0.2, barY - 4, x + bw*0.4, barY - 4, x + bw*0.5, barY);
+                        ctx.bezierCurveTo(x + bw*0.6, barY - 6, x + bw*0.9, barY - 4, x + bw, barY);
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = strokeColor;
+                        for(let k=0; k<2; k++) {
+                            const sx = x + bw*0.3 + k*bw*0.4;
+                            const sy = barY - 6 - Math.random()*3;
+                            ctx.beginPath();
+                            ctx.arc(sx, sy, 1, 0, Math.PI*2);
+                            ctx.fill();
+                        }
+                    } else if (isThunder) {
+                        // Clouds and lightning
+                        ctx.beginPath();
+                        ctx.moveTo(x, barY);
+                        ctx.bezierCurveTo(x + bw*0.25, barY - 5, x + bw*0.5, barY - 2, x + bw*0.75, barY - 5);
+                        ctx.lineTo(x + bw, barY);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        const lx = x + bw/2;
+                        const ly = barY - 7;
+                        ctx.moveTo(lx, ly);
+                        ctx.lineTo(lx - 2, ly + 4);
+                        ctx.lineTo(lx + 2, ly + 3);
+                        ctx.lineTo(lx - 2, ly + 8);
+                        ctx.stroke();
+                    } else {
+                        // Wavy top for rain
+                        ctx.beginPath();
+                        ctx.moveTo(x, barY);
+                        ctx.bezierCurveTo(x + bw/4, barY - 3, x + 3*bw/4, barY + 3, x + bw, barY);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+
                     if (barH > maxH) {
-                        // Broken axis logic
-                        ctx.fillRect(x, h - maxH, bw, maxH);
                         // Draw zigzag
                         ctx.save();
                         ctx.strokeStyle = 'white';
@@ -1595,15 +1609,10 @@ locationInput.addEventListener('input', () => {
                         ctx.lineTo(x + bw, zy);
                         ctx.stroke();
                         ctx.restore();
-                    } else {
-                        ctx.fillRect(x, h - barH, bw, barH);
                     }
                 }
             }
         }
-
-        let cachedRainPattern = null;
-        let cachedSnowPattern = null;
 
         function drawPrecipitationProbability(ctx, viewX, viewW, h, styles) {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
@@ -1621,72 +1630,83 @@ locationInput.addEventListener('input', () => {
                 return '#039be5'; // Azul lluvia
             };
 
-            // Creamos el patrón de lluvia si no existe
-            if (!cachedRainPattern) {
-                const pCanvas = document.createElement('canvas');
-                pCanvas.width = 10;
-                pCanvas.height = 10;
-                const pCtx = pCanvas.getContext('2d');
-                pCtx.strokeStyle = '#0288d1';
-                pCtx.lineWidth = 1;
-                pCtx.globalAlpha = 0.5;
-                pCtx.beginPath();
-                pCtx.moveTo(2, 0);
-                pCtx.lineTo(8, 10);
-                pCtx.stroke();
-                cachedRainPattern = ctx.createPattern(pCanvas, 'repeat');
-            }
-            if (!cachedSnowPattern) {
-                const pCanvas = document.createElement('canvas');
-                pCanvas.width = 10;
-                pCanvas.height = 10;
-                const pCtx = pCanvas.getContext('2d');
-                pCtx.strokeStyle = '#b2ebf2';
-                pCtx.lineWidth = 1;
-                pCtx.globalAlpha = 0.5;
-                pCtx.beginPath();
-                pCtx.moveTo(2, 0);
-                pCtx.lineTo(8, 10);
-                pCtx.stroke();
-                cachedSnowPattern = ctx.createPattern(pCanvas, 'repeat');
-            }
-
-            ctx.save();
-            ctx.beginPath();
-
-            // Dibujamos la silueta
+            const outlinePath = new Path2D();
             let first = true;
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 const x = i * PIXELS_PER_HOUR;
-                const y = h - (h * (d.precipProb / 100));
+                const prob = d.precipProb || 0;
+                const y = h - (h * (prob / 100));
 
                 if (first) {
-                    ctx.moveTo(x, y);
+                    outlinePath.moveTo(x, y);
                     first = false;
                 } else {
-                    // Usamos una curva suave pero menos pomposa que las nubes
                     const prevD = state.hourlyData[i-1];
                     const prevX = (i-1) * PIXELS_PER_HOUR;
-                    const prevY = h - (h * (prevD.precipProb / 100));
+                    const prevProb = prevD.precipProb || 0;
+                    const prevY = h - (h * (prevProb / 100));
                     const cpX1 = prevX + (x - prevX) / 3;
                     const cpX2 = prevX + 2 * (x - prevX) / 3;
-                    ctx.bezierCurveTo(cpX1, prevY, cpX2, y, x, y);
+                    outlinePath.bezierCurveTo(cpX1, prevY, cpX2, y, x, y);
                 }
             }
 
-            // Cerramos para el relleno
+            const fillPath = new Path2D(outlinePath);
             const lastX = (endIdx - 1) * PIXELS_PER_HOUR;
             const firstX = startIdx * PIXELS_PER_HOUR;
+            fillPath.lineTo(lastX, h);
+            fillPath.lineTo(firstX, h);
+            fillPath.closePath();
 
             ctx.save();
-            ctx.lineTo(lastX, h);
-            ctx.lineTo(firstX, h);
-            ctx.closePath();
+            ctx.clip(fillPath);
 
-            // Relleno con patrón (usamos el de lluvia por defecto para todo el área)
-            ctx.fillStyle = cachedRainPattern;
-            ctx.fill();
+            // Relleno con densidad de líneas según probabilidad
+            for (let i = startIdx; i < endIdx - 1; i++) {
+                const d1 = state.hourlyData[i];
+                const d2 = state.hourlyData[i+1];
+                const x1 = i * PIXELS_PER_HOUR;
+                const x2 = (i+1) * PIXELS_PER_HOUR;
+                
+                const prob1 = d1.precipProb || 0;
+                const prob2 = d2.precipProb || 0;
+                
+                if (prob1 > 0 || prob2 > 0) { // Draw if any probability exists
+                    const avgProb = (prob1 + prob2) / 2;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.rect(x1, 0, x2 - x1, h);
+                    ctx.clip();
+                    
+                    const spacing = Math.max(4, 16 - (avgProb / 100) * 12);
+                    ctx.strokeStyle = getPrecipTypeColor(d1.weatherCode);
+                    ctx.lineWidth = 1.2;
+                    ctx.globalAlpha = 0.6;
+                    
+                    // Dibujamos pequeñas líneas diagonales (trazos cortos)
+                    const strokeLen = 4;
+                    const gapLen = 4;
+                    
+                    // Usamos un offset global basado en el espaciado para que las líneas no salten al hacer scroll
+                    const globalOffset = Math.floor(x1 / spacing) * spacing;
+
+                    ctx.beginPath();
+                    for (let lx = globalOffset - h; lx < x2 + h; lx += spacing) {
+                        for (let ly = 0; ly < h; ly += (strokeLen + gapLen)) {
+                            const sx = lx + ly;
+                            const sy = ly;
+                            // Solo dibujamos si el inicio está estrictamente dentro del segmento horario actual
+                            if (sx >= x1 && sx < x2) {
+                                ctx.moveTo(sx, sy);
+                                ctx.lineTo(sx + strokeLen, sy + strokeLen);
+                            }
+                        }
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
             ctx.restore();
 
             // Línea de contorno fina
@@ -1694,14 +1714,15 @@ locationInput.addEventListener('input', () => {
             ctx.lineWidth = 1.5;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.stroke();
+            ctx.stroke(outlinePath);
 
             // Añadimos puntos en cada hora si la probabilidad es > 0
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
-                if (d.precipProb > 5) {
+                const prob = d.precipProb || 0;
+                if (prob > 5) {
                     const x = i * PIXELS_PER_HOUR;
-                    const y = h - (h * (d.precipProb / 100));
+                    const y = h - (h * (prob / 100));
                     ctx.beginPath();
                     ctx.arc(x, y, 2, 0, Math.PI * 2);
                     ctx.fillStyle = getPrecipTypeColor(d.weatherCode);
@@ -1711,8 +1732,6 @@ locationInput.addEventListener('input', () => {
                     ctx.stroke();
                 }
             }
-
-            ctx.restore();
         }
 
         function drawHumidity(ctx, viewX, viewW, h, styles) {
@@ -2140,7 +2159,7 @@ locationInput.addEventListener('input', () => {
                 fixedOverlayCtx.strokeStyle = '#fff';
                 fixedOverlayCtx.lineWidth = 1.5;
 
-                const drawPoint = (y, color, value, unit, shape = 'circle') => {
+                const drawPoint = (y, color, value, unit, shape = 'circle', icon = '') => {
                     if (y >= h - 5) return; // No dibujar si está en el fondo
 
                     // El punto va en la Y exacta
@@ -2169,13 +2188,22 @@ locationInput.addEventListener('input', () => {
                     if (value !== null && (typeof value === 'string' || Math.abs(value) > 0.01)) {
                         // El texto tiene margen de seguridad de 10px
                         let constrainedY = Math.max(10, Math.min(h - 10, y));
-                        const text = ` ${value}${unit}`;
+                        const text = `${value}${unit}`;
 
                         fixedOverlayCtx.save();
                         fixedOverlayCtx.font = 'bold 11px Inter';
                         const textMetrics = fixedOverlayCtx.measureText(text);
-                        const bgW = textMetrics.width + 8;
-                        const bgH = 16;
+                        
+                        // Calculate width for icon if present
+                        let iconWidth = 0;
+                        if (icon) {
+                            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+                            iconWidth = fixedOverlayCtx.measureText(icon).width + 4;
+                            fixedOverlayCtx.font = 'bold 11px Inter'; // restore
+                        }
+                        
+                        const bgW = textMetrics.width + iconWidth + 12;
+                        const bgH = 18;
 
                         // Sistema de detección de colisiones simple para etiquetas en la línea vertical
                         if (!state.labelRects) state.labelRects = [];
@@ -2233,9 +2261,18 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.stroke();
 
                         fixedOverlayCtx.fillStyle = color;
-                        // Centrado perfecto del texto dentro del rect
                         fixedOverlayCtx.textBaseline = 'middle';
-                        fixedOverlayCtx.fillText(text, rect.x + 4, rect.y + rect.h / 2);
+                        
+                        let textStartX = rect.x + 6;
+                        
+                        if (icon) {
+                            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+                            fixedOverlayCtx.fillText(icon, textStartX, rect.y + rect.h / 2 + 1);
+                            textStartX += iconWidth;
+                        }
+                        
+                        fixedOverlayCtx.font = 'bold 11px Inter';
+                        fixedOverlayCtx.fillText(text, textStartX, rect.y + rect.h / 2 + 1);
                         fixedOverlayCtx.restore();
                     }
                 };
@@ -2276,7 +2313,7 @@ locationInput.addEventListener('input', () => {
                 const diff = Math.abs(temp - apparent);
                 const showApparent = diff >= 1;
                 const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
-                drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '');
+                drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '', 'circle', 'device_thermostat');
 
                 // 1.1 Wind Gusts (if over shockwave)
                 const closestIndex = progress < 0.5 ? index : index + 1;
@@ -2287,7 +2324,7 @@ locationInput.addEventListener('input', () => {
                     else if (closestData.gusts > 50) color = '#ea580c';
 
                     // Draw text
-                    drawPoint(h - 35, color, `💨 ${closestData.gusts.toFixed(1)}`, 'km/h', 'none');
+                    drawPoint(h - 35, color, closestData.gusts.toFixed(1), 'km/h', 'none', 'air');
                 }
 
                 // 4. Precipitación
@@ -2301,25 +2338,11 @@ locationInput.addEventListener('input', () => {
                     const visualH = Math.min(maxH, barH);
                     const barY = h - visualH;
 
-                    fixedOverlayCtx.save();
-                    fixedOverlayCtx.font = 'bold 11px Inter';
-                    fixedOverlayCtx.textAlign = 'center';
-                    const pText = '🌧️ ' + pVal.toFixed(1) + ' mm' + (isBroken ? ' (!)' : '');
-                    const pMetrics = fixedOverlayCtx.measureText(pText);
-                    const pBgW = pMetrics.width + 10;
-                    const pBgH = 16;
+                    const isSnow = [71, 73, 75, 77, 85, 86].includes(closestPrecipData.weatherCode);
+                    const isThunder = [95, 96, 99].includes(closestPrecipData.weatherCode);
+                    const pIcon = isSnow ? 'ac_unit' : isThunder ? 'thunderstorm' : 'water_drop';
 
-                    fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    fixedOverlayCtx.beginPath();
-                    fixedOverlayCtx.roundRect(drawX - pBgW/2, barY - 5 - pBgH, pBgW, pBgH, 4);
-                    fixedOverlayCtx.fill();
-                    fixedOverlayCtx.strokeStyle = '#1976d2';
-                    fixedOverlayCtx.lineWidth = 0.5;
-                    fixedOverlayCtx.stroke();
-
-                    fixedOverlayCtx.fillStyle = '#1976d2';
-                    fixedOverlayCtx.fillText(pText, drawX, barY - 5 - pBgH/2 + 4);
-                    fixedOverlayCtx.restore();
+                    drawPoint(barY - 12, '#1976d2', pVal.toFixed(1) + (isBroken ? ' (!)' : ''), ' mm', 'none', pIcon);
                 }
 
                 // 7. Probabilidad de Precipitación
@@ -2328,7 +2351,7 @@ locationInput.addEventListener('input', () => {
                 const py2 = getProbY(d2.precipProb);
                 const t = progress;
                 const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
-                drawPoint(probY, '#0288d1', `☔ ${Math.round(precipProb)}`, '%', 'diamond');
+                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond', 'water_drop');
 
                 // 8. Nubes
                 const getY = (d) => h - (h * (d.clouds / 100));
@@ -2353,7 +2376,7 @@ locationInput.addEventListener('input', () => {
                         cloudY = Math.pow(1-t2, 3) * midY + 3 * Math.pow(1-t2, 2) * t2 * cp3y + 3 * (1-t2) * t2 * t2 * cp4y + Math.pow(t2, 3) * y2;
                     }
                 }
-                drawPoint(cloudY, '#475569', `☁️ ${Math.round(clouds)}`, '%');
+                drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', 'cloud');
 
                 // 9. UV Index Interaction
                 if (currentUV >= 0.1) {
@@ -2368,7 +2391,11 @@ locationInput.addEventListener('input', () => {
                     fixedOverlayCtx.save();
                     fixedOverlayCtx.font = 'bold 10px Inter';
                     const uvMetrics = fixedOverlayCtx.measureText(uvLabel);
-                    const uvW = uvMetrics.width + 12;
+                    
+                    fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+                    const iconMetrics = fixedOverlayCtx.measureText('light_mode');
+                    
+                    const uvW = uvMetrics.width + iconMetrics.width + 16;
                     const uvH = 18;
                     const uvY = 2; // Pegada a la parte superior
 
@@ -2385,9 +2412,15 @@ locationInput.addEventListener('input', () => {
 
                     // Text
                     fixedOverlayCtx.fillStyle = color;
-                    fixedOverlayCtx.textAlign = 'center';
+                    fixedOverlayCtx.textAlign = 'left';
                     fixedOverlayCtx.textBaseline = 'middle';
-                    fixedOverlayCtx.fillText(uvLabel, drawX, uvY + uvH / 2);
+                    
+                    const startX = drawX - uvW / 2 + 6;
+                    fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+                    fixedOverlayCtx.fillText('light_mode', startX, uvY + uvH / 2 + 1);
+                    
+                    fixedOverlayCtx.font = 'bold 10px Inter';
+                    fixedOverlayCtx.fillText(uvLabel, startX + iconMetrics.width + 4, uvY + uvH / 2 + 1);
                     fixedOverlayCtx.restore();
                 }
 

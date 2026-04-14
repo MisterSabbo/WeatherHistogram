@@ -181,25 +181,7 @@
             cursor: pointer;
         }
 
-        /* Leyenda */
-        .legend {
-            display: flex;
-            gap: 15px;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-        }
+        /* Leyenda eliminada */
 
         /* Panel Superior Fijo */
         #top-panel {
@@ -235,8 +217,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px; /* Always close regardless of view */
+            gap: 2px;
             width: 100%;
+            pointer-events: auto; /* Enable interaction for tooltip */
+            position: relative;
+            z-index: 30;
+        }
+
+        .location-group.has-overflow:hover .custom-tooltip,
+        .location-group.has-overflow.active .custom-tooltip {
+            display: block;
         }
 
         #location-name {
@@ -319,41 +309,70 @@
         @media (max-width: 600px) {
             #top-panel {
                 height: auto;
-                min-height: 170px; /* Slightly increased */
+                min-height: auto;
                 padding: 10px 5px;
                 gap: 5px;
-                padding-bottom: 20px; /* Increased bottom padding */
+                padding-bottom: 15px;
+                display: flex;
+                flex-direction: column;
+                position: relative;
             }
             .top-panel-info {
-                left: 55px;
-                width: 110px;
-                top: 0;
-                bottom: 12px; /* Increased bottom spacing */
-                padding-top: 15px;
+                position: relative;
+                transform: none;
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 10px;
+                margin-bottom: 5px;
+                height: auto;
+                left: auto;
+                top: auto;
+                bottom: auto;
+            }
+            .location-group {
+                align-items: flex-start;
+                text-align: left;
+                flex: 1;
+                min-width: 0;
+            }
+            #current-time-display {
+                align-items: flex-end;
+                text-align: right;
+                margin-top: 0;
+                margin-left: 10px;
             }
             #location-name {
-                font-size: 0.8rem;
+                font-size: 1rem;
             }
             #weather-summary {
-                font-size: 0.7rem;
+                font-size: 0.75rem;
             }
             #current-time-display .time-main {
-                font-size: 0.8rem;
+                font-size: 1rem;
             }
             #current-time-display .date-sub {
                 font-size: 0.7rem;
             }
             .top-panel-metrics {
-                margin-left: 115px;
-                gap: 6px;
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
+                margin-left: 0;
+                gap: 10px;
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                width: 100%;
+                padding: 5px 10px;
+                scrollbar-width: none;
+                position: relative;
                 height: auto;
-                padding: 8px 0;
-                align-items: center;
+            }
+            .top-panel-metrics::-webkit-scrollbar {
+                display: none;
             }
             .data-card {
-                min-width: 0;
+                min-width: 60px;
+                flex: 0 0 auto;
                 display: flex;
                 flex-direction: column;
                 justify-content: flex-start;
@@ -444,9 +463,10 @@
         }
 
         #location-tooltip {
-            top: auto;
-            bottom: auto;
-            left: 120%;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 10px;
         }
 
         .info-icon:hover .custom-tooltip {
@@ -578,9 +598,9 @@
         .daily-card {
             display: inline-flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 120px;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 140px;
             flex-shrink: 0;
             height: 100%;
             background: var(--card-bg);
@@ -590,14 +610,29 @@
             cursor: pointer;
             transition: background 0.2s;
             position: relative;
-            padding: 0 5px;
+            padding: 10px 12px;
             box-sizing: border-box;
             overflow: hidden;
         }
 
         .daily-card.active {
             background: var(--bg-color);
-            border-bottom: 3px solid var(--text-primary);
+            border-bottom: 3px solid var(--accent-temp);
+        }
+
+        /* Active day arrow */
+        .daily-card.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: var(--arrow-pos, 50%);
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid var(--accent-temp);
+            z-index: 20;
         }
 
         .daily-card:hover {
@@ -606,39 +641,63 @@
 
         .daily-card .day-header {
             display: flex;
-            gap: 4px;
+            flex-direction: row;
             align-items: baseline;
-            margin-bottom: 4px;
+            gap: 6px;
+            margin-bottom: 0;
+            width: 100%;
         }
 
         .daily-card .day-name {
-            font-size: 0.85rem;
-            font-weight: bold;
+            font-size: 0.8rem;
+            font-weight: 800;
             color: var(--text-primary);
+            line-height: 1.1;
         }
 
         .daily-card .day-date {
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             color: var(--text-secondary);
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        .daily-card .day-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: auto;
         }
 
         .daily-card .day-icon {
-            margin: 6px 0;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-primary);
+            width: 32px;
+            height: 32px;
+        }
+
+        .daily-card .day-temp-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+            gap: 4px;
         }
 
         .daily-card .day-temp {
-            font-size: 0.85rem;
-            font-weight: bold;
+            font-size: 0.9rem;
+            font-weight: 800;
             color: var(--text-primary);
         }
         
         .daily-card .day-temp-min {
+            font-size: 0.75rem;
             color: var(--text-secondary);
-            font-weight: normal;
+            font-weight: 600;
         }
 
         #minimap-canvas {
@@ -727,18 +786,21 @@
 
         @media (max-width: 600px) {
             #controls-bar {
-                padding: 8px 15px;
-                gap: 10px;
+                padding: 8px 10px;
+                gap: 5px;
+                flex-wrap: nowrap; /* Prevent wrapping to keep search in the middle */
             }
             .mobile-toggles {
                 display: flex;
+                flex-shrink: 0;
             }
             .controls-left {
-                width: 100%;
+                flex: 1;
                 min-width: 0;
-                order: 3;
-                gap: 10px;
-                display: none; /* Hidden unless search or legend active */
+                order: 2;
+                gap: 5px;
+                display: none; /* Hidden unless search is active */
+                margin: 0 5px;
             }
             .controls-left.has-active {
                 display: flex;
@@ -751,22 +813,16 @@
             .search-box.active {
                 display: flex;
             }
-            .legend {
-                display: none;
-                width: 100%;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
-                padding: 10px;
-                background: var(--input-bg);
-                border-radius: 8px;
-            }
-            .legend.active {
-                display: flex;
-            }
             .controls-right {
-                margin-left: auto;
+                margin-left: 0;
                 width: auto;
-                order: 2;
+                order: 3;
+                flex-shrink: 0;
+            }
+            #location-tooltip {
+                left: 50%;
+                transform: translateX(-50%);
+                top: 100%;
+                margin-top: 5px;
             }
         }
