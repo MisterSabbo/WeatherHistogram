@@ -153,32 +153,68 @@
             background: var(--input-bg);
             border: 1px solid var(--grid-color);
             color: var(--text-primary);
-            padding: 6px 12px;
+            padding: 0 12px;
             border-radius: 6px;
             flex: 1;
             outline: none;
             font-size: 16px;
+            height: 36px;
+            box-sizing: border-box;
         }
 
         button {
             background: var(--accent-precip);
             color: white;
-            border: none;
-            padding: 6px 15px;
+            border: 1px solid transparent;
+            padding: 0 15px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
+            height: 36px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         button:hover { opacity: 0.9; }
 
         .theme-toggle {
+            background: var(--text-primary) !important;
+            color: var(--bg-color) !important;
+            border: 1px solid var(--grid-color);
+            padding: 0;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s, color 0.3s;
+        }
+
+        .github-link {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .github-link:hover {
+            color: var(--text-primary);
+        }
+
+        #geo-btn {
             background: var(--input-bg);
             color: var(--text-primary);
             border: 1px solid var(--grid-color);
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
+            width: 36px;
+            padding: 0;
         }
 
         /* Leyenda eliminada */
