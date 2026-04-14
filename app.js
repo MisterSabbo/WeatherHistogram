@@ -46,6 +46,17 @@
         window.addEventListener('resize', handleResize);
 
         async function init() {
+            // Block zoom/pinch on iOS
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('gesturestart', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+
             // mainCanvas ya no se usa como un único canvas gigante, sino que usaremos tiles.
             // Pero mantendremos la referencia para compatibilidad si es necesario o la eliminamos.
 
