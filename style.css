@@ -224,7 +224,6 @@
             z-index: 30;
         }
 
-        .location-group.has-overflow:hover .custom-tooltip,
         .location-group.has-overflow.active .custom-tooltip {
             display: block;
         }
@@ -311,11 +310,12 @@
                 height: auto;
                 min-height: auto;
                 padding: 10px 5px;
-                gap: 5px;
+                gap: 10px;
                 padding-bottom: 15px;
                 display: flex;
                 flex-direction: column;
                 position: relative;
+                z-index: 3000; /* Ensure it's above canvas */
             }
             .top-panel-info {
                 position: relative;
@@ -330,18 +330,23 @@
                 left: auto;
                 top: auto;
                 bottom: auto;
+                order: 2; /* Put below metrics */
             }
             .location-group {
-                align-items: flex-start;
-                text-align: left;
-                flex: 1;
-                min-width: 0;
-            }
-            #current-time-display {
                 align-items: flex-end;
                 text-align: right;
+                flex: 1;
+                min-width: 0;
+                order: 2; /* Put on the right */
+            }
+            #current-time-display {
+                align-items: flex-start;
+                text-align: left;
                 margin-top: 0;
-                margin-left: 10px;
+                margin-left: 0;
+                margin-right: 10px;
+                order: 1; /* Put on the left */
+                padding-left: 0; /* Align to the far left */
             }
             #location-name {
                 font-size: 1rem;
@@ -366,6 +371,7 @@
                 scrollbar-width: none;
                 position: relative;
                 height: auto;
+                order: 1; /* Put above info */
             }
             .top-panel-metrics::-webkit-scrollbar {
                 display: none;
@@ -467,10 +473,6 @@
             left: 50%;
             transform: translateX(-50%);
             margin-top: 10px;
-        }
-
-        .info-icon:hover .custom-tooltip {
-            display: block;
         }
 
         [data-theme="light"] .custom-tooltip {

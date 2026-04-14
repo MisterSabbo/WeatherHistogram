@@ -183,8 +183,24 @@ locationInput.addEventListener('input', () => {
                                 }
                                 const isVisible = tooltip.style.display === 'block';
                                 // Cerrar otros tooltips
-                                document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = '');
-                                tooltip.style.display = isVisible ? '' : 'block';
+                                document.querySelectorAll('.custom-tooltip').forEach(t => {
+                                    t.style.display = '';
+                                    t.style.position = '';
+                                    t.style.top = '';
+                                    t.style.left = '';
+                                    t.style.transform = '';
+                                    t.style.zIndex = '';
+                                });
+                                
+                                if (!isVisible) {
+                                    tooltip.style.display = 'block';
+                                    const rect = val.getBoundingClientRect();
+                                    tooltip.style.position = 'fixed';
+                                    tooltip.style.top = (rect.bottom + 10) + 'px';
+                                    tooltip.style.left = '50%';
+                                    tooltip.style.transform = 'translateX(-50%)';
+                                    tooltip.style.zIndex = '9999';
+                                }
                                 e.stopPropagation();
                             }
                         }
@@ -218,11 +234,13 @@ locationInput.addEventListener('input', () => {
                         if (isDailyCardsView) {
                             minimapContainer.style.display = 'none';
                             dailyCardsContainer.style.display = 'flex';
+                            toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">insights</span>';
                             generateDailyCards();
                             updateActiveDailyCard();
                         } else {
                             minimapContainer.style.display = 'block';
                             dailyCardsContainer.style.display = 'none';
+                            toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>';
                         }
                     });
                 }
@@ -359,7 +377,14 @@ locationInput.addEventListener('input', () => {
 
                 document.addEventListener('click', () => {
                     if (window.innerWidth < 600) {
-                        document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = '');
+                        document.querySelectorAll('.custom-tooltip').forEach(t => {
+                            t.style.display = '';
+                            t.style.position = '';
+                            t.style.top = '';
+                            t.style.left = '';
+                            t.style.transform = '';
+                            t.style.zIndex = '';
+                        });
                     }
                 });
 
@@ -1555,38 +1580,38 @@ locationInput.addEventListener('input', () => {
                     ctx.lineCap = 'round';
                     ctx.lineJoin = 'round';
                     
-                    if (isSnow) {
-                        // Clouds and snowflakes on top
-                        ctx.beginPath();
-                        ctx.moveTo(x, barY);
-                        ctx.bezierCurveTo(x + bw*0.2, barY - 4, x + bw*0.4, barY - 4, x + bw*0.5, barY);
-                        ctx.bezierCurveTo(x + bw*0.6, barY - 6, x + bw*0.9, barY - 4, x + bw, barY);
-                        ctx.stroke();
-                        
+                    if (isSnow || isThunder) {
+                        // Draw filled clouds covering the top border
                         ctx.fillStyle = strokeColor;
-                        for(let k=0; k<2; k++) {
-                            const sx = x + bw*0.3 + k*bw*0.4;
-                            const sy = barY - 6 - Math.random()*3;
-                            ctx.beginPath();
-                            ctx.arc(sx, sy, 1, 0, Math.PI*2);
-                            ctx.fill();
-                        }
-                    } else if (isThunder) {
-                        // Clouds and lightning
                         ctx.beginPath();
-                        ctx.moveTo(x, barY);
-                        ctx.bezierCurveTo(x + bw*0.25, barY - 5, x + bw*0.5, barY - 2, x + bw*0.75, barY - 5);
-                        ctx.lineTo(x + bw, barY);
-                        ctx.stroke();
+                        ctx.moveTo(x - 1, barY + 2);
+                        ctx.bezierCurveTo(x - 1, barY - 4, x + bw*0.3, barY - 6, x + bw*0.4, barY - 2);
+                        ctx.bezierCurveTo(x + bw*0.5, barY - 8, x + bw*0.8, barY - 6, x + bw + 1, barY - 1);
+                        ctx.lineTo(x + bw + 1, barY + 2);
+                        ctx.fill();
                         
-                        ctx.beginPath();
-                        const lx = x + bw/2;
-                        const ly = barY - 7;
-                        ctx.moveTo(lx, ly);
-                        ctx.lineTo(lx - 2, ly + 4);
-                        ctx.lineTo(lx + 2, ly + 3);
-                        ctx.lineTo(lx - 2, ly + 8);
-                        ctx.stroke();
+                        if (isSnow) {
+                            ctx.fillStyle = strokeColor;
+                            for(let k=0; k<3; k++) {
+                                const sx = x + bw*0.2 + k*bw*0.3;
+                                const sy = barY - 8 - Math.random()*4;
+                                ctx.beginPath();
+                                ctx.arc(sx, sy, 1.5, 0, Math.PI*2);
+                                ctx.fill();
+                            }
+                        } else {
+                            // Thunder
+                            ctx.strokeStyle = '#fde047'; // yellow lightning
+                            ctx.lineWidth = 1.5;
+                            ctx.beginPath();
+                            const lx = x + bw/2;
+                            const ly = barY - 6;
+                            ctx.moveTo(lx, ly);
+                            ctx.lineTo(lx - 3, ly + 5);
+                            ctx.lineTo(lx + 2, ly + 4);
+                            ctx.lineTo(lx - 2, ly + 10);
+                            ctx.stroke();
+                        }
                     } else {
                         // Wavy top for rain
                         ctx.beginPath();
@@ -2340,7 +2365,7 @@ locationInput.addEventListener('input', () => {
 
                     const isSnow = [71, 73, 75, 77, 85, 86].includes(closestPrecipData.weatherCode);
                     const isThunder = [95, 96, 99].includes(closestPrecipData.weatherCode);
-                    const pIcon = isSnow ? 'ac_unit' : isThunder ? 'thunderstorm' : 'water_drop';
+                    const pIcon = isSnow ? 'ac_unit' : isThunder ? 'bolt' : 'water_drop';
 
                     drawPoint(barY - 12, '#1976d2', pVal.toFixed(1) + (isBroken ? ' (!)' : ''), ' mm', 'none', pIcon);
                 }
