@@ -362,27 +362,30 @@
             }
             .top-panel-metrics {
                 margin-left: 0;
-                gap: 25px; /* Increased gap */
+                gap: 15px; /* Slightly reduced gap for stability */
                 display: flex;
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 width: 100%;
-                padding: 5px 30px 5px 10px; /* Added right padding for indicator */
+                padding: 5px 20px; /* Balanced padding */
                 scrollbar-width: none;
                 position: relative;
-                height: auto;
+                height: 50px; /* Fixed height for vertical centering */
+                align-items: center; /* Center vertically */
                 order: 1; /* Put above info */
             }
             .top-panel-metrics::-webkit-scrollbar {
                 display: none;
             }
             .data-card {
-                min-width: 60px;
+                min-width: 80px; /* Fixed min-width to prevent jumping */
+                width: 80px;     /* Fixed width for stability */
                 flex: 0 0 auto;
                 display: flex;
                 flex-direction: column;
-                justify-content: flex-start;
-                padding-top: 2px;
+                justify-content: center; /* Center content vertically */
+                align-items: center;    /* Center content horizontally */
+                padding-top: 0;
                 min-height: 45px;
             }
             .data-label {
@@ -418,25 +421,38 @@
             .scroll-indicator {
                 display: flex;
                 position: absolute;
-                right: 0;
-                top: 12px; /* Adjusted to align with metrics */
-                height: 35px; /* Adjusted height */
+                top: 12px;
+                height: 35px;
                 align-items: center;
                 justify-content: center;
+                color: var(--accent-temp);
+                pointer-events: none;
+                z-index: 100;
+                transition: opacity 0.3s;
+            }
+            .scroll-indicator-right {
+                right: 0;
                 background: linear-gradient(to right, transparent, var(--bg-color) 20%, var(--bg-color) 80%);
                 padding-left: 15px;
                 padding-right: 5px;
-                color: var(--accent-temp); /* Use a more visible color */
-                pointer-events: none;
-                z-index: 100;
-                animation: pulse-horizontal 2s infinite;
-                transition: opacity 0.3s;
+                animation: pulse-horizontal-right 2s infinite;
+            }
+            .scroll-indicator-left {
+                left: 0;
+                background: linear-gradient(to left, transparent, var(--bg-color) 20%, var(--bg-color) 80%);
+                padding-right: 15px;
+                padding-left: 5px;
+                animation: pulse-horizontal-left 2s infinite;
             }
         }
 
-        @keyframes pulse-horizontal {
+        @keyframes pulse-horizontal-right {
             0%, 100% { transform: translateX(0); }
             50% { transform: translateX(3px); }
+        }
+        @keyframes pulse-horizontal-left {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-3px); }
         }
 
         .scroll-indicator {
@@ -628,7 +644,7 @@
             flex-direction: column;
             align-items: flex-start;
             justify-content: space-between;
-            width: 140px;
+            width: 110px; /* Reduced width */
             flex-shrink: 0;
             height: 100%;
             background: var(--card-bg);
@@ -638,7 +654,7 @@
             cursor: pointer;
             transition: background 0.2s;
             position: relative;
-            padding: 10px 12px;
+            padding: 8px 10px; /* Slightly reduced padding */
             box-sizing: border-box;
             overflow: hidden;
         }
@@ -693,7 +709,8 @@
         .daily-card .day-body {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center; /* Centered to bring icon and temp closer */
+            gap: 8px; /* Controlled gap */
             width: 100%;
             margin-top: auto;
         }
