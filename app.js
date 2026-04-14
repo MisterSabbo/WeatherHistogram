@@ -389,19 +389,34 @@ locationInput.addEventListener('input', () => {
                 });
 
                 const metricsContainer = document.querySelector('.top-panel-metrics');
-                const scrollIndicator = document.querySelector('.scroll-indicator');
-                if (metricsContainer && scrollIndicator) {
+                const scrollIndLeft = document.querySelector('.scroll-indicator-left');
+                const scrollIndRight = document.querySelector('.scroll-indicator-right');
+                
+                if (metricsContainer && scrollIndLeft && scrollIndRight) {
                     const updateScrollIndicator = () => {
                         const hasOverflow = metricsContainer.scrollWidth > metricsContainer.clientWidth;
+                        const isAtStart = metricsContainer.scrollLeft <= 5;
                         const isAtEnd = metricsContainer.scrollLeft + metricsContainer.clientWidth >= metricsContainer.scrollWidth - 5;
                         
+                        // Right indicator
                         if (hasOverflow && !isAtEnd) {
-                            scrollIndicator.style.display = 'flex';
-                            scrollIndicator.style.opacity = '1';
+                            scrollIndRight.style.display = 'flex';
+                            scrollIndRight.style.opacity = '1';
                         } else {
-                            scrollIndicator.style.opacity = '0';
+                            scrollIndRight.style.opacity = '0';
                             setTimeout(() => {
-                                if (scrollIndicator.style.opacity === '0') scrollIndicator.style.display = 'none';
+                                if (scrollIndRight.style.opacity === '0') scrollIndRight.style.display = 'none';
+                            }, 300);
+                        }
+
+                        // Left indicator
+                        if (hasOverflow && !isAtStart) {
+                            scrollIndLeft.style.display = 'flex';
+                            scrollIndLeft.style.opacity = '1';
+                        } else {
+                            scrollIndLeft.style.opacity = '0';
+                            setTimeout(() => {
+                                if (scrollIndLeft.style.opacity === '0') scrollIndLeft.style.display = 'none';
                             }, 300);
                         }
                     };
@@ -409,7 +424,6 @@ locationInput.addEventListener('input', () => {
                     window.updateScrollIndicator = updateScrollIndicator;
                     metricsContainer.addEventListener('scroll', updateScrollIndicator, { passive: true });
                     window.addEventListener('resize', updateScrollIndicator);
-                    // Initial check after a short delay to allow rendering
                     setTimeout(updateScrollIndicator, 1000);
                 }
 
