@@ -362,12 +362,12 @@
             }
             .top-panel-metrics {
                 margin-left: 0;
-                gap: 10px;
+                gap: 25px; /* Increased gap */
                 display: flex;
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 width: 100%;
-                padding: 5px 10px;
+                padding: 5px 30px 5px 10px; /* Added right padding for indicator */
                 scrollbar-width: none;
                 position: relative;
                 height: auto;
@@ -415,6 +415,32 @@
             .info-icon {
                 display: none;
             }
+            .scroll-indicator {
+                display: flex;
+                position: absolute;
+                right: 0;
+                top: 12px; /* Adjusted to align with metrics */
+                height: 35px; /* Adjusted height */
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(to right, transparent, var(--bg-color) 20%, var(--bg-color) 80%);
+                padding-left: 15px;
+                padding-right: 5px;
+                color: var(--accent-temp); /* Use a more visible color */
+                pointer-events: none;
+                z-index: 100;
+                animation: pulse-horizontal 2s infinite;
+                transition: opacity 0.3s;
+            }
+        }
+
+        @keyframes pulse-horizontal {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
+        }
+
+        .scroll-indicator {
+            display: none;
         }
 
         .data-label {

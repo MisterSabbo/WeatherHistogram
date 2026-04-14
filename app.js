@@ -388,6 +388,31 @@ locationInput.addEventListener('input', () => {
                     }
                 });
 
+                const metricsContainer = document.querySelector('.top-panel-metrics');
+                const scrollIndicator = document.querySelector('.scroll-indicator');
+                if (metricsContainer && scrollIndicator) {
+                    const updateScrollIndicator = () => {
+                        const hasOverflow = metricsContainer.scrollWidth > metricsContainer.clientWidth;
+                        const isAtEnd = metricsContainer.scrollLeft + metricsContainer.clientWidth >= metricsContainer.scrollWidth - 5;
+                        
+                        if (hasOverflow && !isAtEnd) {
+                            scrollIndicator.style.display = 'flex';
+                            scrollIndicator.style.opacity = '1';
+                        } else {
+                            scrollIndicator.style.opacity = '0';
+                            setTimeout(() => {
+                                if (scrollIndicator.style.opacity === '0') scrollIndicator.style.display = 'none';
+                            }, 300);
+                        }
+                    };
+
+                    window.updateScrollIndicator = updateScrollIndicator;
+                    metricsContainer.addEventListener('scroll', updateScrollIndicator, { passive: true });
+                    window.addEventListener('resize', updateScrollIndicator);
+                    // Initial check after a short delay to allow rendering
+                    setTimeout(updateScrollIndicator, 1000);
+                }
+
                 handleResize();
                 await useMyLocation();
             } catch (err) {
@@ -1000,12 +1025,23 @@ locationInput.addEventListener('input', () => {
                         ctx.moveTo(-3, 14); ctx.lineTo(0, 11); ctx.lineTo(3, 14);
                         ctx.moveTo(0, 11); ctx.lineTo(0, 18);
                     }
+                    
+                    // Draw white outline for glow
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+
+                    // Draw actual icon
+                    ctx.strokeStyle = markerColor;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
 
                     // Time text
                     ctx.font = 'bold 10px Inter';
+                    ctx.lineWidth = 3;
                     ctx.strokeStyle = 'white';
                     ctx.strokeText(time, 0, 20); // Add stroke for shadow effect
+                    ctx.fillStyle = markerColor;
                     ctx.fillText(time, 0, 20); // Texto debajo del icono
                     ctx.restore();
                 };
@@ -2757,9 +2793,9 @@ locationInput.addEventListener('input', () => {
                 drawPollenRadar(d);
             });
 
-            document.getElementById('val-precip').innerHTML = `${currentData.precip}<span class="data-unit">mm</span>`;
-            document.getElementById('val-precip-prob').innerHTML = `${currentData.precipProb}<span class="data-unit">%</span>`;
-            document.getElementById('val-clouds').innerHTML = `${currentData.clouds}<span class="data-unit">%</span>`;
+            document.getElementById('val-precip').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">rainy</span> <span>${currentData.precip}<span class="data-unit">mm</span></span>`;
+            document.getElementById('val-precip-prob').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">water_drop</span> <span>${currentData.precipProb}<span class="data-unit">%</span></span>`;
+            document.getElementById('val-clouds').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">cloud</span> <span>${currentData.clouds}<span class="data-unit">%</span></span>`;
 
             // Calculamos el tiempo exacto basado en la posición X para mostrar minutos precisos
             const startTime = state.hourlyData[0].time;
@@ -2780,6 +2816,8 @@ locationInput.addEventListener('input', () => {
             timeDisplay.querySelector('.date-sub').innerText = isToday ? `HOY, ${dateStr}` : dateStr;
 
             document.getElementById('weather-summary').innerText = getWeatherDescription(d.weatherCode);
+
+            if (window.updateScrollIndicator) window.updateScrollIndicator();
 
             // Update location tooltip
             document.getElementById('tt-location').innerText = state.locationName;
