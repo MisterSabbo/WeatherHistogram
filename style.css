@@ -66,6 +66,8 @@
             align-items: center;
             flex-wrap: wrap;
             justify-content: space-between;
+            position: relative;
+            z-index: 4000; /* Ensure this is above top-panel's mobile z-index (3000) */
         }
 
         .mobile-toggles {
