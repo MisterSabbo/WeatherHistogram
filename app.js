@@ -1,11 +1,11 @@
 /**
          * CONFIGURACIÓN Y ESTADO
          */
-        let PIXELS_PER_HOUR = window.innerWidth < 600 ? 40 : 60;
+        let PIXELS_PER_HOUR = window.innerWidth < 600 ? 50 : 60;
         const CHART_HEIGHT = 250;
         const MINIMAP_HEIGHT = 80;
         const DEFAULT_COORDS = { lat: 40.4167, lon: -3.70325, name: "Madrid" };
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+        const CACHE_DURATION = 5 * 60 * 1000;
 
         const getDPR = () => {
             return Math.min(window.devicePixelRatio || 1, 2);
@@ -18,11 +18,13 @@
             lon: null,
             locationName: "Cargando...",
             hourlyData: [],
+            dailyData: [],
             sunData: {},
             hoverX: null,
             isFetching: false,
             dpr: getDPR(),
             theme: 'dark',
+            timezone: 'UTC',
             rawForecast: null,
             rawAQI: null,
             isDragging: false,
@@ -31,6 +33,7 @@
         };
 
         let minimapCanvas, minimapCtx;
+        let fixedOverlayCanvas, fixedOverlayCtx;
         let minimapCacheCanvas = null;
         let tiles = [];
         const TILE_WIDTH = 1024;
@@ -440,6 +443,13 @@ locationInput.addEventListener('input', () => {
 
                 handleResize();
                 await useMyLocation();
+
+                // Iniciar bucle de renderizado para el overlay pulsante
+                const pulseLoop = () => {
+                    drawFixedOverlay();
+                    requestAnimationFrame(pulseLoop);
+                };
+                requestAnimationFrame(pulseLoop);
             } catch (err) {
                 console.error("Initialization error:", err);
                 showError("Error al iniciar la aplicación.");
@@ -965,6 +975,40 @@ locationInput.addEventListener('input', () => {
             }
         }
 
+        function drawStarrySky(ctx, viewX, viewW, h) {
+            ctx.save();
+            ctx.fillStyle = 'white';
+            const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
+            const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
+
+            // Seeded random function based on position
+            const rand = (seed) => {
+                let x = Math.sin(seed * 9.9898) * 43758.5453;
+                return x - Math.floor(x);
+            };
+
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (d.isNight) {
+                    const xOffset = i * PIXELS_PER_HOUR;
+                    // Generate deterministic stars per hour chunk
+                    for (let s = 0; s < 12; s++) { // 12 stars per hour width
+                        const seed = i * 100 + s;
+                        const sx = xOffset + rand(seed) * PIXELS_PER_HOUR;
+                        const sy = rand(seed + 1) * (h * 0.4); // Only top 40% of the screen
+                        const size = 0.5 + rand(seed + 2) * 1.0;
+                        const opacity = 0.3 + rand(seed + 3) * 0.7;
+                        
+                        ctx.globalAlpha = opacity;
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            ctx.restore();
+        }
+
         function drawTile(tile) {
             const ctx = tile.ctx;
             const xOffset = tile.index * TILE_WIDTH;
@@ -981,6 +1025,7 @@ locationInput.addEventListener('input', () => {
 
             drawSunnyBackground(ctx, xOffset, w, h, styles, true);
             drawNightOverlay(ctx, xOffset, w, h);
+            drawStarrySky(ctx, xOffset, w, h);
             drawGrid(ctx, xOffset, w, h, styles);
             drawDayNames(ctx, xOffset, w, h, styles);
             drawClouds(ctx, xOffset, w, h, styles);
@@ -1198,22 +1243,22 @@ locationInput.addEventListener('input', () => {
         }
 
         function updateActiveDailyCard() {
-            const toggleNavBtn = document.getElementById('toggle-nav-btn');
-            // We can check if daily cards are visible by checking if the container is flex
             const container = document.getElementById('daily-cards-container');
             if (!container || container.style.display === 'none') return;
             
             const scrollContainer = document.getElementById('scroll-container');
-            // Find the day currently in the center of the view
-            const viewX = scrollContainer.scrollLeft;
-            const viewW = scrollContainer.clientWidth;
-            const centerX = viewX + viewW / 2;
+            const activeX = scrollContainer.scrollLeft + 60;
             
-            const hourIndex = Math.max(0, Math.min(state.hourlyData.length - 1, Math.floor((centerX - 60) / PIXELS_PER_HOUR)));
+            const hourIndex = Math.max(0, Math.min(state.hourlyData.length - 1, Math.floor(activeX / PIXELS_PER_HOUR)));
             const currentData = state.hourlyData[hourIndex];
             if (!currentData) return;
             
             const currentDate = new Date(currentData.time);
+            
+            // Calculamos el progreso exacto dentro del día para la marca roja
+            const dStart = new Date(currentData.time);
+            dStart.setHours(0,0,0,0);
+            const dayProgress = (currentData.time - dStart.getTime()) / 86400000;
             
             const cards = container.querySelectorAll('.daily-card');
             cards.forEach((card, index) => {
@@ -1221,24 +1266,19 @@ locationInput.addEventListener('input', () => {
                 if (!dayData) return;
                 const dDate = new Date(dayData.time);
                 
-                if (currentDate.getDate() === dDate.getDate() && currentDate.getMonth() === dDate.getMonth()) {
-                    card.classList.add('active');
-                    
-                    // Calculate arrow position based on the hour currently in the center of the view
-                    const dayProgress = currentData.localHour / 24;
-                    card.style.setProperty('--arrow-pos', `${dayProgress * 100}%`);
+                const isActive = currentDate.getDate() === dDate.getDate() && currentDate.getMonth() === dDate.getMonth();
+                card.classList.toggle('active', isActive);
+                
+                if (isActive) {
+                    card.style.setProperty('--arrow-pos', `${Math.max(0, Math.min(1, dayProgress)) * 100}%`);
 
-                    // Ensure the active card is visible in the scroll container
                     const cardRect = card.getBoundingClientRect();
                     const containerRect = container.getBoundingClientRect();
                     
                     if (cardRect.left < containerRect.left || cardRect.right > containerRect.right) {
-                        // Smooth scroll to center the card
                         const scrollLeft = card.offsetLeft - (container.clientWidth / 2) + (card.clientWidth / 2);
                         container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
                     }
-                } else {
-                    card.classList.remove('active');
                 }
             });
         }
@@ -1407,6 +1447,18 @@ locationInput.addEventListener('input', () => {
             }
             ctx.stroke();
 
+            // Línea de congelación (0°C)
+            const frozenY = normalizeY(0, -20, 40, h);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(14, 165, 233, 0.4)'; // Cyan/Ice blue
+            ctx.setLineDash([4, 4]); // Dashed line
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(xStart, frozenY);
+            ctx.lineTo(xEnd, frozenY);
+            ctx.stroke();
+            ctx.restore();
+
             // Divisiones de día
             ctx.strokeStyle = 'rgba(0,0,0,0.08)'; // Siempre modo claro
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
@@ -1469,14 +1521,12 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawClouds(ctx, viewX, viewW, h, styles) {
-            const cloudColor = '#9e9e9e'; // Siempre modo claro
-
-            // Gradiente vertical: más rico y con un toque azulado en las sombras
+            // Un gradiente suave simulando la atmósfera dentro de una nube
             const cloudGrad = ctx.createLinearGradient(0, h, 0, 0);
-            cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-            cloudGrad.addColorStop(0.4, 'rgba(226, 232, 240, 0.5)');
-            cloudGrad.addColorStop(0.8, 'rgba(100, 116, 139, 0.7)');
-            cloudGrad.addColorStop(1, 'rgba(51, 65, 85, 0.85)');
+            cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+            cloudGrad.addColorStop(0.3, 'rgba(226, 232, 240, 0.4)');
+            cloudGrad.addColorStop(0.6, 'rgba(148, 163, 184, 0.6)');
+            cloudGrad.addColorStop(1, 'rgba(248, 250, 252, 0.9)'); // Borde superior más blanco
 
             ctx.fillStyle = cloudGrad;
 
@@ -1488,51 +1538,23 @@ locationInput.addEventListener('input', () => {
                 const d = state.hourlyData[i];
                 points.push({
                     x: i * PIXELS_PER_HOUR,
-                    y: h - (h * (d.clouds / 100))
+                    y: h - (h * (d.clouds / 100)),
+                    val: d.clouds
                 });
             }
 
             if (points.length < 2) return;
 
-            // Función para crear el camino ondulado con puffiness dinámico y suavizado total
-            const createPuffyPath = (pathCtx, offset = 0, basePuffScale = 12) => {
-                const getPuff = (idx) => {
-                    const cloudVal = state.hourlyData[idx + startIdx].clouds;
-                    return (cloudVal / 100) * basePuffScale;
-                };
-
+            // Función para crear un camino ondulado muy suave usando curvas de Bezier cúbicas continuas
+            const createSmoothPath = (pathCtx, offset = 0) => {
                 pathCtx.moveTo(points[0].x, points[0].y + offset);
 
                 for (let i = 0; i < points.length - 1; i++) {
                     const p1 = points[i];
                     const p2 = points[i + 1];
-                    const puff = (getPuff(i) + getPuff(i + 1)) / 2;
-
-                    // Si no hay nubes, dibujamos línea recta suave
-                    if (puff < 0.5) {
-                        pathCtx.lineTo(p2.x, p2.y + offset);
-                        continue;
-                    }
-
-                    const midX = (p1.x + p2.x) / 2;
-                    const midY = (p1.y + p2.y) / 2 + offset;
-
-                    // Para que sea "puffy" pero sin aristas, dividimos cada hora en dos pompas
-                    // y nos aseguramos de que las tangentes en los puntos de unión sean horizontales.
-
-                    // Pompa 1: p1 -> mid
-                    const cp1x = p1.x + (midX - p1.x) * 0.5;
-                    const cp1y = p1.y + offset - puff;
-                    const cp2x = midX - (midX - p1.x) * 0.5;
-                    const cp2y = midY - puff;
-                    pathCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, midX, midY);
-
-                    // Pompa 2: mid -> p2
-                    const cp3x = midX + (p2.x - midX) * 0.5;
-                    const cp3y = midY - puff;
-                    const cp4x = p2.x - (p2.x - midX) * 0.5;
-                    const cp4y = p2.y + offset - puff;
-                    pathCtx.bezierCurveTo(cp3x, cp3y, cp4x, cp4y, p2.x, p2.y + offset);
+                    const cx = (p1.x + p2.x) / 2;
+                    // Interpolación cúbica suave, el offset se aplica verticalmente
+                    pathCtx.bezierCurveTo(cx, p1.y + offset, cx, p2.y + offset, p2.x, p2.y + offset);
                 }
             };
 
@@ -1540,7 +1562,7 @@ locationInput.addEventListener('input', () => {
             ctx.beginPath();
             ctx.moveTo(0, h);
             ctx.lineTo(points[0].x, points[0].y);
-            createPuffyPath(ctx);
+            createSmoothPath(ctx);
             ctx.lineTo(state.hourlyData.length * PIXELS_PER_HOUR, h);
             ctx.lineTo(0, h);
             ctx.closePath();
@@ -1549,7 +1571,7 @@ locationInput.addEventListener('input', () => {
             // Textura de ruido sutil
             ctx.save();
             ctx.globalCompositeOperation = 'source-atop';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
             for (let i = 0; i < 800; i++) {
                 const rx = Math.random() * (state.hourlyData.length * PIXELS_PER_HOUR);
                 const ry = Math.random() * h;
@@ -1557,40 +1579,53 @@ locationInput.addEventListener('input', () => {
             }
             ctx.restore();
 
-            // Adornos internos (pompas de volumen)
+            // Bordes interiores (volumen) limitados en opacidad para no dominar
             ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            createPuffyPath(ctx, 12, 8);
+            createSmoothPath(ctx, 8);
             ctx.stroke();
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
             ctx.beginPath();
-            createPuffyPath(ctx, 25, 6);
+            createSmoothPath(ctx, 16);
             ctx.stroke();
             ctx.restore();
 
-            // Rim Light (Brillo en el borde superior)
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            createPuffyPath(ctx, -1, 13);
-            ctx.stroke();
-            ctx.restore();
-
-            // Línea de contorno principal
+            // Línea de contorno principal y borde superior suave
             ctx.save();
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = 'rgba(71, 85, 105, 0.3)';
+            ctx.shadowBlur = 12;
+            
+            // Generate horizontal gradient according to cloud cover
+            const validPoints = points.filter(p => !isNaN(p.val));
+            if (validPoints.length > 0) {
+                const minX = validPoints[0].x;
+                const maxX = validPoints[validPoints.length - 1].x;
+                const clGrad = ctx.createLinearGradient(minX, 0, maxX, 0);
+                
+                validPoints.forEach(p => {
+                    const stop = (p.x - minX) / (maxX - minX || 1);
+                    // Clamped stop to [0,1]
+                    const safeStop = Math.max(0, Math.min(1, stop));
+                    // 0% clouds = white (255), 100% clouds = dark bluish gray (100)
+                    const luma = Math.round(255 - (p.val / 100) * 155);
+                    clGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.9)`);
+                });
+                
+                ctx.strokeStyle = clGrad;
+                ctx.shadowColor = 'rgba(128, 128, 128, 0.2)';
+            } else {
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.2)'; 
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; 
+            }
+            
             ctx.shadowOffsetY = 2;
-            ctx.strokeStyle = '#64748b';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
-            createPuffyPath(ctx);
+            createSmoothPath(ctx);
             ctx.stroke();
             ctx.restore();
         }
@@ -1625,7 +1660,20 @@ locationInput.addEventListener('input', () => {
                     let drawH = Math.min(maxH, barH);
                     let barY = h - drawH;
                     
-                    // Draw base rect without top border
+                    // Customize the fade out so the top is still visible (not fully transparent)
+                    const grad = ctx.createLinearGradient(0, barY, 0, Math.min(h, barY + 30));
+                    
+                    // Extract rgba components to adjust opacity
+                    const colorParts = baseColor.match(/[\d.]+/g);
+                    const R = colorParts[0], G = colorParts[1], B = colorParts[2], A = colorParts[3];
+                    const semiTransparentBase = `rgba(${R}, ${G}, ${B}, ${Math.max(0.1, A * 0.4)})`;
+
+                    grad.addColorStop(0, semiTransparentBase);
+                    grad.addColorStop(1, baseColor);
+                    
+                    ctx.fillStyle = grad;
+                    
+                    // Draw base rect
                     ctx.beginPath();
                     ctx.moveTo(x, h);
                     ctx.lineTo(x, barY);
@@ -1633,7 +1681,18 @@ locationInput.addEventListener('input', () => {
                     ctx.lineTo(x + bw, h);
                     ctx.fill();
                     
-                    // Draw sides and bottom stroke
+                    // Let the stroke also fade, but be clearly visible at the top
+                    const strokeColorParts = strokeColor.match(/[\d.]+/g);
+                    const sR = strokeColorParts[0], sG = strokeColorParts[1], sB = strokeColorParts[2], sA = strokeColorParts[3];
+                    const semiTransparentStroke = `rgba(${sR}, ${sG}, ${sB}, ${Math.max(0.3, sA * 0.5)})`;
+
+                    const strokeGrad = ctx.createLinearGradient(0, barY, 0, Math.min(h, barY + 30));
+                    strokeGrad.addColorStop(0, semiTransparentStroke);
+                    strokeGrad.addColorStop(1, strokeColor);
+                    
+                    ctx.strokeStyle = strokeGrad;
+                    
+                    // Draw sides
                     ctx.beginPath();
                     ctx.moveTo(x, h);
                     ctx.lineTo(x, barY);
@@ -1643,47 +1702,77 @@ locationInput.addEventListener('input', () => {
                     ctx.lineTo(x + bw, barY);
                     ctx.stroke();
 
-                    // Draw custom top border
+                    // Draw custom scattered top effects
                     ctx.save();
-                    ctx.strokeStyle = strokeColor;
                     ctx.lineWidth = 1.5;
                     ctx.lineCap = 'round';
                     ctx.lineJoin = 'round';
                     
-                    if (isSnow || isThunder) {
-                        // Draw filled clouds covering the top border
-                        ctx.fillStyle = strokeColor;
-                        ctx.beginPath();
-                        ctx.moveTo(x - 1, barY + 2);
-                        ctx.bezierCurveTo(x - 1, barY - 4, x + bw*0.3, barY - 6, x + bw*0.4, barY - 2);
-                        ctx.bezierCurveTo(x + bw*0.5, barY - 8, x + bw*0.8, barY - 6, x + bw + 1, barY - 1);
-                        ctx.lineTo(x + bw + 1, barY + 2);
-                        ctx.fill();
-                        
-                        if (isSnow) {
-                            ctx.fillStyle = strokeColor;
-                            for(let k=0; k<3; k++) {
-                                const sx = x + bw*0.2 + k*bw*0.3;
-                                const sy = barY - 8 - Math.random()*4;
-                                ctx.beginPath();
-                                ctx.arc(sx, sy, 1.5, 0, Math.PI*2);
-                                ctx.fill();
-                            }
-                        } else {
-                            // Thunder
-                            ctx.strokeStyle = '#fde047'; // yellow lightning
-                            ctx.lineWidth = 1.5;
+                    if (isSnow) {
+                        // High contrast outline
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 4;
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
+                        for(let k = 0; k < 4; k++) {
+                            const sx = x + bw * 0.15 + k * (bw * 0.25);
+                            const sy = barY + ((k * 17) % 15) - 5;
+                            const flakeSize = 2.5 + ((k * 11) % 2);
                             ctx.beginPath();
-                            const lx = x + bw/2;
-                            const ly = barY - 6;
-                            ctx.moveTo(lx, ly);
-                            ctx.lineTo(lx - 3, ly + 5);
-                            ctx.lineTo(lx + 2, ly + 4);
-                            ctx.lineTo(lx - 2, ly + 10);
+                            ctx.moveTo(sx - flakeSize, sy); ctx.lineTo(sx + flakeSize, sy);
+                            ctx.moveTo(sx, sy - flakeSize); ctx.lineTo(sx, sy + flakeSize);
+                            ctx.moveTo(sx - flakeSize*0.7, sy - flakeSize*0.7); ctx.lineTo(sx + flakeSize*0.7, sy + flakeSize*0.7);
+                            ctx.moveTo(sx - flakeSize*0.7, sy + flakeSize*0.7); ctx.lineTo(sx + flakeSize*0.7, sy - flakeSize*0.7);
+                            ctx.stroke();
+                        }
+
+                        ctx.strokeStyle = 'white'; 
+                        ctx.lineWidth = 1.5;
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                        ctx.shadowBlur = 2;
+                        for(let k = 0; k < 4; k++) {
+                            const sx = x + bw * 0.15 + k * (bw * 0.25);
+                            const sy = barY + ((k * 17) % 15) - 5;
+                            const flakeSize = 2.5 + ((k * 11) % 2);
+                            ctx.beginPath();
+                            ctx.moveTo(sx - flakeSize, sy); ctx.lineTo(sx + flakeSize, sy);
+                            ctx.moveTo(sx, sy - flakeSize); ctx.lineTo(sx, sy + flakeSize);
+                            ctx.moveTo(sx - flakeSize*0.7, sy - flakeSize*0.7); ctx.lineTo(sx + flakeSize*0.7, sy + flakeSize*0.7);
+                            ctx.moveTo(sx - flakeSize*0.7, sy + flakeSize*0.7); ctx.lineTo(sx + flakeSize*0.7, sy - flakeSize*0.7);
+                            ctx.stroke();
+                        }
+                    } else if (isThunder) {
+                        // High contrast Outline
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 5;
+                        ctx.lineJoin = 'round';
+                        for(let k = 0; k < 2; k++) {
+                            const lx = x + bw * 0.3 + k * (bw * 0.4);
+                            const ly = barY + ((k * 13) % 10) - 5;
+                            ctx.beginPath();
+                            ctx.moveTo(lx, ly); ctx.lineTo(lx - 3, ly + 6);
+                            ctx.lineTo(lx + 2, ly + 5); ctx.lineTo(lx - 2, ly + 12);
+                            ctx.stroke();
+                        }
+
+                        ctx.strokeStyle = '#fde047'; // yellow
+                        ctx.shadowColor = 'rgba(253, 224, 71, 0.8)';
+                        ctx.shadowBlur = 6;
+                        ctx.lineWidth = 2.0;
+                        for(let k = 0; k < 2; k++) {
+                            const lx = x + bw * 0.3 + k * (bw * 0.4);
+                            const ly = barY + ((k * 13) % 10) - 5;
+                            ctx.beginPath();
+                            ctx.moveTo(lx, ly); ctx.lineTo(lx - 3, ly + 6);
+                            ctx.lineTo(lx + 2, ly + 5); ctx.lineTo(lx - 2, ly + 12);
                             ctx.stroke();
                         }
                     } else {
-                        // Wavy top for rain
+                        // Regular rain wavy top
+                        ctx.strokeStyle = strokeColor; // Use solid opaque stroke color for contrast
+                        ctx.shadowColor = 'rgba(25, 118, 210, 0.6)';
+                        ctx.shadowBlur = 4;
+                        ctx.lineWidth = 1.5;
                         ctx.beginPath();
                         ctx.moveTo(x, barY);
                         ctx.bezierCurveTo(x + bw/4, barY - 3, x + 3*bw/4, barY + 3, x + bw, barY);
@@ -1866,15 +1955,22 @@ locationInput.addEventListener('input', () => {
                     ctx.save();
                     ctx.translate(x, y);
                     
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                    ctx.shadowBlur = 4;
                     // Rotate based on wind direction (where it blows TO instead of FROM)
                     ctx.rotate((d.windDir + 180) * Math.PI / 180);
 
                     // Determine color based on intensity
-                    let windColor = '#94a3b8'; // light slate
-                    if (d.wind > 20) windColor = '#64748b'; // stronger
-                    if (d.wind > 40) windColor = '#ef4444'; // dangerous
+                    let windColor = '#64748b'; // slate as base so it contrasts with white clouds
+                    if (d.wind > 20) windColor = '#475569'; // stronger
+                    if (d.wind > 40) windColor = '#dc2626'; // dangerous
                     
                     ctx.fillStyle = windColor;
+                    
+                    // Add stroke for better visibility over clouds
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 1.5;
+
                     ctx.beginPath();
                     // Draw a crisp tiny arrow pointing up (which will be rotated)
                     ctx.moveTo(0, -6);
@@ -1883,14 +1979,9 @@ locationInput.addEventListener('input', () => {
                     ctx.lineTo(-4, 4);
                     ctx.closePath();
                     ctx.fill();
+                    ctx.stroke();
                     
                     ctx.restore();
-
-                    // Draw speed text right below the arrow
-                    ctx.fillStyle = '#64748b';
-                    ctx.font = '9px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(`${Math.round(d.wind)}`, x, y + 14);
                 }
             }
             ctx.restore();
@@ -2248,13 +2339,69 @@ locationInput.addEventListener('input', () => {
             if (!state.hourlyData.length) return;
 
             const w = fixedOverlayCanvas.clientWidth;
-            const h = scrollContainer.clientHeight; // Use scrollContainer height to match tiles
+            const h = scrollContainer.clientHeight; 
 
             fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.clientWidth, fixedOverlayCanvas.clientHeight);
 
-            const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
-            const activeX = referenceX;
-            const drawX = 60; // Fixed position on screen
+            const activeX = Math.floor(scrollContainer.scrollLeft + 60);
+            const drawX = 60;
+            
+            // 1. Fixed Reference Line (60px)
+            fixedOverlayCtx.save();
+            fixedOverlayCtx.setLineDash([5, 5]);
+            fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            fixedOverlayCtx.beginPath();
+            fixedOverlayCtx.moveTo(60, 0);
+            fixedOverlayCtx.lineTo(60, h);
+            fixedOverlayCtx.stroke();
+            fixedOverlayCtx.restore();
+
+            // 2. Playhead and Shading
+            const now = Date.now();
+            const startTime = state.hourlyData[0].time;
+            const nowXPos = ((now - startTime) / 36e5) * PIXELS_PER_HOUR;
+            const screenNowX = nowXPos - scrollContainer.scrollLeft;
+
+            if (screenNowX > 0) {
+                let shadeWidth = Math.min(screenNowX, w);
+                fixedOverlayCtx.save();
+                const pastGrad = fixedOverlayCtx.createLinearGradient(shadeWidth - 150, 0, shadeWidth, 0);
+                pastGrad.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
+                pastGrad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+                
+                fixedOverlayCtx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+                fixedOverlayCtx.fillRect(0, 0, Math.max(0, shadeWidth - 150), h);
+                fixedOverlayCtx.fillStyle = pastGrad;
+                fixedOverlayCtx.fillRect(Math.max(0, shadeWidth - 150), 0, Math.min(150, shadeWidth), h);
+                fixedOverlayCtx.restore();
+            }
+            
+            if (screenNowX >= -10 && screenNowX <= w + 10) {
+                fixedOverlayCtx.save();
+                const pulse = Math.sin(Date.now() / 400) * 2;
+                const topY = 22;
+
+                fixedOverlayCtx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+                fixedOverlayCtx.lineWidth = 2;
+                fixedOverlayCtx.beginPath();
+                fixedOverlayCtx.moveTo(screenNowX, 0);
+                fixedOverlayCtx.lineTo(screenNowX, h);
+                fixedOverlayCtx.stroke();
+                
+                fixedOverlayCtx.shadowColor = 'rgba(239, 68, 68, 0.9)';
+                fixedOverlayCtx.shadowBlur = 12 + pulse * 2;
+                fixedOverlayCtx.fillStyle = '#ef4444';
+                fixedOverlayCtx.beginPath();
+                fixedOverlayCtx.arc(screenNowX, topY, 5 + pulse/2, 0, Math.PI * 2);
+                fixedOverlayCtx.fill();
+                
+                fixedOverlayCtx.shadowBlur = 0;
+                fixedOverlayCtx.fillStyle = 'white';
+                fixedOverlayCtx.beginPath();
+                fixedOverlayCtx.arc(screenNowX, topY, 1.5, 0, Math.PI * 2);
+                fixedOverlayCtx.fill();
+                fixedOverlayCtx.restore();
+            }
 
             // Cálculo de índice basado en el inicio de la hora (x = i * PPH)
             const floatIndex = activeX / PIXELS_PER_HOUR;
@@ -2564,8 +2711,7 @@ locationInput.addEventListener('input', () => {
 
             const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
             if (nowLine) {
-                nowLine.style.left = nowX + 'px';
-                nowLine.style.display = Math.abs(nowX - referenceX) > 5 ? 'block' : 'none';
+                nowLine.style.display = 'none'; // We render it on fixed canvas now
             }
 
             // Posición relativa al viewport del scroll
@@ -2673,7 +2819,7 @@ locationInput.addEventListener('input', () => {
             const ctx = canvas.getContext('2d');
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = 50;
+            const radius = 60;
 
             const pollutants = [
                 { name: 'PM10', val: data.aqiDetails.pm10 || 0, max: 100 },
@@ -2715,17 +2861,18 @@ locationInput.addEventListener('input', () => {
             ctx.font = 'bold 9px Inter';
             ctx.fillStyle = 'var(--text-primary)';
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             pollutants.forEach((p, i) => {
                 const angle = (Math.PI * 2 / corners) * i - Math.PI / 2;
-                const distMultiplier = i === 0 || i === 2 ? 22 : 28; // Give top and bottom labels different spacing
-                const x = centerX + (radius + distMultiplier) * Math.cos(angle);
-                const y = centerY + (radius + distMultiplier) * Math.sin(angle);
+                const labelDist = radius + 22;
+                const x = centerX + labelDist * Math.cos(angle);
+                const y = centerY + labelDist * Math.sin(angle);
 
-                let offsetY = 3;
-                if (i === 0) offsetY = 2; // Top
-                if (i === 2) offsetY = 6; // Bottom
-
-                ctx.fillText(p.name, x, y + offsetY);
+                ctx.save();
+                ctx.shadowColor = state.theme === 'dark' ? 'black' : 'white';
+                ctx.shadowBlur = 4;
+                ctx.fillText(p.name, x, y);
+                ctx.restore();
             });
 
             // Área de datos
@@ -2760,7 +2907,7 @@ locationInput.addEventListener('input', () => {
             const ctx = canvas.getContext('2d');
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = 45;
+            const radius = 55;
             const plants = [
                 { name: 'Aliso', val: data.pollenDetails.alder, max: 50 },
                 { name: 'Abedul', val: data.pollenDetails.birch, max: 50 },
@@ -2799,20 +2946,23 @@ locationInput.addEventListener('input', () => {
             ctx.stroke();
 
             // Etiquetas
-            ctx.font = 'bold 10px Inter';
+            ctx.font = 'bold 9px Inter';
             ctx.fillStyle = 'var(--text-primary)';
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             plants.forEach((p, i) => {
                 const angle = (Math.PI / 3) * i - Math.PI / 2;
-                const x = centerX + (radius + 22) * Math.cos(angle);
-                const y = centerY + (radius + 22) * Math.sin(angle);
+                // Aumentamos la distancia de las etiquetas para que no se pisen con el polígono
+                const labelDist = radius + 22;
+                const x = centerX + labelDist * Math.cos(angle);
+                const y = centerY + labelDist * Math.sin(angle);
 
-                // Ajuste fino de posición para que no se salgan
-                let offsetY = 4;
-                if (i === 0) offsetY = -2; // Arriba
-                if (i === 3) offsetY = 10; // Abajo
-
-                ctx.fillText(p.name.substring(0, 5), x, y + offsetY);
+                // Dibujar un pequeño fondo para el texto si es necesario, o usar sombras
+                ctx.save();
+                ctx.shadowColor = state.theme === 'dark' ? 'black' : 'white';
+                ctx.shadowBlur = 4;
+                ctx.fillText(p.name, x, y);
+                ctx.restore();
             });
 
             // Área de datos
