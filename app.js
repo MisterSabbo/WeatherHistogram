@@ -729,7 +729,7 @@ locationInput.addEventListener('input', () => {
 
             try {
                 const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
-                const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&hourly=european_aqi,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
+                const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&hourly=european_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
 
                 const [forecastRes, aqiRes] = await Promise.all([
                     fetch(forecastUrl, { signal: controller.signal }),
@@ -861,6 +861,13 @@ locationInput.addEventListener('input', () => {
                 };
                 const maxPollen = Math.max(...Object.values(pollen));
 
+                const aqiDetails = {
+                    pm10: aqiHourly.pm10 ? aqiHourly.pm10[i] : null,
+                    pm2_5: aqiHourly.pm2_5 ? aqiHourly.pm2_5[i] : null,
+                    ozone: aqiHourly.ozone ? aqiHourly.ozone[i] : null,
+                    nitrogen_dioxide: aqiHourly.nitrogen_dioxide ? aqiHourly.nitrogen_dioxide[i] : null,
+                };
+
                 return {
                     time: timestamp,
                     localHour: parseInt(hourFormatter.format(dateObj)),
@@ -880,6 +887,7 @@ locationInput.addEventListener('input', () => {
                     visibility: hourly.visibility ? hourly.visibility[i] : 10000,
                     weatherCode: hourly.weather_code[i],
                     aqi: aqiHourly.european_aqi ? aqiHourly.european_aqi[i] : null,
+                    aqiDetails: aqiDetails,
                     pollen: maxPollen,
                     pollenDetails: pollen,
                     isNight: isNight
@@ -982,6 +990,7 @@ locationInput.addEventListener('input', () => {
 
             // Weather Phenomena
             drawWeatherPhenomena(ctx, xOffset, w, h);
+            drawWind(ctx, xOffset, w, h, styles);
 
             drawTemperature(ctx, xOffset, w, h, styles);
             drawSunMarkersOnCanvas(ctx, xOffset, w, h);
@@ -1842,23 +1851,49 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawWind(ctx, viewX, viewW, h, styles) {
-            const color = 'rgba(158, 158, 158, 0.4)'; // Grey soft
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
-            ctx.beginPath();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.5;
-
+            ctx.save();
+            // Draw tiny wind arrows directly on the grid
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
-                const x = i * PIXELS_PER_HOUR;
-                // Normalize wind (0-100 km/h)
-                const y = h - (h * (Math.min(100, d.wind) / 100));
-                if (i === startIdx) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (d.localHour % 3 === 0) { // Draw every 3 hours to avoid clutter
+                    const x = i * PIXELS_PER_HOUR;
+                    // Draw wind arrows at the top of the chart
+                    const y = 35; // A bit below the top day labels
+                    
+                    ctx.save();
+                    ctx.translate(x, y);
+                    
+                    // Rotate based on wind direction (where it blows TO instead of FROM)
+                    ctx.rotate((d.windDir + 180) * Math.PI / 180);
+
+                    // Determine color based on intensity
+                    let windColor = '#94a3b8'; // light slate
+                    if (d.wind > 20) windColor = '#64748b'; // stronger
+                    if (d.wind > 40) windColor = '#ef4444'; // dangerous
+                    
+                    ctx.fillStyle = windColor;
+                    ctx.beginPath();
+                    // Draw a crisp tiny arrow pointing up (which will be rotated)
+                    ctx.moveTo(0, -6);
+                    ctx.lineTo(4, 4);
+                    ctx.lineTo(0, 2);
+                    ctx.lineTo(-4, 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.restore();
+
+                    // Draw speed text right below the arrow
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '9px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${Math.round(d.wind)}`, x, y + 14);
+                }
             }
-            ctx.stroke();
+            ctx.restore();
         }
 
         function drawTemperature(ctx, viewX, viewW, h, styles) {
@@ -2632,9 +2667,96 @@ locationInput.addEventListener('input', () => {
             return 'Alto';
         }
 
+        function drawAQIRadar(data) {
+            const canvas = document.getElementById('aqi-radar');
+            if (!canvas || !data.aqiDetails) return;
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 50;
+
+            const pollutants = [
+                { name: 'PM10', val: data.aqiDetails.pm10 || 0, max: 100 },
+                { name: 'PM2.5', val: data.aqiDetails.pm2_5 || 0, max: 75 },
+                { name: 'O3', val: data.aqiDetails.ozone || 0, max: 180 },
+                { name: 'NO2', val: data.aqiDetails.nitrogen_dioxide || 0, max: 200 }
+            ];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw axis lines and background (square/diamond for 4 elements)
+            const corners = pollutants.length;
+            ctx.strokeStyle = 'rgba(128,128,128,0.4)';
+            ctx.lineWidth = 1;
+            for (let j = 1; j <= 3; j++) {
+                ctx.beginPath();
+                const r = (radius / 3) * j;
+                for (let i = 0; i < corners; i++) {
+                    const angle = (Math.PI * 2 / corners) * i - Math.PI / 2;
+                    const x = centerX + r * Math.cos(angle);
+                    const y = centerY + r * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            // Ejes
+            ctx.beginPath();
+            for (let i = 0; i < corners; i++) {
+                const angle = (Math.PI * 2 / corners) * i - Math.PI / 2;
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX + radius * Math.cos(angle), centerY + radius * Math.sin(angle));
+            }
+            ctx.stroke();
+
+            // Etiquetas
+            ctx.font = 'bold 9px Inter';
+            ctx.fillStyle = 'var(--text-primary)';
+            ctx.textAlign = 'center';
+            pollutants.forEach((p, i) => {
+                const angle = (Math.PI * 2 / corners) * i - Math.PI / 2;
+                const distMultiplier = i === 0 || i === 2 ? 22 : 28; // Give top and bottom labels different spacing
+                const x = centerX + (radius + distMultiplier) * Math.cos(angle);
+                const y = centerY + (radius + distMultiplier) * Math.sin(angle);
+
+                let offsetY = 3;
+                if (i === 0) offsetY = 2; // Top
+                if (i === 2) offsetY = 6; // Bottom
+
+                ctx.fillText(p.name, x, y + offsetY);
+            });
+
+            // Área de datos
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.6)'; // Reddish for pollution
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            pollutants.forEach((p, i) => {
+                const angle = (Math.PI * 2 / corners) * i - Math.PI / 2;
+                const r = Math.min(radius, (p.val / p.max) * radius);
+                const x = centerX + r * Math.cos(angle);
+                const y = centerY + r * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Detalles texto
+            const details = document.getElementById('aqi-details');
+            if (details) {
+                details.innerHTML = pollutants.map(p => {
+                    const unit = 'µg/m³';
+                    return `<div style="display:flex; justify-content:space-between;"><span>${p.name}:</span> <b>${p.val.toFixed(1)} ${unit}</b></div>`;
+                }).join('');
+            }
+        }
         function drawPollenRadar(data) {
             const canvas = document.getElementById('pollen-radar');
-            if (!canvas) return;
+            if (!canvas || !data.pollenDetails) return;
             const ctx = canvas.getContext('2d');
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -2744,7 +2866,9 @@ locationInput.addEventListener('input', () => {
                     precip: interpolate(d1.precip, d2.precip).toFixed(1),
                     precipProb: Math.round(interpolate(d1.precipProb, d2.precipProb)),
                     aqi: d1.aqi,
+                    aqiDetails: d1.aqiDetails,
                     pollen: d1.pollen,
+                    pollenDetails: d1.pollenDetails,
                     weatherCode: d1.weatherCode
                 };
                 d = d1;
@@ -2761,7 +2885,9 @@ locationInput.addEventListener('input', () => {
                     precip: d.precip.toFixed(1),
                     precipProb: d.precipProb,
                     aqi: d.aqi,
+                    aqiDetails: d.aqiDetails,
                     pollen: d.pollen,
+                    pollenDetails: d.pollenDetails,
                     weatherCode: d.weatherCode
                 };
             }
@@ -2784,7 +2910,7 @@ locationInput.addEventListener('input', () => {
 
             const arrow = document.getElementById('wind-arrow');
             if (arrow) {
-                arrow.style.transform = `rotate(${currentData.windDir}deg)`;
+                arrow.style.transform = `rotate(${currentData.windDir + 180}deg)`;
                 // Color based on temperature
                 let windColor = 'var(--text-primary)';
                 const t = parseFloat(currentData.temp);
@@ -2798,16 +2924,20 @@ locationInput.addEventListener('input', () => {
             // AQI
             const aqiInfo = getAQIInfo(currentData.aqi);
             document.querySelector('#val-aqi .aqi-text').innerText = aqiInfo.text;
-            document.getElementById('aqi-tooltip').innerHTML = `
-                <div style="min-width: 180px; padding: 2px;">
+            
+            const aqiHeader = document.getElementById('aqi-header-info');
+            if (aqiHeader) {
+                aqiHeader.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:5px;">
                         <span style="font-weight:bold;">Calidad del Aire</span>
                         <span style="background:var(--accent-temp); color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem;">${aqiInfo.val}</span>
                     </div>
-                    <div style="font-weight:bold; color:var(--accent-temp); margin-bottom:4px;">${aqiInfo.text}</div>
-                    <div style="font-size:0.7rem; line-height:1.4; opacity:0.9;">${aqiInfo.rec}</div>
-                </div>
-            `;
+                    <div style="font-weight:bold; color:var(--accent-temp); margin-bottom:4px; text-align:center;">${aqiInfo.text}</div>
+                    <div style="font-size:0.7rem; line-height:1.4; opacity:0.9; text-align:center;">${aqiInfo.rec}</div>
+                `;
+            }
+            const aqiRadar = document.getElementById('aqi-radar');
+            if (aqiRadar) aqiRadar.style.display = 'block';
 
             // Polen
             const pollenText = getPollenText(currentData.pollen);
@@ -2815,7 +2945,8 @@ locationInput.addEventListener('input', () => {
 
             // Dibujamos el radar
             requestAnimationFrame(() => {
-                drawPollenRadar(d);
+                drawAQIRadar(currentData);
+                drawPollenRadar(currentData);
             });
 
             document.getElementById('val-precip').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">rainy</span> <span>${currentData.precip}<span class="data-unit">mm</span></span>`;

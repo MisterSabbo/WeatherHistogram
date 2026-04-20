@@ -400,12 +400,12 @@
             }
             .top-panel-metrics {
                 margin-left: 0;
-                gap: 15px; /* Slightly reduced gap for stability */
+                gap: 5px; /* Significantly reduced gap since cards are auto width now */
                 display: flex;
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 width: 100%;
-                padding: 5px 20px; /* Balanced padding */
+                padding: 5px 2px; /* Less horizontal padding */
                 scrollbar-width: none;
                 position: relative;
                 height: 50px; /* Fixed height for vertical centering */
@@ -416,14 +416,14 @@
                 display: none;
             }
             .data-card {
-                min-width: 80px; /* Fixed min-width to prevent jumping */
-                width: 80px;     /* Fixed width for stability */
+                min-width: 85px; /* Use a fixed min-width to avoid jittering when values change */
+                width: auto;     /* Adapt to content */
                 flex: 0 0 auto;
                 display: flex;
                 flex-direction: column;
                 justify-content: center; /* Center content vertically */
                 align-items: center;    /* Center content horizontally */
-                padding-top: 0;
+                padding: 0 5px;        /* Add horizontal padding to replace gap */
                 min-height: 45px;
             }
             .data-label {
@@ -432,10 +432,11 @@
             }
             .data-value {
                 font-size: 1rem !important;
+                font-variant-numeric: tabular-nums;
                 cursor: pointer;
             }
             .data-card:first-child {
-                min-width: 0;
+                min-width: 85px;
             }
             .data-card:first-child .data-value {
                 font-size: 1.1rem !important;
@@ -532,20 +533,18 @@
             top: 120%; /* Back to appearing below */
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9);
-            color: #f8fafc; /* Slate 50 */
+            background: var(--card-bg); /* Use theme card background */
+            color: var(--text-primary); /* Use theme primary text */
             padding: 12px 16px;
             border-radius: 10px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(51, 65, 85, 1);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            font-size: 1rem; /* Better readability on mobile */
+            border: 1px solid var(--grid-color); /* Theme border */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
             z-index: 5000; /* Keeps it above everything else */
             display: none;
             min-width: 240px;
             pointer-events: none;
             line-height: 1.5;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
         }
 
         #location-tooltip {
@@ -556,10 +555,7 @@
         }
 
         [data-theme="light"] .custom-tooltip {
-            background: rgba(255, 255, 255, 0.9);
-            color: #0f172a;
-            border: 1px solid rgba(226, 232, 240, 1);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         #pollen-radar {

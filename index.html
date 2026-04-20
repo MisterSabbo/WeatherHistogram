@@ -66,16 +66,27 @@
             <span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>
         </div>
         <div class="top-panel-metrics">
-            <div class="data-card">
-                <div class="data-value" id="val-temp" style="font-size: 1.3rem;">--<span class="data-unit">°C</span></div>
-                <div class="data-label" id="val-apparent" style="font-size: 0.6rem; margin-top: 1px;">ST: --°C</div>
+            <div class="data-card" id="wind-card">
+                <div id="wind-compass-container" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <div style="font-size: 10px; font-weight: bold; line-height: 1; color: var(--text-secondary);">N</div>
+                    <div id="wind-compass" style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); position: relative; display: flex; align-items: center; justify-content: center;">
+                        <div id="wind-arrow" style="width: 2px; height: 14px; background: var(--text-primary); position: relative; transition: transform 0.5s;">
+                            <div style="position: absolute; top: -2px; left: -3px; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 6px solid var(--text-primary);"></div>
+                        </div>
+                    </div>
+                    <div class="data-value" id="val-wind" style="font-size: 0.9rem !important;">--<span class="data-unit">km/h</span></div>
+                </div>
             </div>
             <div class="data-card">
                 <div class="data-value" id="val-aqi" style="font-size: 1.1rem; display: flex; align-items: center; gap: 4px;">
                     <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">eco</span>
                     <span class="aqi-text">--</span>
                     <span class="info-icon">i
-                        <div class="custom-tooltip" id="aqi-tooltip"></div>
+                        <div class="custom-tooltip" id="aqi-tooltip" style="min-width: 200px;">
+                            <div id="aqi-header-info" style="margin-bottom:8px;"></div>
+                            <canvas id="aqi-radar" width="150" height="150" style="display:none;"></canvas>
+                            <div id="aqi-details" style="font-size: 0.65rem; line-height: 1.2; margin-top:5px;"></div>
+                        </div>
                     </span>
                 </div>
             </div>
@@ -92,16 +103,9 @@
                     </span>
                 </div>
             </div>
-            <div class="data-card" id="wind-card">
-                <div id="wind-compass-container" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                    <div style="font-size: 10px; font-weight: bold; line-height: 1; color: var(--text-secondary);">N</div>
-                    <div id="wind-compass" style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); position: relative; display: flex; align-items: center; justify-content: center;">
-                        <div id="wind-arrow" style="width: 2px; height: 14px; background: var(--text-primary); position: relative; transition: transform 0.5s;">
-                            <div style="position: absolute; top: -2px; left: -3px; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 6px solid var(--text-primary);"></div>
-                        </div>
-                    </div>
-                    <div class="data-value" id="val-wind" style="font-size: 0.9rem !important;">--<span class="data-unit">km/h</span></div>
-                </div>
+            <div class="data-card">
+                <div class="data-value" id="val-temp" style="font-size: 1.3rem;">--<span class="data-unit">°C</span></div>
+                <div class="data-label" id="val-apparent" style="font-size: 0.6rem; margin-top: 1px;">ST: --°C</div>
             </div>
             <div class="data-card">
                 <div class="data-value" id="val-precip" style="font-size: 1.3rem; display: flex; align-items: center; gap: 4px;">
