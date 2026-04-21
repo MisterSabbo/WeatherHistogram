@@ -136,8 +136,12 @@
             <span class="material-symbols-outlined" style="font-size: 20px;">my_location</span>
         </button>
         <main id="scroll-container">
-            <div id="canvas-wrapper">
-                <canvas id="main-canvas"></canvas>
+            <div id="canvas-wrapper" style="position: relative;">
+                <div id="past-shadow" style="position: absolute; top: 0; left: 0; bottom: 0; width: 0; pointer-events: none; z-index: 5;"></div>
+                <div id="now-indicator" style="position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(239, 68, 68, 0.5); pointer-events: none; z-index: 10; display: none;">
+                    <div style="position: absolute; top: 22px; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 12px rgba(239, 68, 68, 0.9); animation: pulse-breathing 2s infinite ease-in-out;"></div>
+                </div>
+                <canvas id="main-canvas" style="position: relative; z-index: 1;"></canvas>
             </div>
         </main>
     </div>

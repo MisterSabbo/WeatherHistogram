@@ -1672,11 +1672,11 @@ locationInput.addEventListener('input', () => {
                     const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
                     const isThunder = [95, 96, 99].includes(d.weatherCode);
                     
-                    let baseColor = isSnow ? 'rgba(224, 247, 250, 0.4)' : 
+                    let baseColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(148, 163, 184, 0.4)') : 
                                     isThunder ? 'rgba(57, 73, 171, 0.4)' : 
                                     'rgba(25, 118, 210, 0.4)';
                     
-                    let strokeColor = isSnow ? 'rgba(224, 247, 250, 0.8)' : 
+                    let strokeColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(100, 116, 139, 0.8)') : 
                                       isThunder ? 'rgba(57, 73, 171, 0.8)' : 
                                       'rgba(25, 118, 210, 0.8)';
 
@@ -2387,60 +2387,6 @@ locationInput.addEventListener('input', () => {
             fixedOverlayCtx.stroke();
             fixedOverlayCtx.restore();
 
-            // 2. Playhead and Shading
-            const now = Date.now();
-            const startTime = state.hourlyData[0].time;
-            const nowXPos = ((now - startTime) / 36e5) * PIXELS_PER_HOUR;
-            const screenNowX = nowXPos - scrollContainer.scrollLeft;
-
-            if (screenNowX > 0) {
-                const shadeAlpha = state.theme === 'dark' ? 0.5 : 0.2; // Much heavier for dark mode
-                
-                fixedOverlayCtx.save();
-                if (screenNowX <= w + 150) {
-                    const pastGrad = fixedOverlayCtx.createLinearGradient(screenNowX - 150, 0, screenNowX, 0);
-                    pastGrad.addColorStop(0, `rgba(0, 0, 0, ${shadeAlpha})`);
-                    pastGrad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
-                    
-                    fixedOverlayCtx.fillStyle = `rgba(0, 0, 0, ${shadeAlpha})`;
-                    fixedOverlayCtx.fillRect(0, 0, Math.max(0, screenNowX - 150), h);
-                    
-                    fixedOverlayCtx.fillStyle = pastGrad;
-                    fixedOverlayCtx.fillRect(Math.max(0, screenNowX - 150), 0, Math.min(150, screenNowX), h);
-                } else {
-                    fixedOverlayCtx.fillStyle = `rgba(0, 0, 0, ${shadeAlpha})`;
-                    fixedOverlayCtx.fillRect(0, 0, w, h);
-                }
-                fixedOverlayCtx.restore();
-            }
-            
-            if (screenNowX >= -10 && screenNowX <= w + 10) {
-                fixedOverlayCtx.save();
-                const pulse = Math.sin(Date.now() / 400) * 2;
-                const topY = 22;
-
-                fixedOverlayCtx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-                fixedOverlayCtx.lineWidth = 2;
-                fixedOverlayCtx.beginPath();
-                fixedOverlayCtx.moveTo(screenNowX, 0);
-                fixedOverlayCtx.lineTo(screenNowX, h);
-                fixedOverlayCtx.stroke();
-                
-                fixedOverlayCtx.shadowColor = 'rgba(239, 68, 68, 0.9)';
-                fixedOverlayCtx.shadowBlur = 12 + pulse * 2;
-                fixedOverlayCtx.fillStyle = '#ef4444';
-                fixedOverlayCtx.beginPath();
-                fixedOverlayCtx.arc(screenNowX, topY, 5 + pulse/2, 0, Math.PI * 2);
-                fixedOverlayCtx.fill();
-                
-                fixedOverlayCtx.shadowBlur = 0;
-                fixedOverlayCtx.fillStyle = 'white';
-                fixedOverlayCtx.beginPath();
-                fixedOverlayCtx.arc(screenNowX, topY, 1.5, 0, Math.PI * 2);
-                fixedOverlayCtx.fill();
-                fixedOverlayCtx.restore();
-            }
-
             // 0 Degree Marker Line Label
             const y0 = normalizeY(0, -20, 40, h);
             fixedOverlayCtx.save();
@@ -2479,7 +2425,7 @@ locationInput.addEventListener('input', () => {
                 fixedOverlayCtx.strokeStyle = '#fff';
                 fixedOverlayCtx.lineWidth = 1.5;
 
-                const drawPoint = (y, color, value, unit, shape = 'circle', icon = '') => {
+                const drawPoint = (y, color, value, unit, shape = 'circle', icon = '', secondaryText = null, secondaryColor = null) => {
                     if (y >= h - 5) return; // No dibujar si está en el fondo
 
                     // El punto va en la Y exacta
@@ -2513,6 +2459,10 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.save();
                         fixedOverlayCtx.font = 'bold 11px Inter';
                         const textMetrics = fixedOverlayCtx.measureText(text);
+                        let secMetrics = { width: 0 };
+                        if (secondaryText) {
+                            secMetrics = fixedOverlayCtx.measureText(secondaryText);
+                        }
                         
                         // Calculate width for icon if present
                         let iconWidth = 0;
@@ -2522,7 +2472,7 @@ locationInput.addEventListener('input', () => {
                             fixedOverlayCtx.font = 'bold 11px Inter'; // restore
                         }
                         
-                        const bgW = textMetrics.width + iconWidth + 12;
+                        const bgW = textMetrics.width + secMetrics.width + iconWidth + 12 + (secondaryText ? 4 : 0);
                         const bgH = 18;
 
                         // Sistema de detección de colisiones simple para etiquetas en la línea vertical
@@ -2593,6 +2543,12 @@ locationInput.addEventListener('input', () => {
                         
                         fixedOverlayCtx.font = 'bold 11px Inter';
                         fixedOverlayCtx.fillText(text, textStartX, rect.y + rect.h / 2 + 1);
+
+                        if (secondaryText) {
+                            textStartX += textMetrics.width + 4;
+                            fixedOverlayCtx.fillStyle = secondaryColor;
+                            fixedOverlayCtx.fillText(secondaryText, textStartX, rect.y + rect.h / 2 + 1);
+                        }
                         fixedOverlayCtx.restore();
                     }
                 };
@@ -2632,8 +2588,15 @@ locationInput.addEventListener('input', () => {
                 // 1. Temperatura
                 const diff = Math.abs(temp - apparent);
                 const showApparent = diff >= 1;
-                const tempText = showApparent ? `${temp.toFixed(1)}°C (${apparent.toFixed(1)}°C)` : `${temp.toFixed(1)}°C`;
-                drawPoint(normalizeY(temp, -20, 40, h), '#d32f2f', tempText, '', 'circle', 'device_thermostat');
+                const tempColor = '#d32f2f'; // El rojo normal de temperatura
+                
+                if (showApparent) {
+                    const isCold = apparent <= temp;
+                    const apparentColor = isCold ? '#0288d1' : '#ef4444'; // Azul o Rojo fuerte
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', 'device_thermostat', `(${apparent.toFixed(1)}°C)`, apparentColor);
+                } else {
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', 'device_thermostat');
+                }
 
                 // 1.1 Wind Gusts (if over shockwave)
                 const closestIndex = progress < 0.5 ? index : index + 1;
@@ -2751,14 +2714,33 @@ locationInput.addEventListener('input', () => {
         function updateNowButtonPosition() {
             if (state.hourlyData.length === 0) return;
             const floatBtn = document.getElementById('floating-now-btn');
-            if (!floatBtn) return;
             
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
 
             // Posición X real en el canvas
             const nowX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR;
+            
+            // DOM Playhead and Shadow directly mapped to wrapper coords
+            const nowIndicator = document.getElementById('now-indicator');
+            const pastShadow = document.getElementById('past-shadow');
+            
+            if (nowIndicator && pastShadow) {
+                if (nowX > 0) {
+                    nowIndicator.style.display = 'block';
+                    nowIndicator.style.left = nowX + 'px';
+                    
+                    pastShadow.style.width = nowX + 'px';
+                    const shadeAlpha = state.theme === 'dark' ? 0.5 : 0.15;
+                    pastShadow.style.background = `linear-gradient(to right, rgba(0,0,0,${shadeAlpha}) 0%, rgba(0,0,0,${shadeAlpha}) calc(100% - 150px), rgba(0,0,0,0) 100%)`;
+                } else {
+                    nowIndicator.style.display = 'none';
+                    pastShadow.style.width = '0px';
+                }
+            }
 
+            if (!floatBtn) return;
+            
             // Posición relativa al viewport del scroll
             const viewportX = nowX - scrollContainer.scrollLeft;
             const viewportWidth = scrollContainer.clientWidth;
