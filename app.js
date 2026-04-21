@@ -122,8 +122,8 @@
                 geoBtn.addEventListener('click', () => useMyLocation(true));
                 locationInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSearch(); });
 
-                const nowBtn = document.getElementById('now-btn');
-                if (nowBtn) nowBtn.addEventListener('click', centerOnCurrentTime);
+                const floatingNowBtn = document.getElementById('floating-now-btn');
+                if (floatingNowBtn) floatingNowBtn.addEventListener('click', centerOnCurrentTime);
 
                 // Suggestions logic
                 let lastQuery = ""; // Variable para evitar repetir la misma búsqueda
@@ -159,9 +159,10 @@ locationInput.addEventListener('input', () => {
                 document.querySelectorAll('.info-icon, .location-group').forEach(el => {
                     el.addEventListener('mouseenter', () => {
                         if (window.innerWidth >= 600) {
-                            const tt = el.querySelector('.custom-tooltip');
-                            if (tt)
-                            // For location-group, only show if text is truncated
+                            const container = el.classList.contains('info-icon') ? el.closest('.data-value') : el;
+                            const tt = container.querySelector('.custom-tooltip');
+                            if (tt) {
+                                // For location-group, only show if text is truncated
                                 if (el.classList.contains('location-group')) {
                                     const locName = document.getElementById('location-name');
                                     const summary = document.getElementById('weather-summary');
@@ -172,11 +173,13 @@ locationInput.addEventListener('input', () => {
                                 } else {
                                     tt.style.display = 'block';
                                 }
+                            }
                         }
                     });
                     el.addEventListener('mouseleave', () => {
                         if (window.innerWidth >= 600) {
-                            const tt = el.querySelector('.custom-tooltip');
+                            const container = el.classList.contains('info-icon') ? el.closest('.data-value') : el;
+                            const tt = container.querySelector('.custom-tooltip');
                             if (tt) tt.style.display = '';
                         }
                     });
@@ -240,23 +243,32 @@ locationInput.addEventListener('input', () => {
                 const minimapContainer = document.getElementById('minimap-container');
                 const dailyCardsContainer = document.getElementById('daily-cards-container');
                 const toggleNavBtn = document.getElementById('toggle-nav-btn');
-                let isDailyCardsView = false;
+                let isDailyCardsView = localStorage.getItem('view_mode') === 'daily';
+
+                const updateViewMode = () => {
+                    if (isDailyCardsView) {
+                        minimapContainer.style.display = 'none';
+                        dailyCardsContainer.style.display = 'flex';
+                        toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">insights</span>';
+                        if (state.dailyData && state.dailyData.length > 0) {
+                            generateDailyCards();
+                            updateActiveDailyCard();
+                        }
+                    } else {
+                        minimapContainer.style.display = 'block';
+                        dailyCardsContainer.style.display = 'none';
+                        toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>';
+                    }
+                    localStorage.setItem('view_mode', isDailyCardsView ? 'daily' : 'minimap');
+                };
 
                 if (toggleNavBtn) {
                     toggleNavBtn.addEventListener('click', () => {
                         isDailyCardsView = !isDailyCardsView;
-                        if (isDailyCardsView) {
-                            minimapContainer.style.display = 'none';
-                            dailyCardsContainer.style.display = 'flex';
-                            toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">insights</span>';
-                            generateDailyCards();
-                            updateActiveDailyCard();
-                        } else {
-                            minimapContainer.style.display = 'block';
-                            dailyCardsContainer.style.display = 'none';
-                            toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>';
-                        }
+                        updateViewMode();
                     });
+                    // Initialize on start
+                    updateViewMode();
                 }
 
                 // Drag and drop for daily cards
@@ -1196,6 +1208,9 @@ locationInput.addEventListener('input', () => {
 
             if (!state.dailyData || !state.dailyData.length) return;
 
+            const now = new Date();
+            const nowStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone });
+
             state.dailyData.forEach((day, index) => {
                 const card = document.createElement('div');
                 card.className = 'daily-card';
@@ -1205,11 +1220,13 @@ locationInput.addEventListener('input', () => {
                 const dayName = date.toLocaleDateString('es-ES', { weekday: 'short', timeZone: state.timezone }).toUpperCase();
                 const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone });
                 
+                const isToday = (dateStr === nowStr);
+                
                 const iconSVG = getWeatherIconSVG(day.weatherCode);
 
                 card.innerHTML = `
                     <div class="day-header">
-                        <span class="day-name">${dayName}</span>
+                        <span class="day-name">${dayName} ${isToday ? '<span class="today-marker"></span>' : ''}</span>
                         <span class="day-date">${dateStr}</span>
                     </div>
                     <div class="day-body">
@@ -1222,17 +1239,25 @@ locationInput.addEventListener('input', () => {
                 `;
 
                 card.addEventListener('click', () => {
-                    // Find the first hour of this day in hourlyData
-                    const targetTime = day.time;
-                    const hIndex = state.hourlyData.findIndex(h => {
+                    const noonIndex = state.hourlyData.findIndex(h => {
                         const hDate = new Date(h.time);
-                        const dDate = new Date(targetTime);
-                        return hDate.getDate() === dDate.getDate() && hDate.getMonth() === dDate.getMonth();
+                        const hStr = hDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone });
+                        return hStr === dateStr && h.localHour === 12;
                     });
 
-                    if (hIndex !== -1) {
+                    // Si no encuentra la hora 12 exacta de ese día, busca la primera y suma 12
+                    let targetIndex = noonIndex;
+                    if (targetIndex === -1) {
+                         const firstIndex = state.hourlyData.findIndex(h => {
+                            const hDate = new Date(h.time);
+                            return hDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone }) === dateStr;
+                         });
+                         if (firstIndex !== -1) targetIndex = Math.min(state.hourlyData.length - 1, firstIndex + 12);
+                    }
+
+                    if (targetIndex !== -1) {
                         const scrollContainer = document.getElementById('scroll-container');
-                        const targetScroll = (hIndex * PIXELS_PER_HOUR) - (scrollContainer.clientWidth / 2) + 60;
+                        const targetScroll = (targetIndex * PIXELS_PER_HOUR) - 60; // Alineado a la línea de referencia (60px)
                         scrollContainer.scrollTo({ left: targetScroll, behavior: 'smooth' });
                     }
                 });
@@ -1249,24 +1274,26 @@ locationInput.addEventListener('input', () => {
             const scrollContainer = document.getElementById('scroll-container');
             const activeX = scrollContainer.scrollLeft + 60;
             
-            const hourIndex = Math.max(0, Math.min(state.hourlyData.length - 1, Math.floor(activeX / PIXELS_PER_HOUR)));
+            const floatIndex = activeX / PIXELS_PER_HOUR;
+            const hourIndex = Math.max(0, Math.min(state.hourlyData.length - 1, Math.floor(floatIndex)));
             const currentData = state.hourlyData[hourIndex];
             if (!currentData) return;
             
             const currentDate = new Date(currentData.time);
+            const currentDateStr = currentDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone });
             
-            // Calculamos el progreso exacto dentro del día para la marca roja
-            const dStart = new Date(currentData.time);
-            dStart.setHours(0,0,0,0);
-            const dayProgress = (currentData.time - dStart.getTime()) / 86400000;
+            // Usar índice flotante para progreso exacto (incluso entre horas)
+            const fraction = floatIndex - Math.floor(floatIndex);
+            const dayProgress = (currentData.localHour + fraction) / 24;
             
             const cards = container.querySelectorAll('.daily-card');
             cards.forEach((card, index) => {
                 const dayData = state.dailyData[index];
                 if (!dayData) return;
                 const dDate = new Date(dayData.time);
+                const dDateStr = dDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone });
                 
-                const isActive = currentDate.getDate() === dDate.getDate() && currentDate.getMonth() === dDate.getMonth();
+                const isActive = currentDateStr === dDateStr;
                 card.classList.toggle('active', isActive);
                 
                 if (isActive) {
@@ -1960,15 +1987,22 @@ locationInput.addEventListener('input', () => {
                     // Rotate based on wind direction (where it blows TO instead of FROM)
                     ctx.rotate((d.windDir + 180) * Math.PI / 180);
 
-                    // Determine color based on intensity
-                    let windColor = '#64748b'; // slate as base so it contrasts with white clouds
-                    if (d.wind > 20) windColor = '#475569'; // stronger
-                    if (d.wind > 40) windColor = '#dc2626'; // dangerous
+                    // Determine color based on temperature
+                    let windColor = state.theme === 'dark' ? '#cbd5e1' : '#64748b'; // normal base
+                    if (d.temp < 10) {
+                        windColor = '#3b82f6'; // Frío (Azul)
+                    } else if (d.temp > 28) {
+                        windColor = '#ef4444'; // Caliente (Rojo)
+                    }
+
+                    if (d.wind > 40 && d.temp <= 28 && d.temp >= 10) {
+                        windColor = state.theme === 'dark' ? '#f87171' : '#dc2626'; // strong default
+                    }
                     
                     ctx.fillStyle = windColor;
                     
-                    // Add stroke for better visibility over clouds
-                    ctx.strokeStyle = 'white';
+                    // Add dark stroke for better visibility over clouds and background
+                    ctx.strokeStyle = state.theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.6)';
                     ctx.lineWidth = 1.5;
 
                     ctx.beginPath();
@@ -1996,7 +2030,6 @@ locationInput.addEventListener('input', () => {
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
             // Sombreado entre temperatura y sensación térmica
-            ctx.fillStyle = 'rgba(139, 0, 0, 0.2)';
             for (let i = startIdx; i < Math.min(endIdx, state.hourlyData.length - 1); i++) {
                 const d = state.hourlyData[i];
                 const nextD = state.hourlyData[i+1];
@@ -2004,6 +2037,9 @@ locationInput.addEventListener('input', () => {
                 const diff2 = Math.abs(nextD.temp - nextD.apparent);
 
                 if (diff1 >= 1 || diff2 >= 1) {
+                    const isCold = diff1 >= Math.max(1, diff2) ? (d.apparent < d.temp) : (nextD.apparent < nextD.temp);
+                    ctx.fillStyle = isCold ? 'rgba(2, 136, 209, 0.2)' : 'rgba(239, 68, 68, 0.2)'; // Blue for cold, Red for hot
+
                     const x1 = i * PIXELS_PER_HOUR;
                     const x2 = (i + 1) * PIXELS_PER_HOUR;
 
@@ -2024,40 +2060,35 @@ locationInput.addEventListener('input', () => {
             }
 
             // Línea de sensación térmica
-            ctx.strokeStyle = apparentColor;
             ctx.lineWidth = 1.5;
             ctx.setLineDash([4, 4]);
-            ctx.beginPath();
-            let hasStarted = false;
-            for (let i = startIdx; i < endIdx; i++) {
+            
+            for (let i = startIdx; i < Math.min(endIdx, state.hourlyData.length - 1); i++) {
                 const d = state.hourlyData[i];
-                const x = i * PIXELS_PER_HOUR;
-                const diff = Math.abs(d.temp - d.apparent);
-                const targetY = diff >= 1 ? d.apparent : d.temp;
-                const y = normalizeY(targetY, -20, 40, h);
+                const nextD = state.hourlyData[i+1];
+                
+                const diff1 = Math.abs(d.temp - d.apparent);
+                const diff2 = Math.abs(nextD.temp - nextD.apparent);
 
-                const prev = state.hourlyData[i-1];
-                const next = state.hourlyData[i+1];
-                const shouldDraw = diff >= 1 ||
-                                 (prev && Math.abs(prev.temp - prev.apparent) >= 1) ||
-                                 (next && Math.abs(next.temp - next.apparent) >= 1);
+                const shouldDraw = diff1 >= 1 || diff2 >= 1;
 
                 if (shouldDraw) {
-                    if (!hasStarted) {
-                        ctx.moveTo(x, y);
-                        hasStarted = true;
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                } else {
-                    if (hasStarted) {
-                        ctx.stroke();
-                        ctx.beginPath();
-                        hasStarted = false;
-                    }
+                    const isCold = diff1 >= Math.max(1, diff2) ? (d.apparent < d.temp) : (nextD.apparent < nextD.temp);
+                    ctx.strokeStyle = isCold ? '#0288d1' : '#ef4444'; 
+                    
+                    const x1 = i * PIXELS_PER_HOUR;
+                    const y1 = normalizeY(diff1 >= 1 ? d.apparent : d.temp, -20, 40, h);
+                    
+                    const x2 = (i + 1) * PIXELS_PER_HOUR;
+                    const y2 = normalizeY(diff2 >= 1 ? nextD.apparent : nextD.temp, -20, 40, h);
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
                 }
             }
-            if (hasStarted) ctx.stroke();
+            
             ctx.setLineDash([]);
 
             // Línea de temperatura normal
@@ -2363,16 +2394,23 @@ locationInput.addEventListener('input', () => {
             const screenNowX = nowXPos - scrollContainer.scrollLeft;
 
             if (screenNowX > 0) {
-                let shadeWidth = Math.min(screenNowX, w);
-                fixedOverlayCtx.save();
-                const pastGrad = fixedOverlayCtx.createLinearGradient(shadeWidth - 150, 0, shadeWidth, 0);
-                pastGrad.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
-                pastGrad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+                const shadeAlpha = state.theme === 'dark' ? 0.5 : 0.2; // Much heavier for dark mode
                 
-                fixedOverlayCtx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-                fixedOverlayCtx.fillRect(0, 0, Math.max(0, shadeWidth - 150), h);
-                fixedOverlayCtx.fillStyle = pastGrad;
-                fixedOverlayCtx.fillRect(Math.max(0, shadeWidth - 150), 0, Math.min(150, shadeWidth), h);
+                fixedOverlayCtx.save();
+                if (screenNowX <= w + 150) {
+                    const pastGrad = fixedOverlayCtx.createLinearGradient(screenNowX - 150, 0, screenNowX, 0);
+                    pastGrad.addColorStop(0, `rgba(0, 0, 0, ${shadeAlpha})`);
+                    pastGrad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+                    
+                    fixedOverlayCtx.fillStyle = `rgba(0, 0, 0, ${shadeAlpha})`;
+                    fixedOverlayCtx.fillRect(0, 0, Math.max(0, screenNowX - 150), h);
+                    
+                    fixedOverlayCtx.fillStyle = pastGrad;
+                    fixedOverlayCtx.fillRect(Math.max(0, screenNowX - 150), 0, Math.min(150, screenNowX), h);
+                } else {
+                    fixedOverlayCtx.fillStyle = `rgba(0, 0, 0, ${shadeAlpha})`;
+                    fixedOverlayCtx.fillRect(0, 0, w, h);
+                }
                 fixedOverlayCtx.restore();
             }
             
@@ -2402,6 +2440,20 @@ locationInput.addEventListener('input', () => {
                 fixedOverlayCtx.fill();
                 fixedOverlayCtx.restore();
             }
+
+            // 0 Degree Marker Line Label
+            const y0 = normalizeY(0, -20, 40, h);
+            fixedOverlayCtx.save();
+            fixedOverlayCtx.fillStyle = 'rgba(2, 136, 209, 0.8)'; // Ice blue
+            fixedOverlayCtx.font = 'bold 10px Inter';
+            fixedOverlayCtx.textAlign = 'left';
+            fixedOverlayCtx.textBaseline = 'middle';
+            fixedOverlayCtx.fillText('0°C', 5, y0 - 8);
+            
+            // Icon
+            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+            fixedOverlayCtx.fillText('ac_unit', 5, y0 + 6);
+            fixedOverlayCtx.restore();
 
             // Cálculo de índice basado en el inicio de la hora (x = i * PPH)
             const floatIndex = activeX / PIXELS_PER_HOUR;
@@ -2698,38 +2750,32 @@ locationInput.addEventListener('input', () => {
 
         function updateNowButtonPosition() {
             if (state.hourlyData.length === 0) return;
-            const nowBtn = document.getElementById('now-btn');
-            const spacer = document.getElementById('now-btn-spacer');
-            const nowLine = document.getElementById('now-line');
+            const floatBtn = document.getElementById('floating-now-btn');
+            if (!floatBtn) return;
+            
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
 
             // Posición X real en el canvas
             const nowX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR;
 
-            spacer.style.width = nowX + 'px';
-
-            const referenceX = Math.floor(scrollContainer.scrollLeft + 60);
-            if (nowLine) {
-                nowLine.style.display = 'none'; // We render it on fixed canvas now
-            }
-
             // Posición relativa al viewport del scroll
             const viewportX = nowX - scrollContainer.scrollLeft;
             const viewportWidth = scrollContainer.clientWidth;
 
-            let isMini = false;
-            if (viewportX < 40 || viewportX > viewportWidth - 40) {
-                isMini = true;
-            }
-
-            if (isMini !== lastNowBtnMini) {
-                lastNowBtnMini = isMini;
-                if (isMini) {
-                    nowBtn.classList.add('mini');
+            if (viewportX < 0 || viewportX > viewportWidth) {
+                floatBtn.style.display = 'flex';
+                if (viewportX < 0) {
+                    floatBtn.style.left = '20px';
+                    floatBtn.style.right = 'auto';
+                    floatBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>';
                 } else {
-                    nowBtn.classList.remove('mini');
+                    floatBtn.style.left = 'auto';
+                    floatBtn.style.right = '20px';
+                    floatBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>';
                 }
+            } else {
+                floatBtn.style.display = 'none';
             }
         }
 
