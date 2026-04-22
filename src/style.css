@@ -653,7 +653,13 @@
             top: 0;
             left: 0;
             cursor: pointer;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #minimap-container::-webkit-scrollbar {
+            display: none;
         }
 
         #daily-cards-container {

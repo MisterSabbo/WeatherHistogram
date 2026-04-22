@@ -13,24 +13,36 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 
 ## Key Features
 
-*   **No backend needed**
-*   **Efficient Canvas Rendering:** Utilizes the HTML5 Canvas API to draw complex weather histograms, ensuring 60fps performance even on mobile devices.
-*   **Network-First API Strategy:** Implements a robust caching mechanism for weather data, prioritizing fresh data from the network while falling back to cached data when offline.
-*   **Cache-First Asset Strategy:** Employs a Service Worker to cache static assets (HTML, CSS, JS, icons) for immediate loading and offline availability.
-*   **Interactive Minimap & Scrubbing:** Features a responsive minimap and vertical scrubber for precise temporal navigation through the forecast data.
-*   **Dynamic Theming:** Supports both light and dark modes with seamless transitions and high-contrast UI elements.
+*   **Efficient Canvas Rendering:** Utilizes the HTML5 Canvas API to draw complex weather histograms, ensuring 60fps performance without stuttering even on iOS/mobile devices.
+*   **Dual View Navigation:** Seamlessly switch between a detailed daily cards view and a continuous interactive minimap. State is persisted via `localStorage`.
+*   **Zero-Lag Time Scrubber:** Features a smoothly animated present-time pulsing indicator (Now playhead) with dynamic historical shading for past weather, rendered instantly via native CSS hardware acceleration.
+*   **Intelligent Interactive Graphing:** 
+    *   **Apparent Temperature vs Real:** Fill areas highlight cold/heat stress periods in intuitive icy/warm hues when the "feels-like" temperature splits from the ambient one.
+    *   **Wind & Gust Visuals:** Dynamic thermal-colored wind arrows adapt their tone depending on specific weather bounds.
+    *   **Dynamic Precipitation:** Advanced visual bars to mark thunderstorms (blue/purple) and snowfall (pale frost), intelligently adapting to dark/light modes.
+    *   **UV Index & Environmental Risk:** Smart UI collision detection to stack and cleanly present UV Index, Wind Gusts, and Precipitation probabilities at the scrubber point cleanly without overlapping.
+    *   **0°C Visual Marker:** Contextual 0-degree horizon line overlay to easily spot sub-zero plunging.
+*   **Floating Present-Time Centering:** The "Now" re-centering button floats dynamically depending on which way the horizon scroll is lost.
+*   **Offline First & Network Strategy:** Service Worker-enabled caching system that prioritizes network fetches during active connections while making static payload accessible offline.
+*   **Dynamic Theming:** Supports both light and dark modes with seamless transitions, deep contrast shadows, and refined visual weighting.
 
 ## Tech Stack
 
 *   **Core:** Vanilla JavaScript (ES6+), HTML5, CSS3
-*   **Rendering:** HTML5 Canvas API (for histograms, precipitation effects, and pollen radar)
+*   **Rendering:** HTML5 Canvas API (for histograms, precipitation effects, and pollen radar) combined with standard DOM layering for playheads and real-time pointers.
 *   **Styling:** Native CSS Variables (`var(--color)`) for dynamic theming and responsive design
 *   **Offline Capabilities:** Service Workers (`sw.js`) and Web App Manifest (`manifest.json`) for PWA support
 *   **Build Tool:** Vite (for fast development server and optimized production builds)
 
-## Installation and Usage
+## Project Structure
 
-This project can run directly hosted on any repo (published on github pages).
+The project directory follows a standard structure splitting logic, static views, and assets cleanly:
+*   `./index.html` — The core layout and app shell.
+*   `./src/` — Contains application source logic (`app.js`) and core styling (`style.css`).
+*   `./assets/images/` — Contains standard image and icon assets across the application.
+*   `./manifest.json` \& `./sw.js` — Core PWA and Service layout.
+
+## Installation and Usage
 
 To run this project locally, ensure you have Node.js installed, then execute the following commands:
 
@@ -49,4 +61,4 @@ npm run build
 
 The application follows a centralized state management pattern using a single global `state` object. This object holds all critical application data, including coordinates, raw forecast data, parsed hourly/daily data, UI state (like the current hover position), and theme preferences. 
 
-DOM updates are driven by this state. When the state changes (e.g., after fetching new weather data or scrubbing the timeline), a centralized `render()` function is called. This function clears the canvas, recalculates dimensions based on the current device pixel ratio (DPR) and window size, and redraws all visual elements (temperature curves, precipitation bars, sun/moon indicators) to reflect the updated state. This approach ensures UI consistency and predictable rendering cycles.
+DOM updates are driven by this state. When the state changes (e.g., after fetching new weather data or scrubbing the timeline), a centralized `render()` function is called. This function clears the canvas, recalculates dimensions based on the current device pixel ratio (DPR) and window size, and redraws all visual elements (temperature curves, precipitation bars, sun/moon indicators) to reflect the updated state. Layering and hardware-accelerated transforms are strategically mapped to keep interactions fluid.

@@ -42,6 +42,24 @@
         let ticking = false;
         const PIXELS_PER_MM = 10;
 
+        window.hexToRgb = hex => {
+            let r = 0, g = 0, b = 0;
+            if (hex.startsWith('rgba')) {
+                const parts = hex.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                if (parts) { r = parseInt(parts[1]); g = parseInt(parts[2]); b = parseInt(parts[3]); }
+            } else {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex) || /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex);
+                if (result) {
+                    if (result[1].length === 1) {
+                        r = parseInt(result[1]+result[1], 16); g = parseInt(result[2]+result[2], 16); b = parseInt(result[3]+result[3], 16);
+                    } else {
+                        r = parseInt(result[1], 16); g = parseInt(result[2], 16); b = parseInt(result[3], 16);
+                    }
+                }
+            }
+            return {r, g, b};
+        };
+
         /**
          * INICIALIZACIÓN
          */
@@ -1313,11 +1331,24 @@ locationInput.addEventListener('input', () => {
         function updateMinimapViewport() {
             if (!state.hourlyData.length) return;
 
-            const visibleRatio = scrollContainer.clientWidth / (state.hourlyData.length * PIXELS_PER_HOUR);
-            const scrollRatio = scrollContainer.scrollLeft / (state.hourlyData.length * PIXELS_PER_HOUR);
+            const totalMainWidth = state.hourlyData.length * PIXELS_PER_HOUR;
+            const scrollRatio = scrollContainer.scrollLeft / totalMainWidth;
+            const visibleRatio = scrollContainer.clientWidth / totalMainWidth;
 
-            minimapViewport.style.width = (visibleRatio * 100) + '%';
-            minimapViewport.style.left = (scrollRatio * 100) + '%';
+            const minimapW = minimapCanvas.clientWidth;
+            
+            const vpWidth = visibleRatio * minimapW;
+            const vpLeft = scrollRatio * minimapW;
+
+            minimapViewport.style.width = vpWidth + 'px';
+            minimapViewport.style.left = vpLeft + 'px';
+
+            // Auto-scroll the minimap container if it's wider than the screen
+            const mContainer = document.getElementById('minimap-container');
+            if (mContainer && minimapW > mContainer.clientWidth) {
+                const vpCenter = vpLeft + (vpWidth / 2);
+                mContainer.scrollLeft = vpCenter - (mContainer.clientWidth / 2);
+            }
 
             updateNowButtonPosition();
         }
@@ -2215,7 +2246,7 @@ locationInput.addEventListener('input', () => {
         function drawMinimap() {
             if (!state.hourlyData.length) return;
 
-            const w = window.innerWidth;
+            const w = minimapCanvas.clientWidth || window.innerWidth;
             const h = 80;
             const dpr = state.dpr;
 
@@ -2521,8 +2552,16 @@ locationInput.addEventListener('input', () => {
 
                         state.labelRects.push(rect);
 
-                        // Fondo sólido para legibilidad extrema
-                        fixedOverlayCtx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+                        const c = window.hexToRgb ? window.hexToRgb(color) : {r: 0, g: 0, b: 0};
+                        
+                        // Always use light mode base (white) and mix with brand color.
+                        // User request: always use the style it has currently in light mode, and more transparency.
+                        const bgR = Math.round(255 * 0.85 + c.r * 0.15);
+                        const bgG = Math.round(255 * 0.85 + c.g * 0.15);
+                        const bgB = Math.round(255 * 0.85 + c.b * 0.15);
+
+                        // Fondo más translúcido (0.75 en lugar de 0.9)
+                        fixedOverlayCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, 0.75)`;
                         fixedOverlayCtx.beginPath();
                         fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, 4);
                         fixedOverlayCtx.fill();
@@ -2555,14 +2594,13 @@ locationInput.addEventListener('input', () => {
 
                 state.labelRects = []; // Reset para este frame
 
-                // Add UV label to collision detection
-                const currentUV = interpolate(d1.uv, d2.uv);
-                if (currentUV >= 0.1) {
+                // Pre-add UV label constraint at the top so other labels avoid it
+                if (d1.uv >= 1) {
                     state.labelRects.push({
-                        x: drawX - 30, // Approximate width
-                        y: 2,
-                        w: 60,
-                        h: 18,
+                        x: index * PIXELS_PER_HOUR - scrollContainer.scrollLeft, 
+                        y: 0,
+                        w: PIXELS_PER_HOUR,
+                        h: 22,
                         isUV: true
                     });
                 }
@@ -2592,7 +2630,7 @@ locationInput.addEventListener('input', () => {
                 
                 if (showApparent) {
                     const isCold = apparent <= temp;
-                    const apparentColor = isCold ? '#0288d1' : '#ef4444'; // Azul o Rojo fuerte
+                    const apparentColor = isCold ? '#0288d1' : '#f97316'; // Azul o Naranja fuerte
                     drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', 'device_thermostat', `(${apparent.toFixed(1)}°C)`, apparentColor);
                 } else {
                     drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', 'device_thermostat');
@@ -2662,48 +2700,59 @@ locationInput.addEventListener('input', () => {
                 drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', 'cloud');
 
                 // 9. UV Index Interaction
-                if (currentUV >= 0.1) {
+                // The current hour slot is 'index'
+                if (d1.uv >= 1) {
                     let color = '#4caf50';
-                    let text = 'Bajo';
-                    if (currentUV >= 3 && currentUV < 6) { color = '#fbc02d'; text = 'Medio'; }
-                    else if (currentUV >= 6 && currentUV < 8) { color = '#f57c00'; text = 'Alto'; }
-                    else if (currentUV >= 8 && currentUV < 11) { color = '#d32f2f'; text = 'Muy Alto'; }
-                    else if (currentUV >= 11) { color = '#7b1fa2'; text = 'Extremo'; }
+                    if (d1.uv >= 3 && d1.uv < 6) color = '#fbc02d';
+                    else if (d1.uv >= 6 && d1.uv < 8) color = '#f57c00';
+                    else if (d1.uv >= 8 && d1.uv < 11) color = '#d32f2f';
+                    else if (d1.uv >= 11) color = '#7b1fa2';
 
-                    const uvLabel = `UV ${currentUV.toFixed(1)} ${text}`;
+                    const slotStartX = index * PIXELS_PER_HOUR - scrollContainer.scrollLeft;
+                    const slotWidth = PIXELS_PER_HOUR;
+                    // Add gap to avoid overlapping the hour digit texts
+                    // Narrower gap (12px) to allow more space for the text
+                    const safeStartX = slotStartX + 12;
+                    const safeWidth = slotWidth - 24;
+                    
                     fixedOverlayCtx.save();
-                    fixedOverlayCtx.font = 'bold 10px Inter';
-                    const uvMetrics = fixedOverlayCtx.measureText(uvLabel);
                     
-                    fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
-                    const iconMetrics = fixedOverlayCtx.measureText('light_mode');
+                    const c = window.hexToRgb ? window.hexToRgb(color) : {r: 0, g: 0, b: 0};
                     
-                    const uvW = uvMetrics.width + iconMetrics.width + 16;
-                    const uvH = 18;
-                    const uvY = 2; // Pegada a la parte superior
+                    // Mix with white for light-mode consistent look
+                    const bgR = Math.round(255 * 0.8 + c.r * 0.2);
+                    const bgG = Math.round(255 * 0.8 + c.g * 0.2);
+                    const bgB = Math.round(255 * 0.8 + c.b * 0.2);
+                    const opacityColor = `rgba(${bgR}, ${bgG}, ${bgB}, 0.95)`;
 
-                    // Background
-                    fixedOverlayCtx.fillStyle = state.theme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+                    // Dibujar fondo transparente con borde redondeado abajo (menos altura)
                     fixedOverlayCtx.beginPath();
-                    fixedOverlayCtx.roundRect(drawX - uvW / 2, uvY, uvW, uvH, 4);
+                    fixedOverlayCtx.moveTo(safeStartX, 0);
+                    fixedOverlayCtx.lineTo(safeStartX, 12);
+                    fixedOverlayCtx.arcTo(safeStartX, 16, safeStartX + 4, 16, 4);
+                    fixedOverlayCtx.lineTo(safeStartX + safeWidth - 4, 16);
+                    fixedOverlayCtx.arcTo(safeStartX + safeWidth, 16, safeStartX + safeWidth, 12, 4);
+                    fixedOverlayCtx.lineTo(safeStartX + safeWidth, 0);
+                    // Don't closePath so the top side doesn't get drawn
+
+                    fixedOverlayCtx.fillStyle = opacityColor;
                     fixedOverlayCtx.fill();
                     
-                    // Border
                     fixedOverlayCtx.strokeStyle = color;
-                    fixedOverlayCtx.lineWidth = 1.5;
+                    fixedOverlayCtx.lineWidth = 1;
                     fixedOverlayCtx.stroke();
-
-                    // Text
-                    fixedOverlayCtx.fillStyle = color;
-                    fixedOverlayCtx.textAlign = 'left';
+                    
+                    // Texto centrado en la ranura
+                    // We need a solid text color so we use the base color directly.
+                    // Dark colors pop out on light backgrounds, which aligns with 'light mode' request.
+                    let textColor = color;
+                    if (color === '#fbc02d') textColor = '#e65100'; // Darker orange for yellow for legibility
+                    fixedOverlayCtx.fillStyle = textColor;
+                    fixedOverlayCtx.font = 'bold 9px Inter';
+                    fixedOverlayCtx.textAlign = 'center';
                     fixedOverlayCtx.textBaseline = 'middle';
+                    fixedOverlayCtx.fillText(`UV ${parseFloat(d1.uv).toFixed(1)}`, safeStartX + safeWidth / 2, 8);
                     
-                    const startX = drawX - uvW / 2 + 6;
-                    fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
-                    fixedOverlayCtx.fillText('light_mode', startX, uvY + uvH / 2 + 1);
-                    
-                    fixedOverlayCtx.font = 'bold 10px Inter';
-                    fixedOverlayCtx.fillText(uvLabel, startX + iconMetrics.width + 4, uvY + uvH / 2 + 1);
                     fixedOverlayCtx.restore();
                 }
 
@@ -3194,9 +3243,13 @@ locationInput.addEventListener('input', () => {
                 }
             }
 
-            minimapCanvas.width = window.innerWidth * state.dpr;
+            const numDays = state.hourlyData.length ? Math.ceil(state.hourlyData.length / 24) : 7;
+            const MIN_MINIMAP_DAY_WIDTH = 80;
+            const minimapTargetWidth = Math.max(window.innerWidth, numDays * MIN_MINIMAP_DAY_WIDTH);
+
+            minimapCanvas.width = minimapTargetWidth * state.dpr;
             minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
-            minimapCanvas.style.width = window.innerWidth + 'px';
+            minimapCanvas.style.width = minimapTargetWidth + 'px';
             minimapCanvas.style.height = MINIMAP_HEIGHT + 'px';
 
             const chartArea = document.getElementById('chart-area');
