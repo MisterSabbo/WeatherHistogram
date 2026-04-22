@@ -29,8 +29,68 @@
             rawAQI: null,
             isDragging: false,
             startX: 0,
-            scrollLeft: 0
+            scrollLeft: 0,
+            activeChartTheme: localStorage.getItem('chart_theme') || 'default',
+            themeConfig: null
         };
+
+        function getThemeColor(path, fallbackColor) {
+            if (!state.themeConfig || !state.themeConfig.colors) return fallbackColor;
+            const parts = path.split('.');
+            let val = state.themeConfig.colors;
+            for (let p of parts) {
+                if (val && val[p]) val = val[p];
+                else return fallbackColor;
+            }
+            return typeof val === 'string' ? val : fallbackColor;
+        }
+
+        function getThemeIcon(path, fallbackIcon) {
+            if (!state.themeConfig || !state.themeConfig.icons) return fallbackIcon;
+            const parts = path.split('.');
+            let val = state.themeConfig.icons;
+            for (let p of parts) {
+                if (val && val[p]) val = val[p];
+                else return fallbackIcon;
+            }
+            return typeof val === 'string' ? val : fallbackIcon;
+        }
+
+        function getThemeFont() {
+            return (state.themeConfig && state.themeConfig.font) ? state.themeConfig.font : 'Inter, sans-serif';
+        }
+
+        async function loadChartTheme(themeId) {
+            try {
+                const res = await fetch(`./themes/${themeId}.json`);
+                if (!res.ok) throw new Error('Theme not found');
+                state.themeConfig = await res.json();
+            } catch(e) {
+                console.warn('Error loading theme:', e);
+                // Hardcode default fallback if fetch fails
+                state.themeConfig = { "font": "Inter, sans-serif", "icons": { "scrubber": { "temp": "device_thermostat", "wind": "air", "precip": "rainy", "prob": "water_drop", "cloud": "cloud" }, "header": { "aqi": "air", "allergen": "eco", "precip": "rainy", "prob": "water_drop", "cloud": "cloud" }, "zeroLine": "ac_unit", "windDirection": "navigation" }, "colors": { "tempLine": "#d32f2f", "humidityLine": "rgba(0, 172, 193, 0.4)", "precipBar": "rgba(25, 118, 210, 0.4)", "precipProbArea": "rgba(2, 136, 209, 0.2)", "cloudsArea": "rgba(100, 116, 139, 0.2)", "uvLevels": { "low": "#4caf50", "moderate": "#fbc02d", "high": "#f57c00", "veryHigh": "#d32f2f", "extreme": "#7b1fa2" }, "wind": { "normalLight": "#64748b", "normalDark": "#cbd5e1", "cold": "#3b82f6", "hot": "#ef4444", "strongDefaultLight": "#dc2626", "strongDefaultDark": "#f87171" }, "gusts": { "normal": "#64748b", "strong": "#ea580c", "extreme": "#dc2626" }, "zeroLine": "rgba(2, 136, 209, 0.8)", "zeroLineIcon": "#0288d1", "referenceLine": "rgba(255, 255, 255, 0.3)", "scrubber": { "bgLightMix": 0.85, "bgOpacity": 0.75 } } };
+            }
+            applyThemeDOM();
+        }
+
+        function applyThemeDOM() {
+            document.body.style.fontFamily = getThemeFont();
+            // Update header icons
+            const elPrecip = document.querySelector('#val-precip .material-symbols-outlined');
+            if (elPrecip) elPrecip.textContent = getThemeIcon('header.precip', 'rainy');
+            
+            const elProb = document.querySelector('#val-precip-prob .material-symbols-outlined');
+            if (elProb) elProb.textContent = getThemeIcon('header.prob', 'water_drop');
+            
+            const elCloud = document.querySelector('#val-clouds .material-symbols-outlined');
+            if (elCloud) elCloud.textContent = getThemeIcon('header.cloud', 'cloud');
+            
+            const elAqi = document.querySelector('#val-aqi .material-symbols-outlined');
+            if (elAqi) elAqi.textContent = getThemeIcon('header.aqi', 'air');
+            
+            const elPollen = document.querySelector('#val-pollen .material-symbols-outlined');
+            if (elPollen) elPollen.textContent = getThemeIcon('header.allergen', 'eco');
+        }
 
         let minimapCanvas, minimapCtx;
         let fixedOverlayCanvas, fixedOverlayCtx;
@@ -67,6 +127,8 @@
         window.addEventListener('resize', handleResize);
 
         async function init() {
+            await loadChartTheme(state.activeChartTheme);
+            
             // Block zoom/pinch on iOS
             document.addEventListener('touchstart', (e) => {
                 if (e.touches.length > 1) {
@@ -142,6 +204,56 @@
 
                 const floatingNowBtn = document.getElementById('floating-now-btn');
                 if (floatingNowBtn) floatingNowBtn.addEventListener('click', centerOnCurrentTime);
+
+                // Modal logic
+                const btnInfo = document.getElementById('btn-info');
+                const infoModal = document.getElementById('info-modal');
+                const closeInfoBtn = document.getElementById('close-info-btn');
+                if (btnInfo && infoModal) {
+                    btnInfo.addEventListener('click', () => infoModal.style.display = 'flex');
+                    closeInfoBtn.addEventListener('click', () => infoModal.style.display = 'none');
+                    infoModal.addEventListener('click', (e) => {
+                        if (e.target === infoModal) infoModal.style.display = 'none';
+                    });
+                }
+                
+                // Theme Logic
+                const chartThemeSelect = document.getElementById('chart-theme-select');
+                if (chartThemeSelect) {
+                    chartThemeSelect.value = state.activeChartTheme;
+                    chartThemeSelect.addEventListener('change', async (e) => {
+                        state.activeChartTheme = e.target.value;
+                        localStorage.setItem('chart_theme', state.activeChartTheme);
+                        await loadChartTheme(state.activeChartTheme);
+                        // Redraw everything
+                        tiles.forEach(t => t.drawn = false);
+                        minimapCacheCanvas = null;
+                        render();
+                    });
+                }
+
+                // Force refresh
+                const forceRefreshBtn = document.getElementById('force-refresh-btn');
+                if (forceRefreshBtn) {
+                    forceRefreshBtn.addEventListener('click', async () => {
+                        localStorage.clear();
+                        if ('caches' in window) {
+                            try {
+                                const cacheNames = await caches.keys();
+                                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                            } catch(e) { console.warn(e); }
+                        }
+                        if ('serviceWorker' in navigator) {
+                            try {
+                                const registrations = await navigator.serviceWorker.getRegistrations();
+                                for (let reg of registrations) {
+                                    await reg.unregister();
+                                }
+                            } catch(e) { console.warn(e); }
+                        }
+                        window.location.reload(true);
+                    });
+                }
 
                 // Suggestions logic
                 let lastQuery = ""; // Variable para evitar repetir la misma búsqueda
@@ -1083,7 +1195,7 @@ locationInput.addEventListener('input', () => {
             const markerColor = '#666666'; // Siempre gris oscuro como los ejes
 
             ctx.save();
-            ctx.font = 'bold 10px Inter';
+            ctx.font = `bold 10px ${getThemeFont()}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.lineWidth = 1.5;
@@ -1203,21 +1315,20 @@ locationInput.addEventListener('input', () => {
         }
 
         function getWeatherIconSVG(code) {
-            const stroke = "currentColor";
-            if (code === 0) { // Clear
-                return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
-            } else if (code >= 1 && code <= 3) { // Cloudy
-                return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`;
-            } else if (code === 45 || code === 48) { // Fog
-                return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="10" x2="20" y2="10"></line><line x1="4" y1="14" x2="20" y2="14"></line><line x1="8" y1="18" x2="16" y2="18"></line><line x1="8" y1="6" x2="16" y2="6"></line></svg>`;
-            } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) { // Rain
-                return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path><line x1="16" y1="13" x2="16" y2="21"></line><line x1="8" y1="13" x2="8" y2="21"></line><line x1="12" y1="15" x2="12" y2="23"></line></svg>`;
-            } else if ((code >= 71 && code <= 77) || code === 85 || code === 86) { // Snow
-                return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line><path d="m20 16-4-4 4-4"></path><path d="m4 8 4 4-4 4"></path><path d="m16 4-4 4-4-4"></path><path d="m8 20 4-4 4 4"></path></svg>`;
-            } else if (code >= 95) { // Thunderstorm
-                return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="13 11 9 17 15 17 11 23"></polyline></svg>`;
+            let iconName = getThemeIcon('dailyCards.clear', 'clear_day');
+            
+            if (code >= 1 && code <= 3) {
+                iconName = getThemeIcon('dailyCards.cloudy', 'cloud');
+            } else if (code === 45 || code === 48) {
+                iconName = getThemeIcon('dailyCards.fog', 'foggy');
+            } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+                iconName = getThemeIcon('dailyCards.rain', 'rainy');
+            } else if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
+                iconName = getThemeIcon('dailyCards.snow', 'ac_unit');
+            } else if (code >= 95) {
+                iconName = getThemeIcon('dailyCards.thunderstorm', 'thunderstorm');
             }
-            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+            return `<span class="material-symbols-outlined" style="font-size:24px;">${iconName}</span>`;
         }
 
         function generateDailyCards() {
@@ -1509,7 +1620,7 @@ locationInput.addEventListener('input', () => {
             // Línea de congelación (0°C)
             const frozenY = normalizeY(0, -20, 40, h);
             ctx.save();
-            ctx.strokeStyle = 'rgba(14, 165, 233, 0.4)'; // Cyan/Ice blue
+            ctx.strokeStyle = getThemeColor('zeroLine', 'rgba(14, 165, 233, 0.4)');
             ctx.setLineDash([4, 4]); // Dashed line
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -1537,7 +1648,7 @@ locationInput.addEventListener('input', () => {
         function drawDayNames(ctx, viewX, viewW, h, styles) {
             ctx.save();
             ctx.fillStyle = 'rgba(0,0,0,0.15)'; // Increased opacity for better visibility
-            ctx.font = '900 80px Inter';
+            ctx.font = `900 80px ${getThemeFont()}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
@@ -1706,7 +1817,7 @@ locationInput.addEventListener('input', () => {
                     
                     let baseColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(148, 163, 184, 0.4)') : 
                                     isThunder ? 'rgba(57, 73, 171, 0.4)' : 
-                                    'rgba(25, 118, 210, 0.4)';
+                                    getThemeColor('precipBar', 'rgba(25, 118, 210, 0.4)');
                     
                     let strokeColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(100, 116, 139, 0.8)') : 
                                       isThunder ? 'rgba(57, 73, 171, 0.8)' : 
@@ -1978,7 +2089,7 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawHumidity(ctx, viewX, viewW, h, styles) {
-            const color = 'rgba(0, 188, 212, 0.3)'; // Cyan soft
+            const color = getThemeColor('humidityLine', 'rgba(0, 188, 212, 0.3)');
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
@@ -2020,32 +2131,41 @@ locationInput.addEventListener('input', () => {
                     ctx.rotate((d.windDir + 180) * Math.PI / 180);
 
                     // Determine color based on temperature
-                    let windColor = state.theme === 'dark' ? '#cbd5e1' : '#64748b'; // normal base
+                    let windColor = state.theme === 'dark' ? getThemeColor('wind.normalDark', '#cbd5e1') : getThemeColor('wind.normalLight', '#64748b'); // normal base
                     if (d.temp < 10) {
-                        windColor = '#3b82f6'; // Frío (Azul)
+                        windColor = getThemeColor('wind.cold', '#3b82f6'); // Frío (Azul)
                     } else if (d.temp > 28) {
-                        windColor = '#ef4444'; // Caliente (Rojo)
+                        windColor = getThemeColor('wind.hot', '#ef4444'); // Caliente (Rojo)
                     }
 
                     if (d.wind > 40 && d.temp <= 28 && d.temp >= 10) {
-                        windColor = state.theme === 'dark' ? '#f87171' : '#dc2626'; // strong default
+                        windColor = state.theme === 'dark' ? getThemeColor('wind.strongDefaultDark', '#f87171') : getThemeColor('wind.strongDefaultLight', '#dc2626'); // strong default
                     }
                     
-                    ctx.fillStyle = windColor;
-                    
-                    // Add dark stroke for better visibility over clouds and background
-                    ctx.strokeStyle = state.theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.6)';
-                    ctx.lineWidth = 1.5;
-
-                    ctx.beginPath();
-                    // Draw a crisp tiny arrow pointing up (which will be rotated)
-                    ctx.moveTo(0, -6);
-                    ctx.lineTo(4, 4);
-                    ctx.lineTo(0, 2);
-                    ctx.lineTo(-4, 4);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
+                    // Draw text
+                    let wIcon = getThemeIcon('windDirection', null);
+                    if (wIcon) {
+                        ctx.font = '14px "Material Symbols Outlined"';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = windColor;
+                        ctx.strokeStyle = state.theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.6)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeText(wIcon, 0, 0);
+                        ctx.fillText(wIcon, 0, 0);
+                    } else {
+                        ctx.fillStyle = windColor;
+                        ctx.strokeStyle = state.theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.6)';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -6);
+                        ctx.lineTo(4, 4);
+                        ctx.lineTo(0, 2);
+                        ctx.lineTo(-4, 4);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                    }
                     
                     ctx.restore();
                 }
@@ -2054,8 +2174,8 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawTemperature(ctx, viewX, viewW, h, styles) {
-            const color = '#d32f2f'; // Siempre modo claro
-            const apparentColor = '#8b0000'; // Rojo oscuro para sensación térmica
+            const color = getThemeColor('tempLine', '#d32f2f'); // Temperature Base
+            const apparentColor = getThemeColor('apparentTempLine', '#8b0000'); // Sensación térmica
             const textColor = '#1a1a1a'; // Siempre modo claro
 
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
@@ -2137,7 +2257,7 @@ locationInput.addEventListener('input', () => {
             ctx.stroke();
 
             // Puntos y valores
-            ctx.font = 'bold 10px Inter';
+            ctx.font = `bold 10px ${getThemeFont()}`;
             ctx.textAlign = 'center';
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
@@ -2197,7 +2317,7 @@ locationInput.addEventListener('input', () => {
         function drawAxes(ctx, viewX, viewW, h, styles) {
             ctx.save();
             ctx.fillStyle = '#666666'; // Siempre modo claro
-            ctx.font = 'bold 10px Inter';
+            ctx.font = `bold 10px ${getThemeFont()}`;
             ctx.textAlign = 'center';
 
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
@@ -2288,7 +2408,7 @@ locationInput.addEventListener('input', () => {
                     ctx.stroke();
 
                     ctx.fillStyle = '#666666';
-                    ctx.font = 'bold 9px Inter';
+                    ctx.font = `bold 9px ${getThemeFont()}`;
                     ctx.fillText(d.localDayShort, x + 4, 12);
                 }
             });
@@ -2359,11 +2479,11 @@ locationInput.addEventListener('input', () => {
             state.hourlyData.forEach((d, i) => {
                 if (d.uv >= 1) {
                     const x = i * step;
-                    let color = '#4caf50'; // Low (1-2)
-                    if (d.uv >= 3 && d.uv < 6) color = '#fbc02d'; // Moderate (3-5)
-                    else if (d.uv >= 6 && d.uv < 8) color = '#f57c00'; // High (6-7)
-                    else if (d.uv >= 8 && d.uv < 11) color = '#d32f2f'; // Very High (8-10)
-                    else if (d.uv >= 11) color = '#7b1fa2'; // Extreme (11+)
+                    let color = getThemeColor('uvLevels.low', '#4caf50');
+                    if (d.uv >= 3 && d.uv < 6) color = getThemeColor('uvLevels.moderate', '#fbc02d');
+                    else if (d.uv >= 6 && d.uv < 8) color = getThemeColor('uvLevels.high', '#f57c00');
+                    else if (d.uv >= 8 && d.uv < 11) color = getThemeColor('uvLevels.veryHigh', '#d32f2f');
+                    else if (d.uv >= 11) color = getThemeColor('uvLevels.extreme', '#7b1fa2');
 
                     ctx.fillStyle = color;
                     ctx.fillRect(x, 0, step + 0.5, 2);
@@ -2412,7 +2532,7 @@ locationInput.addEventListener('input', () => {
             // 1. Fixed Reference Line (60px)
             fixedOverlayCtx.save();
             fixedOverlayCtx.setLineDash([5, 5]);
-            fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            fixedOverlayCtx.strokeStyle = getThemeColor('referenceLine', 'rgba(255, 255, 255, 0.3)');
             fixedOverlayCtx.beginPath();
             fixedOverlayCtx.moveTo(60, 0);
             fixedOverlayCtx.lineTo(60, h);
@@ -2422,15 +2542,16 @@ locationInput.addEventListener('input', () => {
             // 0 Degree Marker Line Label
             const y0 = normalizeY(0, -20, 40, h);
             fixedOverlayCtx.save();
-            fixedOverlayCtx.fillStyle = 'rgba(2, 136, 209, 0.8)'; // Ice blue
-            fixedOverlayCtx.font = 'bold 10px Inter';
+            fixedOverlayCtx.fillStyle = getThemeColor('zeroLine', 'rgba(2, 136, 209, 0.8)'); // Ice blue
+            fixedOverlayCtx.font = `bold 10px ${getThemeFont()}`;
             fixedOverlayCtx.textAlign = 'left';
             fixedOverlayCtx.textBaseline = 'middle';
             fixedOverlayCtx.fillText('0°C', 5, y0 - 8);
             
             // Icon
+            fixedOverlayCtx.fillStyle = getThemeColor('zeroLineIcon', '#0288d1');
             fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
-            fixedOverlayCtx.fillText('ac_unit', 5, y0 + 6);
+            fixedOverlayCtx.fillText(getThemeIcon('zeroLine', 'ac_unit'), 5, y0 + 6);
             fixedOverlayCtx.restore();
 
             // Cálculo de índice basado en el inicio de la hora (x = i * PPH)
@@ -2451,7 +2572,7 @@ locationInput.addEventListener('input', () => {
 
                 fixedOverlayCtx.save();
                 fixedOverlayCtx.setLineDash([]);
-                fixedOverlayCtx.font = 'bold 10px Inter';
+                fixedOverlayCtx.font = `bold 10px ${getThemeFont()}`;
                 fixedOverlayCtx.textAlign = 'left';
                 fixedOverlayCtx.textBaseline = 'middle';
                 fixedOverlayCtx.strokeStyle = '#fff';
@@ -2489,7 +2610,7 @@ locationInput.addEventListener('input', () => {
                         const text = `${value}${unit}`;
 
                         fixedOverlayCtx.save();
-                        fixedOverlayCtx.font = 'bold 11px Inter';
+                        fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
                         const textMetrics = fixedOverlayCtx.measureText(text);
                         let secMetrics = { width: 0 };
                         if (secondaryText) {
@@ -2501,7 +2622,7 @@ locationInput.addEventListener('input', () => {
                         if (icon) {
                             fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
                             iconWidth = fixedOverlayCtx.measureText(icon).width + 4;
-                            fixedOverlayCtx.font = 'bold 11px Inter'; // restore
+                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // restore
                         }
                         
                         const bgW = textMetrics.width + secMetrics.width + iconWidth + 12 + (secondaryText ? 4 : 0);
@@ -2555,18 +2676,17 @@ locationInput.addEventListener('input', () => {
 
                         const c = window.hexToRgb ? window.hexToRgb(color) : {r: 0, g: 0, b: 0};
                         
-                        // Always use light mode base (white) and mix with brand color.
-                        // User request: always use the style it has currently in light mode, and more transparency.
-                        const bgR = Math.round(255 * 0.85 + c.r * 0.15);
-                        const bgG = Math.round(255 * 0.85 + c.g * 0.15);
-                        const bgB = Math.round(255 * 0.85 + c.b * 0.15);
+                        const lightMix = getThemeColor('scrubber.bgLightMix', 0.85);
+                        const bgR = Math.round(255 * lightMix + c.r * (1 - lightMix));
+                        const bgG = Math.round(255 * lightMix + c.g * (1 - lightMix));
+                        const bgB = Math.round(255 * lightMix + c.b * (1 - lightMix));
 
-                        // Fondo más translúcido (0.75 en lugar de 0.9)
-                        fixedOverlayCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, 0.75)`;
+                        const opacity = getThemeColor('scrubber.bgOpacity', 0.75);
+                        fixedOverlayCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${opacity})`;
                         fixedOverlayCtx.beginPath();
                         fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, 4);
                         fixedOverlayCtx.fill();
-                        fixedOverlayCtx.strokeStyle = color;
+                        fixedOverlayCtx.strokeStyle = getThemeColor('scrubber.borderColor', color);
                         fixedOverlayCtx.lineWidth = 0.5;
                         fixedOverlayCtx.stroke();
 
@@ -2581,7 +2701,7 @@ locationInput.addEventListener('input', () => {
                             textStartX += iconWidth;
                         }
                         
-                        fixedOverlayCtx.font = 'bold 11px Inter';
+                        fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
                         fixedOverlayCtx.fillText(text, textStartX, rect.y + rect.h / 2 + 1);
 
                         if (secondaryText) {
@@ -2632,21 +2752,21 @@ locationInput.addEventListener('input', () => {
                 if (showApparent) {
                     const isCold = apparent <= temp;
                     const apparentColor = isCold ? '#0288d1' : '#f97316'; // Azul o Naranja fuerte
-                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', 'device_thermostat', `(${apparent.toFixed(1)}°C)`, apparentColor);
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'), `(${apparent.toFixed(1)}°C)`, apparentColor);
                 } else {
-                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', 'device_thermostat');
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'));
                 }
 
                 // 1.1 Wind Gusts (if over shockwave)
                 const closestIndex = progress < 0.5 ? index : index + 1;
                 const closestData = state.hourlyData[closestIndex];
                 if (closestData && closestData.gusts > 35) {
-                    let color = '#64748b';
-                    if (closestData.gusts > 70) color = '#dc2626';
-                    else if (closestData.gusts > 50) color = '#ea580c';
+                    let color = getThemeColor('gusts.normal', '#64748b');
+                    if (closestData.gusts > 70) color = getThemeColor('gusts.extreme', '#dc2626');
+                    else if (closestData.gusts > 50) color = getThemeColor('gusts.strong', '#ea580c');
 
                     // Draw text
-                    drawPoint(h - 35, color, closestData.gusts.toFixed(1), 'km/h', 'none', 'air');
+                    drawPoint(h - 35, color, closestData.gusts.toFixed(1), 'km/h', 'none', getThemeIcon('scrubber.wind', 'air'));
                 }
 
                 // 4. Precipitación
@@ -2662,7 +2782,7 @@ locationInput.addEventListener('input', () => {
 
                     const isSnow = [71, 73, 75, 77, 85, 86].includes(closestPrecipData.weatherCode);
                     const isThunder = [95, 96, 99].includes(closestPrecipData.weatherCode);
-                    const pIcon = isSnow ? 'ac_unit' : isThunder ? 'bolt' : 'water_drop';
+                    const pIcon = isSnow ? 'ac_unit' : isThunder ? 'bolt' : getThemeIcon('scrubber.precip', 'water_drop');
 
                     drawPoint(barY - 12, '#1976d2', pVal.toFixed(1) + (isBroken ? ' (!)' : ''), ' mm', 'none', pIcon);
                 }
@@ -2673,7 +2793,7 @@ locationInput.addEventListener('input', () => {
                 const py2 = getProbY(d2.precipProb);
                 const t = progress;
                 const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
-                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond', 'water_drop');
+                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond', getThemeIcon('scrubber.prob', 'water_drop'));
 
                 // 8. Nubes
                 const getY = (d) => h - (h * (d.clouds / 100));
@@ -2698,7 +2818,7 @@ locationInput.addEventListener('input', () => {
                         cloudY = Math.pow(1-t2, 3) * midY + 3 * Math.pow(1-t2, 2) * t2 * cp3y + 3 * (1-t2) * t2 * t2 * cp4y + Math.pow(t2, 3) * y2;
                     }
                 }
-                drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', 'cloud');
+                drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', getThemeIcon('scrubber.cloud', 'cloud'));
 
                 // 9. UV Index Interaction
                 let uvBlockDOM = document.getElementById('uv-active-block');
@@ -2707,15 +2827,15 @@ locationInput.addEventListener('input', () => {
                     uvBlockDOM.id = 'uv-active-block';
                     uvBlockDOM.style.position = 'absolute';
                     uvBlockDOM.style.top = '0';
-                    uvBlockDOM.style.height = '16px';
+                    uvBlockDOM.style.height = '14px'; // Reduced to prevent overlap with hour digits text
                     uvBlockDOM.style.zIndex = '5'; // Below overlay, above tiles
                     uvBlockDOM.style.pointerEvents = 'none';
                     uvBlockDOM.style.display = 'flex';
                     uvBlockDOM.style.alignItems = 'center';
                     uvBlockDOM.style.justifyContent = 'center';
                     uvBlockDOM.style.fontWeight = 'bold';
-                    uvBlockDOM.style.fontSize = '9px';
-                    uvBlockDOM.style.fontFamily = 'Inter, sans-serif';
+                    uvBlockDOM.style.fontSize = '8.5px'; // Slightly smaller to fit in the 14px height
+                    uvBlockDOM.style.fontFamily = getThemeFont();
                     uvBlockDOM.style.borderBottomLeftRadius = '4px';
                     uvBlockDOM.style.borderBottomRightRadius = '4px';
                     uvBlockDOM.style.borderBottom = '1px solid transparent';
@@ -2726,11 +2846,11 @@ locationInput.addEventListener('input', () => {
                 }
 
                 if (d1.uv >= 1) {
-                    let color = '#4caf50';
-                    if (d1.uv >= 3 && d1.uv < 6) color = '#fbc02d';
-                    else if (d1.uv >= 6 && d1.uv < 8) color = '#f57c00';
-                    else if (d1.uv >= 8 && d1.uv < 11) color = '#d32f2f';
-                    else if (d1.uv >= 11) color = '#7b1fa2';
+                    let color = getThemeColor('uvLevels.low', '#4caf50');
+                    if (d1.uv >= 3 && d1.uv < 6) color = getThemeColor('uvLevels.moderate', '#fbc02d');
+                    else if (d1.uv >= 6 && d1.uv < 8) color = getThemeColor('uvLevels.high', '#f57c00');
+                    else if (d1.uv >= 8 && d1.uv < 11) color = getThemeColor('uvLevels.veryHigh', '#d32f2f');
+                    else if (d1.uv >= 11) color = getThemeColor('uvLevels.extreme', '#7b1fa2');
 
                     const uvText = `UV ${parseFloat(d1.uv).toFixed(1)}`;
                     
@@ -2760,7 +2880,7 @@ locationInput.addEventListener('input', () => {
                             uvBlockDOM.style.borderBottomRightRadius = '0px';
                         } else {
                             // Fit to width + padding on desktop
-                            const canvasFont = 'bold 9px Inter';
+                            const canvasFont = `bold 9px ${getThemeFont()}`;
                             fixedOverlayCtx.font = canvasFont;
                             const textW = fixedOverlayCtx.measureText(uvText).width;
                             const labelW = Math.max(34, textW + 10);
@@ -3200,9 +3320,9 @@ locationInput.addEventListener('input', () => {
                 drawPollenRadar(currentData);
             });
 
-            document.getElementById('val-precip').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">rainy</span> <span>${currentData.precip}<span class="data-unit">mm</span></span>`;
-            document.getElementById('val-precip-prob').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">water_drop</span> <span>${currentData.precipProb}<span class="data-unit">%</span></span>`;
-            document.getElementById('val-clouds').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">cloud</span> <span>${currentData.clouds}<span class="data-unit">%</span></span>`;
+            document.getElementById('val-precip').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">${getThemeIcon('header.precip', 'rainy')}</span> <span>${currentData.precip}<span class="data-unit">mm</span></span>`;
+            document.getElementById('val-precip-prob').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">${getThemeIcon('header.prob', 'water_drop')}</span> <span>${currentData.precipProb}<span class="data-unit">%</span></span>`;
+            document.getElementById('val-clouds').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">${getThemeIcon('header.cloud', 'cloud')}</span> <span>${currentData.clouds}<span class="data-unit">%</span></span>`;
 
             // Calculamos el tiempo exacto basado en la posición X para mostrar minutos precisos
             const startTime = state.hourlyData[0].time;

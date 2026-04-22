@@ -1,0 +1,65 @@
+{
+  "id": "neon",
+  "name": "Neón Nocturno",
+  "font": "'JetBrains Mono', monospace",
+  "icons": {
+    "scrubber": {
+      "temp": "thermostat",
+      "wind": "storm",
+      "precip": "thunderstorm",
+      "prob": "grain",
+      "cloud": "filter_drama"
+    },
+    "header": {
+      "aqi": "masks",
+      "allergen": "coronavirus",
+      "precip": "thunderstorm",
+      "prob": "grain",
+      "cloud": "filter_drama"
+    },
+    "dailyCards": {
+      "clear": "light_mode",
+      "cloudy": "cloudy",
+      "fog": "blur_on",
+      "rain": "water_drop",
+      "snow": "snowing",
+      "thunderstorm": "flash_on"
+    },
+    "zeroLine": "ac_unit",
+    "windDirection": "arrow_upward"
+  },
+  "colors": {
+    "tempLine": "#ff00ff",
+    "humidityLine": "rgba(0, 255, 255, 0.4)",
+    "precipBar": "rgba(255, 0, 128, 0.4)",
+    "precipProbArea": "rgba(255, 0, 128, 0.2)",
+    "cloudsArea": "rgba(102, 0, 255, 0.2)",
+    "uvLevels": {
+      "low": "#4caf50",
+      "moderate": "#fbc02d",
+      "high": "#f57c00",
+      "veryHigh": "#d32f2f",
+      "extreme": "#7b1fa2"
+    },
+    "wind": {
+      "normalLight": "#00ffff",
+      "normalDark": "#00ffff",
+      "cold": "#0088ff",
+      "hot": "#ff0088",
+      "strongDefaultLight": "#ff0000",
+      "strongDefaultDark": "#ff0000"
+    },
+    "gusts": {
+      "normal": "#00ffff",
+      "strong": "#ff8800",
+      "extreme": "#ff0000"
+    },
+    "zeroLine": "rgba(0, 255, 255, 0.8)",
+    "zeroLineIcon": "#00ffff",
+    "referenceLine": "rgba(255, 0, 255, 0.4)",
+    "scrubber": {
+      "bgLightMix": 0.1,
+      "bgOpacity": 0.90
+    }
+  }
+}

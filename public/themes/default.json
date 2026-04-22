@@ -1,0 +1,65 @@
+{
+  "id": "default",
+  "name": "Clásico",
+  "font": "Inter, sans-serif",
+  "icons": {
+    "scrubber": {
+      "temp": "device_thermostat",
+      "wind": "air",
+      "precip": "rainy",
+      "prob": "water_drop",
+      "cloud": "cloud"
+    },
+    "header": {
+      "aqi": "eco",
+      "allergen": "local_florist",
+      "precip": "rainy",
+      "prob": "water_drop",
+      "cloud": "cloud"
+    },
+    "dailyCards": {
+      "clear": "clear_day",
+      "cloudy": "cloud",
+      "fog": "foggy",
+      "rain": "rainy",
+      "snow": "ac_unit",
+      "thunderstorm": "thunderstorm"
+    },
+    "zeroLine": "ac_unit",
+    "windDirection": "navigation"
+  },
+  "colors": {
+    "tempLine": "#d32f2f",
+    "humidityLine": "rgba(0, 172, 193, 0.4)",
+    "precipBar": "rgba(25, 118, 210, 0.4)",
+    "precipProbArea": "rgba(2, 136, 209, 0.2)",
+    "cloudsArea": "rgba(100, 116, 139, 0.2)",
+    "uvLevels": {
+      "low": "#4caf50",
+      "moderate": "#fbc02d",
+      "high": "#f57c00",
+      "veryHigh": "#d32f2f",
+      "extreme": "#7b1fa2"
+    },
+    "wind": {
+      "normalLight": "#64748b",
+      "normalDark": "#cbd5e1",
+      "cold": "#3b82f6",
+      "hot": "#ef4444",
+      "strongDefaultLight": "#dc2626",
+      "strongDefaultDark": "#f87171"
+    },
+    "gusts": {
+      "normal": "#64748b",
+      "strong": "#ea580c",
+      "extreme": "#dc2626"
+    },
+    "zeroLine": "rgba(0, 255, 255, 0.8)",
+    "zeroLineIcon": "#00ffff",
+    "referenceLine": "rgba(255, 255, 255, 0.3)",
+    "scrubber": {
+      "bgLightMix": 0.85,
+      "bgOpacity": 0.75
+    }
+  }
+}

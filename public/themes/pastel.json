@@ -1,0 +1,65 @@
+{
+  "id": "pastel",
+  "name": "Pastel Suave",
+  "font": "'Quicksand', 'Inter', sans-serif",
+  "icons": {
+    "scrubber": {
+      "temp": "device_thermostat",
+      "wind": "toys",
+      "precip": "umbrella",
+      "prob": "opacity",
+      "cloud": "cloud_queue"
+    },
+    "header": {
+      "aqi": "air",
+      "allergen": "local_florist",
+      "precip": "umbrella",
+      "prob": "opacity",
+      "cloud": "cloud_queue"
+    },
+    "dailyCards": {
+      "clear": "wb_sunny",
+      "cloudy": "filter_drama",
+      "fog": "dehaze",
+      "rain": "grain",
+      "snow": "ac_unit",
+      "thunderstorm": "thunderstorm"
+    },
+    "zeroLine": "severe_cold",
+    "windDirection": "north"
+  },
+  "colors": {
+    "tempLine": "#ffb3ba",
+    "humidityLine": "rgba(186, 255, 201, 0.6)",
+    "precipBar": "rgba(186, 225, 255, 0.6)",
+    "precipProbArea": "rgba(186, 225, 255, 0.3)",
+    "cloudsArea": "rgba(255, 223, 186, 0.4)",
+    "uvLevels": {
+      "low": "#baffc9",
+      "moderate": "#ffffba",
+      "high": "#ffdfba",
+      "veryHigh": "#ffb3ba",
+      "extreme": "#dcb3ff"
+    },
+    "wind": {
+      "normalLight": "#c1c1c1",
+      "normalDark": "#e1e1e1",
+      "cold": "#bae1ff",
+      "hot": "#ffb3ba",
+      "strongDefaultLight": "#ff8c94",
+      "strongDefaultDark": "#ff8c94"
+    },
+    "gusts": {
+      "normal": "#c1c1c1",
+      "strong": "#ffdfba",
+      "extreme": "#ffb3ba"
+    },
+    "zeroLine": "rgba(186, 225, 255, 0.9)",
+    "zeroLineIcon": "#bae1ff",
+    "referenceLine": "rgba(255, 255, 255, 0.5)",
+    "scrubber": {
+      "bgLightMix": 0.95,
+      "bgOpacity": 0.8
+    }
+  }
+}
