@@ -62,7 +62,8 @@
 
         async function loadChartTheme(themeId) {
             try {
-                const res = await fetch(`./themes/${themeId}.json`);
+                // Ruta relativa sin el punto inicial para mejorar compatibilidad en subdirectorios de GitHub Pages
+                const res = await fetch(`themes/${themeId}.json`);
                 if (!res.ok) throw new Error('Theme not found');
                 state.themeConfig = await res.json();
             } catch(e) {
