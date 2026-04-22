@@ -318,6 +318,9 @@ locationInput.addEventListener('input', () => {
                 }
 
                 if (minimapContainer) {
+                    // Reverting to basic mouse/touch events to ensure standard behavior that was working before
+                    minimapContainer.style.touchAction = '';
+
                     minimapContainer.addEventListener('mousedown', (e) => {
                         isMinimapDragging = true;
                         handleMinimapClick(e);
@@ -344,8 +347,6 @@ locationInput.addEventListener('input', () => {
                 window.addEventListener('touchend', () => {
                     isMinimapDragging = false;
                 });
-
-                // Scroll and Drag events (Desktop only)
                 scrollContainer.addEventListener('pointerdown', (e) => {
                     if (e.pointerType !== 'mouse') return;
                     state.isDragging = true;
@@ -2700,7 +2701,30 @@ locationInput.addEventListener('input', () => {
                 drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', 'cloud');
 
                 // 9. UV Index Interaction
-                // The current hour slot is 'index'
+                let uvBlockDOM = document.getElementById('uv-active-block');
+                if (!uvBlockDOM) {
+                    uvBlockDOM = document.createElement('div');
+                    uvBlockDOM.id = 'uv-active-block';
+                    uvBlockDOM.style.position = 'absolute';
+                    uvBlockDOM.style.top = '0';
+                    uvBlockDOM.style.height = '16px';
+                    uvBlockDOM.style.zIndex = '5'; // Below overlay, above tiles
+                    uvBlockDOM.style.pointerEvents = 'none';
+                    uvBlockDOM.style.display = 'flex';
+                    uvBlockDOM.style.alignItems = 'center';
+                    uvBlockDOM.style.justifyContent = 'center';
+                    uvBlockDOM.style.fontWeight = 'bold';
+                    uvBlockDOM.style.fontSize = '9px';
+                    uvBlockDOM.style.fontFamily = 'Inter, sans-serif';
+                    uvBlockDOM.style.borderBottomLeftRadius = '4px';
+                    uvBlockDOM.style.borderBottomRightRadius = '4px';
+                    uvBlockDOM.style.borderBottom = '1px solid transparent';
+                    uvBlockDOM.style.borderLeft = '1px solid transparent';
+                    uvBlockDOM.style.borderRight = '1px solid transparent';
+                    const wrapper = document.getElementById('canvas-wrapper');
+                    if (wrapper) wrapper.appendChild(uvBlockDOM);
+                }
+
                 if (d1.uv >= 1) {
                     let color = '#4caf50';
                     if (d1.uv >= 3 && d1.uv < 6) color = '#fbc02d';
@@ -2708,55 +2732,55 @@ locationInput.addEventListener('input', () => {
                     else if (d1.uv >= 8 && d1.uv < 11) color = '#d32f2f';
                     else if (d1.uv >= 11) color = '#7b1fa2';
 
-                    const slotStartX = index * PIXELS_PER_HOUR - scrollContainer.scrollLeft;
-                    const slotWidth = PIXELS_PER_HOUR;
-                    // Add gap to avoid overlapping the hour digit texts
-                    // Narrower gap (12px) to allow more space for the text
-                    const safeStartX = slotStartX + 12;
-                    const safeWidth = slotWidth - 24;
-                    
-                    fixedOverlayCtx.save();
+                    const uvText = `UV ${parseFloat(d1.uv).toFixed(1)}`;
                     
                     const c = window.hexToRgb ? window.hexToRgb(color) : {r: 0, g: 0, b: 0};
-                    
-                    // Mix with white for light-mode consistent look
                     const bgR = Math.round(255 * 0.8 + c.r * 0.2);
                     const bgG = Math.round(255 * 0.8 + c.g * 0.2);
                     const bgB = Math.round(255 * 0.8 + c.b * 0.2);
                     const opacityColor = `rgba(${bgR}, ${bgG}, ${bgB}, 0.95)`;
-
-                    // Dibujar fondo transparente con borde redondeado abajo (menos altura)
-                    fixedOverlayCtx.beginPath();
-                    fixedOverlayCtx.moveTo(safeStartX, 0);
-                    fixedOverlayCtx.lineTo(safeStartX, 12);
-                    fixedOverlayCtx.arcTo(safeStartX, 16, safeStartX + 4, 16, 4);
-                    fixedOverlayCtx.lineTo(safeStartX + safeWidth - 4, 16);
-                    fixedOverlayCtx.arcTo(safeStartX + safeWidth, 16, safeStartX + safeWidth, 12, 4);
-                    fixedOverlayCtx.lineTo(safeStartX + safeWidth, 0);
-                    // Don't closePath so the top side doesn't get drawn
-
-                    fixedOverlayCtx.fillStyle = opacityColor;
-                    fixedOverlayCtx.fill();
                     
-                    fixedOverlayCtx.strokeStyle = color;
-                    fixedOverlayCtx.lineWidth = 1;
-                    fixedOverlayCtx.stroke();
-                    
-                    // Texto centrado en la ranura
-                    // We need a solid text color so we use the base color directly.
-                    // Dark colors pop out on light backgrounds, which aligns with 'light mode' request.
                     let textColor = color;
-                    if (color === '#fbc02d') textColor = '#e65100'; // Darker orange for yellow for legibility
-                    fixedOverlayCtx.fillStyle = textColor;
-                    fixedOverlayCtx.font = 'bold 9px Inter';
-                    fixedOverlayCtx.textAlign = 'center';
-                    fixedOverlayCtx.textBaseline = 'middle';
-                    fixedOverlayCtx.fillText(`UV ${parseFloat(d1.uv).toFixed(1)}`, safeStartX + safeWidth / 2, 8);
-                    
-                    fixedOverlayCtx.restore();
+                    if (color === '#fbc02d') textColor = '#e65100';
+
+                    if (uvBlockDOM) {
+                        uvBlockDOM.style.display = 'flex';
+                        uvBlockDOM.style.backgroundColor = opacityColor;
+                        uvBlockDOM.style.borderColor = color;
+                        uvBlockDOM.style.color = textColor;
+                        uvBlockDOM.innerText = uvText;
+                        
+                        if (window.innerWidth < 600) {
+                            // Full width on mobile, minimal padding, no left/right borders to look flushed
+                            uvBlockDOM.style.left = (index * PIXELS_PER_HOUR) + 'px';
+                            uvBlockDOM.style.width = PIXELS_PER_HOUR + 'px';
+                            uvBlockDOM.style.borderLeft = 'none';
+                            uvBlockDOM.style.borderRight = 'none';
+                            uvBlockDOM.style.borderBottomLeftRadius = '0px';
+                            uvBlockDOM.style.borderBottomRightRadius = '0px';
+                        } else {
+                            // Fit to width + padding on desktop
+                            const canvasFont = 'bold 9px Inter';
+                            fixedOverlayCtx.font = canvasFont;
+                            const textW = fixedOverlayCtx.measureText(uvText).width;
+                            const labelW = Math.max(34, textW + 10);
+                            const slotCenterX = index * PIXELS_PER_HOUR + PIXELS_PER_HOUR / 2;
+                            uvBlockDOM.style.left = (slotCenterX - labelW / 2) + 'px';
+                            uvBlockDOM.style.width = labelW + 'px';
+                            uvBlockDOM.style.borderLeft = `1px solid ${color}`;
+                            uvBlockDOM.style.borderRight = `1px solid ${color}`;
+                            uvBlockDOM.style.borderBottomLeftRadius = '4px';
+                            uvBlockDOM.style.borderBottomRightRadius = '4px';
+                        }
+                    }
+                } else if (uvBlockDOM) {
+                    uvBlockDOM.style.display = 'none';
                 }
 
                 fixedOverlayCtx.restore();
+            } else {
+                const uvBlockDOM = document.getElementById('uv-active-block');
+                if (uvBlockDOM) uvBlockDOM.style.display = 'none';
             }
         }
 
@@ -3209,7 +3233,7 @@ locationInput.addEventListener('input', () => {
 
         function handleResize() {
             if (!scrollContainer) return;
-            PIXELS_PER_HOUR = window.innerWidth < 600 ? 40 : 60;
+            PIXELS_PER_HOUR = window.innerWidth < 600 ? 50 : 60;
             state.dpr = getDPR();
 
             const containerH = scrollContainer.clientHeight;
@@ -3243,10 +3267,7 @@ locationInput.addEventListener('input', () => {
                 }
             }
 
-            const numDays = state.hourlyData.length ? Math.ceil(state.hourlyData.length / 24) : 7;
-            const MIN_MINIMAP_DAY_WIDTH = 80;
-            const minimapTargetWidth = Math.max(window.innerWidth, numDays * MIN_MINIMAP_DAY_WIDTH);
-
+            const minimapTargetWidth = minimapCanvas.parentElement.clientWidth || window.innerWidth;
             minimapCanvas.width = minimapTargetWidth * state.dpr;
             minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
             minimapCanvas.style.width = minimapTargetWidth + 'px';
