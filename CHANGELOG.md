@@ -2,6 +2,12 @@
 
 Todas las novedades, mejoras y correcciones de WeatherHist se documentarán en este archivo de manera comprensible.
 
+## [v1.3.20] - 2026-04-23
+
+### Mejoras Visuales (UI/UX)
+- **Degradado Progresivo de Glow**: Los resplandores (glows) blanco y anaranjado de la línea de temperatura ahora aparecen y desaparecen de forma paulatina al transicionar entre zonas despejadas y nubladas/con lluvia, evitando cambios bruscos.
+- **Optimización de Resplandor Móvil**: Se ha suavizado el resplandor anaranjado en dispositivos móviles, aumentando la difuminación (blur) y ajustando su intensidad para una visualización más cómoda y profesional.
+
 ## [v1.3.19] - 2026-04-23
 
 ### Mejoras Visuales (UI/UX)

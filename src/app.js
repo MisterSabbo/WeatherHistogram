@@ -2409,6 +2409,13 @@ locationInput.addEventListener('input', () => {
                     let isWet = avgY >= avgProbY && avgProb > 15;
                     let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
 
+                    // Factor para transición paulatina del glow
+                    let glowFactor = 1 - Math.max(
+                        Math.min(1, (avgClouds - 5) / 20), // Transición entre 5% y 25% nubes
+                        Math.min(1, (avgProb - 5) / 10)    // Transición entre 5% y 15% prob
+                    );
+                    glowFactor = Math.max(0, glowFactor);
+
                     // 1. Dibujado de Efectos Continuos (Glow/Sombra)
                     ctx.save();
                     ctx.beginPath();
@@ -2427,18 +2434,23 @@ locationInput.addEventListener('input', () => {
                         sCol = 'rgba(0, 0, 0, 0.2)'; // Más suave
                         sBlur = 20; // Más difuminado
                         sOffY = 6; // Más separado
-                    } else {
-                        sCol = d.isNight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 140, 0, 0.3)'; // Anaranjado de día
-                        sBlur = 25;
-                        sOffY = 0; // Fixed double line illusion
+                    } else if (glowFactor > 0) {
+                        const isMobile = window.innerWidth < 600;
+                        const baseBlur = isMobile ? 35 : 25;
+                        const opacity = 0.3 * glowFactor;
+                        sCol = d.isNight ? `rgba(255, 255, 255, ${opacity})` : `rgba(255, 140, 0, ${opacity})`;
+                        sBlur = baseBlur;
+                        sOffY = 0; 
                     }
                     
-                    ctx.shadowColor = sCol;
-                    ctx.shadowBlur = sBlur;
-                    ctx.shadowOffsetY = sOffY;
-                    ctx.strokeStyle = sCol.replace('0.3', '0.05'); // Muy tenue, solo para emitir sombra
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+                    if (sCol) {
+                        ctx.shadowColor = sCol;
+                        ctx.shadowBlur = sBlur;
+                        ctx.shadowOffsetY = sOffY;
+                        ctx.strokeStyle = sCol.replace(/[\d.]+\)$/, '0.05)'); // Muy tenue
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
                     ctx.restore();
 
                     // 2. Dibujado de la Línea Punteada (Sin sombra física individual)
@@ -2505,14 +2517,23 @@ locationInput.addEventListener('input', () => {
                 let isWet = avgY >= avgProbY && avgProb > 15;
                 let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
 
+                // Factor para transición paulatina del glow
+                let glowFactor = 1 - Math.max(
+                    Math.min(1, (avgClouds - 5) / 20), // Transición entre 5% y 25% nubes
+                    Math.min(1, (avgProb - 5) / 10)    // Transición entre 5% y 15% prob
+                );
+                glowFactor = Math.max(0, glowFactor);
+
                 if (isCloudy || isWet) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // Más transparente y difuminado
                     ctx.shadowOffsetY = 4;
                     ctx.shadowBlur = 12;
-                } else {
-                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 140, 0, 1)'; // Naranja fuerte / Blanco brillante
-                    ctx.shadowOffsetY = -6; // Hacia arriba para glow superior
-                    ctx.shadowBlur = 15;
+                } else if (glowFactor > 0) {
+                    const isMobile = window.innerWidth < 600;
+                    const baseBlur = isMobile ? (d.isNight ? 22 : 32) : 15; // Más difuminado en móvil, especialmente naranja
+                    ctx.shadowColor = d.isNight ? `rgba(255, 255, 255, ${glowFactor})` : `rgba(255, 140, 0, ${glowFactor})`;
+                    ctx.shadowOffsetY = -6; 
+                    ctx.shadowBlur = baseBlur;
                 }
 
                 ctx.beginPath();
@@ -2520,9 +2541,12 @@ locationInput.addEventListener('input', () => {
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
                 
-                // Refuerzo extra de brillo (Multi-stroke) para cielos despejados haciendo el glow mucho más visible
-                if (!isCloudy && !isWet) {
+                // Refuerzo extra de brillo (Multi-stroke) para cielos muy despejados
+                if (glowFactor > 0.7) {
+                    ctx.save();
+                    ctx.globalAlpha = (glowFactor - 0.7) * 3.3; // Escalar alpha para transición suave del refuerzo
                     ctx.stroke();
+                    ctx.restore();
                 }
 
                 // Detalles adicionales adaptativos a la línea base
