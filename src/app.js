@@ -2080,6 +2080,10 @@ locationInput.addEventListener('input', () => {
             ctx.save();
             ctx.clip(fillPath, 'evenodd');
 
+            // Añadir fondo azul suave casi transparente (resaltar relleno sobre fondo)
+            ctx.fillStyle = 'rgba(3, 155, 229, 0.08)';
+            ctx.fillRect((startIdx-1) * PIXELS_PER_HOUR, 0, (endIdx - startIdx + 2) * PIXELS_PER_HOUR, h);
+
             // Relleno con densidad de líneas según probabilidad
             for (let i = startIdx; i < endIdx - 1; i++) {
                 const d1 = state.hourlyData[i];
@@ -2301,7 +2305,6 @@ locationInput.addEventListener('input', () => {
 
             // Línea de sensación térmica
             ctx.lineWidth = 1.5;
-            ctx.setLineDash([4, 4]);
             
             for (let i = startIdx; i < Math.min(endIdx, state.hourlyData.length - 1); i++) {
                 const d = state.hourlyData[i];
@@ -2314,7 +2317,6 @@ locationInput.addEventListener('input', () => {
 
                 if (shouldDraw) {
                     const isCold = diff1 >= Math.max(1, diff2) ? (d.apparent < d.temp) : (nextD.apparent < nextD.temp);
-                    ctx.strokeStyle = isCold ? '#0288d1' : '#ef4444'; 
                     
                     const x1 = i * PIXELS_PER_HOUR;
                     const y1 = normalizeY(diff1 >= 1 ? d.apparent : d.temp, -20, 40, h);
@@ -2322,27 +2324,132 @@ locationInput.addEventListener('input', () => {
                     const x2 = (i + 1) * PIXELS_PER_HOUR;
                     const y2 = normalizeY(diff2 >= 1 ? nextD.apparent : nextD.temp, -20, 40, h);
 
+                    const avgY = (y1 + y2) / 2;
+                    const cloudY = h - (h * (d.clouds / 100));
+                    const nextCloudY = h - (h * (nextD.clouds / 100));
+                    const avgCloudY = (cloudY + nextCloudY) / 2;
+
+                    const probY = h - (h * ((d.precipProb || 0) / 100));
+                    const nextProbY = h - (h * ((nextD.precipProb || 0) / 100));
+                    const avgProbY = (probY + nextProbY) / 2;
+
+                    const avgClouds = (d.clouds + nextD.clouds) / 2;
+                    const avgProb = ((d.precipProb || 0) + (nextD.precipProb || 0)) / 2;
+
+                    let isWet = avgY >= avgProbY && avgProb > 15;
+                    let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
+
+                    // 1. Dibujado de Efectos Continuos (Glow/Sombra)
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    
+                    let sCol = '';
+                    let sBlur = 0;
+                    let sOffY = 0;
+
+                    if (isWet) {
+                        sCol = 'rgba(0, 200, 255, 0.3)';
+                        sBlur = 20;
+                        sOffY = 1;
+                    } else if (isCloudy) {
+                        sCol = 'rgba(0, 0, 0, 0.3)';
+                        sBlur = 15;
+                        sOffY = 3;
+                    } else {
+                        sCol = d.isNight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 240, 150, 0.3)';
+                        sBlur = 25;
+                        sOffY = -3;
+                    }
+                    
+                    ctx.shadowColor = sCol;
+                    ctx.shadowBlur = sBlur;
+                    ctx.shadowOffsetY = sOffY;
+                    ctx.strokeStyle = sCol.replace('0.3', '0.05'); // Muy tenue, solo para emitir sombra
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // 2. Dibujado de la Línea Punteada (Sin sombra física individual)
+                    ctx.save();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = isCold ? '#0288d1' : '#ef4444'; 
+                    ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.moveTo(x1, y1);
                     ctx.lineTo(x2, y2);
                     ctx.stroke();
+
+                    if (isWet) {
+                        // Reflejo húmedo continuo (sin puntos) como pidió el usuario
+                        ctx.setLineDash([]); 
+                        ctx.strokeStyle = 'rgba(200, 240, 255, 0.4)';
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+
+                    ctx.restore();
                 }
             }
             
-            ctx.setLineDash([]);
-
             // Línea de temperatura normal
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            for (let i = startIdx; i < endIdx; i++) {
+            for (let i = startIdx; i < endIdx - 1; i++) {
                 const d = state.hourlyData[i];
-                const x = i * PIXELS_PER_HOUR;
-                const y = normalizeY(d.temp, -20, 40, h);
-                if (i === startIdx) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                const nextD = state.hourlyData[i+1];
+                
+                const x1 = i * PIXELS_PER_HOUR;
+                const y1 = normalizeY(d.temp, -20, 40, h);
+                const x2 = (i + 1) * PIXELS_PER_HOUR;
+                const y2 = normalizeY(nextD.temp, -20, 40, h);
+
+                const avgY = (y1 + y2) / 2;
+                const cloudY = h - (h * (d.clouds / 100));
+                const nextCloudY = h - (h * (nextD.clouds / 100));
+                const avgCloudY = (cloudY + nextCloudY) / 2;
+
+                const probY = h - (h * ((d.precipProb || 0) / 100));
+                const nextProbY = h - (h * ((nextD.precipProb || 0) / 100));
+                const avgProbY = (probY + nextProbY) / 2;
+
+                const avgClouds = (d.clouds + nextD.clouds) / 2;
+                const avgProb = ((d.precipProb || 0) + (nextD.precipProb || 0)) / 2;
+
+                ctx.save();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = color;
+
+                let isWet = avgY >= avgProbY && avgProb > 15;
+                let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
+
+                if (isWet) {
+                    ctx.shadowColor = 'rgba(0, 200, 255, 1)';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowOffsetY = 1;
+                } else if (isCloudy) {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                    ctx.shadowOffsetY = 4;
+                    ctx.shadowBlur = 6;
+                } else {
+                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 240, 150, 1)';
+                    ctx.shadowOffsetY = -4;
+                    ctx.shadowBlur = 10;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                if (isWet) {
+                    // Reflejo húmedo ampliado
+                    ctx.strokeStyle = 'rgba(200, 240, 255, 0.8)';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                ctx.restore();
             }
-            ctx.stroke();
 
             // Puntos y valores
             ctx.font = `bold 10px ${getThemeFont()}`;
