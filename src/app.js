@@ -1201,6 +1201,7 @@ locationInput.addEventListener('input', () => {
 
             drawSunnyBackground(ctx, xOffset, w, h, styles, true);
             drawNightOverlay(ctx, xOffset, w, h);
+            drawNightShadow(ctx, xOffset, w, h);
             drawStarrySky(ctx, xOffset, w, h);
             drawGrid(ctx, xOffset, w, h, styles);
             drawDayNames(ctx, xOffset, w, h, styles);
@@ -1215,7 +1216,6 @@ locationInput.addEventListener('input', () => {
 
             drawTemperature(ctx, xOffset, w, h, styles);
             drawSunMarkersOnCanvas(ctx, xOffset, w, h);
-            drawNightShadow(ctx, xOffset, w, h);
             drawAxes(ctx, xOffset, w, h, styles);
 
             ctx.restore();
@@ -2098,9 +2098,16 @@ locationInput.addEventListener('input', () => {
                     ctx.clip();
                     
                     const spacing = 16; // Menos densidad (antes 12)
+                    
+                    // Mejorar contraste general, sobre todo cuando es de noche
+                    if (d1.isNight) {
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                        ctx.shadowBlur = 3;
+                    }
+                    
                     ctx.strokeStyle = getPrecipTypeColor(d1.weatherCode);
-                    ctx.lineWidth = 1.2;
-                    ctx.globalAlpha = 0.5; // Un poco más leve
+                    ctx.lineWidth = 1; // Más fino
+                    ctx.globalAlpha = d1.isNight ? 0.6 : 0.4; // Aumentado en la noche
                     
                     // Suavizado de transición de color si el siguiente es distinto
                     if (d2) {
@@ -2162,13 +2169,11 @@ locationInput.addEventListener('input', () => {
             ctx.restore();
 
             // Línea de contorno fina
-            ctx.strokeStyle = '#0288d1';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#0288d1'; // Color sutil
+            ctx.lineWidth = 1; // Línea más fina
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke(outlinePath);
-
-            ctx.restore();
         }
 
         function drawHumidity(ctx, viewX, viewW, h, styles) {
@@ -2432,12 +2437,11 @@ locationInput.addEventListener('input', () => {
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = 'white';
 
-                // Top labels
+                // Top labels (Axis X)
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
-                ctx.lineTo(x, 8); // Longer tick
+                ctx.lineTo(x, 8);
                 ctx.stroke();
-                
                 ctx.strokeText(label, x, 20);
                 ctx.fillStyle = '#666666';
                 ctx.fillText(label, x, 20);
