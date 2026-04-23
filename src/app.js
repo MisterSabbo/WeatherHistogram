@@ -402,6 +402,8 @@ locationInput.addEventListener('input', () => {
                         minimapContainer.style.display = 'block';
                         dailyCardsContainer.style.display = 'none';
                         toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>';
+                        drawMinimap();
+                        updateMinimapViewport();
                     }
                     localStorage.setItem('view_mode', isDailyCardsView ? 'daily' : 'minimap');
                 };
@@ -1090,42 +1092,59 @@ locationInput.addEventListener('input', () => {
                         color = 'rgba(234, 88, 12, 1)'; // Naranja para rachas muy fuertes
                     }
                     
+                    // Halo blanco para visibilidad
+                    ctx.shadowBlur = 4;
+                    ctx.shadowColor = 'white';
+                    
                     ctx.strokeStyle = color;
                     ctx.lineWidth = 1.5;
                     const centerX = x; 
                     const centerY = h - 35; // Altura aproximada de las aspas
                     
-                    // Semicírculo (onda frontal base)
-                    ctx.beginPath();
-                    ctx.arc(centerX + 2, centerY, 6, -Math.PI/2, Math.PI/2, false);
-                    ctx.stroke();
+                    // Semejante al strokeText, dibujamos una base negra/oscura para contraste extra
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 3.5;
+                    
+                    const drawGustIcon = () => {
+                        // Semicírculo (onda frontal base)
+                        ctx.beginPath();
+                        ctx.arc(centerX + 2, centerY, 6, -Math.PI/2, Math.PI/2, false);
+                        ctx.stroke();
 
-                    // Líneas detrás base
-                    ctx.beginPath();
-                    ctx.moveTo(centerX - 3, centerY - 4);
-                    ctx.lineTo(centerX - 3, centerY + 4);
-                    ctx.moveTo(centerX - 7, centerY - 2);
-                    ctx.lineTo(centerX - 7, centerY + 2);
-                    ctx.stroke();
+                        // Líneas detrás base
+                        ctx.beginPath();
+                        ctx.moveTo(centerX - 3, centerY - 4);
+                        ctx.lineTo(centerX - 3, centerY + 4);
+                        ctx.moveTo(centerX - 7, centerY - 2);
+                        ctx.lineTo(centerX - 7, centerY + 2);
+                        ctx.stroke();
 
-                    // Detalles adicionales según intensidad
-                    if (d.gusts > 50) {
-                        // Segunda onda frontal
-                        ctx.beginPath();
-                        ctx.arc(centerX + 6, centerY, 10, -Math.PI/2.5, Math.PI/2.5, false);
-                        ctx.stroke();
-                        // Línea extra detrás
-                        ctx.beginPath();
-                        ctx.moveTo(centerX - 11, centerY - 1);
-                        ctx.lineTo(centerX - 11, centerY + 1);
-                        ctx.stroke();
-                    }
-                    if (d.gusts > 70) {
-                        // Tercera onda frontal
-                        ctx.beginPath();
-                        ctx.arc(centerX + 10, centerY, 14, -Math.PI/3, Math.PI/3, false);
-                        ctx.stroke();
-                    }
+                        // Detalles adicionales según intensidad
+                        if (d.gusts > 50) {
+                            // Segunda onda frontal
+                            ctx.beginPath();
+                            ctx.arc(centerX + 6, centerY, 10, -Math.PI/2.5, Math.PI/2.5, false);
+                            ctx.stroke();
+                            // Línea extra detrás
+                            ctx.beginPath();
+                            ctx.moveTo(centerX - 11, centerY - 1);
+                            ctx.lineTo(centerX - 11, centerY + 1);
+                            ctx.stroke();
+                        }
+                        if (d.gusts > 70) {
+                            // Tercera onda frontal
+                            ctx.beginPath();
+                            ctx.arc(centerX + 10, centerY, 14, -Math.PI/3, Math.PI/3, false);
+                            ctx.stroke();
+                        }
+                    };
+
+                    drawGustIcon(); // Stroke blanco
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowBlur = 0; // Quitar sombra para el color real
+                    drawGustIcon(); // Color real
                     
                     ctx.restore();
                 }
@@ -1383,6 +1402,11 @@ locationInput.addEventListener('input', () => {
                 `;
 
                 card.addEventListener('click', () => {
+                    if (isToday) {
+                        centerOnCurrentTime('smooth');
+                        return;
+                    }
+
                     const noonIndex = state.hourlyData.findIndex(h => {
                         const hDate = new Date(h.time);
                         const hStr = hDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: state.timezone });
@@ -1705,21 +1729,13 @@ locationInput.addEventListener('input', () => {
         }
 
         function drawClouds(ctx, viewX, viewW, h, styles) {
-            // Un gradiente suave simulando la atmósfera dentro de una nube
-            const cloudGrad = ctx.createLinearGradient(0, h, 0, 0);
-            cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-            cloudGrad.addColorStop(0.3, 'rgba(226, 232, 240, 0.4)');
-            cloudGrad.addColorStop(0.6, 'rgba(148, 163, 184, 0.6)');
-            cloudGrad.addColorStop(1, 'rgba(248, 250, 252, 0.9)'); // Borde superior más blanco
-
-            ctx.fillStyle = cloudGrad;
-
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
             const points = [];
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
+                if (!d) continue;
                 points.push({
                     x: i * PIXELS_PER_HOUR,
                     y: h - (h * (d.clouds / 100)),
@@ -1729,87 +1745,88 @@ locationInput.addEventListener('input', () => {
 
             if (points.length < 2) return;
 
-            // Función para crear un camino ondulado muy suave usando curvas de Bezier cúbicas continuas
-            const createSmoothPath = (pathCtx, offset = 0) => {
-                pathCtx.moveTo(points[0].x, points[0].y + offset);
+            const addSmoothPathTo = (pathCtx, offset = 0, firstMove = true) => {
+                if (firstMove) pathCtx.moveTo(points[0].x, points[0].y + offset);
 
                 for (let i = 0; i < points.length - 1; i++) {
                     const p1 = points[i];
                     const p2 = points[i + 1];
                     const cx = (p1.x + p2.x) / 2;
-                    // Interpolación cúbica suave, el offset se aplica verticalmente
                     pathCtx.bezierCurveTo(cx, p1.y + offset, cx, p2.y + offset, p2.x, p2.y + offset);
                 }
             };
 
-            // Relleno principal
-            ctx.beginPath();
-            ctx.moveTo(0, h);
-            ctx.lineTo(points[0].x, points[0].y);
-            createSmoothPath(ctx);
-            ctx.lineTo(state.hourlyData.length * PIXELS_PER_HOUR, h);
-            ctx.lineTo(0, h);
-            ctx.closePath();
-            ctx.fill();
+            const cloudPath = new Path2D();
+            cloudPath.moveTo(points[0].x, h);
+            cloudPath.lineTo(points[0].x, points[0].y);
+            addSmoothPathTo(cloudPath, 0, false);
+            cloudPath.lineTo(points[points.length-1].x, h);
+            cloudPath.closePath();
 
-            // Textura de ruido sutil
+            // Relleno suave con un único gradiente global para evitar líneas verticales
             ctx.save();
-            ctx.globalCompositeOperation = 'source-atop';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            for (let i = 0; i < 800; i++) {
-                const rx = Math.random() * (state.hourlyData.length * PIXELS_PER_HOUR);
-                const ry = Math.random() * h;
-                ctx.fillRect(rx, ry, 1, 1);
-            }
-            ctx.restore();
+            ctx.clip(cloudPath);
+            
+            const minX = points[0].x;
+            const maxX = points[points.length - 1].x;
+            const globalGrad = ctx.createLinearGradient(minX, 0, maxX, 0);
+            
+            points.forEach(p => {
+                const stop = (p.x - minX) / (maxX - minX || 1);
+                const safeStop = Math.max(0, Math.min(1, stop));
+                const luma = Math.round(255 - (p.val / 100) * 155);
+                globalGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.7)`);
+            });
 
-            // Bordes interiores (volumen) limitados en opacidad para no dominar
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            createSmoothPath(ctx, 8);
-            ctx.stroke();
-
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-            ctx.beginPath();
-            createSmoothPath(ctx, 16);
-            ctx.stroke();
-            ctx.restore();
-
-            // Línea de contorno principal y borde superior suave
+            ctx.fillStyle = globalGrad;
+            ctx.fillRect(minX, 0, maxX - minX, h);
+            
+            // Efecto Volumen (Isóbaras más sutiles pero más capas)
             ctx.save();
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.shadowBlur = 12;
+            ctx.globalAlpha = 0.45;
+
+            const layers = [
+                { offset: 5, width: 4, color: 'rgba(255, 255, 255, 0.3)' },
+                { offset: 12, width: 8, color: 'rgba(255, 255, 255, 0.2)' },
+                { offset: 25, width: 15, color: 'rgba(255, 255, 255, 0.1)' },
+                { offset: 45, width: 22, color: 'rgba(0, 0, 0, 0.05)' },
+                { offset: 65, width: 30, color: 'rgba(0, 0, 0, 0.03)' }
+            ];
+
+            layers.forEach(layer => {
+                ctx.lineWidth = layer.width;
+                ctx.strokeStyle = layer.color;
+                ctx.beginPath();
+                addSmoothPathTo(ctx, layer.offset);
+                ctx.stroke();
+            });
+
+            ctx.restore();
+            ctx.restore();
+
+            // Línea de contorno principal con color dinámico (gris claro/oscuro según nubosidad)
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
             
-            // Generate horizontal gradient according to cloud cover
-            const validPoints = points.filter(p => !isNaN(p.val));
-            if (validPoints.length > 0) {
-                const minX = validPoints[0].x;
-                const maxX = validPoints[validPoints.length - 1].x;
-                const clGrad = ctx.createLinearGradient(minX, 0, maxX, 0);
-                
-                validPoints.forEach(p => {
-                    const stop = (p.x - minX) / (maxX - minX || 1);
-                    // Clamped stop to [0,1]
-                    const safeStop = Math.max(0, Math.min(1, stop));
-                    // 0% clouds = white (255), 100% clouds = dark bluish gray (100)
-                    const luma = Math.round(255 - (p.val / 100) * 155);
-                    clGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.9)`);
-                });
-                
-                ctx.strokeStyle = clGrad;
-                ctx.shadowColor = 'rgba(128, 128, 128, 0.2)';
-            } else {
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.2)'; 
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; 
-            }
-            
-            ctx.shadowOffsetY = 2;
+            const strokeGrad = ctx.createLinearGradient(minX, 0, maxX, 0);
+            points.forEach(p => {
+                const stop = (p.x - minX) / (maxX - minX || 1);
+                const safeStop = Math.max(0, Math.min(1, stop));
+                // Luma para la línea: un poco más oscura que el relleno para que resalte
+                const luma = Math.round(230 - (p.val / 100) * 150);
+                strokeGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 5}, 1)`);
+            });
+
+            ctx.strokeStyle = strokeGrad;
+            ctx.shadowOffsetY = 1;
             ctx.lineWidth = 2.5;
             ctx.beginPath();
-            createSmoothPath(ctx);
+            addSmoothPathTo(ctx);
             ctx.stroke();
             ctx.restore();
         }
@@ -1952,15 +1969,31 @@ locationInput.addEventListener('input', () => {
                             ctx.stroke();
                         }
                     } else {
-                        // Regular rain wavy top
-                        ctx.strokeStyle = strokeColor; // Use solid opaque stroke color for contrast
-                        ctx.shadowColor = 'rgba(25, 118, 210, 0.6)';
-                        ctx.shadowBlur = 4;
-                        ctx.lineWidth = 1.5;
-                        ctx.beginPath();
-                        ctx.moveTo(x, barY);
-                        ctx.bezierCurveTo(x + bw/4, barY - 3, x + 3*bw/4, barY + 3, x + bw, barY);
-                        ctx.stroke();
+                        // Regular rain (water drop stickers)
+                        const dropIcon = 'water_drop';
+                        ctx.font = '10px "Material Symbols Outlined"'; // Más pequeños
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        
+                        // Several icons
+                        const dropCount = 3;
+                        for (let k = 0; k < dropCount; k++) {
+                            const dropX = x + (bw / (dropCount + 1)) * (k + 1);
+                            // Altura aleatoria basada en el índice para que no estén alineados
+                            const yJitter = ((i * 7 + k * 13) % 10) - 5;
+                            const dropY = barY + 4 + yJitter;
+                            
+                            // Sticker outline (glow effect)
+                            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+                            ctx.lineWidth = 3;
+                            ctx.strokeText(dropIcon, dropX, dropY);
+                            
+                            // Main icon
+                            ctx.fillStyle = strokeColor;
+                            ctx.shadowColor = 'rgba(25, 118, 210, 0.3)';
+                            ctx.shadowBlur = 1;
+                            ctx.fillText(dropIcon, dropX, dropY);
+                        }
                     }
                     ctx.restore();
 
@@ -2027,8 +2060,25 @@ locationInput.addEventListener('input', () => {
             fillPath.lineTo(firstX, h);
             fillPath.closePath();
 
+            // Excluir las barras de precipitación usando sub-trazados para la regla evenodd
+            // Agrandamos los rectángulos un poco para asegurar que no queden orillas de los patrones
+            const maxH = h * 0.9;
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (d && d.precip > 0.05) { // Solo si hay precipitación relevante
+                    const barH = d.precip * PIXELS_PER_MM;
+                    const visualH = Math.min(maxH, barH);
+                    const barY = h - visualH;
+                    const x = i * PIXELS_PER_HOUR + 5;
+                    const bw = PIXELS_PER_HOUR - 10;
+                    
+                    // Si el barY está dentro del área de relleno, restamos el rectángulo
+                    fillPath.rect(x - 1, barY, bw + 2, h - barY + 1);
+                }
+            }
+
             ctx.save();
-            ctx.clip(fillPath);
+            ctx.clip(fillPath, 'evenodd');
 
             // Relleno con densidad de líneas según probabilidad
             for (let i = startIdx; i < endIdx - 1; i++) {
@@ -2047,31 +2097,65 @@ locationInput.addEventListener('input', () => {
                     ctx.rect(x1, 0, x2 - x1, h);
                     ctx.clip();
                     
-                    const spacing = Math.max(4, 16 - (avgProb / 100) * 12);
+                    const spacing = 16; // Menos densidad (antes 12)
                     ctx.strokeStyle = getPrecipTypeColor(d1.weatherCode);
                     ctx.lineWidth = 1.2;
-                    ctx.globalAlpha = 0.6;
+                    ctx.globalAlpha = 0.5; // Un poco más leve
                     
-                    // Dibujamos pequeñas líneas diagonales (trazos cortos)
-                    const strokeLen = 4;
-                    const gapLen = 4;
-                    
-                    // Usamos un offset global basado en el espaciado para que las líneas no salten al hacer scroll
-                    const globalOffset = Math.floor(x1 / spacing) * spacing;
-
-                    ctx.beginPath();
-                    for (let lx = globalOffset - h; lx < x2 + h; lx += spacing) {
-                        for (let ly = 0; ly < h; ly += (strokeLen + gapLen)) {
-                            const sx = lx + ly;
-                            const sy = ly;
-                            // Solo dibujamos si el inicio está estrictamente dentro del segmento horario actual
-                            if (sx >= x1 && sx < x2) {
-                                ctx.moveTo(sx, sy);
-                                ctx.lineTo(sx + strokeLen, sy + strokeLen);
-                            }
+                    // Suavizado de transición de color si el siguiente es distinto
+                    if (d2) {
+                        const c1 = getPrecipTypeColor(d1.weatherCode);
+                        const c2 = getPrecipTypeColor(d2.weatherCode);
+                        if (c1 !== c2) {
+                            const g = ctx.createLinearGradient(x1, 0, x2, 0);
+                            g.addColorStop(0, c1);
+                            g.addColorStop(1, c2);
+                            ctx.strokeStyle = g;
                         }
                     }
-                    ctx.stroke();
+
+                    // Usamos un offset global basado en el espaciado para que las líneas no salten al hacer scroll
+                    const globalOffset = Math.floor(x1 / spacing) * spacing;
+                    const isSnow = [71, 73, 75, 77, 85, 86].includes(d1.weatherCode);
+
+                    if (isSnow) {
+                        ctx.fillStyle = ctx.strokeStyle;
+                        ctx.font = '10px "Material Symbols Outlined"';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        const flakeSpacing = 40; // Menos densidad (antes 30)
+                        const flakeOffset = Math.floor(x1 / flakeSpacing) * flakeSpacing;
+                        
+                        for (let lx = flakeOffset - h; lx < x2 + h; lx += flakeSpacing) {
+                            for (let ly = 10; ly < h; ly += flakeSpacing) {
+                                const stagger = (Math.floor(ly / flakeSpacing) % 2) * (flakeSpacing * 0.5);
+                                const sx = lx + stagger;
+                                const sy = ly;
+                                if (sx >= x1 && sx < x2) {
+                                    ctx.fillText('ac_unit', sx, sy);
+                                }
+                            }
+                        }
+                    } else {
+                        // Dibujamos pequeñas líneas diagonales (trazos cortos)
+                        const strokeLen = 4;
+                        const gapLen = 4;
+                        
+                        ctx.beginPath();
+                        for (let lx = globalOffset - h; lx < x2 + h; lx += spacing) {
+                            for (let ly = 0; ly < h; ly += (strokeLen + gapLen)) {
+                                const sx = lx + ly;
+                                const sy = ly;
+                                // Solo dibujamos si el inicio está estrictamente dentro del segmento horario actual
+                                if (sx >= x1 && sx < x2) {
+                                    ctx.moveTo(sx, sy);
+                                    ctx.lineTo(sx + strokeLen, sy + strokeLen);
+                                }
+                            }
+                        }
+                        ctx.stroke();
+                    }
                     ctx.restore();
                 }
             }
@@ -2084,22 +2168,7 @@ locationInput.addEventListener('input', () => {
             ctx.lineJoin = 'round';
             ctx.stroke(outlinePath);
 
-            // Añadimos puntos en cada hora si la probabilidad es > 0
-            for (let i = startIdx; i < endIdx; i++) {
-                const d = state.hourlyData[i];
-                const prob = d.precipProb || 0;
-                if (prob > 5) {
-                    const x = i * PIXELS_PER_HOUR;
-                    const y = h - (h * (prob / 100));
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    ctx.fillStyle = getPrecipTypeColor(d.weatherCode);
-                    ctx.fill();
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
-                }
-            }
+            ctx.restore();
         }
 
         function drawHumidity(ctx, viewX, viewW, h, styles) {
@@ -2429,61 +2498,70 @@ locationInput.addEventListener('input', () => {
             ctx.restore();
 
             // 3. Layers (Simplified for minimap)
-            // Clouds
-            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
+            // Zero line (0°C)
+            const y0 = normalizeY(0, -20, 40, h);
+            ctx.strokeStyle = 'rgba(2, 136, 209, 0.4)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1;
             ctx.beginPath();
+            ctx.moveTo(0, y0);
+            ctx.lineTo(w, y0);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Clouds
+            ctx.save();
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.6)';
+            ctx.lineWidth = 1;
+            const cloudPath = new Path2D();
             state.hourlyData.forEach((d, i) => {
                 const x = i * step;
                 const y = h - (h * (d.clouds / 100));
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (i === 0) cloudPath.moveTo(x, y);
+                else cloudPath.lineTo(x, y);
             });
-            ctx.lineTo(w, h);
-            ctx.lineTo(0, h);
-            ctx.fill();
+            ctx.stroke(cloudPath);
+            cloudPath.lineTo(w, h);
+            cloudPath.lineTo(0, h);
+            ctx.fill(cloudPath);
+            ctx.restore();
 
-            // Precipitation
-            ctx.fillStyle = 'rgba(25, 118, 210, 0.4)';
+            // Precipitation bars
+            ctx.fillStyle = 'rgba(25, 118, 210, 0.5)';
             state.hourlyData.forEach((d, i) => {
                 if (d.precip > 0) {
                     const x = i * step;
-                    const barH = Math.min(h, d.precip * 5);
-                    ctx.fillRect(x, h - barH, step, barH);
+                    const barH = Math.max(2, Math.min(h, d.precip * 5));
+                    ctx.fillRect(x, h - barH, Math.max(1, step - 0.5), barH);
                 }
             });
 
             // Precipitation Probability
+            ctx.save();
             ctx.fillStyle = 'rgba(2, 136, 209, 0.2)';
-            ctx.beginPath();
+            ctx.strokeStyle = '#0288d1';
+            ctx.lineWidth = 1;
+            const probPath = new Path2D();
             state.hourlyData.forEach((d, i) => {
                 const x = i * step;
                 const y = h - (h * (d.precipProb / 100));
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (i === 0) probPath.moveTo(x, y);
+                else probPath.lineTo(x, y);
             });
-            ctx.lineTo(w, h);
-            ctx.lineTo(0, h);
-            ctx.fill();
+            ctx.stroke(probPath);
+            probPath.lineTo(w, h);
+            probPath.lineTo(0, h);
+            ctx.fill(probPath);
+            ctx.restore();
 
             // Temperature Line
             ctx.strokeStyle = '#d32f2f';
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1.8;
             ctx.beginPath();
             state.hourlyData.forEach((d, i) => {
                 const x = i * step;
                 const y = normalizeY(d.temp, -20, 40, h);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            // Humidity Line
-            ctx.strokeStyle = 'rgba(0, 172, 193, 0.4)';
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            state.hourlyData.forEach((d, i) => {
-                const x = i * step;
-                const y = h - (h * (d.humidity / 100));
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             });
@@ -2500,24 +2578,40 @@ locationInput.addEventListener('input', () => {
                     else if (d.uv >= 11) color = getThemeColor('uvLevels.extreme', '#7b1fa2');
 
                     ctx.fillStyle = color;
-                    ctx.fillRect(x, 0, step + 0.5, 2);
+                    ctx.fillRect(x, 0, Math.max(1, step), 3);
                 }
             });
 
-            // Red line for 'now'
+            // Modern vertical line for 'Now'
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
             const nowIndex = (now - startTime) / 3600000;
             if (nowIndex >= 0 && nowIndex <= state.hourlyData.length) {
                 const nowX = nowIndex * step;
-                ctx.strokeStyle = '#ff4d4d';
-                ctx.lineWidth = 1.5;
-                ctx.setLineDash([2, 2]);
+                ctx.save();
+                
+                // Outer glow shadow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
+                
+                // Vertical line
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.5;
                 ctx.beginPath();
                 ctx.moveTo(nowX, 0);
                 ctx.lineTo(nowX, h);
                 ctx.stroke();
-                ctx.setLineDash([]);
+                
+                // Little indicator circle at top
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(nowX, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
             }
 
             ctx.restore();
@@ -2771,21 +2865,19 @@ locationInput.addEventListener('input', () => {
                     drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'));
                 }
 
-                // 1.1 Wind Gusts (if over shockwave)
-                const closestIndex = progress < 0.5 ? index : index + 1;
-                const closestData = state.hourlyData[closestIndex];
-                if (closestData && closestData.gusts > 35) {
+                // 1.1 Wind Gusts (discrete hourly metric)
+                const currentData = state.hourlyData[index];
+                if (currentData && currentData.gusts > 35) {
                     let color = getThemeColor('gusts.normal', '#64748b');
-                    if (closestData.gusts > 70) color = getThemeColor('gusts.extreme', '#dc2626');
-                    else if (closestData.gusts > 50) color = getThemeColor('gusts.strong', '#ea580c');
+                    if (currentData.gusts > 70) color = getThemeColor('gusts.extreme', '#dc2626');
+                    else if (currentData.gusts > 50) color = getThemeColor('gusts.strong', '#ea580c');
 
-                    // Draw text
-                    drawPoint(h - 35, color, closestData.gusts.toFixed(1), 'km/h', 'none', getThemeIcon('scrubber.wind', 'air'));
+                    // Draw label
+                    drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', getThemeIcon('scrubber.wind', 'air'));
                 }
 
-                // 4. Precipitación
-                const closestPrecipData = progress < 0.5 ? d1 : d2;
-                const pVal = closestPrecipData.precip;
+                // 4. Precipitación (discrete hourly metric)
+                const pVal = d1.precip;
 
                 if (pVal > 0.01) {
                     const maxH = h * 0.9;
@@ -2794,8 +2886,8 @@ locationInput.addEventListener('input', () => {
                     const visualH = Math.min(maxH, barH);
                     const barY = h - visualH;
 
-                    const isSnow = [71, 73, 75, 77, 85, 86].includes(closestPrecipData.weatherCode);
-                    const isThunder = [95, 96, 99].includes(closestPrecipData.weatherCode);
+                    const isSnow = [71, 73, 75, 77, 85, 86].includes(d1.weatherCode);
+                    const isThunder = [95, 96, 99].includes(d1.weatherCode);
                     const pIcon = isSnow ? 'ac_unit' : isThunder ? 'bolt' : getThemeIcon('scrubber.precip', 'water_drop');
 
                     drawPoint(barY - 12, '#1976d2', pVal.toFixed(1) + (isBroken ? ' (!)' : ''), ' mm', 'none', pIcon);
@@ -3417,7 +3509,7 @@ locationInput.addEventListener('input', () => {
             render();
         }
 
-        function centerOnCurrentTime() {
+        function centerOnCurrentTime(behavior = 'auto') {
             if (state.hourlyData.length === 0) return;
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
@@ -3427,7 +3519,12 @@ locationInput.addEventListener('input', () => {
             const exactX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR;
 
             // Centramos exactX en la línea de referencia fija (scrollLeft + 60)
-            scrollContainer.scrollLeft = exactX - 60;
+            const targetLeft = Math.max(0, exactX - 60);
+            if (behavior === 'smooth') {
+                scrollContainer.scrollTo({ left: targetLeft, behavior: 'smooth' });
+            } else {
+                scrollContainer.scrollLeft = targetLeft;
+            }
             state.hoverX = null;
             render();
         }
