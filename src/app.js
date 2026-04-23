@@ -1984,13 +1984,13 @@ locationInput.addEventListener('input', () => {
                             const dropY = barY + 4 + yJitter;
                             
                             // Sticker outline (glow effect)
-                            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; // Borde mucho menos agresivo, blanquecino
+                            ctx.lineWidth = 2; // Más fino
                             ctx.strokeText(dropIcon, dropX, dropY);
                             
                             // Main icon
                             ctx.fillStyle = strokeColor;
-                            ctx.shadowColor = 'rgba(25, 118, 210, 0.3)';
+                            ctx.shadowColor = 'rgba(25, 118, 210, 0.4)';
                             ctx.shadowBlur = 1;
                             ctx.fillText(dropIcon, dropX, dropY);
                         }
@@ -2352,15 +2352,15 @@ locationInput.addEventListener('input', () => {
                     if (isWet) {
                         sCol = 'rgba(0, 200, 255, 0.3)';
                         sBlur = 20;
-                        sOffY = 1;
+                        sOffY = 2; // Más separado
                     } else if (isCloudy) {
-                        sCol = 'rgba(0, 0, 0, 0.3)';
-                        sBlur = 15;
-                        sOffY = 3;
+                        sCol = 'rgba(0, 0, 0, 0.2)'; // Más suave
+                        sBlur = 20; // Más difuminado
+                        sOffY = 6; // Más separado
                     } else {
-                        sCol = d.isNight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 240, 150, 0.3)';
+                        sCol = d.isNight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 140, 0, 0.3)'; // Anaranjado de día
                         sBlur = 25;
-                        sOffY = -3;
+                        sOffY = -6; // Más separado
                     }
                     
                     ctx.shadowColor = sCol;
@@ -2422,18 +2422,14 @@ locationInput.addEventListener('input', () => {
                 let isWet = avgY >= avgProbY && avgProb > 15;
                 let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
 
-                if (isWet) {
-                    ctx.shadowColor = 'rgba(0, 200, 255, 1)';
-                    ctx.shadowBlur = 8;
-                    ctx.shadowOffsetY = 1;
-                } else if (isCloudy) {
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                    ctx.shadowOffsetY = 4;
-                    ctx.shadowBlur = 6;
+                if (isCloudy || isWet) {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // Más transparente y difuminado
+                    ctx.shadowOffsetY = 6;
+                    ctx.shadowBlur = 15;
                 } else {
-                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 240, 150, 1)';
-                    ctx.shadowOffsetY = -4;
-                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 140, 0, 0.8)'; // Moon glow OR Orange glow
+                    ctx.shadowOffsetY = -6;
+                    ctx.shadowBlur = 18;
                 }
 
                 ctx.beginPath();
@@ -2441,11 +2437,29 @@ locationInput.addEventListener('input', () => {
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
 
+                // Dibujar splashes de agua si está mojado
                 if (isWet) {
-                    // Reflejo húmedo ampliado
-                    ctx.strokeStyle = 'rgba(200, 240, 255, 0.8)';
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(150, 230, 255, 0.9)';
                     ctx.lineWidth = 1.5;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    // Un par de salpicaduras pequeñas sobre la línea
+                    const steps = 3;
+                    for(let k = 1; k <= steps; k++) {
+                        const t = k / (steps + 1);
+                        const lx = x1 + (x2 - x1) * t;
+                        const ly = y1 + (y2 - y1) * t;
+                        // Salpicadura hacia arriba
+                        ctx.moveTo(lx, ly - 3);
+                        ctx.lineTo(lx - 3, ly - 7);
+                        ctx.moveTo(lx, ly - 3);
+                        ctx.lineTo(lx + 3, ly - 6);
+                        ctx.moveTo(lx, ly - 3);
+                        ctx.lineTo(lx, ly - 8);
+                    }
                     ctx.stroke();
+                    ctx.restore();
                 }
 
                 ctx.restore();
