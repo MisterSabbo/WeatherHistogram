@@ -61,15 +61,28 @@
         }
 
         async function loadChartTheme(themeId) {
+            const primaryPath = `themes/${themeId}.json`;
+            const fallbackPath = `public/themes/${themeId}.json`;
+
+            async function doFetch(url) {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Not found');
+                return await res.json();
+            }
+
             try {
-                // Ruta relativa sin el punto inicial para mejorar compatibilidad en subdirectorios de GitHub Pages
-                const res = await fetch(`themes/${themeId}.json`);
-                if (!res.ok) throw new Error('Theme not found');
-                state.themeConfig = await res.json();
+                // Intento 1: Ruta estándar (Build o Local Dev)
+                state.themeConfig = await doFetch(primaryPath);
             } catch(e) {
-                console.warn('Error loading theme:', e);
-                // Hardcode default fallback if fetch fails
-                state.themeConfig = { "font": "Inter, sans-serif", "icons": { "scrubber": { "temp": "device_thermostat", "wind": "air", "precip": "rainy", "prob": "water_drop", "cloud": "cloud" }, "header": { "aqi": "air", "allergen": "eco", "precip": "rainy", "prob": "water_drop", "cloud": "cloud" }, "zeroLine": "ac_unit", "windDirection": "navigation" }, "colors": { "tempLine": "#d32f2f", "humidityLine": "rgba(0, 172, 193, 0.4)", "precipBar": "rgba(25, 118, 210, 0.4)", "precipProbArea": "rgba(2, 136, 209, 0.2)", "cloudsArea": "rgba(100, 116, 139, 0.2)", "uvLevels": { "low": "#4caf50", "moderate": "#fbc02d", "high": "#f57c00", "veryHigh": "#d32f2f", "extreme": "#7b1fa2" }, "wind": { "normalLight": "#64748b", "normalDark": "#cbd5e1", "cold": "#3b82f6", "hot": "#ef4444", "strongDefaultLight": "#dc2626", "strongDefaultDark": "#f87171" }, "gusts": { "normal": "#64748b", "strong": "#ea580c", "extreme": "#dc2626" }, "zeroLine": "rgba(2, 136, 209, 0.8)", "zeroLineIcon": "#0288d1", "referenceLine": "rgba(255, 255, 255, 0.3)", "scrubber": { "bgLightMix": 0.85, "bgOpacity": 0.75 } } };
+                console.warn(`Theme not found at ${primaryPath}, trying ${fallbackPath}...`);
+                try {
+                    // Intento 2: Ruta del repositorio (si no se está usando build de Vite)
+                    state.themeConfig = await doFetch(fallbackPath);
+                } catch(e2) {
+                    console.error('Theme loading failed completely:', e2);
+                    // Fallback hardcodeado para asegurar que la app no se rompa
+                    state.themeConfig = { "font": "Inter, sans-serif", "icons": { "scrubber": { "temp": "device_thermostat", "wind": "air", "precip": "rainy", "prob": "water_drop", "cloud": "cloud" }, "header": { "aqi": "air", "allergen": "eco", "precip": "rainy", "prob": "water_drop", "cloud": "cloud" }, "zeroLine": "ac_unit", "windDirection": "navigation" }, "colors": { "tempLine": "#d32f2f", "humidityLine": "rgba(0, 172, 193, 0.4)", "precipBar": "rgba(25, 118, 210, 0.4)", "precipProbArea": "rgba(2, 136, 209, 0.2)", "cloudsArea": "rgba(100, 116, 139, 0.2)", "uvLevels": { "low": "#4caf50", "moderate": "#fbc02d", "high": "#f57c00", "veryHigh": "#d32f2f", "extreme": "#7b1fa2" }, "wind": { "normalLight": "#64748b", "normalDark": "#cbd5e1", "cold": "#3b82f6", "hot": "#ef4444", "strongDefaultLight": "#dc2626", "strongDefaultDark": "#f87171" }, "gusts": { "normal": "#64748b", "strong": "#ea580c", "extreme": "#dc2626" }, "zeroLine": "rgba(2, 136, 209, 0.8)", "zeroLineIcon": "#0288d1", "referenceLine": "rgba(255, 255, 255, 0.3)", "scrubber": { "bgLightMix": 0.85, "bgOpacity": 0.75 } } };
+                }
             }
             applyThemeDOM();
         }
@@ -3445,8 +3458,19 @@ locationInput.addEventListener('input', () => {
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+                const swPaths = ['./sw.js', './public/sw.js'];
+                let attempting = 0;
+
+                const tryNext = () => {
+                    if (attempting >= swPaths.length) return;
+                    navigator.serviceWorker.register(swPaths[attempting])
+                        .then(() => console.log('ServiceWorker registered:', swPaths[attempting]))
+                        .catch(err => {
+                            console.warn(`SW ${swPaths[attempting]} failed:`, err);
+                            attempting++;
+                            tryNext();
+                        });
+                };
+                tryNext();
             });
         }
