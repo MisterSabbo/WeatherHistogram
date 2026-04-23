@@ -34,7 +34,10 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 *   **Offline Capabilities:** Service Workers (`sw.js`) and Web App Manifest (`manifest.json`) for PWA support
 *   **Build Tool:** Vite (for fast development server and optimized production builds)
 
-## Project Structure
+## Versiones y Cambios
+Puedes consular la evolución completa y detallada las últimas novedades en nuestro archivo [CHANGELOG.md](CHANGELOG.md).
+
+## Proyecto e Instalación
 
 The project directory follows a standard structure splitting logic, static views, and assets cleanly:
 *   `./index.html` — The core layout and app shell.

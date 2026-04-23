@@ -1171,8 +1171,8 @@ locationInput.addEventListener('input', () => {
                     for (let s = 0; s < 12; s++) { // 12 stars per hour width
                         const seed = i * 100 + s;
                         const sx = xOffset + rand(seed) * PIXELS_PER_HOUR;
-                        const sy = rand(seed + 1) * (h * 0.4); // Only top 40% of the screen
-                        const size = 0.5 + rand(seed + 2) * 1.0;
+                        const sy = rand(seed + 1) * h; // En todo el cielo
+                        const size = 0.5 + rand(seed + 2) * 1.5;
                         const opacity = 0.3 + rand(seed + 3) * 0.7;
                         
                         ctx.globalAlpha = opacity;
@@ -1592,34 +1592,57 @@ locationInput.addEventListener('input', () => {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
+            let solidNightStart = -1;
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
-                const prevD = state.hourlyData[i - 1];
-                const nextD = state.hourlyData[i + 1];
-
-                const x = i * PIXELS_PER_HOUR;
-                const w = PIXELS_PER_HOUR + 0.5;
-
                 if (d.isNight) {
-                    if (prevD && !prevD.isNight) {
-                        // Sunset transition (Dusk) - Softer orange
-                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                    const prevIsDay = i > 0 && !state.hourlyData[i - 1].isNight;
+                    const nextIsDay = i < state.hourlyData.length - 1 && !state.hourlyData[i + 1].isNight;
+                    const x = i * PIXELS_PER_HOUR;
+                    const w = PIXELS_PER_HOUR;
+
+                    if (prevIsDay) {
+                        if (solidNightStart !== -1) {
+                            ctx.fillStyle = '#e9d5ff';
+                            ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR, h);
+                            solidNightStart = -1;
+                        }
+                        const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
                         grad.addColorStop(0, '#fffde7');
-                        grad.addColorStop(0.5, '#ffedd5'); // Softer Orange
+                        grad.addColorStop(0.5, '#ffedd5');
                         grad.addColorStop(1, '#e9d5ff');
                         ctx.fillStyle = grad;
-                    } else if (nextD && !nextD.isNight) {
-                        // Sunrise transition (Dawn) - Softer orange
-                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        ctx.fillRect(x, 0, w + 0.5, h);
+                    } else if (nextIsDay) {
+                        if (solidNightStart !== -1) {
+                            ctx.fillStyle = '#e9d5ff';
+                            ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR, h);
+                            solidNightStart = -1;
+                        }
+                        const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
                         grad.addColorStop(0, '#e9d5ff');
-                        grad.addColorStop(0.5, '#ffedd5'); // Softer Orange
+                        grad.addColorStop(0.5, '#ffedd5');
                         grad.addColorStop(1, '#fffde7');
                         ctx.fillStyle = grad;
+                        ctx.fillRect(x, 0, w + 0.5, h);
                     } else {
-                        ctx.fillStyle = '#e9d5ff'; // Darker violet
+                        if (solidNightStart === -1) {
+                            solidNightStart = i;
+                        }
                     }
-                    ctx.fillRect(x, 0, w, h);
+                } else {
+                    if (solidNightStart !== -1) {
+                        ctx.fillStyle = '#e9d5ff'; // Darker violet
+                        ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 0.5, h);
+                        solidNightStart = -1;
+                    }
                 }
+            }
+
+            if (solidNightStart !== -1) {
+                ctx.fillStyle = '#e9d5ff';
+                ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (endIdx - solidNightStart) * PIXELS_PER_HOUR + 0.5, h);
             }
 
             // Draw Moon at midpoints
@@ -2084,92 +2107,139 @@ locationInput.addEventListener('input', () => {
             ctx.fillStyle = 'rgba(3, 155, 229, 0.08)';
             ctx.fillRect((startIdx-1) * PIXELS_PER_HOUR, 0, (endIdx - startIdx + 2) * PIXELS_PER_HOUR, h);
 
-            // Relleno con densidad de líneas según probabilidad
-            for (let i = startIdx; i < endIdx - 1; i++) {
-                const d1 = state.hourlyData[i];
-                const d2 = state.hourlyData[i+1];
-                const x1 = i * PIXELS_PER_HOUR;
-                const x2 = (i+1) * PIXELS_PER_HOUR;
-                
-                const prob1 = d1.precipProb || 0;
-                const prob2 = d2.precipProb || 0;
-                
-                if (prob1 > 0 || prob2 > 0) { // Draw if any probability exists
-                    const avgProb = (prob1 + prob2) / 2;
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(x1, 0, x2 - x1, h);
-                    ctx.clip();
-                    
-                    const spacing = 16; // Menos densidad (antes 12)
-                    
-                    // Mejorar contraste general, sobre todo cuando es de noche
-                    if (d1.isNight) {
-                        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-                        ctx.shadowBlur = 3;
-                    }
-                    
-                    ctx.strokeStyle = getPrecipTypeColor(d1.weatherCode);
-                    ctx.lineWidth = 1; // Más fino
-                    ctx.globalAlpha = d1.isNight ? 0.6 : 0.4; // Aumentado en la noche
-                    
-                    // Suavizado de transición de color si el siguiente es distinto
-                    if (d2) {
-                        const c1 = getPrecipTypeColor(d1.weatherCode);
-                        const c2 = getPrecipTypeColor(d2.weatherCode);
-                        if (c1 !== c2) {
-                            const g = ctx.createLinearGradient(x1, 0, x2, 0);
-                            g.addColorStop(0, c1);
-                            g.addColorStop(1, c2);
-                            ctx.strokeStyle = g;
-                        }
-                    }
+            // Relleno con densidad de líneas según probabilidad (Agrupado en bloques contiguos)
+            const blocks = [];
+            let currentBlock = null;
 
-                    // Usamos un offset global basado en el espaciado para que las líneas no salten al hacer scroll
-                    const globalOffset = Math.floor(x1 / spacing) * spacing;
-                    const isSnow = [71, 73, 75, 77, 85, 86].includes(d1.weatherCode);
+            for (let i = startIdx; i < endIdx; i++) {
+                const d = state.hourlyData[i];
+                if (!d || !d.precipProb) {
+                    if (currentBlock) { blocks.push(currentBlock); currentBlock = null; }
+                    continue;
+                }
+                
+                const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
+                const type = isSnow ? 'snow' : 'rain';
+                const color = getPrecipTypeColor(d.weatherCode);
+                const alpha = d.isNight ? 0.6 : 0.4;
+                const shadowColor = d.isNight ? 'rgba(255, 255, 255, 0.5)' : 'transparent';
 
-                    if (isSnow) {
-                        ctx.fillStyle = ctx.strokeStyle;
-                        ctx.font = '10px "Material Symbols Outlined"';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        
-                        const flakeSpacing = 40; // Menos densidad (antes 30)
-                        const flakeOffset = Math.floor(x1 / flakeSpacing) * flakeSpacing;
-                        
-                        for (let lx = flakeOffset - h; lx < x2 + h; lx += flakeSpacing) {
-                            for (let ly = 10; ly < h; ly += flakeSpacing) {
-                                const stagger = (Math.floor(ly / flakeSpacing) % 2) * (flakeSpacing * 0.5);
-                                const sx = lx + stagger;
-                                const sy = ly;
-                                if (sx >= x1 && sx < x2) {
-                                    ctx.fillText('ac_unit', sx, sy);
-                                }
-                            }
-                        }
-                    } else {
-                        // Dibujamos pequeñas líneas diagonales (trazos cortos)
-                        const strokeLen = 4;
-                        const gapLen = 4;
-                        
-                        ctx.beginPath();
-                        for (let lx = globalOffset - h; lx < x2 + h; lx += spacing) {
-                            for (let ly = 0; ly < h; ly += (strokeLen + gapLen)) {
-                                const sx = lx + ly;
-                                const sy = ly;
-                                // Solo dibujamos si el inicio está estrictamente dentro del segmento horario actual
-                                if (sx >= x1 && sx < x2) {
-                                    ctx.moveTo(sx, sy);
-                                    ctx.lineTo(sx + strokeLen, sy + strokeLen);
-                                }
-                            }
-                        }
-                        ctx.stroke();
-                    }
-                    ctx.restore();
+                if (!currentBlock || currentBlock.type !== type) {
+                    if (currentBlock) blocks.push(currentBlock);
+                    currentBlock = { type, start: i, end: i, colors: [color], alphas: [alpha], shadows: [shadowColor] };
+                } else {
+                    currentBlock.end = i;
+                    currentBlock.colors.push(color);
+                    currentBlock.alphas.push(alpha);
+                    currentBlock.shadows.push(shadowColor);
                 }
             }
+            if (currentBlock) blocks.push(currentBlock);
+
+            const spacing = 16; // Menos densidad (antes 12)
+            
+            blocks.forEach(block => {
+                const xStart = block.start * PIXELS_PER_HOUR;
+                const xEnd = (block.end + 1) * PIXELS_PER_HOUR;
+                
+                // Margen generoso para que se fundan los tramos colindantes sin corte
+                const drawXStart = xStart - 30;
+                const drawXEnd = xEnd + 30;
+
+                ctx.save();
+                ctx.beginPath();
+                // Clip del bloque entero + los márgenes
+                ctx.rect(drawXStart, 0, drawXEnd - drawXStart, h);
+                ctx.clip();
+                
+                let strokeFillColor = block.colors[0];
+                
+                // Helper para transformar color Hex a Rgba con Alpha controlado
+                const toRgba = (color, a) => {
+                    const {r, g, b} = window.hexToRgb(color);
+                    return `rgba(${r}, ${g}, ${b}, ${a})`;
+                };
+                
+                const alphaSolid = block.alphas[0];
+                const cFirst = block.colors[0];
+                const cLast = block.colors[block.colors.length - 1];
+                const totalW = drawXEnd - drawXStart;
+                
+                const g = ctx.createLinearGradient(drawXStart, 0, drawXEnd, 0);
+                
+                // Fundido transparente de entrada (overlap izquierdo ampliado a 60px para mayor suavidad)
+                const fadeW = 60;
+                g.addColorStop(0, toRgba(cFirst, 0));
+                g.addColorStop(fadeW / totalW, toRgba(cFirst, alphaSolid));
+                
+                // Colores internos del bloque iterados proporcionalmente en su espacio central
+                if (block.colors.length > 1) {
+                    block.colors.forEach((c, idx) => {
+                        const relativePos = idx / (block.colors.length - 1);
+                        const stopPos = (fadeW + relativePos * (xEnd - xStart)) / totalW;
+                        g.addColorStop(Math.min(1, Math.max(0, stopPos)), toRgba(c, alphaSolid));
+                    });
+                } else {
+                    g.addColorStop((totalW - fadeW) / totalW, toRgba(cFirst, alphaSolid));
+                }
+                
+                // Fundido transparente de salida (overlap derecho ampliado a 60px)
+                g.addColorStop((totalW - fadeW) / totalW, toRgba(cLast, alphaSolid));
+                g.addColorStop(1, toRgba(cLast, 0));
+                
+                strokeFillColor = g;
+                
+                ctx.strokeStyle = strokeFillColor;
+                ctx.fillStyle = strokeFillColor;
+                ctx.globalAlpha = 1; // Alpha controlado directamente en el gradiente
+                
+                if (block.shadows[0] !== 'transparent') {
+                    ctx.shadowColor = block.shadows[0];
+                    ctx.shadowBlur = 3;
+                }
+
+                ctx.lineWidth = 1;
+
+                if (block.type === 'snow') {
+                    ctx.font = '10px "Material Symbols Outlined"';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    const flakeSpacing = 40; // Menos densidad (antes 30)
+                    const flakeOffset = Math.floor(drawXStart / flakeSpacing) * flakeSpacing;
+                    
+                    for (let lx = flakeOffset - h; lx < drawXEnd + h; lx += flakeSpacing) {
+                        for (let ly = 10; ly < h; ly += flakeSpacing) {
+                            const stagger = (Math.floor(ly / flakeSpacing) % 2) * (flakeSpacing * 0.5);
+                            const randX = Math.sin(lx * 4.3 + ly * 2.1) * 12;
+                            const randY = Math.cos(lx * 1.5 + ly * 3.7) * 12;
+                            const sx = lx + stagger + randX;
+                            const sy = ly + randY;
+                            if (sx >= drawXStart && sx < drawXEnd) {
+                                ctx.fillText('ac_unit', sx, sy);
+                            }
+                        }
+                    }
+                } else {
+                    const strokeLen = 4;
+                    const gapLen = 4;
+                    const globalOffset = Math.floor(drawXStart / spacing) * spacing;
+                    
+                    ctx.beginPath();
+                    for (let lx = globalOffset - h; lx < drawXEnd + h; lx += spacing) {
+                        for (let ly = 0; ly < h; ly += (strokeLen + gapLen)) {
+                            const sx = lx + ly;
+                            const sy = ly;
+                            if (sx >= drawXStart && sx < drawXEnd) {
+                                ctx.moveTo(sx, sy);
+                                ctx.lineTo(sx + strokeLen, sy + strokeLen);
+                            }
+                        }
+                    }
+                    ctx.stroke();
+                }
+                ctx.restore();
+            });
             ctx.restore();
 
             // Línea de contorno fina
@@ -2360,7 +2430,7 @@ locationInput.addEventListener('input', () => {
                     } else {
                         sCol = d.isNight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 140, 0, 0.3)'; // Anaranjado de día
                         sBlur = 25;
-                        sOffY = -6; // Más separado
+                        sOffY = 0; // Fixed double line illusion
                     }
                     
                     ctx.shadowColor = sCol;
@@ -2374,7 +2444,20 @@ locationInput.addEventListener('input', () => {
                     // 2. Dibujado de la Línea Punteada (Sin sombra física individual)
                     ctx.save();
                     ctx.setLineDash([4, 4]);
-                    ctx.strokeStyle = isCold ? '#0288d1' : '#ef4444'; 
+                    
+                    if (!isWet && !isCloudy) {
+                        // Color adaptado para despejado (mezcla entre color base y resplandor)
+                        if (d.isNight) {
+                            // Night: Blanco como base de mezcla solo si es calor
+                            ctx.strokeStyle = isCold ? '#0288d1' : 'rgba(247, 161, 161, 0.9)';
+                        } else {
+                            // Day: Naranja como base de mezcla solo si es calor
+                            ctx.strokeStyle = isCold ? '#0288d1' : 'rgba(247, 104, 34, 1)';
+                        }
+                    } else {
+                        ctx.strokeStyle = isCold ? '#0288d1' : '#ef4444'; 
+                    }
+
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.moveTo(x1, y1);
@@ -2424,40 +2507,61 @@ locationInput.addEventListener('input', () => {
 
                 if (isCloudy || isWet) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // Más transparente y difuminado
-                    ctx.shadowOffsetY = 6;
-                    ctx.shadowBlur = 15;
+                    ctx.shadowOffsetY = 4;
+                    ctx.shadowBlur = 12;
                 } else {
-                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 140, 0, 0.8)'; // Moon glow OR Orange glow
-                    ctx.shadowOffsetY = -6;
-                    ctx.shadowBlur = 18;
+                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 140, 0, 1)'; // Naranja fuerte / Blanco brillante
+                    ctx.shadowOffsetY = -6; // Hacia arriba para glow superior
+                    ctx.shadowBlur = 15;
                 }
 
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
+                
+                // Refuerzo extra de brillo (Multi-stroke) para cielos despejados haciendo el glow mucho más visible
+                if (!isCloudy && !isWet) {
+                    ctx.stroke();
+                }
 
-                // Dibujar splashes de agua si está mojado
+                // Detalles adicionales adaptativos a la línea base
                 if (isWet) {
                     ctx.save();
-                    ctx.strokeStyle = 'rgba(150, 230, 255, 0.9)';
-                    ctx.lineWidth = 1.5;
-                    ctx.lineCap = 'round';
-                    ctx.beginPath();
-                    // Un par de salpicaduras pequeñas sobre la línea
-                    const steps = 3;
-                    for(let k = 1; k <= steps; k++) {
-                        const t = k / (steps + 1);
+                    ctx.fillStyle = 'rgba(150, 230, 255, 0.9)';
+                    // Generación seudo-aleatoria pero persistente para las gotas
+                    const splashCount = 1 + Math.floor(Math.abs(Math.sin((x1 + y1) * 10)) * 2); // 1 or 2
+                    for (let s = 1; s <= splashCount; s++) {
+                        const seed = x1 * 3.1 + s * 7.4;
+                        const t = 0.2 + (Math.abs(Math.sin(seed)) * 0.6); // Random position between 0.2 and 0.8
                         const lx = x1 + (x2 - x1) * t;
                         const ly = y1 + (y2 - y1) * t;
-                        // Salpicadura hacia arriba
-                        ctx.moveTo(lx, ly - 3);
-                        ctx.lineTo(lx - 3, ly - 7);
-                        ctx.moveTo(lx, ly - 3);
-                        ctx.lineTo(lx + 3, ly - 6);
-                        ctx.moveTo(lx, ly - 3);
-                        ctx.lineTo(lx, ly - 8);
+                        
+                        const dropSize = 0.8 + Math.abs(Math.cos(seed)) * 1.2;
+                        const dropOffsetX = (Math.sin(seed * 2) * 5); // Desplazamiento lateral
+                        const dropOffsetY = 3 + Math.abs(Math.cos(seed * 3)) * 5; // Desplazamiento vertical arriba
+                        
+                        const dx = lx + dropOffsetX;
+                        const dy = ly - dropOffsetY;
+                        
+                        // Dibujar forma de gota (teardrop) en lugar de círculo
+                        ctx.beginPath();
+                        ctx.moveTo(dx, dy - dropSize * 1.5);
+                        ctx.bezierCurveTo(dx + dropSize, dy - dropSize * 0.5, dx + dropSize * 1.2, dy + dropSize, dx, dy + dropSize);
+                        ctx.bezierCurveTo(dx - dropSize * 1.2, dy + dropSize, dx - dropSize, dy - dropSize * 0.5, dx, dy - dropSize * 1.5);
+                        ctx.fill();
                     }
+                    ctx.restore();
+                }
+                
+                // Contraste para nubes: sutil resplandor interno claro por encima de la sombra oscura
+                if (isCloudy && !isWet) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; // Fina luz blanca debajo del rojo, arriba de las nubes grises
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1 + 1);
+                    ctx.lineTo(x2, y2 + 1);
                     ctx.stroke();
                     ctx.restore();
                 }
@@ -2478,13 +2582,21 @@ locationInput.addEventListener('input', () => {
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Sombra para legibilidad (Halo blanco más fuerte)
+                // Sombra para legibilidad (Solo si hay nubosidad o lluvia)
+                const cloudY = h - (h * (d.clouds / 100));
+                const probY = h - (h * ((d.precipProb || 0) / 100));
+                const isWet = y >= probY && (d.precipProb || 0) > 15;
+                const isCloudy = y >= cloudY && d.clouds >= 25;
+
                 ctx.save();
-                ctx.shadowColor = 'white';
-                ctx.shadowBlur = 5;
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = 'white';
-                ctx.strokeText(d.temp.toFixed(1) + '°', x, y - 10);
+                if (isWet || isCloudy) {
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+                    ctx.shadowBlur = 5;
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.strokeText(d.temp.toFixed(1) + '°', x, y - 10);
+                }
+                
                 ctx.fillStyle = textColor;
                 ctx.fillText(d.temp.toFixed(1) + '°', x, y - 10);
                 ctx.restore();
@@ -2495,31 +2607,55 @@ locationInput.addEventListener('input', () => {
             const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
             const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
+            let solidNightStart = -1;
+
             for (let i = startIdx; i < endIdx; i++) {
                 const d = state.hourlyData[i];
                 if (d.isNight) {
-                    const x = i * PIXELS_PER_HOUR;
-                    const w = PIXELS_PER_HOUR + 0.5;
-
                     const prevIsDay = i > 0 && !state.hourlyData[i-1].isNight;
                     const nextIsDay = i < state.hourlyData.length - 1 && !state.hourlyData[i+1].isNight;
+                    const x = i * PIXELS_PER_HOUR;
+                    const w = PIXELS_PER_HOUR;
 
                     if (prevIsDay) {
-                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        if (solidNightStart !== -1) {
+                            ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                            ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR, h);
+                            solidNightStart = -1;
+                        }
+                        const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
                         grad.addColorStop(0, 'rgba(0, 0, 20, 0)');
                         grad.addColorStop(1, 'rgba(0, 0, 20, 0.15)');
                         ctx.fillStyle = grad;
+                        ctx.fillRect(x, 0, w + 0.5, h);
                     } else if (nextIsDay) {
-                        const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+                        if (solidNightStart !== -1) {
+                            ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                            ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR, h);
+                            solidNightStart = -1;
+                        }
+                        const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
                         grad.addColorStop(0, 'rgba(0, 0, 20, 0.15)');
                         grad.addColorStop(1, 'rgba(0, 0, 20, 0)');
                         ctx.fillStyle = grad;
+                        ctx.fillRect(x, 0, w + 0.5, h);
                     } else {
-                        ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                        if (solidNightStart === -1) {
+                            solidNightStart = i;
+                        }
                     }
-
-                    ctx.fillRect(x, 0, w, h);
+                } else {
+                    if (solidNightStart !== -1) {
+                        ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                        ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 0.5, h);
+                        solidNightStart = -1;
+                    }
                 }
+            }
+
+            if (solidNightStart !== -1) {
+                ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (endIdx - solidNightStart) * PIXELS_PER_HOUR + 0.5, h);
             }
         }
 
