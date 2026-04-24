@@ -1,8 +1,5 @@
 {
-  "name": "Weather Histogram",
+  "name": "",
   "description": "",
-  "requestFramePermissions": [
-    "geolocation"
-  ],
-  "majorCapabilities": []
+  "requestFramePermissions": ["geolocation"]
 }
