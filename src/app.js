@@ -1871,11 +1871,11 @@ locationInput.addEventListener('input', () => {
                     
                     let baseColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(148, 163, 184, 0.4)') : 
                                     isThunder ? 'rgba(57, 73, 171, 0.4)' : 
-                                    getThemeColor('precipBar', 'rgba(25, 118, 210, 0.4)');
+                                    getThemeColor('precipBar', 'rgba(13, 71, 161, 0.4)');
                     
                     let strokeColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(100, 116, 139, 0.8)') : 
                                       isThunder ? 'rgba(57, 73, 171, 0.8)' : 
-                                      'rgba(25, 118, 210, 0.8)';
+                                      'rgba(13, 71, 161, 0.8)';
 
                     ctx.fillStyle = baseColor;
                     ctx.strokeStyle = strokeColor;
@@ -2013,7 +2013,7 @@ locationInput.addEventListener('input', () => {
                             
                             // Main icon
                             ctx.fillStyle = strokeColor;
-                            ctx.shadowColor = 'rgba(25, 118, 210, 0.4)';
+                            ctx.shadowColor = 'rgba(13, 71, 161, 0.4)';
                             ctx.shadowBlur = 1;
                             ctx.fillText(dropIcon, dropX, dropY);
                         }
@@ -2409,13 +2409,6 @@ locationInput.addEventListener('input', () => {
                     let isWet = avgY >= avgProbY && avgProb > 15;
                     let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
 
-                    // Factor para transición paulatina del glow
-                    let glowFactor = 1 - Math.max(
-                        Math.min(1, (avgClouds - 5) / 20), // Transición entre 5% y 25% nubes
-                        Math.min(1, (avgProb - 5) / 10)    // Transición entre 5% y 15% prob
-                    );
-                    glowFactor = Math.max(0, glowFactor);
-
                     // 1. Dibujado de Efectos Continuos (Glow/Sombra)
                     ctx.save();
                     ctx.beginPath();
@@ -2434,13 +2427,6 @@ locationInput.addEventListener('input', () => {
                         sCol = 'rgba(0, 0, 0, 0.2)'; // Más suave
                         sBlur = 20; // Más difuminado
                         sOffY = 6; // Más separado
-                    } else if (glowFactor > 0) {
-                        const isMobile = window.innerWidth < 600;
-                        const baseBlur = isMobile ? 35 : 25;
-                        const opacity = 0.3 * glowFactor;
-                        sCol = d.isNight ? `rgba(255, 255, 255, ${opacity})` : `rgba(255, 140, 0, ${opacity})`;
-                        sBlur = baseBlur;
-                        sOffY = 0; 
                     }
                     
                     if (sCol) {
@@ -2488,6 +2474,19 @@ locationInput.addEventListener('input', () => {
                 }
             }
             
+            // Pre-calcular claridad de nodos para transiciones suaves del resplandor
+            let nodeClear = [];
+            for (let i = 0; i < state.hourlyData.length; i++) {
+                const d = state.hourlyData[i];
+                const y = normalizeY(d.temp, -20, 40, h);
+                const cloudY = h - (h * (d.clouds / 100));
+                const probY = h - (h * ((d.precipProb || 0) / 100));
+                
+                let isWetNode = y >= probY && (d.precipProb || 0) > 15;
+                let isCloudyNode = y >= cloudY && d.clouds >= 25;
+                nodeClear.push(!(isWetNode || isCloudyNode) ? 1 : 0);
+            }
+
             // Línea de temperatura normal
             for (let i = startIdx; i < endIdx - 1; i++) {
                 const d = state.hourlyData[i];
@@ -2517,23 +2516,70 @@ locationInput.addEventListener('input', () => {
                 let isWet = avgY >= avgProbY && avgProb > 15;
                 let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
 
-                // Factor para transición paulatina del glow
-                let glowFactor = 1 - Math.max(
-                    Math.min(1, (avgClouds - 5) / 20), // Transición entre 5% y 25% nubes
-                    Math.min(1, (avgProb - 5) / 10)    // Transición entre 5% y 15% prob
-                );
-                glowFactor = Math.max(0, glowFactor);
-
                 if (isCloudy || isWet) {
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // Más transparente y difuminado
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
                     ctx.shadowOffsetY = 4;
                     ctx.shadowBlur = 12;
-                } else if (glowFactor > 0) {
+                } else {
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowBlur = 0;
+                }
+                
+                let gStart = nodeClear[i] || 0;
+                let gEnd = nodeClear[i+1] || 0;
+
+                // Efecto resplandor como trazo continuo con gradiente (suavizado)
+                if (gStart > 0 || gEnd > 0) {
                     const isMobile = window.innerWidth < 600;
-                    const baseBlur = isMobile ? (d.isNight ? 22 : 32) : 15; // Más difuminado en móvil, especialmente naranja
-                    ctx.shadowColor = d.isNight ? `rgba(255, 255, 255, ${glowFactor})` : `rgba(255, 140, 0, ${glowFactor})`;
-                    ctx.shadowOffsetY = -6; 
-                    ctx.shadowBlur = baseBlur;
+                    
+                    // Al usar multi-stroke, las capas suman mucha opacidad. Reducimos el base multiplicador.
+                    let intensityStart = isMobile && !d.isNight ? gStart * 0.6 : gStart * 1.0;
+                    let intensityEnd = isMobile && !nextD.isNight ? gEnd * 0.6 : gEnd * 1.0;
+                    
+                    if (d.isNight) intensityStart = gStart * 1.4; // Noche más brillante
+                    if (nextD.isNight) intensityEnd = gEnd * 1.4;
+
+                    const colStart = d.isNight ? `rgba(255, 255, 255, ${Math.min(1, intensityStart)})` : `rgba(255, 140, 0, ${Math.min(1, intensityStart)})`;
+                    const colEnd = nextD.isNight ? `rgba(255, 255, 255, ${Math.min(1, intensityEnd)})` : `rgba(255, 140, 0, ${Math.min(1, intensityEnd)})`;
+
+                    let grad = ctx.createLinearGradient(x1, y1, x2, y2);
+                    grad.addColorStop(0, colStart);
+                    grad.addColorStop(1, colEnd);
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    
+                    ctx.strokeStyle = grad;
+                    ctx.lineCap = 'round';
+                    
+                    // Para evitar cualquier banding o cortes visibles, usamos una línea muy fina (3px) 
+                    // que quedará completamente oculta bajo la línea principal roja/azul.
+                    // Toda la luz visible hacia afuera se generará ÚNICAMENTE mediante el desenfoque gaussiano perfecto.
+                    ctx.lineWidth = 3; 
+                    ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 140, 0, 1)';
+                    ctx.shadowOffsetY = 0;
+                    
+                    // Capa 1: Halo exterior suave y muy amplio
+                    ctx.shadowBlur = isMobile ? (d.isNight ? 24 : 18) : (d.isNight ? 30 : 22);
+                    ctx.globalAlpha = d.isNight ? 0.8 : 0.45; 
+                    ctx.stroke();
+                    if (d.isNight) { ctx.stroke(); } // Duplicar intensidad en la noche
+                    
+                    // Capa 2: Resplandor medio para dar cuerpo a la luz
+                    ctx.shadowBlur = isMobile ? (d.isNight ? 12 : 9) : (d.isNight ? 16 : 12);
+                    ctx.globalAlpha = d.isNight ? 0.95 : 0.65;
+                    ctx.stroke();
+                    if (d.isNight) { ctx.stroke(); }
+                    
+                    // Capa 3: Brillo intenso concentrado cerca del núcleo
+                    ctx.shadowBlur = isMobile ? (d.isNight ? 5 : 4) : (d.isNight ? 7 : 5);
+                    ctx.globalAlpha = d.isNight ? 1.0 : 0.9;
+                    ctx.stroke();
+                    if (d.isNight) { ctx.stroke(); ctx.stroke(); } // Multiplicar el núcleo para que el blanco destaque
+                    
+                    ctx.restore();
                 }
 
                 ctx.beginPath();
@@ -2541,41 +2587,47 @@ locationInput.addEventListener('input', () => {
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
                 
-                // Refuerzo extra de brillo (Multi-stroke) para cielos muy despejados
-                if (glowFactor > 0.7) {
+                // Refuerzo extra de brillo para cielos muy despejados
+                let glowFactor = (gStart + gEnd) / 2;
+                if (glowFactor > 0.7 && !isCloudy && !isWet) {
                     ctx.save();
-                    ctx.globalAlpha = (glowFactor - 0.7) * 3.3; // Escalar alpha para transición suave del refuerzo
+                    ctx.globalAlpha = (glowFactor - 0.7) * 3.3;
                     ctx.stroke();
                     ctx.restore();
                 }
 
                 // Detalles adicionales adaptativos a la línea base
-                if (isWet) {
+                const avgTemp = (d.temp + nextD.temp) / 2;
+                const avgWind = (d.wind + nextD.wind) / 2;
+                
+
+
+                // Efecto escarcha para frío (reacciona al entorno)
+                if (avgTemp <= 0) {
                     ctx.save();
-                    ctx.fillStyle = 'rgba(150, 230, 255, 0.9)';
-                    // Generación seudo-aleatoria pero persistente para las gotas
-                    const splashCount = 1 + Math.floor(Math.abs(Math.sin((x1 + y1) * 10)) * 2); // 1 or 2
-                    for (let s = 1; s <= splashCount; s++) {
-                        const seed = x1 * 3.1 + s * 7.4;
-                        const t = 0.2 + (Math.abs(Math.sin(seed)) * 0.6); // Random position between 0.2 and 0.8
-                        const lx = x1 + (x2 - x1) * t;
-                        const ly = y1 + (y2 - y1) * t;
-                        
-                        const dropSize = 0.8 + Math.abs(Math.cos(seed)) * 1.2;
-                        const dropOffsetX = (Math.sin(seed * 2) * 5); // Desplazamiento lateral
-                        const dropOffsetY = 3 + Math.abs(Math.cos(seed * 3)) * 5; // Desplazamiento vertical arriba
-                        
-                        const dx = lx + dropOffsetX;
-                        const dy = ly - dropOffsetY;
-                        
-                        // Dibujar forma de gota (teardrop) en lugar de círculo
-                        ctx.beginPath();
-                        ctx.moveTo(dx, dy - dropSize * 1.5);
-                        ctx.bezierCurveTo(dx + dropSize, dy - dropSize * 0.5, dx + dropSize * 1.2, dy + dropSize, dx, dy + dropSize);
-                        ctx.bezierCurveTo(dx - dropSize * 1.2, dy + dropSize, dx - dropSize, dy - dropSize * 0.5, dx, dy - dropSize * 1.5);
-                        ctx.fill();
-                    }
+                    ctx.strokeStyle = 'rgba(150, 240, 255, 0.7)';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1 + 3);
+                    ctx.lineTo(x2, y2 + 3);
+                    ctx.stroke();
                     ctx.restore();
+                }
+
+                if (isWet) {
+                    // Charco continuo (continuous puddle)
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineWidth = 7;
+                    ctx.strokeStyle = 'rgba(13, 71, 161, 0.35)'; // Azul oscuro transparente
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                    ctx.restore();
+
+
                 }
                 
                 // Contraste para nubes: sutil resplandor interno claro por encima de la sombra oscura

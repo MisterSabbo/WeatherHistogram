@@ -2,6 +2,23 @@
 
 Todas las novedades, mejoras y correcciones de WeatherHist se documentarán en este archivo de manera comprensible.
 
+## [v1.3.22] - 2026-04-24
+
+### Mejoras Visuales (UI/UX)
+- **Eliminación del Viento en Temperatura**: Se ha retirado la línea visual superpuesta que representaba ráfagas de viento para limpiar la interfaz del gráfico de temperatura.
+- **Resplandor (Glow) de Temperatura Perfeccionado**:
+  - Se eliminó el resplandor de la línea de sensación térmica.
+  - La lógica de visibilidad ahora verifica colisiones gráficas reales con las nubes, solucionando tramos despejados que antes no tenían *glow*.
+  - El trazo luminoso se difumina progresivamente en los bordes para una transición orgánica sin *banding* usando un núcleo fino combinado con múltiples pasadas de desenfoque gaussiano y gradientes de opacidad.
+  - Aumentada significativamente la densidad e intensidad del halo blanco nocturno para garantizar su visibilidad y contraste sobre fondos claros.
+
+## [v1.3.21] - 2026-04-24
+
+### Mejoras Visuales (UI/UX)
+- **Efecto Charco Continuo**: Se ha rediseñado el efecto de "charco" bajo la línea de temperatura para que sea una franja continua y fluida en lugar de elipses individuales, integrándose mejor con el relleno de probabilidad de lluvia.
+- **Salpicaduras y Goteo Orgánico**: Se han reemplazado las gotas estáticas por un sistema de salpicaduras (splash) dinámicas. Además, el goteo de agua ahora sigue trayectorias curvas y orgánicas mediante curvas de Bézier, eliminando la apariencia artificial de líneas rectas.
+- **Resplandor (Glow) de Temperatura Mejorado**: Se ha implementado un sistema de doble capa para el resplandor de la línea de temperatura (naranja en día, blanco en noche), asegurando su visibilidad tanto en escritorio como en móvil mediante trazados explícitos bajo la línea principal.
+
 ## [v1.3.20] - 2026-04-23
 
 ### Mejoras Visuales (UI/UX)

@@ -17,10 +17,11 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 *   **Dual View Navigation:** Seamlessly switch between a detailed daily cards view and a continuous interactive minimap. State is persisted via `localStorage`.
 *   **Zero-Lag Time Scrubber:** Features a smoothly animated present-time pulsing indicator (Now playhead) with dynamic historical shading for past weather, rendered instantly via native CSS hardware acceleration.
 *   **Intelligent Interactive Graphing:** 
+    *   **Advanced Atmospheric Rendering:** Features a dynamic, multi-layered volumetric neon glow for temperature lines that accurately calculates visual collisions with clouds and precipitation using native Gaussian blurs for zero-banding smooth falloffs.
+    *   **Dynamic Puddles:** A continuous, fluid puddle effect that organically outlines the temperature line during rain probabilities.
     *   **Apparent Temperature vs Real:** Fill areas highlight cold/heat stress periods in intuitive icy/warm hues when the "feels-like" temperature splits from the ambient one.
-    *   **Wind & Gust Visuals:** Dynamic thermal-colored wind arrows adapt their tone depending on specific weather bounds.
     *   **Dynamic Precipitation:** Advanced visual bars to mark thunderstorms (blue/purple) and snowfall (pale frost), intelligently adapting to dark/light modes.
-    *   **UV Index & Environmental Risk:** Smart UI collision detection to stack and cleanly present UV Index, Wind Gusts, and Precipitation probabilities at the scrubber point cleanly without overlapping.
+    *   **UV Index & Environmental Risk:** Smart UI collision detection to stack and cleanly present UV Index and Precipitation probabilities at the scrubber point cleanly without overlapping.
     *   **0°C Visual Marker:** Contextual 0-degree horizon line overlay to easily spot sub-zero plunging.
 *   **Floating Present-Time Centering:** The "Now" re-centering button floats dynamically depending on which way the horizon scroll is lost.
 *   **Offline First & Network Strategy:** Service Worker-enabled caching system that prioritizes network fetches during active connections while making static payload accessible offline.
@@ -34,10 +35,10 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 *   **Offline Capabilities:** Service Workers (`sw.js`) and Web App Manifest (`manifest.json`) for PWA support
 *   **Build Tool:** Vite (for fast development server and optimized production builds)
 
-## Versiones y Cambios
-Puedes consular la evolución completa y detallada las últimas novedades en nuestro archivo [CHANGELOG.md](CHANGELOG.md).
+## Changelog & Versions
+You can consult the complete and detailed evolution of the latest features in our [CHANGELOG.md](CHANGELOG.md) file.
 
-## Proyecto e Instalación
+## Project Structure
 
 The project directory follows a standard structure splitting logic, static views, and assets cleanly:
 *   `./index.html` — The core layout and app shell.
