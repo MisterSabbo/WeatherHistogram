@@ -15,6 +15,7 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 
 *   **Efficient Canvas Rendering:** Utilizes the HTML5 Canvas API to draw complex weather histograms, ensuring 60fps performance without stuttering even on iOS/mobile devices.
 *   **Dual View Navigation:** Seamlessly switch between a detailed daily cards view and a continuous interactive minimap. State is persisted via `localStorage`.
+*   **Internationalization (i18n):** Features bilingual support out of the box (English and Spanish) via a lightweight, scalable custom module that handles translation files, UI texts, dates, weather phenomena, and AQI statuses dynamically.
 *   **Zero-Lag Time Scrubber:** Features a smoothly animated present-time pulsing indicator (Now playhead) with dynamic historical shading for past weather, rendered instantly via native CSS hardware acceleration.
 *   **Intelligent Interactive Graphing:** 
     *   **Advanced Atmospheric Rendering:** Features a dynamic, multi-layered volumetric neon glow for temperature lines that accurately calculates visual collisions with clouds and precipitation using native Gaussian blurs for zero-banding smooth falloffs.
