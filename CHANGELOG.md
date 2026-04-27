@@ -2,6 +2,49 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.30] - 2026-04-27
+ 
+### UX & Aesthetic Refinements
+- **Alerts Tooltip Interaction**: Simplified alerts tooltip triggering and ensured its CSS alignment behaves consistently on high-DPI and regular desktop screens. Increased the hit target size for easier interaction and verified visibility overrides against default hidden states.
+- **Canvas Label Fidelity**: Re-harmonized the hour digit rendering color in the upper X-axis when overlapping UV panels. Switched to a universal white-haloing strategy to match the core theme's grid axes, ensuring perfect legibility and color consistency between "free" and "covered" hours.
+- **iOS Rendering Stability**: Integrated canvas smoothing and adjusted redraw buffering to eliminate microscopic flickering on modern iOS devices during rapid horizontal panning or panel expansion.
+
+## [v1.3.29] - 2026-04-27
+
+### Fixes & Optimizations
+- **Cloud Scrubber Interpolation**: Adjusted the scrubber tracker Y coordinate mapped calculation point to perfectly match the cubic bezier curves applied natively by the Canvas 2D engine in `AtmosphereRenderer`, completely fixing the scrubber marker drawing into the "air". 
+- **Tooltips Positioning**: Cleaned up the CSS rules controlling the desktop and mobile views of the geolocation and weather alert tooltips so they correctly align towards the view bounds without getting truncated out of the screen.
+- **X-Axis Overlap by UV Panels**: Restored visibility of the hour markers directly beneath dynamically expanded active Ultraviolet panels, cleanly separating them along the left/right boundaries of the panel overlay logic and improving rendering hierarchies.
+- **Polar Region Support**: Added direct native response queries for `is_day` onto the hourly API to prevent edge-case infinite loops where locations situated near the polar circles caused infinite "Night" bugs because `sunrise` and `sunset` times can be reported as null/missing.
+- **UX Hover Refinements**: Refactored the DOM styling inline properties causing conflicts with alert CSS interactions, solving issues where alert panels would fail to display.
+
+## [v1.3.28] - 2026-04-27
+
+### Fixes & Optimizations
+- **Tooltip Positioning Override**: Ensured that the tooltips logic explicitly leverages bounding adjustments correctly. They respect screen bounds directly and prevent edge trimming. Specifically removed conflictive nested layout directives driving elements towards negative translation boundaries. 
+- **UX Hover Refinements**: For the active alerts notification capability in mobile view, its hover logic is completely suppressed and strictly relies on active tap. This eliminates unintended constant and intrusive system behavior while users drag through the interface. Furthermore, visibility and opacity rendering triggers were re-patched. 
+- **Z-Index Layer Hierarchy Optimization (UV / Scrubber axis)**: Rendering the interactive UV extended panel natively into the scrubber overlay no longer obscures the underlying temporal hours ticks framework structure underneath. Now, a dynamic top-level re-render is layered properly upon overlap allowing consistent axis readout overlaying any dynamically constructed block.
+- **Micro-adjustment of Curve Render Accuracy**: Eliminated subtle fractional subpixel rounding misalignments introduced within horizontal scroll mapping bounds, ensuring perfectly anchored marker locations directly onto real pathing coordinate intersects across the mathematical drawing logic frame.
+
+## [v1.3.27] - 2026-04-27
+
+### UI/UX Refinements
+- **Tooltip Adjustments**: Fixed off-screen positioning for the top panel tooltips (Location & Active Alerts), preventing horizontal layout shifts on smaller devices. Also reduced their font size internally for improved proportion.
+- **Header Layout Constraint**: Re-arranged the inner flex container of the header timeblock and modified the warning icon size and placement such that rendering it doesn't cause vertical shifting of the main chart layout. Also ensured the tooltip interaction triggers cleanly over standard hover patterns and modern Safari touch devices.
+- **UV Index State Presentation**: The universal background UV index layer now draws in a minified visual state (reduced height, intense color) globally across the entire timeline, expanding to reveal its full numeric value metric block strictly under the active vertical scrubber's position.
+- **Visual Scrubber Fixes**: Removed an overlapping dashed line effect underneath the primary solid reference scrubber line, resolving blurring/dotted artifacts. Adjusted the interaction points center to perfectly perfectly align horizontally with the solid scrubber axis.
+- **Translations (i18n)**: Appended new text dictionary keys mapped across EN & ES files for localized Active Alerts descriptors.
+
+## [v1.3.26] - 2026-04-27
+
+### Feature Additions & Improvements
+- **Uniform UV Style**: The UV Index label across the axis on the desktop version now explicitly uses the same styling rules as the mobile version, maintaining a consistent block format.
+- **UV Label Rendering Logic Overhaul**: UV labels are now rendered natively within `BackgroundRenderer` avoiding asynchronous reposition calculations on the DOM layer. This absolutely solves the flickering bug experienced on modern iOS devices when scrolling the histogram.
+- **Layer Stacking Consistency**: By rendering UV in the background and before drawing grid elements `GridRenderer`, the upper X-axis hour digits correctly overlap over the UV label instead of being hidden behind it.
+- **Snow Frost Effect**: Added a frosty cyan glow internal visual effect on the temperature line graph when traversing a snow weather condition.
+- **Smart Notification System**: Incorporated a predictive active weather alert notification capability checking conditions (Temperature >35°C/<-5°C, Hurriquate Winds, Torrential Rain, Extreme UV >11 or Intense Snowwards) over a 12-hour horizon, with a visual indicator tooltip directly on the header interface.
+- **Label Collision Fix**: Refined constraints causing `% clouds` labels occasionally overlapping with UV index block.
+
 ## [v1.3.25] - 2026-04-26
 
 ### Bug Fixes & I18n

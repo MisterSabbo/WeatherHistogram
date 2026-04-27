@@ -28,7 +28,8 @@ export const translations = {
             ttLocation: "Ubicación",
             ttSummary: "Resumen del tiempo",
             windN: "N",
-            today: "HOY"
+            today: "HOY",
+            activeAlerts: "Alertas Activas (próx 12h)"
         },
         pollen: {
             riskTitle: "Riesgo por Planta",
@@ -151,7 +152,8 @@ export const translations = {
             ttLocation: "Location",
             ttSummary: "Weather Summary",
             windN: "N",
-            today: "TODAY"
+            today: "TODAY",
+            activeAlerts: "Active Alerts (next 12h)"
         },
         pollen: {
             riskTitle: "Risk by Plant",

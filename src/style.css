@@ -264,6 +264,8 @@
 
         .location-group.has-overflow.active .custom-tooltip {
             display: block;
+            opacity: 1;
+            visibility: visible;
         }
 
         #location-name {
@@ -308,13 +310,22 @@
         #current-time-display {
             margin-top: -2px;
             display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 800;
+            text-align: left;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        #current-time-display .time-block {
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
             text-align: center;
-            line-height: 1;
-            text-transform: uppercase;
         }
 
         #current-time-display .time-main {
@@ -343,7 +354,33 @@
             min-width: 60px;
         }
 
+        #alerts-container {
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        #alerts-container:hover {
+            background: rgba(128, 128, 128, 0.1);
+        }
+
+        #alerts-container:hover #alerts-tooltip,
+        #alerts-container.active #alerts-tooltip {
+            display: block !important;
+            opacity: 1;
+            visibility: visible;
+        }
+
         @media (max-width: 600px) {
+            #alerts-container:hover #alerts-tooltip {
+                display: none !important;
+                opacity: 0;
+                visibility: hidden;
+            }
+            #alerts-container.active #alerts-tooltip {
+                display: block !important;
+                opacity: 1;
+                visibility: visible;
+            }
             #top-panel {
                 height: auto;
                 min-height: auto;
@@ -549,9 +586,27 @@
 
         #location-tooltip {
             top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-top: 10px;
+            left: 0;
+            transform: none;
+            margin-top: 5px;
+            font-size: 0.75rem;
+            text-align: left;
+            min-width: 200px;
+        }
+
+        #alerts-tooltip {
+            top: 100%;
+            left: 0;
+            transform: none;
+            margin-top: 5px;
+            font-size: 0.75rem;
+            min-width: 220px;
+            white-space: normal;
+        }
+
+        .custom-tooltip[style*="display: block"] {
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         [data-theme="light"] .custom-tooltip {
@@ -957,5 +1012,10 @@
                 transform: translateX(-50%);
                 top: 100%;
                 margin-top: 5px;
+            }
+            #alerts-tooltip {
+                left: auto;
+                right: 0;
+                transform: none;
             }
         }

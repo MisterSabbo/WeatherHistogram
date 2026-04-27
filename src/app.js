@@ -130,6 +130,17 @@ let weatherCache = new Map();
                         }
                     });
                 }
+                
+                const alertsContainer = document.getElementById('alerts-container');
+                if (alertsContainer) {
+                    alertsContainer.addEventListener('click', (e) => {
+                        alertsContainer.classList.toggle('active');
+                        // Auto-hide after 4 seconds on mobile
+                        if (alertsContainer.classList.contains('active') && window.innerWidth <= 600) {
+                            setTimeout(() => alertsContainer.classList.remove('active'), 4000);
+                        }
+                    });
+                }
 
                 // Theme setup
                 themeToggle.addEventListener('click', toggleTheme);
@@ -1118,18 +1129,9 @@ locationInput.addEventListener('input', () => {
 
             fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.clientWidth, fixedOverlayCanvas.clientHeight);
 
-            const activeX = Math.floor(scrollContainer.scrollLeft + 60);
+            // Calculate Exact Subpixel Scrubber Frame
+            const activeX = scrollContainer.scrollLeft + 60;
             const drawX = 60;
-            
-            // 1. Fixed Reference Line (60px)
-            fixedOverlayCtx.save();
-            fixedOverlayCtx.setLineDash([5, 5]);
-            fixedOverlayCtx.strokeStyle = getThemeColor('referenceLine', 'rgba(255, 255, 255, 0.3)');
-            fixedOverlayCtx.beginPath();
-            fixedOverlayCtx.moveTo(60, 0);
-            fixedOverlayCtx.lineTo(60, h);
-            fixedOverlayCtx.stroke();
-            fixedOverlayCtx.restore();
 
             // 0 Degree Marker Line Label
             const y0 = normalizeY(0, -20, 40, h);
@@ -1157,9 +1159,21 @@ locationInput.addEventListener('input', () => {
 
                 const interpolate = (v1, v2) => v1 + (v2 - v1) * progress;
 
+                // Cloud data is drawn using bezierCurveTo(cx, y1, cx, y2, x2, y2)
+                // We must find the correct 't' where B_x(t) = progress.
+                let tBezier = 0.5, minT = 0, maxT = 1;
+                for (let i = 0; i < 10; i++) {
+                    let bx = 1.5 * tBezier - 1.5 * tBezier * tBezier + tBezier * tBezier * tBezier;
+                    if (bx < progress) minT = tBezier; else maxT = tBezier;
+                    tBezier = (minT + maxT) / 2;
+                }
+                // then B_y(t) is linear interpolation over t^2(3-2t)
+                const ty = tBezier * tBezier * (3 - 2 * tBezier);
+                const interpolateBezier = (v1, v2) => v1 + (v2 - v1) * ty;
+
                 const temp = interpolate(d1.temp, d2.temp);
                 const apparent = interpolate(d1.apparent, d2.apparent);
-                const clouds = interpolate(d1.clouds, d2.clouds);
+                const clouds = interpolateBezier(d1.clouds, d2.clouds);
                 const precipProb = interpolate(d1.precipProb, d2.precipProb);
 
                 fixedOverlayCtx.save();
@@ -1308,7 +1322,7 @@ locationInput.addEventListener('input', () => {
                 state.labelRects = []; // Reset para este frame
 
                 // Pre-add UV label constraint at the top so other labels avoid it
-                if (d1.uv >= 1) {
+                if (d1.uv > 0 && !d1.isNight) {
                     state.labelRects.push({
                         x: index * PIXELS_PER_HOUR - scrollContainer.scrollLeft, 
                         y: 0,
@@ -1416,65 +1430,90 @@ locationInput.addEventListener('input', () => {
 
                 // 9. UV Index Interaction Canvas Mode
                 const oldUvBlockDOM = document.getElementById('uv-active-block');
-                if (oldUvBlockDOM) oldUvBlockDOM.remove(); 
+                if (oldUvBlockDOM) oldUvBlockDOM.remove();
 
                 if (d1.uv > 0 && !d1.isNight) {
-                    let color = getThemeColor('uvLevels.low', '#4caf50');
-                    if (d1.uv >= 3 && d1.uv < 6) color = getThemeColor('uvLevels.moderate', '#fbc02d');
-                    else if (d1.uv >= 6 && d1.uv < 8) color = getThemeColor('uvLevels.high', '#f57c00');
-                    else if (d1.uv >= 8 && d1.uv < 11) color = getThemeColor('uvLevels.veryHigh', '#d32f2f');
-                    else if (d1.uv >= 11) color = getThemeColor('uvLevels.extreme', '#7b1fa2');
+                    let uvColor;
+                    if (d1.uv >= 11) uvColor = getThemeColor('uvLevels.extreme', '#7b1fa2');
+                    else if (d1.uv >= 8) uvColor = getThemeColor('uvLevels.veryHigh', '#d32f2f');
+                    else if (d1.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#f57c00');
+                    else if (d1.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#fbc02d');
+                    else uvColor = getThemeColor('uvLevels.low', '#4caf50');
 
                     const uvText = `UV ${parseFloat(d1.uv).toFixed(1)}`;
                     
-                    const c = window.hexToRgb ? window.hexToRgb(color) : {r: 0, g: 0, b: 0};
+                    const c = window.hexToRgb ? window.hexToRgb(uvColor) : {r: 0, g: 0, b: 0};
                     const bgR = Math.round(255 * 0.8 + c.r * 0.2);
                     const bgG = Math.round(255 * 0.8 + c.g * 0.2);
                     const bgB = Math.round(255 * 0.8 + c.b * 0.2);
                     const opacityColor = `rgba(${bgR}, ${bgG}, ${bgB}, 0.95)`;
                     
-                    let textColor = color;
-                    if (color === '#fbc02d') textColor = '#e65100';
+                    let textColor = uvColor;
+                    if (uvColor === getThemeColor('uvLevels.moderate', '#fbc02d') || uvColor === '#fbc02d') {
+                        textColor = '#e65100';
+                    }
 
                     fixedOverlayCtx.save();
                     fixedOverlayCtx.translate(-scrollContainer.scrollLeft, 0);
                     
-                    const isMobile = window.innerWidth < 600;
                     const cellAbsX = index * PIXELS_PER_HOUR;
                         
-                    if (isMobile) {
-                        fixedOverlayCtx.fillStyle = opacityColor;
-                        fixedOverlayCtx.beginPath();
-                        fixedOverlayCtx.rect(cellAbsX, 0, PIXELS_PER_HOUR, 14);
-                        fixedOverlayCtx.fill();
+                    // Draw full block identical to mobile
+                    fixedOverlayCtx.fillStyle = opacityColor;
+                    fixedOverlayCtx.beginPath();
+                    fixedOverlayCtx.rect(cellAbsX, 0, PIXELS_PER_HOUR, 14);
+                    fixedOverlayCtx.fill();
+                    
+                    fixedOverlayCtx.fillStyle = textColor;
+                    fixedOverlayCtx.font = `bold 8.5px ${getThemeFont()}`;
+                    fixedOverlayCtx.textAlign = 'center';
+                    fixedOverlayCtx.textBaseline = 'middle';
+                    fixedOverlayCtx.fillText(uvText, cellAbsX + PIXELS_PER_HOUR / 2, 8);
+                    
+                    // Redraw the X axis hour digits to overlap the UV block
+                    const drawTick = (tickX, hourLabel) => {
+                        const isSunMarker = state.hourlyData.length && Object.values(state.sunData).some(sun => {
+                            if (!sun || !sun.sunrise || !sun.sunset) return false;
+                            const markerX = ((sun.sunrise - state.hourlyData[0].time) / 3600000) * PIXELS_PER_HOUR;
+                            const markerX2 = ((sun.sunset - state.hourlyData[0].time) / 3600000) * PIXELS_PER_HOUR;
+                            return Math.abs(markerX - tickX) < 25 || Math.abs(markerX2 - tickX) < 25;
+                        });
                         
-                        fixedOverlayCtx.fillStyle = textColor;
-                        fixedOverlayCtx.font = `bold 8.5px ${getThemeFont()}`;
-                        fixedOverlayCtx.textAlign = 'center';
-                        fixedOverlayCtx.textBaseline = 'middle';
-                        fixedOverlayCtx.fillText(uvText, cellAbsX + PIXELS_PER_HOUR / 2, 8);
-                    } else {
-                        const canvasFont = `bold 9px ${getThemeFont()}`;
-                        fixedOverlayCtx.font = canvasFont;
-                        const textW = fixedOverlayCtx.measureText(uvText).width;
-                        const labelW = Math.max(34, textW + 10);
-                        const cellCenterX = cellAbsX + PIXELS_PER_HOUR / 2;
-                        const boxX = cellCenterX - labelW / 2;
-                        
-                        fixedOverlayCtx.fillStyle = opacityColor;
-                        fixedOverlayCtx.strokeStyle = color;
-                        fixedOverlayCtx.lineWidth = 1;
+                        if (!isSunMarker) {
+                            fixedOverlayCtx.font = `bold 10px ${getThemeFont()}`;
+                            fixedOverlayCtx.textAlign = 'center';
+                            fixedOverlayCtx.textBaseline = 'alphabetic';
+                            
+                            fixedOverlayCtx.shadowBlur = 0;
+                            fixedOverlayCtx.lineWidth = 2.5;
+                            fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                            fixedOverlayCtx.beginPath();
+                            fixedOverlayCtx.moveTo(tickX, 0);
+                            fixedOverlayCtx.lineTo(tickX, 8);
+                            fixedOverlayCtx.stroke();
 
-                        fixedOverlayCtx.beginPath();
-                        fixedOverlayCtx.roundRect(boxX, -1, labelW, 14, 4);
-                        fixedOverlayCtx.fill();
-                        fixedOverlayCtx.stroke();
-                        
-                        fixedOverlayCtx.fillStyle = textColor;
-                        fixedOverlayCtx.textAlign = 'center';
-                        fixedOverlayCtx.textBaseline = 'middle';
-                        fixedOverlayCtx.fillText(uvText, cellCenterX, 7);
+                            fixedOverlayCtx.lineWidth = 1;
+                            fixedOverlayCtx.strokeStyle = getThemeColor('xAxisLabel', '#666666');
+                            fixedOverlayCtx.stroke();
+
+                            fixedOverlayCtx.shadowColor = 'rgba(255, 255, 255, 1)';
+                            fixedOverlayCtx.shadowBlur = 4;
+                            fixedOverlayCtx.lineWidth = 2.5;
+                            fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 1)';
+                            fixedOverlayCtx.strokeText(hourLabel, tickX, 20);
+                            
+                            fixedOverlayCtx.shadowBlur = 0;
+                            fixedOverlayCtx.fillStyle = getThemeColor('xAxisLabel', '#666666');
+                            fixedOverlayCtx.fillText(hourLabel, tickX, 20);
+                        }
+                    };
+
+                    fixedOverlayCtx.imageSmoothingEnabled = true;
+                    drawTick(cellAbsX, d1.localHour.toString().padStart(2, '0'));
+                    if (d2) {
+                        drawTick(cellAbsX + PIXELS_PER_HOUR, d2.localHour.toString().padStart(2, '0'));
                     }
+                    
                     fixedOverlayCtx.restore();
                 }
 
@@ -1670,6 +1709,91 @@ locationInput.addEventListener('input', () => {
             const timeDisplay = document.getElementById('current-time-display');
             timeDisplay.querySelector('.time-main').innerText = timeStr;
             timeDisplay.querySelector('.date-sub').innerText = isToday ? `${t('topPanel.today')}, ${dateStr}` : dateStr;
+
+            // Generate Alerts (based on current data + next 12h)
+            const alerts = [];
+            const alertTypes = new Set();
+            let alertLevel = 0; // 0: none, 1: yellow, 2: orange, 3: red
+            
+            for(let i = index; i < Math.min(state.hourlyData.length, index + 12); i++) {
+                const hourData = state.hourlyData[i];
+                if (!hourData) continue;
+                
+                // Temp
+                if (hourData.temp >= 38 && !alertTypes.has("temp")) {
+                    alerts.push({ type: "temp", level: 3, msg: "Calor extremo (>38°C)" });
+                    alertTypes.add("temp");
+                    alertLevel = Math.max(alertLevel, 3);
+                } else if (hourData.temp >= 35 && !alertTypes.has("temp")) {
+                    alerts.push({ type: "temp", level: 2, msg: "Altas temperaturas (>35°C)" });
+                    alertTypes.add("temp");
+                    alertLevel = Math.max(alertLevel, 2);
+                } else if (hourData.temp <= -5 && !alertTypes.has("temp")) {
+                    alerts.push({ type: "temp", level: 2, msg: "Frío extremo (<-5°C)" });
+                    alertTypes.add("temp");
+                    alertLevel = Math.max(alertLevel, 2);
+                }
+
+                // Wind
+                if (hourData.gusts >= 90 && !alertTypes.has("wind")) {
+                    alerts.push({ type: "wind", level: 3, msg: "Vientos huracanados (>90km/h)" });
+                    alertTypes.add("wind");
+                    alertLevel = Math.max(alertLevel, 3);
+                } else if (hourData.gusts >= 70 && !alertTypes.has("wind")) {
+                    alerts.push({ type: "wind", level: 2, msg: "Rachas muy fuertes (>70km/h)" });
+                    alertTypes.add("wind");
+                    alertLevel = Math.max(alertLevel, 2);
+                }
+
+                // Precip
+                if (hourData.precip >= 15 && !alertTypes.has("rain")) {
+                    alerts.push({ type: "rain", level: 3, msg: "Lluvias torrenciales (>15mm/h)" });
+                    alertTypes.add("rain");
+                    alertLevel = Math.max(alertLevel, 3);
+                } else if (hourData.precip >= 8 && !alertTypes.has("rain")) {
+                    alerts.push({ type: "rain", level: 2, msg: "Lluvias intensas (>8mm/h)" });
+                    alertTypes.add("rain");
+                    alertLevel = Math.max(alertLevel, 2);
+                }
+                
+                // UV
+                if (hourData.uv >= 11 && !alertTypes.has("uv")) {
+                    alerts.push({ type: "uv", level: 3, msg: "Índice UV Extremo (≥11)" });
+                    alertTypes.add("uv");
+                    alertLevel = Math.max(alertLevel, 3);
+                }
+
+                // Snow
+                const isSnow = [71, 73, 75, 77, 85, 86].includes(hourData.weatherCode);
+                if (isSnow && hourData.precip >= 2 && !alertTypes.has("snow")) {
+                    alerts.push({ type: "snow", level: 2, msg: "Nevadas intensas" });
+                    alertTypes.add("snow");
+                    alertLevel = Math.max(alertLevel, 2);
+                }
+            }
+
+            const alertContainer = document.getElementById('alerts-container');
+            const alertTooltip = document.getElementById('alerts-tooltip');
+            
+            if (alerts.length > 0 && alertContainer && alertTooltip) {
+                alertContainer.style.display = 'flex';
+                
+                let alertHtml = `<div style="font-weight:bold; margin-bottom:5px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:3px; color:var(--text-primary);">${t('topPanel.activeAlerts')}</div>`;
+                
+                let iconColor = '#fbc02d'; // Yellow
+                if (alertLevel === 3) iconColor = '#d32f2f'; // Red
+                else if (alertLevel === 2) iconColor = '#f57c00'; // Orange
+                
+                alertContainer.querySelector('.material-symbols-outlined').style.color = iconColor;
+
+                alerts.forEach(a => {
+                    let c = a.level === 3 ? '#ef5350' : a.level === 2 ? '#ff9800' : '#ffca28';
+                    alertHtml += `<div style="display:flex; align-items:center; gap:6px; margin:4px 0; color:var(--text-primary);"><span style="min-width:8px; width:8px; height:8px; border-radius:50%; background:${c};"></span> <span style="font-size:0.85rem; text-align:left;">${a.msg}</span></div>`;
+                });
+                alertTooltip.innerHTML = alertHtml;
+            } else if (alertContainer) {
+                alertContainer.style.display = 'none';
+            }
 
             document.getElementById('weather-summary').innerText = getWeatherDescription(d.weatherCode);
 

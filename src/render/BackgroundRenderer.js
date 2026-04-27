@@ -1,5 +1,5 @@
 import { state } from '../store.js';
-import { getThemeFont } from '../theme.js';
+import { getThemeFont, getThemeColor } from '../theme.js';
 import { getLocale } from '../utils/i18n.js';
 
 export function drawWeatherPhenomena(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
@@ -199,19 +199,32 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
         const d = state.hourlyData[i];
         if (d.uv > 0 && !d.isNight) {
             const x = i * PIXELS_PER_HOUR;
-            const uvSegmentH = 4;
             
             let uvColor;
-            if (d.uv >= 11) uvColor = '#8b5cf6'; // Extreme
-            else if (d.uv >= 8) uvColor = '#ef4444'; // Very High
-            else if (d.uv >= 6) uvColor = '#f97316'; // High
-            else if (d.uv >= 3) uvColor = '#eab308'; // Moderate
-            else uvColor = '#84cc16'; // Low
+            if (d.uv >= 11) uvColor = getThemeColor('uvLevels.extreme', '#7b1fa2');
+            else if (d.uv >= 8) uvColor = getThemeColor('uvLevels.veryHigh', '#d32f2f');
+            else if (d.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#f57c00');
+            else if (d.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#fbc02d');
+            else uvColor = getThemeColor('uvLevels.low', '#4caf50');
+
+            const c = window.hexToRgb ? window.hexToRgb(uvColor) : {r: 0, g: 0, b: 0};
+            const bgR = Math.round(255 * 0.8 + c.r * 0.2);
+            const bgG = Math.round(255 * 0.8 + c.g * 0.2);
+            const bgB = Math.round(255 * 0.8 + c.b * 0.2);
+            const opacityColor = `rgba(${bgR}, ${bgG}, ${bgB}, 0.95)`;
+            
+            let textColor = uvColor;
+            if (uvColor === getThemeColor('uvLevels.moderate', '#fbc02d') || uvColor === '#fbc02d') {
+                textColor = '#e65100';
+            }
+
+            const uvText = `UV ${parseFloat(d.uv).toFixed(1)}`;
 
             ctx.save();
+            // Draw rectangle block (reduced height, solid intense color)
             ctx.fillStyle = uvColor;
             ctx.beginPath();
-            ctx.roundRect(x + 2, 0, PIXELS_PER_HOUR - 4, uvSegmentH, [0, 0, 4, 4]);
+            ctx.rect(x, 0, PIXELS_PER_HOUR, 6);
             ctx.fill();
             ctx.restore();
         }

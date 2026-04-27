@@ -281,6 +281,9 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
         const isThunder1 = [95, 96, 99].includes(d.weatherCode);
         const isThunder2 = [95, 96, 99].includes(nextD.weatherCode);
 
+        const isSnow1 = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
+        const isSnow2 = [71, 73, 75, 77, 85, 86].includes(nextD.weatherCode);
+
         // Sunlight Glow
         if (isClear1 || isClear2) {
             const isMobile = window.innerWidth < 600;
@@ -321,21 +324,56 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.restore();
         }
 
-        // Wet overlay
+        // Wet overlay (Rain or Snow)
         if (isWet1 || isWet2) {
+            const hasSnow = (isSnow1 && isWet1) || (isSnow2 && isWet2);
+            
             let grad = ctx.createLinearGradient(x1, y1, x2, y2);
-            grad.addColorStop(0, isWet1 ? 'rgba(13, 71, 161, 0.45)' : 'rgba(13, 71, 161, 0)');
-            grad.addColorStop(1, isWet2 ? 'rgba(13, 71, 161, 0.45)' : 'rgba(13, 71, 161, 0)');
+            
+            if (hasSnow) {
+                // Freezing effect: cyan/white frozen glow
+                grad.addColorStop(0, isWet1 && isSnow1 ? 'rgba(0, 220, 255, 0.7)' : 'rgba(0, 220, 255, 0)');
+                grad.addColorStop(1, isWet2 && isSnow2 ? 'rgba(0, 220, 255, 0.7)' : 'rgba(0, 220, 255, 0)');
+            } else {
+                // Normal rain dark blue effect
+                grad.addColorStop(0, isWet1 ? 'rgba(13, 71, 161, 0.45)' : 'rgba(13, 71, 161, 0)');
+                grad.addColorStop(1, isWet2 ? 'rgba(13, 71, 161, 0.45)' : 'rgba(13, 71, 161, 0)');
+            }
 
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.lineWidth = 7;
+            ctx.lineWidth = hasSnow ? 5 : 7;
             ctx.strokeStyle = grad;
             ctx.lineCap = 'round';
+            
+            if (hasSnow) {
+                // Render frost outline
+                ctx.setLineDash([2, 4]);
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                ctx.shadowBlur = 4;
+            }
+            
             ctx.stroke();
             ctx.restore();
+            
+            if (hasSnow) {
+                // Frost inner core
+                let innerGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+                innerGrad.addColorStop(0, isWet1 && isSnow1 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0)');
+                innerGrad.addColorStop(1, isWet2 && isSnow2 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0)');
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = innerGrad;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         // Thunder electricity effect

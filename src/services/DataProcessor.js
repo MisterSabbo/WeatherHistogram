@@ -51,11 +51,19 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
         const dateStr = dateObj.toLocaleDateString('en-CA', { timeZone: state.timezone });
         const sun = state.sunData[dateStr];
         let isNight = false;
-        if (sun) {
+        
+        if (hourly.is_day !== undefined && hourly.is_day[i] !== undefined) {
+            isNight = hourly.is_day[i] === 0;
+        } else if (sun) {
             // Consider it night if the hour is strictly before sunrise or strictly after sunset
             // We check the hour's midpoint to be safe
             const hourMidpoint = timestamp + 1800000; // +30 mins
-            isNight = hourMidpoint < sun.sunrise || hourMidpoint > sun.sunset;
+            if (sun.sunrise > 0 && sun.sunset > 0) {
+                isNight = hourMidpoint < sun.sunrise || hourMidpoint > sun.sunset;
+            } else {
+                // Polar regions rough fallback if no is_day and sunrise/set are missing or 0
+                isNight = false; // Just fallback to false
+            }
         }
 
         const pollen = {
