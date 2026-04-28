@@ -17,7 +17,7 @@ export function drawGrid(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
 
     const frozenY = normalizeY(0, -20, 40, h);
     ctx.save();
-    ctx.strokeStyle = getThemeColor('zeroLine', 'rgba(14, 165, 233, 0.4)');
+    ctx.strokeStyle = getThemeColor('zeroLine', 'rgba(14, 165, 233, 0.7)');
     ctx.setLineDash([4, 4]); 
     ctx.lineWidth = 1;
     ctx.beginPath();

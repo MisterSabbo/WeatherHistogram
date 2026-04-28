@@ -308,15 +308,18 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.restore();
         }
 
-        // Cloudy overlay
+        // Cloudy shadow overlay (underneath the line)
         if ((isCloudy1 || isCloudy2) && (!isWet1 && !isWet2)) {
             let grad = ctx.createLinearGradient(x1, y1, x2, y2);
-            grad.addColorStop(0, isCloudy1 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0)');
-            grad.addColorStop(1, isCloudy2 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0)');
+            grad.addColorStop(0, isCloudy1 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0)');
+            grad.addColorStop(1, isCloudy2 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0)');
             
             ctx.save();
             ctx.strokeStyle = grad; 
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetY = 2;
             ctx.beginPath();
             ctx.moveTo(x1, y1 + 1);
             ctx.lineTo(x2, y2 + 1);
@@ -406,19 +409,6 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.strokeStyle = grad;
             ctx.shadowColor = 'rgba(253, 224, 71, 0.8)';
             ctx.shadowBlur = 6;
-            ctx.stroke();
-            ctx.restore();
-        }
-        
-        const avgTemp = (d.temp + nextD.temp) / 2;
-        if (avgTemp <= 0) {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(150, 240, 255, 0.7)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([3, 4]);
-            ctx.beginPath();
-            ctx.moveTo(x1, y1 + 3);
-            ctx.lineTo(x2, y2 + 3);
             ctx.stroke();
             ctx.restore();
         }

@@ -2,6 +2,32 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.34] - 2026-04-28
+### Diseño Minimalista
+- **Rediseño del Selector de Minimapa**: El conmutador de Pasado/Previsión ha sido simplificado al máximo, eliminando texto y utilizando iconos sutiles sobre un fondo semi-transparente para evitar tapar información crítica del gráfico.
+
+## [v1.3.33] - 2026-04-28
+### Minimapa y Alertas
+- **Mejora del Minimapa**: El selector de Pasado/Previsión ahora es más minimalista y permite navegar directamente a la sección correspondiente al hacer clic. 
+- **Solapamiento de Días**: Optimizado el dibujado de nombres de días en el minimapa para evitar colisiones visuales entre etiquetas.
+- **Alertas en Móvil**: Corregido el posicionamiento del tooltip de alertas meteorológicas en dispositivos móviles para que no se desborde por el lateral de la pantalla.
+- **Sensación Térmica**: Reducido ligeramente el tamaño de fuente de la sensación térmica para mejorar la jerarquía visual en la línea de temperatura.
+
+## [v1.3.32] - 2026-04-28
+### Tooltips, Scrubber y Modo Minimapa
+- **Minimapa Dual**: Dividido el funcionamiento del minimapa en dos estados conmutables (Pasado y Previsión) navegables independientemente para ver mejor los datos a mayor escala de los días recientes. Auto-conmutación al moverse en los bordes.
+- **Doble temperatura (Sensación Térmica)**: Rediseñada la etiqueta de temperatura en la línea del tiempo para incluir el apunte dinámico de "sensación térmica" en una línea debajo en un tamaño ligeramente inferior evitando un rectángulo confuso en horizontal.
+- **Icono del Cero Dinámico**: Reforzado el número y color de marcador del 0°C a la izquierda sobre la sombra del panel añadiendo "efecto halo" para mejor lectura del estado sin importar el nivel de luz u oscuridad solar del momento.
+- **Tooltips Alertas Hover / Click Fix**: Agregados listeners transparentes a `mouseenter` y `mouseleave` evitando la opacidad 0 cortando de forma prematura el mensaje.
+
+## [v1.3.31] - 2026-04-28
+ 
+### Visual Upgrades & Bug Fixes
+- **Volumetric Clouds Effect**: Replaced the flat cyan dotted line from freezing temperatures with a sleek dynamic shadow system. When the temperature line passes "behind" clouds visually, a subtle drop shadow perfectly simulates the sensation of clouds eclipsing the sun.
+- **Flawless Scrubber Tracking**: Aligned the vertical scrubber dots to snap mathematically to the visual curve intersections. Clouds and Precipitation Probability interpolation functions were matched exactly to the bezier `t` parameters used by the canvas renderer. 
+- **Bulletproof Alerts Tooltip**: Redesigned the tooltip logic for severe weather alerts. Extracted it from the generic tooltip class to prevent `visibility` CSS conflicts and guaranteed reliable `hover` scaling across all desktop and mobile formats.
+- **Consistent Axis Colors**: Matched the text color of X-axis time blocks during expanded UV modes precisely to the main dataset to avoid unexpected dimming.
+
 ## [v1.3.30] - 2026-04-27
  
 ### UX & Aesthetic Refinements

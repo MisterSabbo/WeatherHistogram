@@ -47,6 +47,10 @@ export const translations = {
         map: {
             nowBtn: "Ir al momento actual"
         },
+        minimap: {
+            past: "Pasado",
+            future: "Previsión"
+        },
         weatherCodes: {
             0: "Despejado",
             1: "Principalmente despejado",
@@ -170,6 +174,10 @@ export const translations = {
         },
         map: {
             nowBtn: "Go to current time"
+        },
+        minimap: {
+            past: "Past",
+            future: "Forecast"
         },
         weatherCodes: {
             0: "Clear",

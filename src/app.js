@@ -33,12 +33,40 @@ let weatherCache = new Map();
         let tiles = [];
         const TILE_WIDTH = 1440; // 24 hours * 60px/hour to prevent overlapping artifacts
         let scrollContainer, minimapViewport, themeToggle, locationInput, suggestionsBox, searchBtn, geoBtn;
+        let btnMinimapPast, btnMinimapFuture;
+        let minimapMode = 'future'; // 'past' or 'future'
+        let isMinimapDragging = false;
+        
+        const setMinimapMode = (mode, isUserInteraction = false) => {
+            const hasChanged = minimapMode !== mode;
+            minimapMode = mode;
+            if (btnMinimapPast) btnMinimapPast.classList.toggle('active', mode === 'past');
+            if (btnMinimapFuture) btnMinimapFuture.classList.toggle('active', mode === 'future');
+            
+            if (isUserInteraction) {
+                if (mode === 'future') {
+                    centerOnCurrentTime();
+                } else if (mode === 'past') {
+                    // Scroll to the very beginning of the data
+                    scrollContainer.scrollLeft = 0;
+                }
+            }
+
+            if (hasChanged) {
+                requestAnimationFrame(() => {
+                    minimapCacheCanvas = null;
+                    updateMinimapViewport();
+                    drawMinimap();
+                });
+            }
+        };
         let searchTimeout = null;
         let ticking = false;
         const PIXELS_PER_MM = 10;
 
         window.hexToRgb = hex => {
             let r = 0, g = 0, b = 0;
+            if (typeof hex !== 'string') return {r, g, b};
             if (hex.startsWith('rgba')) {
                 const parts = hex.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
                 if (parts) { r = parseInt(parts[1]); g = parseInt(parts[2]); b = parseInt(parts[3]); }
@@ -86,6 +114,8 @@ let weatherCache = new Map();
 
             scrollContainer = document.getElementById('scroll-container');
             minimapViewport = document.getElementById('minimap-viewport');
+            btnMinimapPast = document.getElementById('btn-minimap-past');
+            btnMinimapFuture = document.getElementById('btn-minimap-future');
             themeToggle = document.getElementById('theme-toggle');
             locationInput = document.getElementById('location-input');
             suggestionsBox = document.getElementById('suggestions');
@@ -133,11 +163,55 @@ let weatherCache = new Map();
                 
                 const alertsContainer = document.getElementById('alerts-container');
                 if (alertsContainer) {
+                    alertsContainer.style.pointerEvents = 'auto';
                     alertsContainer.addEventListener('click', (e) => {
-                        alertsContainer.classList.toggle('active');
-                        // Auto-hide after 4 seconds on mobile
-                        if (alertsContainer.classList.contains('active') && window.innerWidth <= 600) {
-                            setTimeout(() => alertsContainer.classList.remove('active'), 4000);
+                        const isMobile = window.innerWidth <= 600;
+                        if (isMobile) {
+                            const tooltip = document.getElementById('alerts-tooltip');
+                            if (tooltip) {
+                                const isVisible = tooltip.style.opacity === '1';
+                                
+                                // Cerrar otros
+                                document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = '');
+                                
+                                if (!isVisible) {
+                                    alertsContainer.classList.add('active');
+                                    // Use fixed positioning like other cards to avoid left-side cutoff
+                                    tooltip.style.position = 'fixed';
+                                    const rect = alertsContainer.getBoundingClientRect();
+                                    tooltip.style.top = (rect.bottom + 10) + 'px';
+                                    tooltip.style.left = '50%';
+                                    tooltip.style.transform = 'translateX(-50%)';
+                                    tooltip.style.zIndex = '9999';
+                                    tooltip.style.opacity = '1';
+                                    tooltip.style.visibility = 'visible';
+                                    tooltip.style.display = 'block';
+
+                                    setTimeout(() => {
+                                        alertsContainer.classList.remove('active');
+                                        tooltip.style.opacity = '';
+                                        tooltip.style.visibility = '';
+                                        tooltip.style.display = '';
+                                    }, 4000);
+                                } else {
+                                    alertsContainer.classList.remove('active');
+                                    tooltip.style.opacity = '';
+                                    tooltip.style.visibility = '';
+                                    tooltip.style.display = '';
+                                }
+                            }
+                            e.stopPropagation();
+                        }
+                    });
+                    
+                    alertsContainer.addEventListener('mouseenter', () => {
+                        if (window.innerWidth > 600) {
+                            alertsContainer.classList.add('active');
+                        }
+                    });
+                    alertsContainer.addEventListener('mouseleave', () => {
+                        if (window.innerWidth > 600) {
+                            alertsContainer.classList.remove('active');
                         }
                     });
                 }
@@ -350,15 +424,16 @@ locationInput.addEventListener('input', () => {
                 }, 10000);
 
                 // Minimap drag and drop
-                let isMinimapDragging = false;
                 const minimapContainer = document.getElementById('minimap-container');
                 const dailyCardsContainer = document.getElementById('daily-cards-container');
                 const toggleNavBtn = document.getElementById('toggle-nav-btn');
                 let isDailyCardsView = localStorage.getItem('view_mode') === 'daily';
 
                 const updateViewMode = () => {
+                    const toggle = document.getElementById('minimap-toggle');
                     if (isDailyCardsView) {
                         minimapContainer.style.display = 'none';
+                        if (toggle) toggle.style.display = 'none';
                         dailyCardsContainer.style.display = 'flex';
                         toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">insights</span>';
                         if (state.dailyData && state.dailyData.length > 0) {
@@ -367,6 +442,7 @@ locationInput.addEventListener('input', () => {
                         }
                     } else {
                         minimapContainer.style.display = 'block';
+                        if (toggle) toggle.style.display = 'flex';
                         dailyCardsContainer.style.display = 'none';
                         toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>';
                         drawMinimap();
@@ -413,6 +489,11 @@ locationInput.addEventListener('input', () => {
                 }
 
                 if (minimapContainer) {
+                    if (btnMinimapPast && btnMinimapFuture) {
+                        btnMinimapPast.addEventListener('click', () => setMinimapMode('past', true));
+                        btnMinimapFuture.addEventListener('click', () => setMinimapMode('future', true));
+                    }
+
                     // Reverting to basic mouse/touch events to ensure standard behavior that was working before
                     minimapContainer.style.touchAction = '';
 
@@ -917,17 +998,50 @@ locationInput.addEventListener('input', () => {
 
         // Functions logic removed because it is handled by DailyCards.js
 
+        function getSplitIndex() {
+            if (!state.hourlyData.length) return 0;
+            const now = Date.now();
+            const startTime = state.hourlyData[0].time;
+            const index = Math.floor((now - startTime) / 3600000);
+            return Math.max(0, Math.min(state.hourlyData.length, index));
+        }
+
         function updateMinimapViewport() {
             if (!state.hourlyData.length) return;
+
+            const splitIndex = getSplitIndex();
+            let startIndex = minimapMode === 'past' ? 0 : splitIndex;
+            let dataLength = minimapMode === 'past' ? splitIndex : state.hourlyData.length - splitIndex;
+            if (dataLength <= 0) return;
 
             const totalMainWidth = state.hourlyData.length * PIXELS_PER_HOUR;
             const scrollRatio = scrollContainer.scrollLeft / totalMainWidth;
             const visibleRatio = scrollContainer.clientWidth / totalMainWidth;
 
+            // Current visible range in indexes
+            const currentLeftIndex = scrollContainer.scrollLeft / PIXELS_PER_HOUR;
+            const currentRightIndex = (scrollContainer.scrollLeft + scrollContainer.clientWidth) / PIXELS_PER_HOUR;
+            const centerIndex = currentLeftIndex + (currentRightIndex - currentLeftIndex) / 2;
+
+            // Auto-switch mode based on center of screen
+            if (!isMinimapDragging) { // don't auto-switch while dragging minimap
+                if (minimapMode === 'future' && centerIndex < splitIndex) {
+                    setMinimapMode('past'); // helper handles the toggle + redraw
+                    return;
+                } else if (minimapMode === 'past' && centerIndex >= splitIndex && centerIndex < state.hourlyData.length) {
+                    setMinimapMode('future');
+                    return;
+                }
+            }
+
             const minimapW = minimapCanvas.clientWidth;
             
-            const vpWidth = visibleRatio * minimapW;
-            const vpLeft = scrollRatio * minimapW;
+            // Map the global ratio to the local data slice
+            const localLeftIndex = currentLeftIndex - startIndex;
+            const localRightIndex = currentRightIndex - startIndex;
+            
+            const vpLeft = (localLeftIndex / dataLength) * minimapW;
+            const vpWidth = ((localRightIndex - localLeftIndex) / dataLength) * minimapW;
 
             minimapViewport.style.width = vpWidth + 'px';
             minimapViewport.style.left = vpLeft + 'px';
@@ -945,6 +1059,20 @@ locationInput.addEventListener('input', () => {
         function drawMinimap() {
             if (!state.hourlyData.length) return;
 
+            const splitIndex = getSplitIndex();
+            let minimapData;
+            let startIndex = 0;
+
+            if (minimapMode === 'past') {
+                minimapData = state.hourlyData.slice(0, splitIndex);
+                startIndex = 0;
+            } else {
+                minimapData = state.hourlyData.slice(splitIndex);
+                startIndex = splitIndex;
+            }
+
+            if (!minimapData.length) return;
+
             const w = minimapCanvas.clientWidth || window.innerWidth;
             const h = 80;
             const dpr = state.dpr;
@@ -960,14 +1088,14 @@ locationInput.addEventListener('input', () => {
             ctx.scale(dpr, dpr);
             ctx.clearRect(0, 0, w, h);
 
-            const step = w / state.hourlyData.length;
+            const step = w / minimapData.length;
 
             // 1. Background (Day/Night)
             ctx.fillStyle = '#fffde7'; // Day
             ctx.fillRect(0, 0, w, h);
 
             ctx.fillStyle = '#f3e8ff'; // Night
-            state.hourlyData.forEach((d, i) => {
+            minimapData.forEach((d, i) => {
                 if (d.isNight) {
                     ctx.fillRect(i * step, 0, step + 0.5, h);
                 }
@@ -975,9 +1103,10 @@ locationInput.addEventListener('input', () => {
 
             // 2. Grid & Day Labels
             ctx.save();
-            state.hourlyData.forEach((d, i) => {
-                if (d.localHour === 0) {
-                    const x = i * step;
+            let lastLabelX = -100;
+            minimapData.forEach((d, i) => {
+                const x = i * step;
+                if (d.localHour === 0 || (i === 0 && d.localHour !== 0)) {
                     ctx.strokeStyle = 'rgba(0,0,0,0.05)';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
@@ -985,9 +1114,14 @@ locationInput.addEventListener('input', () => {
                     ctx.lineTo(x, h);
                     ctx.stroke();
 
-                    ctx.fillStyle = '#666666';
-                    ctx.font = `bold 9px ${getThemeFont()}`;
-                    ctx.fillText(d.localDayShort, x + 4, 12);
+                    // Only draw text if it's midnight or first entry in segment AND enough space
+                    const labelWidth = ctx.measureText(d.localDayShort).width + 16; // Increased gap to prevent overlapping
+                    if (x > lastLabelX + labelWidth) {
+                        ctx.fillStyle = '#666666';
+                        ctx.font = `bold 9px ${getThemeFont()}`;
+                        ctx.fillText(d.localDayShort, x + 4, 12);
+                        lastLabelX = x;
+                    }
                 }
             });
             ctx.restore();
@@ -1010,7 +1144,7 @@ locationInput.addEventListener('input', () => {
             ctx.strokeStyle = 'rgba(100, 116, 139, 0.6)';
             ctx.lineWidth = 1;
             const cloudPath = new Path2D();
-            state.hourlyData.forEach((d, i) => {
+            minimapData.forEach((d, i) => {
                 const x = i * step;
                 const y = h - (h * (d.clouds / 100));
                 if (i === 0) cloudPath.moveTo(x, y);
@@ -1024,7 +1158,7 @@ locationInput.addEventListener('input', () => {
 
             // Precipitation bars
             ctx.fillStyle = 'rgba(25, 118, 210, 0.5)';
-            state.hourlyData.forEach((d, i) => {
+            minimapData.forEach((d, i) => {
                 if (d.precip > 0) {
                     const x = i * step;
                     const barH = Math.max(2, Math.min(h, d.precip * 5));
@@ -1038,7 +1172,7 @@ locationInput.addEventListener('input', () => {
             ctx.strokeStyle = '#0288d1';
             ctx.lineWidth = 1;
             const probPath = new Path2D();
-            state.hourlyData.forEach((d, i) => {
+            minimapData.forEach((d, i) => {
                 const x = i * step;
                 const y = h - (h * (d.precipProb / 100));
                 if (i === 0) probPath.moveTo(x, y);
@@ -1054,7 +1188,7 @@ locationInput.addEventListener('input', () => {
             ctx.strokeStyle = '#d32f2f';
             ctx.lineWidth = 1.8;
             ctx.beginPath();
-            state.hourlyData.forEach((d, i) => {
+            minimapData.forEach((d, i) => {
                 const x = i * step;
                 const y = normalizeY(d.temp, -20, 40, h);
                 if (i === 0) ctx.moveTo(x, y);
@@ -1063,7 +1197,7 @@ locationInput.addEventListener('input', () => {
             ctx.stroke();
 
             // UV Segments
-            state.hourlyData.forEach((d, i) => {
+            minimapData.forEach((d, i) => {
                 if (d.uv >= 1) {
                     const x = i * step;
                     let color = getThemeColor('uvLevels.low', '#4caf50');
@@ -1078,35 +1212,38 @@ locationInput.addEventListener('input', () => {
             });
 
             // Modern vertical line for 'Now'
-            const now = Date.now();
-            const startTime = state.hourlyData[0].time;
-            const nowIndex = (now - startTime) / 3600000;
-            if (nowIndex >= 0 && nowIndex <= state.hourlyData.length) {
-                const nowX = nowIndex * step;
-                ctx.save();
+            if (minimapMode === 'future' || minimapMode === 'past') {
+                const now = Date.now();
+                const nowIndex = (now - state.hourlyData[0].time) / 3600000;
+                const localNowIndex = nowIndex - startIndex;
                 
-                // Outer glow shadow
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
-                
-                // Vertical line
-                ctx.strokeStyle = '#ef4444';
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.moveTo(nowX, 0);
-                ctx.lineTo(nowX, h);
-                ctx.stroke();
-                
-                // Little indicator circle at top
-                ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                ctx.arc(nowX, 0, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                
-                ctx.restore();
+                if (localNowIndex >= 0 && localNowIndex <= minimapData.length) {
+                    const nowX = localNowIndex * step;
+                    ctx.save();
+                    
+                    // Outer glow shadow
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
+                    
+                    // Vertical line
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(nowX, 0);
+                    ctx.lineTo(nowX, h);
+                    ctx.stroke();
+                    
+                    // Little indicator circle at top
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(nowX, 0, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                }
             }
 
             ctx.restore();
@@ -1136,15 +1273,43 @@ locationInput.addEventListener('input', () => {
             // 0 Degree Marker Line Label
             const y0 = normalizeY(0, -20, 40, h);
             fixedOverlayCtx.save();
-            fixedOverlayCtx.fillStyle = getThemeColor('zeroLine', 'rgba(2, 136, 209, 0.8)'); // Ice blue
-            fixedOverlayCtx.font = `bold 10px ${getThemeFont()}`;
+            const isDark = state.theme === 'dark';
+            const haloColor = isDark ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)';
+            
+            // Dotted line on the left side
+            fixedOverlayCtx.strokeStyle = getThemeColor('zeroLine', 'rgba(14, 165, 233, 0.9)');
+            fixedOverlayCtx.setLineDash([4, 4]); 
+            fixedOverlayCtx.lineWidth = 1.5;
+            fixedOverlayCtx.beginPath();
+            fixedOverlayCtx.moveTo(0, y0);
+            fixedOverlayCtx.lineTo(60, y0);
+            fixedOverlayCtx.stroke();
+            fixedOverlayCtx.setLineDash([]);
+            
+            // Label rendering with halo
+            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // Slightly larger
             fixedOverlayCtx.textAlign = 'left';
             fixedOverlayCtx.textBaseline = 'middle';
-            fixedOverlayCtx.fillText('0°C', 5, y0 - 8);
+            
+            fixedOverlayCtx.shadowColor = haloColor;
+            fixedOverlayCtx.shadowBlur = 4;
+            fixedOverlayCtx.lineWidth = 3;
+            fixedOverlayCtx.strokeStyle = haloColor;
+            fixedOverlayCtx.strokeText('0°C', 5, y0 - 10);
+            
+            fixedOverlayCtx.shadowBlur = 0;
+            fixedOverlayCtx.fillStyle = getThemeColor('zeroLine', 'rgba(2, 136, 209, 1)'); // More opaque
+            fixedOverlayCtx.fillText('0°C', 5, y0 - 10);
             
             // Icon
+            fixedOverlayCtx.font = '13px "Material Symbols Outlined"';
+            
+            fixedOverlayCtx.shadowColor = haloColor;
+            fixedOverlayCtx.shadowBlur = 4;
+            fixedOverlayCtx.strokeText(getThemeIcon('zeroLine', 'ac_unit'), 5, y0 + 6);
+            
+            fixedOverlayCtx.shadowBlur = 0;
             fixedOverlayCtx.fillStyle = getThemeColor('zeroLineIcon', '#0288d1');
-            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
             fixedOverlayCtx.fillText(getThemeIcon('zeroLine', 'ac_unit'), 5, y0 + 6);
             fixedOverlayCtx.restore();
 
@@ -1174,7 +1339,7 @@ locationInput.addEventListener('input', () => {
                 const temp = interpolate(d1.temp, d2.temp);
                 const apparent = interpolate(d1.apparent, d2.apparent);
                 const clouds = interpolateBezier(d1.clouds, d2.clouds);
-                const precipProb = interpolate(d1.precipProb, d2.precipProb);
+                const precipProb = interpolateBezier(d1.precipProb, d2.precipProb);
 
                 fixedOverlayCtx.save();
                 fixedOverlayCtx.setLineDash([]);
@@ -1220,7 +1385,9 @@ locationInput.addEventListener('input', () => {
                         const textMetrics = fixedOverlayCtx.measureText(text);
                         let secMetrics = { width: 0 };
                         if (secondaryText) {
+                            fixedOverlayCtx.font = `bold 8px ${getThemeFont()}`; // Reduced 1px as requested
                             secMetrics = fixedOverlayCtx.measureText(secondaryText);
+                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // restore
                         }
                         
                         // Calculate width for icon if present
@@ -1231,8 +1398,9 @@ locationInput.addEventListener('input', () => {
                             fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // restore
                         }
                         
-                        const bgW = textMetrics.width + secMetrics.width + iconWidth + 12 + (secondaryText ? 4 : 0);
-                        const bgH = 18;
+                        const textW = Math.max(textMetrics.width, secMetrics.width);
+                        const bgW = textW + iconWidth + 12;
+                        const bgH = secondaryText ? 28 : 18; // Taller for secondary text
 
                         // Sistema de detección de colisiones simple para etiquetas en la línea vertical
                         if (!state.labelRects) state.labelRects = [];
@@ -1307,13 +1475,15 @@ locationInput.addEventListener('input', () => {
                             textStartX += iconWidth;
                         }
                         
+                        const textY = secondaryText ? rect.y + 10 : rect.y + rect.h / 2 + 1;
+                        
                         fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
-                        fixedOverlayCtx.fillText(text, textStartX, rect.y + rect.h / 2 + 1);
+                        fixedOverlayCtx.fillText(text, textStartX, textY);
 
                         if (secondaryText) {
-                            textStartX += textMetrics.width + 4;
+                            fixedOverlayCtx.font = `bold 8px ${getThemeFont()}`;
                             fixedOverlayCtx.fillStyle = secondaryColor;
-                            fixedOverlayCtx.fillText(secondaryText, textStartX, rect.y + rect.h / 2 + 1);
+                            fixedOverlayCtx.fillText(secondaryText, textStartX, textY + 12);
                         }
                         fixedOverlayCtx.restore();
                     }
@@ -1358,7 +1528,7 @@ locationInput.addEventListener('input', () => {
                 if (showApparent) {
                     const isCold = apparent <= temp;
                     const apparentColor = isCold ? '#0288d1' : '#f97316'; // Azul o Naranja fuerte
-                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'), `(${apparent.toFixed(1)}°C)`, apparentColor);
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'), `${apparent.toFixed(1)}°C`, apparentColor);
                 } else {
                     drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'));
                 }
@@ -1404,28 +1574,7 @@ locationInput.addEventListener('input', () => {
                 drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond', getThemeIcon('scrubber.prob', 'water_drop'));
 
                 // 8. Nubes
-                const getY = (d) => h - (h * (d.clouds / 100));
-                const y1 = getY(d1);
-                const y2 = getY(d2);
-                const midY = (y1 + y2) / 2;
-                const puff = ((d1.clouds / 100) * 12 + (d2.clouds / 100) * 12) / 2;
-
-                let cloudY;
-                if (puff < 0.5) {
-                    cloudY = y1 + (y2 - y1) * progress;
-                } else {
-                    if (progress < 0.5) {
-                        const t2 = progress * 2;
-                        const cp1y = y1 - puff;
-                        const cp2y = midY - puff;
-                        cloudY = Math.pow(1-t2, 3) * y1 + 3 * Math.pow(1-t2, 2) * t2 * cp1y + 3 * (1-t2) * t2 * t2 * cp2y + Math.pow(t2, 3) * midY;
-                    } else {
-                        const t2 = (progress - 0.5) * 2;
-                        const cp3y = midY - puff;
-                        const cp4y = y2 - puff;
-                        cloudY = Math.pow(1-t2, 3) * midY + 3 * Math.pow(1-t2, 2) * t2 * cp3y + 3 * (1-t2) * t2 * t2 * cp4y + Math.pow(t2, 3) * y2;
-                    }
-                }
+                const cloudY = h - (h * (clouds / 100));
                 drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', getThemeIcon('scrubber.cloud', 'cloud'));
 
                 // 9. UV Index Interaction Canvas Mode
@@ -1486,7 +1635,7 @@ locationInput.addEventListener('input', () => {
                             
                             fixedOverlayCtx.shadowBlur = 0;
                             fixedOverlayCtx.lineWidth = 2.5;
-                            fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                            fixedOverlayCtx.strokeStyle = 'white';
                             fixedOverlayCtx.beginPath();
                             fixedOverlayCtx.moveTo(tickX, 0);
                             fixedOverlayCtx.lineTo(tickX, 8);
@@ -1496,10 +1645,10 @@ locationInput.addEventListener('input', () => {
                             fixedOverlayCtx.strokeStyle = getThemeColor('xAxisLabel', '#666666');
                             fixedOverlayCtx.stroke();
 
-                            fixedOverlayCtx.shadowColor = 'rgba(255, 255, 255, 1)';
-                            fixedOverlayCtx.shadowBlur = 4;
-                            fixedOverlayCtx.lineWidth = 2.5;
-                            fixedOverlayCtx.strokeStyle = 'rgba(255, 255, 255, 1)';
+                            fixedOverlayCtx.shadowColor = 'white';
+                            fixedOverlayCtx.shadowBlur = 3;
+                            fixedOverlayCtx.lineWidth = 2;
+                            fixedOverlayCtx.strokeStyle = 'white';
                             fixedOverlayCtx.strokeText(hourLabel, tickX, 20);
                             
                             fixedOverlayCtx.shadowBlur = 0;
@@ -1880,8 +2029,16 @@ locationInput.addEventListener('input', () => {
             const rect = minimapCanvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const ratio = Math.max(0, Math.min(1, x / rect.width));
-            const totalWidth = state.hourlyData.length * PIXELS_PER_HOUR;
-            scrollContainer.scrollLeft = (ratio * totalWidth) - (scrollContainer.clientWidth / 2);
+            
+            const splitIndex = getSplitIndex();
+            const startIndex = minimapMode === 'past' ? 0 : splitIndex;
+            const dataLength = minimapMode === 'past' ? splitIndex : state.hourlyData.length - splitIndex;
+
+            const targetLocalIndex = ratio * dataLength;
+            const targetGlobalIndex = startIndex + targetLocalIndex;
+            
+            const targetScrollX = (targetGlobalIndex * PIXELS_PER_HOUR) - (scrollContainer.clientWidth / 2);
+            scrollContainer.scrollLeft = targetScrollX;
         }
 
         function showError(msg) {
