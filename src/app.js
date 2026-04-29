@@ -33,15 +33,12 @@ let weatherCache = new Map();
         let tiles = [];
         const TILE_WIDTH = 1440; // 24 hours * 60px/hour to prevent overlapping artifacts
         let scrollContainer, minimapViewport, themeToggle, locationInput, suggestionsBox, searchBtn, geoBtn;
-        let btnMinimapPast, btnMinimapFuture;
-        let minimapMode = 'future'; // 'past' or 'future'
         let isMinimapDragging = false;
+        let minimapMode = 'future'; // 'past' or 'future'
         
         const setMinimapMode = (mode, isUserInteraction = false) => {
             const hasChanged = minimapMode !== mode;
             minimapMode = mode;
-            if (btnMinimapPast) btnMinimapPast.classList.toggle('active', mode === 'past');
-            if (btnMinimapFuture) btnMinimapFuture.classList.toggle('active', mode === 'future');
             
             if (isUserInteraction) {
                 if (mode === 'future') {
@@ -60,6 +57,7 @@ let weatherCache = new Map();
                 });
             }
         };
+
         let searchTimeout = null;
         let ticking = false;
         const PIXELS_PER_MM = 10;
@@ -114,10 +112,28 @@ let weatherCache = new Map();
 
             scrollContainer = document.getElementById('scroll-container');
             minimapViewport = document.getElementById('minimap-viewport');
-            btnMinimapPast = document.getElementById('btn-minimap-past');
-            btnMinimapFuture = document.getElementById('btn-minimap-future');
             themeToggle = document.getElementById('theme-toggle');
             locationInput = document.getElementById('location-input');
+
+            // Initialize UV interaction block once
+            const canvasWrapper = document.getElementById('canvas-wrapper');
+            let uvBlock = document.getElementById('uv-active-block');
+            if (canvasWrapper && !uvBlock) {
+                uvBlock = document.createElement('div');
+                uvBlock.id = 'uv-active-block';
+                uvBlock.style.position = 'absolute';
+                uvBlock.style.top = '0';
+                uvBlock.style.height = '14px';
+                uvBlock.style.zIndex = '50';
+                uvBlock.style.pointerEvents = 'none';
+                uvBlock.style.display = 'none';
+                uvBlock.style.justifyContent = 'center';
+                uvBlock.style.alignItems = 'center';
+                uvBlock.style.fontWeight = 'bold';
+                uvBlock.style.fontFamily = getThemeFont();
+                uvBlock.style.fontSize = '8.5px'; // Will be responsive to theme if needed, but keeping small size
+                canvasWrapper.appendChild(uvBlock);
+            }
             suggestionsBox = document.getElementById('suggestions');
             searchBtn = document.getElementById('search-btn');
             geoBtn = document.getElementById('geo-btn');
@@ -489,11 +505,6 @@ locationInput.addEventListener('input', () => {
                 }
 
                 if (minimapContainer) {
-                    if (btnMinimapPast && btnMinimapFuture) {
-                        btnMinimapPast.addEventListener('click', () => setMinimapMode('past', true));
-                        btnMinimapFuture.addEventListener('click', () => setMinimapMode('future', true));
-                    }
-
                     // Reverting to basic mouse/touch events to ensure standard behavior that was working before
                     minimapContainer.style.touchAction = '';
 
@@ -685,12 +696,24 @@ locationInput.addEventListener('input', () => {
                 results.forEach(loc => {
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    const admin = loc.admin1 ? `<span class="admin">(${loc.admin1}, ${loc.country})</span>` : `<span class="admin">(${loc.country})</span>`;
+                    
+                    const countryStr = loc.country || loc.country_code || "";
+                    const adminParts = [];
+                    if (loc.admin1) adminParts.push(loc.admin1);
+                    if (countryStr) adminParts.push(countryStr);
+                    
+                    const admin = adminParts.length > 0 ? `<span class="admin">(${adminParts.join(', ')})</span>` : "";
                     div.innerHTML = `<strong>${loc.name}</strong> ${admin}`;
                     div.onclick = () => {
                         state.lat = loc.latitude;
                         state.lon = loc.longitude;
-                        state.locationName = loc.name + (loc.admin1 ? `, ${loc.admin1}` : "");
+                        
+                        const countryStr = loc.country || loc.country_code || "";
+                        const nameParts = [loc.name];
+                        if (loc.admin1) nameParts.push(loc.admin1);
+                        if (countryStr) nameParts.push(countryStr);
+                        state.locationName = nameParts.join(', ');
+
                         locationInput.value = loc.name;
                         suggestionsBox.style.display = 'none';
                         updateLocationUI();
@@ -1115,11 +1138,16 @@ locationInput.addEventListener('input', () => {
                     ctx.stroke();
 
                     // Only draw text if it's midnight or first entry in segment AND enough space
-                    const labelWidth = ctx.measureText(d.localDayShort).width + 16; // Increased gap to prevent overlapping
+                    const dateObj = new Date(d.time);
+                    const dayStr = String(dateObj.getDate()).padStart(2, '0');
+                    const monthStr = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const dayText = `${d.localDayShort} ${dayStr}/${monthStr}`;
+                    
+                    const labelWidth = ctx.measureText(dayText).width + 16; // Increased gap to prevent overlapping
                     if (x > lastLabelX + labelWidth) {
                         ctx.fillStyle = '#666666';
                         ctx.font = `bold 9px ${getThemeFont()}`;
-                        ctx.fillText(d.localDayShort, x + 4, 12);
+                        ctx.fillText(dayText, x + 4, 12);
                         lastLabelX = x;
                     }
                 }
@@ -1156,8 +1184,28 @@ locationInput.addEventListener('input', () => {
             ctx.fill(cloudPath);
             ctx.restore();
 
+            // Gradient color helper for precipitation type
+            const buildPrecipGradient = (alpha) => {
+                const grad = ctx.createLinearGradient(0, 0, w, 0);
+                if (minimapData.length === 0) return `rgba(2, 136, 209, ${alpha})`;
+                minimapData.forEach((d, i) => {
+                    const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
+                    const isThunder = [95, 96, 99].includes(d.weatherCode);
+                    let baseColor = '2, 136, 209'; // Default blue
+                    if (isSnow) baseColor = '0, 188, 212'; // Cyan
+                    else if (isThunder) baseColor = '126, 87, 194'; // Purple
+
+                    grad.addColorStop(i / (minimapData.length - 1 || 1), `rgba(${baseColor}, ${alpha})`);
+                });
+                return grad;
+            };
+
+            const precipBarGrad = buildPrecipGradient(0.6);
+            const probStrokeGrad = buildPrecipGradient(1.0);
+            const probFillGrad = buildPrecipGradient(0.2);
+
             // Precipitation bars
-            ctx.fillStyle = 'rgba(25, 118, 210, 0.5)';
+            ctx.fillStyle = precipBarGrad;
             minimapData.forEach((d, i) => {
                 if (d.precip > 0) {
                     const x = i * step;
@@ -1168,8 +1216,8 @@ locationInput.addEventListener('input', () => {
 
             // Precipitation Probability
             ctx.save();
-            ctx.fillStyle = 'rgba(2, 136, 209, 0.2)';
-            ctx.strokeStyle = '#0288d1';
+            ctx.fillStyle = probFillGrad;
+            ctx.strokeStyle = probStrokeGrad;
             ctx.lineWidth = 1;
             const probPath = new Path2D();
             minimapData.forEach((d, i) => {
@@ -1212,14 +1260,13 @@ locationInput.addEventListener('input', () => {
             });
 
             // Modern vertical line for 'Now'
-            if (minimapMode === 'future' || minimapMode === 'past') {
-                const now = Date.now();
-                const nowIndex = (now - state.hourlyData[0].time) / 3600000;
-                const localNowIndex = nowIndex - startIndex;
-                
-                if (localNowIndex >= 0 && localNowIndex <= minimapData.length) {
-                    const nowX = localNowIndex * step;
-                    ctx.save();
+            const now = Date.now();
+            const nowIndex = (now - state.hourlyData[0].time) / 3600000;
+            const localNowIndex = nowIndex - startIndex;
+            
+            if (localNowIndex >= 0 && localNowIndex <= minimapData.length) {
+                const nowX = localNowIndex * step;
+                ctx.save();
                     
                     // Outer glow shadow
                     ctx.shadowBlur = 10;
@@ -1243,7 +1290,15 @@ locationInput.addEventListener('input', () => {
                     ctx.stroke();
                     
                     ctx.restore();
-                }
+            }
+
+            if (minimapMode === 'past') {
+                ctx.save();
+                ctx.fillStyle = getThemeColor('minimapPastOverlay', 'rgba(0, 0, 0, 0.45)');
+                // If it's light mode, it could have a different tint, but let the user's theme system handle it, or just use blackish
+                if (state.theme === 'light') ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
+                ctx.fillRect(0, 0, w, h);
+                ctx.restore();
             }
 
             ctx.restore();
@@ -1287,7 +1342,7 @@ locationInput.addEventListener('input', () => {
             fixedOverlayCtx.setLineDash([]);
             
             // Label rendering with halo
-            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // Slightly larger
+            fixedOverlayCtx.font = `bold 10px ${getThemeFont()}`;
             fixedOverlayCtx.textAlign = 'left';
             fixedOverlayCtx.textBaseline = 'middle';
             
@@ -1295,22 +1350,22 @@ locationInput.addEventListener('input', () => {
             fixedOverlayCtx.shadowBlur = 4;
             fixedOverlayCtx.lineWidth = 3;
             fixedOverlayCtx.strokeStyle = haloColor;
-            fixedOverlayCtx.strokeText('0°C', 5, y0 - 10);
+            fixedOverlayCtx.strokeText('0°C', 20, y0 - 8);
             
             fixedOverlayCtx.shadowBlur = 0;
             fixedOverlayCtx.fillStyle = getThemeColor('zeroLine', 'rgba(2, 136, 209, 1)'); // More opaque
-            fixedOverlayCtx.fillText('0°C', 5, y0 - 10);
+            fixedOverlayCtx.fillText('0°C', 20, y0 - 8);
             
             // Icon
-            fixedOverlayCtx.font = '13px "Material Symbols Outlined"';
+            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
             
             fixedOverlayCtx.shadowColor = haloColor;
             fixedOverlayCtx.shadowBlur = 4;
-            fixedOverlayCtx.strokeText(getThemeIcon('zeroLine', 'ac_unit'), 5, y0 + 6);
+            fixedOverlayCtx.strokeText(getThemeIcon('zeroLine', 'ac_unit'), 4, y0 - 8);
             
             fixedOverlayCtx.shadowBlur = 0;
             fixedOverlayCtx.fillStyle = getThemeColor('zeroLineIcon', '#0288d1');
-            fixedOverlayCtx.fillText(getThemeIcon('zeroLine', 'ac_unit'), 5, y0 + 6);
+            fixedOverlayCtx.fillText(getThemeIcon('zeroLine', 'ac_unit'), 4, y0 - 8);
             fixedOverlayCtx.restore();
 
             // Cálculo de índice basado en el inicio de la hora (x = i * PPH)
@@ -1376,31 +1431,32 @@ locationInput.addEventListener('input', () => {
 
                     // Do not show values of 0 or very close to 0 to avoid noise and overlapping
                     if (value !== null && (typeof value === 'string' || Math.abs(value) > 0.01)) {
-                        // El texto tiene margen de seguridad de 10px
-                        let constrainedY = Math.max(10, Math.min(h - 10, y));
+                        const bgH = secondaryText ? 32 : 22; // Taller for secondary text
+                        let constrainedY = Math.max(bgH / 2 + 2, Math.min(h - bgH / 2 - 2, y));
                         const text = `${value}${unit}`;
 
                         fixedOverlayCtx.save();
-                        fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
-                        const textMetrics = fixedOverlayCtx.measureText(text);
+                        fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`;
+                        const measureStr = text.replace(/[\d]/g, '0');
+                        const textMetrics = fixedOverlayCtx.measureText(measureStr);
                         let secMetrics = { width: 0 };
                         if (secondaryText) {
-                            fixedOverlayCtx.font = `bold 8px ${getThemeFont()}`; // Reduced 1px as requested
-                            secMetrics = fixedOverlayCtx.measureText(secondaryText);
-                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // restore
+                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // 2px smaller than main
+                            const strSec = secondaryText.replace(/[\d]/g, '0');
+                            secMetrics = fixedOverlayCtx.measureText(strSec);
+                            fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`; // restore
                         }
                         
                         // Calculate width for icon if present
                         let iconWidth = 0;
                         if (icon) {
-                            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+                            fixedOverlayCtx.font = '14px "Material Symbols Outlined"';
                             iconWidth = fixedOverlayCtx.measureText(icon).width + 4;
-                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // restore
+                            fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`; // restore
                         }
                         
                         const textW = Math.max(textMetrics.width, secMetrics.width);
-                        const bgW = textW + iconWidth + 12;
-                        const bgH = secondaryText ? 28 : 18; // Taller for secondary text
+                        const bgW = textW + iconWidth + 14;
 
                         // Sistema de detección de colisiones simple para etiquetas en la línea vertical
                         if (!state.labelRects) state.labelRects = [];
@@ -1458,7 +1514,7 @@ locationInput.addEventListener('input', () => {
                         const opacity = getThemeColor('scrubber.bgOpacity', 0.75);
                         fixedOverlayCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${opacity})`;
                         fixedOverlayCtx.beginPath();
-                        fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, 4);
+                        fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, 6);
                         fixedOverlayCtx.fill();
                         fixedOverlayCtx.strokeStyle = getThemeColor('scrubber.borderColor', color);
                         fixedOverlayCtx.lineWidth = 0.5;
@@ -1470,20 +1526,20 @@ locationInput.addEventListener('input', () => {
                         let textStartX = rect.x + 6;
                         
                         if (icon) {
-                            fixedOverlayCtx.font = '12px "Material Symbols Outlined"';
+                            fixedOverlayCtx.font = '14px "Material Symbols Outlined"';
                             fixedOverlayCtx.fillText(icon, textStartX, rect.y + rect.h / 2 + 1);
                             textStartX += iconWidth;
                         }
                         
-                        const textY = secondaryText ? rect.y + 10 : rect.y + rect.h / 2 + 1;
+                        const textY = secondaryText ? rect.y + 11 : rect.y + rect.h / 2 + 1;
                         
-                        fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
+                        fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`;
                         fixedOverlayCtx.fillText(text, textStartX, textY);
 
                         if (secondaryText) {
-                            fixedOverlayCtx.font = `bold 8px ${getThemeFont()}`;
+                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
                             fixedOverlayCtx.fillStyle = secondaryColor;
-                            fixedOverlayCtx.fillText(secondaryText, textStartX, textY + 12);
+                            fixedOverlayCtx.fillText(secondaryText, textStartX, textY + 14);
                         }
                         fixedOverlayCtx.restore();
                     }
@@ -1541,7 +1597,7 @@ locationInput.addEventListener('input', () => {
                     else if (currentData.gusts > 50) color = getThemeColor('gusts.strong', '#ea580c');
 
                     // Draw label
-                    drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', getThemeIcon('scrubber.wind', 'air'));
+                    drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', '');
                 }
 
                 // 4. Precipitación (discrete hourly metric)
@@ -1556,13 +1612,12 @@ locationInput.addEventListener('input', () => {
 
                     const isSnow = [71, 73, 75, 77, 85, 86].includes(d1.weatherCode);
                     const isThunder = [95, 96, 99].includes(d1.weatherCode);
-                    const pIcon = isSnow ? 'ac_unit' : isThunder ? 'bolt' : getThemeIcon('scrubber.precip', 'water_drop');
                     
                     let pColor = '#1976d2';
                     if (isSnow) pColor = '#000000';
                     else if (isThunder) pColor = '#5e35b1';
 
-                    drawPoint(barY - 12, pColor, pVal.toFixed(1) + (isBroken ? ' (!)' : ''), ' mm', 'none', pIcon);
+                    drawPoint(barY - 12, pColor, pVal.toFixed(1) + (isBroken ? ' (!)' : ''), ' mm', 'none', '');
                 }
 
                 // 7. Probabilidad de Precipitación
@@ -1571,15 +1626,22 @@ locationInput.addEventListener('input', () => {
                 const py2 = getProbY(d2.precipProb);
                 const t = progress;
                 const probY = py1 * (1 - t) * (1 - t) * (1 + 2 * t) + py2 * t * t * (3 - 2 * t);
-                drawPoint(probY, '#0288d1', Math.round(precipProb), '%', 'diamond', getThemeIcon('scrubber.prob', 'water_drop'));
+                
+                const isSnowProb = [71, 73, 75, 77, 85, 86].includes(d1.weatherCode);
+                const isThunderProb = [95, 96, 99].includes(d1.weatherCode);
+                const probIcon = isSnowProb ? 'ac_unit' : isThunderProb ? 'bolt' : getThemeIcon('scrubber.prob', 'water_drop');
+                let probColor = '#0288d1';
+                if (isSnowProb) probColor = '#00bcd4';
+                else if (isThunderProb) probColor = '#7e57c2';
+
+                drawPoint(probY, probColor, Math.round(precipProb), '%', 'diamond', probIcon);
 
                 // 8. Nubes
                 const cloudY = h - (h * (clouds / 100));
                 drawPoint(cloudY, '#475569', Math.round(clouds), '%', 'circle', getThemeIcon('scrubber.cloud', 'cloud'));
 
                 // 9. UV Index Interaction Canvas Mode
-                const oldUvBlockDOM = document.getElementById('uv-active-block');
-                if (oldUvBlockDOM) oldUvBlockDOM.remove();
+                const uvBlockDOM = document.getElementById('uv-active-block');
 
                 if (d1.uv > 0 && !d1.isNight) {
                     let uvColor;
@@ -1602,74 +1664,24 @@ locationInput.addEventListener('input', () => {
                         textColor = '#e65100';
                     }
 
-                    fixedOverlayCtx.save();
-                    fixedOverlayCtx.translate(-scrollContainer.scrollLeft, 0);
-                    
                     const cellAbsX = index * PIXELS_PER_HOUR;
                         
-                    // Draw full block identical to mobile
-                    fixedOverlayCtx.fillStyle = opacityColor;
-                    fixedOverlayCtx.beginPath();
-                    fixedOverlayCtx.rect(cellAbsX, 0, PIXELS_PER_HOUR, 14);
-                    fixedOverlayCtx.fill();
-                    
-                    fixedOverlayCtx.fillStyle = textColor;
-                    fixedOverlayCtx.font = `bold 8.5px ${getThemeFont()}`;
-                    fixedOverlayCtx.textAlign = 'center';
-                    fixedOverlayCtx.textBaseline = 'middle';
-                    fixedOverlayCtx.fillText(uvText, cellAbsX + PIXELS_PER_HOUR / 2, 8);
-                    
-                    // Redraw the X axis hour digits to overlap the UV block
-                    const drawTick = (tickX, hourLabel) => {
-                        const isSunMarker = state.hourlyData.length && Object.values(state.sunData).some(sun => {
-                            if (!sun || !sun.sunrise || !sun.sunset) return false;
-                            const markerX = ((sun.sunrise - state.hourlyData[0].time) / 3600000) * PIXELS_PER_HOUR;
-                            const markerX2 = ((sun.sunset - state.hourlyData[0].time) / 3600000) * PIXELS_PER_HOUR;
-                            return Math.abs(markerX - tickX) < 25 || Math.abs(markerX2 - tickX) < 25;
-                        });
-                        
-                        if (!isSunMarker) {
-                            fixedOverlayCtx.font = `bold 10px ${getThemeFont()}`;
-                            fixedOverlayCtx.textAlign = 'center';
-                            fixedOverlayCtx.textBaseline = 'alphabetic';
-                            
-                            fixedOverlayCtx.shadowBlur = 0;
-                            fixedOverlayCtx.lineWidth = 2.5;
-                            fixedOverlayCtx.strokeStyle = 'white';
-                            fixedOverlayCtx.beginPath();
-                            fixedOverlayCtx.moveTo(tickX, 0);
-                            fixedOverlayCtx.lineTo(tickX, 8);
-                            fixedOverlayCtx.stroke();
-
-                            fixedOverlayCtx.lineWidth = 1;
-                            fixedOverlayCtx.strokeStyle = getThemeColor('xAxisLabel', '#666666');
-                            fixedOverlayCtx.stroke();
-
-                            fixedOverlayCtx.shadowColor = 'white';
-                            fixedOverlayCtx.shadowBlur = 3;
-                            fixedOverlayCtx.lineWidth = 2;
-                            fixedOverlayCtx.strokeStyle = 'white';
-                            fixedOverlayCtx.strokeText(hourLabel, tickX, 20);
-                            
-                            fixedOverlayCtx.shadowBlur = 0;
-                            fixedOverlayCtx.fillStyle = getThemeColor('xAxisLabel', '#666666');
-                            fixedOverlayCtx.fillText(hourLabel, tickX, 20);
-                        }
-                    };
-
-                    fixedOverlayCtx.imageSmoothingEnabled = true;
-                    drawTick(cellAbsX, d1.localHour.toString().padStart(2, '0'));
-                    if (d2) {
-                        drawTick(cellAbsX + PIXELS_PER_HOUR, d2.localHour.toString().padStart(2, '0'));
+                    if (uvBlockDOM) {
+                        uvBlockDOM.style.display = 'flex';
+                        uvBlockDOM.style.left = cellAbsX + 'px';
+                        uvBlockDOM.style.width = PIXELS_PER_HOUR + 'px';
+                        uvBlockDOM.style.backgroundColor = opacityColor;
+                        uvBlockDOM.style.color = textColor;
+                        uvBlockDOM.innerText = uvText;
                     }
-                    
-                    fixedOverlayCtx.restore();
+                } else {
+                    if (uvBlockDOM) uvBlockDOM.style.display = 'none';
                 }
 
                 fixedOverlayCtx.restore();
             } else {
                 const uvBlockDOM = document.getElementById('uv-active-block');
-                if (uvBlockDOM) uvBlockDOM.remove();
+                if (uvBlockDOM) uvBlockDOM.style.display = 'none';
             }
         }
 

@@ -737,52 +737,6 @@
             touch-action: none;
         }
 
-        .minimap-toggle {
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            background: rgba(30, 31, 34, 0.4);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 200;
-            padding: 1px;
-        }
-
-        [data-theme="light"] .minimap-toggle {
-            background: rgba(255, 255, 255, 0.5);
-            border-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .minimap-toggle button {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            padding: 2px 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .minimap-toggle button span {
-            font-size: 14px;
-        }
-
-        .minimap-toggle button.active {
-            background: var(--accent-temp);
-            color: #fff;
-            box-shadow: 0 2px 4px rgba(244, 63, 94, 0.2);
-        }
-
         #minimap-container::-webkit-scrollbar {
             display: none;
         }
@@ -796,6 +750,7 @@
             display: none;
             overflow-x: auto;
             overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
             white-space: nowrap;
             padding: 0;
             box-sizing: border-box;
@@ -945,33 +900,35 @@
             position: absolute;
             top: 0;
             height: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border-left: 2px solid rgba(255, 255, 255, 0.8);
-            border-right: 2px solid rgba(255, 255, 255, 0.8);
-            border-top: none;
-            border-bottom: none;
+            border-left: 1.5px solid rgba(255, 255, 255, 0.6);
+            border-right: 1.5px solid rgba(255, 255, 255, 0.6);
+            border-radius: 6px;
             pointer-events: none;
-            box-shadow: 
-                0 0 0 5000px rgba(0, 0, 0, 0.45),
-                inset 25px 0 25px -10px rgba(255, 255, 255, 0.6),
-                inset -25px 0 25px -10px rgba(255, 255, 255, 0.6),
-                inset 0 10px 15px -5px rgba(255, 255, 255, 0.4),
-                inset 0 -10px 15px -5px rgba(0, 0, 0, 0.3),
-                0 0 5px rgba(255, 255, 255, 0.3);
             z-index: 10;
-            background-image: 
-                radial-gradient(circle at 50% 40%, rgba(255,255,255,0.2) 0%, transparent 60%),
-                linear-gradient(90deg, rgba(255,255,255,0.15) 0%, transparent 20%, transparent 80%, rgba(255,255,255,0.15) 100%);
             transition: left 0.1s ease-out, width 0.1s ease-out;
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: contrast(1.05) saturate(1.1);
+            -webkit-backdrop-filter: contrast(1.05) saturate(1.1);
+            box-shadow: 
+                0 0 15px rgba(0, 0, 0, 0.5),
+                inset 0 4px 12px rgba(255, 255, 255, 0.5),
+                inset 0 -4px 12px rgba(0, 0, 0, 0.3),
+                inset 4px 0 8px rgba(0, 0, 0, 0.1),
+                inset -4px 0 8px rgba(0, 0, 0, 0.1);
         }
 
         #minimap-viewport::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-            border-radius: 4px;
+            border-radius: 6px;
+            background: linear-gradient(
+                135deg, 
+                rgba(255,255,255,0.45) 0%, 
+                rgba(255,255,255,0) 35%, 
+                rgba(255,255,255,0) 65%, 
+                rgba(0,0,0,0.15) 100%
+            );
             pointer-events: none;
         }
 

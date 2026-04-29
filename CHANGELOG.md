@@ -2,23 +2,45 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.38] - 2026-04-29
+### Fixes
+- **Location Search**: Fixed an error that showed "undefined" for the country in certain locations (e.g., Ittoqqortoormiit). Search results and selected locations now correctly handle the absence of administrative or country fields, providing more complete and cleaner names.
+
+## [v1.3.37] - 2026-04-29
+### UI Improvements & Visual Fixes
+- **Critical Label Visibility**: Fixed the bug that caused cloud or rain probability labels to disappear when their value reached 100%. They are now correctly constrained to the top and bottom edges of the canvas area before attempting collision placement.
+- **Minimap Magnifier Relief**: The base blur of the animated content in the minimap magnifier has been completely removed to improve sharpness. Refraction shadows have been intensified to enhance the 3D crystalline relief effect.
+- **Precipitation Gradients**: Precipitation bars and the probability line in the minimap now accurately reflect precipitation types, gradually interpolating colors for snow (cyan), storm (purple), or rain (blue) based on context.
+- **0°C Base Line**: Relocated the 0°C label and placed it horizontally aligned with its snow icon, integrating it better into the left column.
+
+## [v1.3.35] - 2026-04-29
+### Fixes & UX Improvements
+- **Minimap Visual Effects**: The minimap magnifier is now transparent and works as a convex glass with 3D shadows and refraction. The minimap restores the past/forecast split with independent scrolling, darkening the past as a temporal reference without the UI toggle.
+- **Adaptive Labels & Jitter**: Fixed temperature label flickering (visual jitter caused by variable character widths during scrolling). Precision now uses simulated tabular figures for the bubble.
+- **Weather Iconography**: Precipitation probability dynamically changes its color and icon for rain, snow, or storm. Duplicate icons in precipitation bars and wind gusts have been removed for better readability.
+- **Temperature Visuals**: Underlying shadow of the temperature line in cloudy segments has been further blurred for better differentiation.
+- **iOS Performance**: Fixed flickering by introducing an independent DOM element for the UV block and removing unnecessary canvas redraws. Native smooth scrolling has also been added for daily cards, eliminating lag.
+- **Simplified Minimap**: Removed the Past/Forecast selector, unifying the minimap view. The minimap now freely shows the entire timeline without artificial darkening, and its magnifier is fully transparent.
+- **Labels & Text**: Increased the size of chart point labels (temperature, clouds, rain) for better readability on mobile. Apparent temperature remains visible and proportionate.
+- **Minimap Dates**: Added a "dd/MM" format next to the day of the week and expanded its space to prevent date labels from overlapping at lower resolutions.
+
 ## [v1.3.34] - 2026-04-28
-### Diseño Minimalista
-- **Rediseño del Selector de Minimapa**: El conmutador de Pasado/Previsión ha sido simplificado al máximo, eliminando texto y utilizando iconos sutiles sobre un fondo semi-transparente para evitar tapar información crítica del gráfico.
+### Minimalist Design
+- **Minimap Selector Redesign**: The Past/Forecast toggle has been simplified to its maximum, removing text and using subtle icons over a semi-transparent background to avoid obscuring critical chart information.
 
 ## [v1.3.33] - 2026-04-28
-### Minimapa y Alertas
-- **Mejora del Minimapa**: El selector de Pasado/Previsión ahora es más minimalista y permite navegar directamente a la sección correspondiente al hacer clic. 
-- **Solapamiento de Días**: Optimizado el dibujado de nombres de días en el minimapa para evitar colisiones visuales entre etiquetas.
-- **Alertas en Móvil**: Corregido el posicionamiento del tooltip de alertas meteorológicas en dispositivos móviles para que no se desborde por el lateral de la pantalla.
-- **Sensación Térmica**: Reducido ligeramente el tamaño de fuente de la sensación térmica para mejorar la jerarquía visual en la línea de temperatura.
+### Minimap & Alerts
+- **Minimap Improvement**: The Past/Forecast selector is now more minimalist and allows direct navigation to the corresponding section upon clicking. 
+- **Day Overlapping**: Optimized the drawing of day names in the minimap to avoid visual collisions between labels.
+- **Mobile Alerts**: Fixed the positioning of weather alert tooltips on mobile devices to prevent them from overflowing off the side of the screen.
+- **Apparent Temperature**: Slightly reduced the font size of the apparent temperature to improve visual hierarchy on the temperature line.
 
 ## [v1.3.32] - 2026-04-28
-### Tooltips, Scrubber y Modo Minimapa
-- **Minimapa Dual**: Dividido el funcionamiento del minimapa en dos estados conmutables (Pasado y Previsión) navegables independientemente para ver mejor los datos a mayor escala de los días recientes. Auto-conmutación al moverse en los bordes.
-- **Doble temperatura (Sensación Térmica)**: Rediseñada la etiqueta de temperatura en la línea del tiempo para incluir el apunte dinámico de "sensación térmica" en una línea debajo en un tamaño ligeramente inferior evitando un rectángulo confuso en horizontal.
-- **Icono del Cero Dinámico**: Reforzado el número y color de marcador del 0°C a la izquierda sobre la sombra del panel añadiendo "efecto halo" para mejor lectura del estado sin importar el nivel de luz u oscuridad solar del momento.
-- **Tooltips Alertas Hover / Click Fix**: Agregados listeners transparentes a `mouseenter` y `mouseleave` evitando la opacidad 0 cortando de forma prematura el mensaje.
+### Tooltips, Scrubber & Minimap Mode
+- **Dual Minimap**: Split minimap operation into two toggleable states (Past and Forecast), independently navigable to better view data on a larger scale for recent days. Auto-toggle when moving at the edges.
+- **Dual Temperature (Apparent Temp)**: Redesigned the temperature label on the timeline to include the dynamic "apparent temperature" note on a line below in a slightly smaller size, avoiding a confusing horizontal rectangle.
+- **Dynamic Zero Icon**: Reinforced the number and marker color of the 0°C on the left over the panel shadow, adding a "halo effect" for better readability regardless of the solar light or darkness at the time.
+- **Alert Tooltips Hover/Click Fix**: Added transparent listeners to `mouseenter` and `mouseleave` to prevent opacity 0 from prematurely cutting off the message.
 
 ## [v1.3.31] - 2026-04-28
  
