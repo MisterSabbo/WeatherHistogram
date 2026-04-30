@@ -308,22 +308,45 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.restore();
         }
 
-        // Cloudy shadow overlay (underneath the line)
+        // Cloudy shadow overlay (underneath the line) - Updated to 3D volume effect
         if ((isCloudy1 || isCloudy2) && (!isWet1 && !isWet2)) {
-            let grad = ctx.createLinearGradient(x1, y1, x2, y2);
-            grad.addColorStop(0, isCloudy1 ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0)');
-            grad.addColorStop(1, isCloudy2 ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0)');
+            let gradD = ctx.createLinearGradient(x1, y1, x2, y2);
+            gradD.addColorStop(0, isCloudy1 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0)');
+            gradD.addColorStop(1, isCloudy2 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0)');
             
+            let gradL = ctx.createLinearGradient(x1, y1, x2, y2);
+            gradL.addColorStop(0, isCloudy1 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0)');
+            gradL.addColorStop(1, isCloudy2 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0)');
+
             ctx.save();
-            ctx.strokeStyle = grad; 
-            ctx.lineWidth = 2.5;
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetY = 5;
+            
+            // Top highlight for volume
+            ctx.strokeStyle = gradL;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(x1, y1 + 1);
-            ctx.lineTo(x2, y2 + 1);
+            ctx.moveTo(x1, y1 - 1.5);
+            ctx.lineTo(x2, y2 - 1.5);
             ctx.stroke();
+
+            // Bottom shadow for volume
+            ctx.strokeStyle = gradD;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + 1.5);
+            ctx.lineTo(x2, y2 + 1.5);
+            ctx.stroke();
+
+            // Soft ambient drop shadow underneath
+            ctx.strokeStyle = gradD;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 4;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
             ctx.restore();
         }
 

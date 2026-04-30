@@ -28,5 +28,10 @@ export const state = {
     scrollLeft: 0,
     activeChartTheme: localStorage.getItem('chart_theme') || 'default',
     themeConfig: null,
-    PIXELS_PER_HOUR: window.innerWidth < 600 ? 50 : 60
+    PIXELS_PER_HOUR: window.innerWidth < 600 ? 50 : 60,
+    stickmanThresholds: {
+        cold: parseFloat(localStorage.getItem('weatherhist_stickmancold')) || 10,
+        hot: parseFloat(localStorage.getItem('weatherhist_stickmanhot')) || 30,
+        wind: parseFloat(localStorage.getItem('weatherhist_stickmanwind')) || 45
+    }
 };

@@ -2,6 +2,14 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.39] - 2026-04-30
+### Animated Interactions and Visual Enhancements
+- **Interactive Stickman**: Added a stickman animation at the left of the scrubber that walks forward/backward in tandem with the user's scrolling.
+- **Dynamic Stickman Reactions**: The stickman dynamically reacts to the current weather on screen (e.g. holding an umbrella when raining, wiping sweat when hot, wearing a scarf/beanie returning cold, leaning into the wind).
+- **Scrubber Weather Summary**: A large, responsive current-weather icon was added to the bottom left section of the scrubber area for a quick reading of the active hour.
+- **3D Cloudy Temperature Line**: Transformed the shadow beneath the cloudy temperature line into a multi-layered embossed effect, giving the line genuine geometric volume.
+- **Past Days Card Dimming**: The daily forecast cards for past days are now gracefully desaturated and dimmed to help users distinguish historical data from upcoming forecasts instantly.
+
 ## [v1.3.38] - 2026-04-29
 ### Fixes
 - **Location Search**: Fixed an error that showed "undefined" for the country in certain locations (e.g., Ittoqqortoormiit). Search results and selected locations now correctly handle the absence of administrative or country fields, providing more complete and cleaner names.

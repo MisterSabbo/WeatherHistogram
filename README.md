@@ -17,6 +17,7 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 *   **Dual View Navigation:** Seamlessly switch between a detailed daily cards view and a continuous interactive minimap. State is persisted via `localStorage`.
 *   **Internationalization (i18n):** Features bilingual support out of the box (English and Spanish) via a lightweight, scalable custom module that handles translation files, UI texts, dates, weather phenomena, and AQI statuses dynamically.
 *   **Zero-Lag Time Scrubber:** Features a smoothly animated present-time pulsing indicator (Now playhead) with dynamic historical shading for past weather, rendered instantly via native CSS hardware acceleration.
+*   **Animated Reaction Stickman:** An animated stickman continuously tracks user scrolling and dynamically reacts to current weather conditions (rain, snow, heat, cold, and wind) using procedural inverse kinematics.
 *   **Intelligent Interactive Graphing:** 
     *   **Advanced Atmospheric Rendering:** Features a dynamic, multi-layered volumetric neon glow for temperature lines that accurately calculates visual collisions with clouds and precipitation using native Gaussian blurs for zero-banding smooth falloffs.
     *   **Dynamic Puddles:** A continuous, fluid puddle effect that organically outlines the temperature line during rain probabilities.

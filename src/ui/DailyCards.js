@@ -39,10 +39,27 @@ export function generateDailyCards(centerOnCurrentTimeCallback) {
         const dateStr = date.toLocaleDateString(getLocale(), { day: '2-digit', month: '2-digit', timeZone: state.timezone });
         
         const isToday = (dateStr === nowStr);
+        let isPast = false;
+        
+        // Find today's index
+        const todayIndex = state.dailyData.findIndex(d => {
+             const dDate = new Date(d.time);
+             return dDate.toLocaleDateString(getLocale(), { day: '2-digit', month: '2-digit', timeZone: state.timezone }) === nowStr;
+        });
+        if (todayIndex !== -1 && index < todayIndex) {
+            isPast = true;
+        }
         
         const iconSVG = getWeatherIconSVG(day.weatherCode);
 
+        let pastIconHTML = '';
+        if (isPast) {
+            card.classList.add('past-day');
+            pastIconHTML = `<span class="material-symbols-outlined past-indicator">history</span>`;
+        }
+
         card.innerHTML = `
+            ${pastIconHTML}
             <div class="day-header">
                 <span class="day-name">${dayName} ${isToday ? '<span class="today-marker"></span>' : ''}</span>
                 <span class="day-date">${dateStr}</span>

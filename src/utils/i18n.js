@@ -5,7 +5,11 @@ export const translations = {
             chartTheme: "Tema de Gráficas:",
             clearCache: "Limpiar Caché y Recargar",
             version: "Versión:",
-            repository: "Repositorio:"
+            repository: "Repositorio:",
+            stickmanConfig: "Ajustes del Stickman:",
+            coldThreshold: "Umbral de Frío (°C):",
+            hotThreshold: "Umbral de Calor (°C):",
+            windThreshold: "Umbral de Viento (km/h):"
         },
         theme: {
         },
@@ -133,7 +137,11 @@ export const translations = {
             chartTheme: "Chart Theme:",
             clearCache: "Clear Cache & Reload",
             version: "Version:",
-            repository: "Repository:"
+            repository: "Repository:",
+            stickmanConfig: "Stickman Settings:",
+            coldThreshold: "Cold Threshold (°C):",
+            hotThreshold: "Hot Threshold (°C):",
+            windThreshold: "Wind Threshold (km/h):"
         },
         theme: {
         },

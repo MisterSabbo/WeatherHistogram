@@ -783,6 +783,26 @@
             overflow: hidden;
         }
 
+        .daily-card.past-day {
+            opacity: 0.65;
+            filter: grayscale(0.6);
+        }
+        [data-theme='light'] .daily-card.past-day {
+            background: rgba(0, 0, 0, 0.03);
+        }
+        [data-theme='dark'] .daily-card.past-day {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .daily-card .past-indicator {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 14px;
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+
         .daily-card.active {
             background: var(--bg-color);
             border-bottom: 3px solid var(--accent-temp);

@@ -18,6 +18,7 @@ import { drawHumidity, drawWind, drawTemperature } from './render/MetricsRendere
 import { drawClouds, drawPrecipitation, drawPrecipitationProbability } from './render/AtmosphereRenderer.js';
 import { drawGrid, drawDayNames, drawAxes } from './render/GridRenderer.js';
 import { drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunMarkersOnCanvas, drawSunnyBackground, drawNightOverlay, drawNightShadow } from './render/BackgroundRenderer.js';
+import { drawStickman } from './render/StickmanRenderer.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -300,6 +301,48 @@ let weatherCache = new Map();
                         tiles.forEach(t => t.drawn = false);
                         minimapCacheCanvas = null;
                         render();
+                    });
+                }
+                
+                // Stickman Thresholds Logic
+                const stickmanColdInput = document.getElementById('stickman-cold-input');
+                const stickmanHotInput = document.getElementById('stickman-hot-input');
+                const stickmanWindInput = document.getElementById('stickman-wind-input');
+                
+                if (stickmanColdInput) {
+                    stickmanColdInput.value = state.stickmanThresholds.cold;
+                    stickmanColdInput.addEventListener('change', (e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            state.stickmanThresholds.cold = val;
+                            localStorage.setItem('weatherhist_stickmancold', val);
+                            drawFixedOverlay();
+                        }
+                    });
+                }
+                
+                if (stickmanHotInput) {
+                    stickmanHotInput.value = state.stickmanThresholds.hot;
+                    stickmanHotInput.addEventListener('change', (e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            state.stickmanThresholds.hot = val;
+                            localStorage.setItem('weatherhist_stickmanhot', val);
+                            drawFixedOverlay();
+                        }
+                    });
+                }
+                
+                if (stickmanWindInput) {
+                    stickmanWindInput.value = state.stickmanThresholds.wind;
+                    stickmanWindInput.addEventListener('change', (e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            state.stickmanThresholds.wind = val;
+                            localStorage.setItem('weatherhist_stickmanwind', val);
+                            drawFixedOverlay();
+                            render(); // redraw to update wind gusts icons too!
+                        }
                     });
                 }
 
@@ -697,9 +740,12 @@ locationInput.addEventListener('input', () => {
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
                     
-                    const countryStr = loc.country || loc.country_code || "";
+                    const getCleanStr = (val) => (val && String(val).toLowerCase() !== 'undefined') ? val : "";
+                    const countryStr = getCleanStr(loc.country) || getCleanStr(loc.country_code) || "";
+                    const admin1Str = getCleanStr(loc.admin1);
+                    
                     const adminParts = [];
-                    if (loc.admin1) adminParts.push(loc.admin1);
+                    if (admin1Str) adminParts.push(admin1Str);
                     if (countryStr) adminParts.push(countryStr);
                     
                     const admin = adminParts.length > 0 ? `<span class="admin">(${adminParts.join(', ')})</span>` : "";
@@ -708,9 +754,8 @@ locationInput.addEventListener('input', () => {
                         state.lat = loc.latitude;
                         state.lon = loc.longitude;
                         
-                        const countryStr = loc.country || loc.country_code || "";
                         const nameParts = [loc.name];
-                        if (loc.admin1) nameParts.push(loc.admin1);
+                        if (admin1Str) nameParts.push(admin1Str);
                         if (countryStr) nameParts.push(countryStr);
                         state.locationName = nameParts.join(', ');
 
@@ -1395,6 +1440,57 @@ locationInput.addEventListener('input', () => {
                 const apparent = interpolate(d1.apparent, d2.apparent);
                 const clouds = interpolateBezier(d1.clouds, d2.clouds);
                 const precipProb = interpolateBezier(d1.precipProb, d2.precipProb);
+                
+                // Stickman & Weather Icon
+                fixedOverlayCtx.save();
+                
+                // Weather Icon update
+                const currentData = state.hourlyData[index];
+                let summaryIconName = 'clear_day';
+                if (currentData) {
+                    const code = currentData.weatherCode;
+                    if (code >= 1 && code <= 3) summaryIconName = 'cloud';
+                    else if (code === 45 || code === 48) summaryIconName = 'foggy';
+                    else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) summaryIconName = 'rainy';
+                    else if ((code >= 71 && code <= 77) || code === 85 || code === 86) summaryIconName = 'ac_unit';
+                    else if (code >= 95) summaryIconName = 'thunderstorm';
+                }
+                
+                const summaryIconDOM = document.getElementById('summary-icon-dom');
+                if (summaryIconDOM) {
+                    if (summaryIconDOM.innerText !== summaryIconName) {
+                        summaryIconDOM.innerText = summaryIconName;
+                    }
+                    // Setup shadow color based on haloColor
+                    summaryIconDOM.style.textShadow = `0 0 4px ${haloColor}, 0 0 6px ${haloColor}`;
+                    summaryIconDOM.style.color = isDark ? '#f8fafc' : '#1e293b';
+                }
+                
+                // Stickman
+                const walkPhase = (scrollContainer.scrollLeft % 80) / 80;
+                let isWindy = false;
+                if (currentData) isWindy = currentData.gusts >= state.stickmanThresholds.wind;
+                const isNight = currentData ? !!currentData.isNight : false;
+                
+                const stickmanCanvas = document.getElementById('stickman-canvas');
+                if (stickmanCanvas) {
+                    const sCtx = stickmanCanvas.getContext('2d');
+                    sCtx.clearRect(0, 0, stickmanCanvas.width, stickmanCanvas.height);
+                    drawStickman(
+                        sCtx, 
+                        40, 
+                        76, // sitting at bottom of 80x80 canvas
+                        walkPhase, 
+                        apparent, 
+                        currentData ? currentData.weatherCode : 0, 
+                        isWindy, 
+                        isDark,
+                        isNight,
+                        state.stickmanThresholds
+                    );
+                }
+                
+                fixedOverlayCtx.restore();
 
                 fixedOverlayCtx.save();
                 fixedOverlayCtx.setLineDash([]);
@@ -1497,10 +1593,9 @@ locationInput.addEventListener('input', () => {
                             attempts++;
                         }
 
-                        if (rect.y < 0 || rect.y + rect.h > h) {
-                            fixedOverlayCtx.restore();
-                            return; // Skip if pushed out of bounds
-                        }
+                        // Prevent disappearance if pushed slightly out of bounds due to collisions
+                        if (rect.y < 0) rect.y = 2;
+                        if (rect.y + rect.h > h) rect.y = h - rect.h - 2;
 
                         state.labelRects.push(rect);
 
@@ -1590,11 +1685,12 @@ locationInput.addEventListener('input', () => {
                 }
 
                 // 1.1 Wind Gusts (discrete hourly metric)
-                const currentData = state.hourlyData[index];
                 if (currentData && currentData.gusts > 35) {
-                    let color = getThemeColor('gusts.normal', '#64748b');
-                    if (currentData.gusts > 70) color = getThemeColor('gusts.extreme', '#dc2626');
-                    else if (currentData.gusts > 50) color = getThemeColor('gusts.strong', '#ea580c');
+                    let color = getThemeColor('gusts.normal', '#64748b'); // Gray
+                    if (currentData.gusts >= state.stickmanThresholds.wind) {
+                        color = getThemeColor('gusts.strong', '#ea580c'); // Orange
+                        if (currentData.gusts > 70) color = getThemeColor('gusts.extreme', '#dc2626');
+                    }
 
                     // Draw label
                     drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', '');
