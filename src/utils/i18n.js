@@ -9,7 +9,8 @@ export const translations = {
             stickmanConfig: "Ajustes del Stickman:",
             coldThreshold: "Umbral de Frío (°C):",
             hotThreshold: "Umbral de Calor (°C):",
-            windThreshold: "Umbral de Viento (km/h):"
+            windThreshold: "Umbral de Viento (km/h):",
+            cloudsThreshold: "Umbral de Nubes para Gafas (%):"
         },
         theme: {
         },
@@ -141,7 +142,8 @@ export const translations = {
             stickmanConfig: "Stickman Settings:",
             coldThreshold: "Cold Threshold (°C):",
             hotThreshold: "Hot Threshold (°C):",
-            windThreshold: "Wind Threshold (km/h):"
+            windThreshold: "Wind Threshold (km/h):",
+            cloudsThreshold: "Cloudiness threshold for sunglasses (%):"
         },
         theme: {
         },

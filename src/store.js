@@ -32,6 +32,7 @@ export const state = {
     stickmanThresholds: {
         cold: parseFloat(localStorage.getItem('weatherhist_stickmancold')) || 10,
         hot: parseFloat(localStorage.getItem('weatherhist_stickmanhot')) || 30,
-        wind: parseFloat(localStorage.getItem('weatherhist_stickmanwind')) || 45
+        wind: parseFloat(localStorage.getItem('weatherhist_stickmanwind')) || 45,
+        clouds: parseFloat(localStorage.getItem('weatherhist_stickmanclouds')) || 60
     }
 };

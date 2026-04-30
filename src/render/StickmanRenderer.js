@@ -1,4 +1,4 @@
-export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWindy, isDarkTheme, isNight, thresholds) {
+export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWindy, isDarkTheme, isNight, thresholds, precipAmt, clouds) {
     ctx.save();
     
     // Inverted halo shadow
@@ -13,11 +13,11 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
     ctx.lineJoin = 'round';
     
     // Reactions
-    const isRaining = ((precCode >= 51 && precCode <= 67) || (precCode >= 80 && precCode <= 82) || precCode >= 95);
     const isSnowing = ((precCode >= 71 && precCode <= 77) || precCode === 85 || precCode === 86);
+    const isRaining = (!isSnowing && precipAmt > 0) || ((precCode >= 51 && precCode <= 67) || (precCode >= 80 && precCode <= 82) || precCode >= 95);
     const isHot = apparentTemp >= thresholds.hot;
     const isCold = apparentTemp <= thresholds.cold;
-    const isSunnyDay = !isNight && (precCode >= 0 && precCode <= 2);
+    const isSunnyDay = !isNight && clouds < thresholds.clouds;
     
     // Wind lean
     const windLean = isWindy ? Math.PI / 10 : 0;
@@ -46,7 +46,7 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
     ctx.lineTo(Math.sin(swing2) * legLength, pelvisY + Math.cos(swing2) * legLength);
     ctx.stroke();
     
-    if (isSnowing || isCold) {
+    if (isSnowing) {
         // Boots
         ctx.strokeStyle = '#8b5cf6'; // Purple boot
         ctx.lineWidth = 4;
@@ -66,19 +66,18 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
     let arm2tipX = Math.sin(arm2Angle) * 9;
     let arm2tipY = neckY + 2 + Math.cos(arm2Angle) * 9;
     
-    if (!isHot && !isCold && !isRaining) {
+    // Always draw back arm unless it's doing something very specific that needs hiding (we don't need hiding)
+    ctx.beginPath();
+    ctx.moveTo(0, neckY + 2);
+    ctx.lineTo(arm2tipX, arm2tipY);
+    ctx.stroke();
+    
+    if (isSnowing) {
+        // Glove
+        ctx.fillStyle = '#8b5cf6';
         ctx.beginPath();
-        ctx.moveTo(0, neckY + 2);
-        ctx.lineTo(arm2tipX, arm2tipY);
-        ctx.stroke();
-        
-        if (isSnowing || isCold) {
-            // Glove
-            ctx.fillStyle = '#8b5cf6';
-            ctx.beginPath();
-            ctx.arc(arm2tipX, arm2tipY, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        ctx.arc(arm2tipX, arm2tipY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     // --- DRAW BODY & HEAD ---
@@ -95,12 +94,12 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
     ctx.shadowBlur = 0; // Disable shadow for the head so it looks pure white/unaffected by blur
     ctx.beginPath();
     ctx.arc(headCenterX, headCenterY, headRadius, 0, Math.PI * 2);
-    // Explicitly set fill and stroke for the head to meet the user's "pure white" and "blush border" requirements
+    // Explicitly set fill and stroke for the head to meet the user's requirements
     ctx.fillStyle = isHot ? '#fca5a5' : '#ffffff'; 
     ctx.fill();
     
     if (isHot) {
-        ctx.strokeStyle = '#ef4444'; // Reddish border for blush
+        ctx.strokeStyle = '#fca5a5'; // Pure reddish border for blush
     } else {
         ctx.strokeStyle = strokeColor;
     }
@@ -138,7 +137,7 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
     ctx.lineTo(Math.sin(swing1) * legLength, pelvisY + Math.cos(swing1) * legLength);
     ctx.stroke();
     
-    if (isSnowing || isCold) {
+    if (isSnowing) {
         // Boots
         ctx.strokeStyle = '#8b5cf6';
         ctx.lineWidth = 4;
@@ -192,7 +191,7 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
         ctx.lineTo(arm1tipX, arm1tipY);
         ctx.stroke();
         
-        if (isSnowing || isCold) {
+        if (isSnowing) {
             // Glove
             ctx.fillStyle = '#8b5cf6';
             ctx.beginPath();

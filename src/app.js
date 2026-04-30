@@ -308,6 +308,7 @@ let weatherCache = new Map();
                 const stickmanColdInput = document.getElementById('stickman-cold-input');
                 const stickmanHotInput = document.getElementById('stickman-hot-input');
                 const stickmanWindInput = document.getElementById('stickman-wind-input');
+                const stickmanCloudsInput = document.getElementById('stickman-clouds-input');
                 
                 if (stickmanColdInput) {
                     stickmanColdInput.value = state.stickmanThresholds.cold;
@@ -342,6 +343,18 @@ let weatherCache = new Map();
                             localStorage.setItem('weatherhist_stickmanwind', val);
                             drawFixedOverlay();
                             render(); // redraw to update wind gusts icons too!
+                        }
+                    });
+                }
+
+                if (stickmanCloudsInput) {
+                    stickmanCloudsInput.value = state.stickmanThresholds.clouds;
+                    stickmanCloudsInput.addEventListener('change', (e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            state.stickmanThresholds.clouds = val;
+                            localStorage.setItem('weatherhist_stickmanclouds', val);
+                            drawFixedOverlay();
                         }
                     });
                 }
@@ -1377,9 +1390,10 @@ locationInput.addEventListener('input', () => {
             const haloColor = isDark ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)';
             
             // Dotted line on the left side
-            fixedOverlayCtx.strokeStyle = getThemeColor('zeroLine', 'rgba(14, 165, 233, 0.9)');
-            fixedOverlayCtx.setLineDash([4, 4]); 
-            fixedOverlayCtx.lineWidth = 1.5;
+            // Match the right side: rgba(2, 136, 209, 0.4)
+            fixedOverlayCtx.strokeStyle = getThemeColor('zeroLine', 'rgba(2, 136, 209, 0.4)');
+            fixedOverlayCtx.setLineDash([2, 2]); 
+            fixedOverlayCtx.lineWidth = 1;
             fixedOverlayCtx.beginPath();
             fixedOverlayCtx.moveTo(0, y0);
             fixedOverlayCtx.lineTo(60, y0);
@@ -1398,7 +1412,7 @@ locationInput.addEventListener('input', () => {
             fixedOverlayCtx.strokeText('0°C', 20, y0 - 8);
             
             fixedOverlayCtx.shadowBlur = 0;
-            fixedOverlayCtx.fillStyle = getThemeColor('zeroLine', 'rgba(2, 136, 209, 1)'); // More opaque
+            fixedOverlayCtx.fillStyle = getThemeColor('zeroLineText', 'rgba(2, 136, 209, 0.8)'); // Less intense opaque
             fixedOverlayCtx.fillText('0°C', 20, y0 - 8);
             
             // Icon
@@ -1406,11 +1420,11 @@ locationInput.addEventListener('input', () => {
             
             fixedOverlayCtx.shadowColor = haloColor;
             fixedOverlayCtx.shadowBlur = 4;
-            fixedOverlayCtx.strokeText(getThemeIcon('zeroLine', 'ac_unit'), 4, y0 - 8);
+            fixedOverlayCtx.strokeText(getThemeIcon('zeroLineIcon', 'ac_unit'), 4, y0 - 8);
             
             fixedOverlayCtx.shadowBlur = 0;
-            fixedOverlayCtx.fillStyle = getThemeColor('zeroLineIcon', '#0288d1');
-            fixedOverlayCtx.fillText(getThemeIcon('zeroLine', 'ac_unit'), 4, y0 - 8);
+            fixedOverlayCtx.fillStyle = getThemeColor('zeroLineIcon', 'rgba(2, 136, 209, 0.8)');
+            fixedOverlayCtx.fillText(getThemeIcon('zeroLineIcon', 'ac_unit'), 4, y0 - 8);
             fixedOverlayCtx.restore();
 
             // Cálculo de índice basado en el inicio de la hora (x = i * PPH)
@@ -1486,7 +1500,9 @@ locationInput.addEventListener('input', () => {
                         isWindy, 
                         isDark,
                         isNight,
-                        state.stickmanThresholds
+                        state.stickmanThresholds,
+                        currentData ? currentData.precip : 0,
+                        currentData ? currentData.clouds : 0
                     );
                 }
                 
@@ -1693,7 +1709,8 @@ locationInput.addEventListener('input', () => {
                     }
 
                     // Draw label
-                    drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', '');
+                    const gustIcon = getThemeIcon('scrubber.gusts', 'air');
+                    drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', gustIcon);
                 }
 
                 // 4. Precipitación (discrete hourly metric)

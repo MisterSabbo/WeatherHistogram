@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.40] - 2026-04-30
+### Stickman & UI Adjustments
+- **Stickman Logic Update**: Sunglasses are now only worn during daytime when cloud cover is below 60% (configurable via settings). Cold outfits dynamically display only a scarf, while winter boots and gloves are now strictly reserved for snowy conditions. The umbrella is correctly deployed during any liquid/storm precipitation. Stickman blushing effects are now applied with precise unified color for fill and stroke. Addressed an occasional rendering bug related to the back arm.
+- **Wind Gust Labels**: The hourly wind gusts labels now embed an inline wind icon seamlessly matching the alarm color associated with the intensity of the wind.
+- **Visual Clarity Adjustments**: The left side dashed segment of the 0°C baseline in the overlay properly synchronizes its opacity and styling with the rest of the layout, eliminating jarring intensity. Additionally, past daily cards exhibit heightened grayscale and reduced opacity to reinforce visual differentiation from the forecast section.
+
 ## [v1.3.39] - 2026-04-30
 ### Animated Interactions and Visual Enhancements
 - **Interactive Stickman**: Added a stickman animation at the left of the scrubber that walks forward/backward in tandem with the user's scrolling.
