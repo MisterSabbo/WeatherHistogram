@@ -48,7 +48,7 @@ export function drawClouds(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
         const stop = (p.x - minX) / (maxX - minX || 1);
         const safeStop = Math.max(0, Math.min(1, stop));
         const luma = Math.round(255 - (p.val / 100) * 115); // Increased brightness (was 155)
-        globalGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.5)`); // Increased transparency (was 0.7)
+        globalGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.7)`); // Transparency restored to 0.7
     });
 
     ctx.fillStyle = globalGrad;

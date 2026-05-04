@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.44] - 2026-05-04
+### UI & Usability Updates
+- **Pull To Refresh**: Refined mobile pull-to-refresh logic to correctly identify vertical intent and ignore horizontal panning.
+- **Scrubber Label Alignment**: Repositioned data point labels so their upper-left corners directly attach to their corresponding scrubber points. Labels now present square top-left corners to visually emphasize this connection.
+- **Visual Refinements**: Reverted the opacity in the clouds graph to 0.7 for optimal visual balance.
+
 ## [v1.3.43] - 2026-05-04
 ### UI Refinements
 - **Temperature Label Alignment**: Refined the scrubber labels to individually associate icons with their respective temperature values. The thermometer icon is now strictly aligned with the real temperature, while the "feels like" icon is aligned with the apparent temperature, both following a consistent two-column layout within the label for improved clarity.

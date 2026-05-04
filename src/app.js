@@ -1590,7 +1590,7 @@ locationInput.addEventListener('input', () => {
                     // Do not show values of 0 or very close to 0 to avoid noise and overlapping
                     if (value !== null && (typeof value === 'string' || Math.abs(value) > 0.01)) {
                         const bgH = secondaryText ? 32 : 22; // Taller for secondary text
-                        let constrainedY = Math.max(bgH / 2 + 2, Math.min(h - bgH / 2 - 2, y));
+                        let constrainedY = Math.max(0, Math.min(h - bgH, y));
                         const text = `${value}${unit}`;
 
                         fixedOverlayCtx.save();
@@ -1609,8 +1609,8 @@ locationInput.addEventListener('input', () => {
                         if (!state.labelRects) state.labelRects = [];
 
                         let rect = {
-                            x: drawX + 4,
-                            y: constrainedY - bgH / 2,
+                            x: drawX,
+                            y: constrainedY,
                             w: bgW,
                             h: bgH
                         };
@@ -1632,7 +1632,7 @@ locationInput.addEventListener('input', () => {
                             if (collidingWithNow) {
                                 rect.x += 10;
                                 if (rect.x + rect.w > w) {
-                                    rect.x = drawX + 4; // Reset X
+                                    rect.x = drawX; // Reset X
                                     rect.y += (bgH + 1) * direction; // Move down instead
                                     constrainedY += (bgH + 1) * direction;
                                 }
@@ -1660,7 +1660,7 @@ locationInput.addEventListener('input', () => {
                         const opacity = getThemeColor('scrubber.bgOpacity', 0.75);
                         fixedOverlayCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${opacity})`;
                         fixedOverlayCtx.beginPath();
-                        fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, 6);
+                        fixedOverlayCtx.roundRect(rect.x, rect.y, rect.w, rect.h, [0, 6, 6, 6]);
                         fixedOverlayCtx.fill();
                         fixedOverlayCtx.strokeStyle = getThemeColor('scrubber.borderColor', color);
                         fixedOverlayCtx.lineWidth = 0.5;
