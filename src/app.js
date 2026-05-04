@@ -91,6 +91,52 @@ let weatherCache = new Map();
         async function init() {
             await loadChartTheme(state.activeChartTheme);
             
+            // Pull To Refresh Logic
+            let ptrStartY = 0;
+            let ptrStartX = 0;
+            let ptrDist = 0;
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#search-results')) {
+                    ptrStartY = e.touches[0].clientY;
+                    ptrStartX = e.touches[0].clientX;
+                    ptrDist = 0;
+                } else {
+                    ptrStartY = 0;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && ptrStartY > 0) {
+                    const currentY = e.touches[0].clientY;
+                    const currentX = e.touches[0].clientX;
+                    
+                    // If horizontal movement is greater than vertical, cancel PTR
+                    if (Math.abs(currentX - ptrStartX) > Math.abs(currentY - ptrStartY)) {
+                        ptrStartY = 0;
+                        ptrDist = 0;
+                        return;
+                    }
+
+                    if (currentY > ptrStartY && ptrStartY < 150) { 
+                        ptrDist = currentY - ptrStartY;
+                    } else {
+                        ptrDist = 0; 
+                    }
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                if (ptrDist > 100 && state.lat && state.lon) {
+                    const loader = document.querySelector('.loader');
+                    if (loader) loader.style.display = 'block';
+                    weatherCache.clear();
+                    fetchWeatherData(7, 7);
+                }
+                ptrStartY = 0;
+                ptrStartX = 0;
+                ptrDist = 0;
+            });
+
             // Block zoom/pinch on iOS
             document.addEventListener('touchstart', (e) => {
                 if (e.touches.length > 1) {
@@ -1412,7 +1458,7 @@ locationInput.addEventListener('input', () => {
             fixedOverlayCtx.strokeText('0°C', 20, y0 - 8);
             
             fixedOverlayCtx.shadowBlur = 0;
-            fixedOverlayCtx.fillStyle = getThemeColor('zeroLineText', 'rgba(2, 136, 209, 0.8)'); // Less intense opaque
+            fixedOverlayCtx.fillStyle = getThemeColor('zeroLineIcon', 'rgba(2, 136, 209, 0.8)'); // Sync with icon color
             fixedOverlayCtx.fillText('0°C', 20, y0 - 8);
             
             // Icon
@@ -1516,7 +1562,7 @@ locationInput.addEventListener('input', () => {
                 fixedOverlayCtx.strokeStyle = '#fff';
                 fixedOverlayCtx.lineWidth = 1.5;
 
-                const drawPoint = (y, color, value, unit, shape = 'circle', icon = '', secondaryText = null, secondaryColor = null) => {
+                const drawPoint = (y, color, value, unit, shape = 'circle', icon = '', secondaryText = null, secondaryColor = null, secondaryIcon = '') => {
                     if (y >= h - 5) return; // Do not draw if it's at the bottom
 
                     // The point goes at the exact Y coordinate
@@ -1551,24 +1597,13 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`;
                         const measureStr = text.replace(/[\d]/g, '0');
                         const textMetrics = fixedOverlayCtx.measureText(measureStr);
-                        let secMetrics = { width: 0 };
-                        if (secondaryText) {
-                            fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`; // 2px smaller than main
-                            const strSec = secondaryText.replace(/[\d]/g, '0');
-                            secMetrics = fixedOverlayCtx.measureText(strSec);
-                            fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`; // restore
-                        }
+                        const iconWidth = icon ? (fixedOverlayCtx.font = '14px "Material Symbols Outlined"', fixedOverlayCtx.measureText(icon).width + 4) : 0;
+                        fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
+                        const secMetrics = secondaryText ? (fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`, fixedOverlayCtx.measureText(secondaryText.replace(/[\d]/g, '0'))) : { width: 0 };
+                        const secIconWidth = secondaryIcon ? (fixedOverlayCtx.font = '12px "Material Symbols Outlined"', fixedOverlayCtx.measureText(secondaryIcon).width + 4) : 0;
                         
-                        // Calculate width for icon if present
-                        let iconWidth = 0;
-                        if (icon) {
-                            fixedOverlayCtx.font = '14px "Material Symbols Outlined"';
-                            iconWidth = fixedOverlayCtx.measureText(icon).width + 4;
-                            fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`; // restore
-                        }
-                        
-                        const textW = Math.max(textMetrics.width, secMetrics.width);
-                        const bgW = textW + iconWidth + 14;
+                        const col1W = Math.max(iconWidth, secIconWidth);
+                        const bgW = Math.max(textMetrics.width, secMetrics.width) + col1W + 14;
 
                         // Sistema de detección de colisiones simple para etiquetas en la línea vertical
                         if (!state.labelRects) state.labelRects = [];
@@ -1634,20 +1669,27 @@ locationInput.addEventListener('input', () => {
                         fixedOverlayCtx.fillStyle = color;
                         fixedOverlayCtx.textBaseline = 'middle';
                         
-                        let textStartX = rect.x + 6;
-                        
+                        const textBaseX = rect.x + 6;
+                        const textStartX = textBaseX + col1W;
+
+                        const textY = secondaryText ? rect.y + 11 : rect.y + rect.h / 2 + 0.5;
+
                         if (icon) {
                             fixedOverlayCtx.font = '14px "Material Symbols Outlined"';
-                            fixedOverlayCtx.fillText(icon, textStartX, rect.y + rect.h / 2 + 1);
-                            textStartX += iconWidth;
+                            fixedOverlayCtx.fillStyle = color;
+                            fixedOverlayCtx.fillText(icon, textBaseX, textY);
                         }
                         
-                        const textY = secondaryText ? rect.y + 11 : rect.y + rect.h / 2 + 1;
-                        
                         fixedOverlayCtx.font = `bold 13px ${getThemeFont()}`;
+                        fixedOverlayCtx.fillStyle = color;
                         fixedOverlayCtx.fillText(text, textStartX, textY);
 
                         if (secondaryText) {
+                            if (secondaryIcon) {
+                                fixedOverlayCtx.font = '13px "Material Symbols Outlined"';
+                                fixedOverlayCtx.fillStyle = secondaryColor;
+                                fixedOverlayCtx.fillText(secondaryIcon, textBaseX, textY + 14);
+                            }
                             fixedOverlayCtx.font = `bold 11px ${getThemeFont()}`;
                             fixedOverlayCtx.fillStyle = secondaryColor;
                             fixedOverlayCtx.fillText(secondaryText, textStartX, textY + 14);
@@ -1689,15 +1731,15 @@ locationInput.addEventListener('input', () => {
 
                 // 1. Temperatura
                 const diff = Math.abs(temp - apparent);
-                const showApparent = diff >= 1;
+                const showApparent = diff >= 1.5;
                 const tempColor = '#d32f2f'; // El rojo normal de temperatura
                 
                 if (showApparent) {
                     const isCold = apparent <= temp;
                     const apparentColor = isCold ? '#0288d1' : '#f97316'; // Azul o Naranja fuerte
-                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'), `${apparent.toFixed(1)}°C`, apparentColor);
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${Math.round(temp)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'), `${Math.round(apparent)}°C`, apparentColor, 'emoji_people');
                 } else {
-                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${temp.toFixed(1)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'));
+                    drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${Math.round(temp)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'));
                 }
 
                 // 1.1 Wind Gusts (discrete hourly metric)
@@ -1914,8 +1956,8 @@ locationInput.addEventListener('input', () => {
             if (JSON.stringify(currentData) === JSON.stringify(lastTopPanelData)) return;
             lastTopPanelData = currentData;
 
-            document.getElementById('val-temp').innerHTML = `${currentData.temp}<span class="data-unit">°C</span>`;
-            document.getElementById('val-apparent').innerText = `ST: ${currentData.apparent}°C`;
+            document.getElementById('val-temp').innerHTML = `${Math.round(currentData.temp)}<span class="data-unit">°C</span>`;
+            document.getElementById('val-apparent').innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle; margin-right: 2px;">emoji_people</span><span style="vertical-align: middle;">${Math.round(currentData.apparent)}°C</span>`;
 
             // Wind Compass logic
             const windVal = document.getElementById('val-wind');

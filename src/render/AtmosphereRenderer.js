@@ -47,8 +47,8 @@ export function drawClouds(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     points.forEach(p => {
         const stop = (p.x - minX) / (maxX - minX || 1);
         const safeStop = Math.max(0, Math.min(1, stop));
-        const luma = Math.round(255 - (p.val / 100) * 155);
-        globalGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.7)`);
+        const luma = Math.round(255 - (p.val / 100) * 115); // Increased brightness (was 155)
+        globalGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.5)`); // Increased transparency (was 0.7)
     });
 
     ctx.fillStyle = globalGrad;
@@ -88,7 +88,7 @@ export function drawClouds(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     points.forEach(p => {
         const stop = (p.x - minX) / (maxX - minX || 1);
         const safeStop = Math.max(0, Math.min(1, stop));
-        const luma = Math.round(230 - (p.val / 100) * 150);
+        const luma = Math.round(230 - (p.val / 100) * 110); // Brighter stroke (was 150)
         strokeGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 5}, 1)`);
     });
 

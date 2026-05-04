@@ -89,7 +89,7 @@ export function drawStarrySky(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             for (let s = 0; s < 12; s++) { 
                 const seed = i * 100 + s;
                 const sx = xOffset + rand(seed) * PIXELS_PER_HOUR;
-                const sy = rand(seed + 1) * h * 0.5; // Stars up to middle height
+                const sy = rand(seed + 1) * h * 0.85; // Stars up to 85% of height (was 0.5)
                 let sSize = rand(seed + 2) * 1.5 + 0.5;
                 
                 let alpha = rand(seed + 3) * 0.8 + 0.2;

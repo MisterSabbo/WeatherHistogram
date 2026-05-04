@@ -2,6 +2,23 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.43] - 2026-05-04
+### UI Refinements
+- **Temperature Label Alignment**: Refined the scrubber labels to individually associate icons with their respective temperature values. The thermometer icon is now strictly aligned with the real temperature, while the "feels like" icon is aligned with the apparent temperature, both following a consistent two-column layout within the label for improved clarity.
+
+## [v1.3.42] - 2026-05-04
+### UI & Usability Updates
+- **Mobile Adjustments**: The information modal now respects vertical viewport constraints with a maximum height and internal scrolling. Stickman configuration is neatly collapsed by default to save space.
+- **Pull To Refresh**: Added a pull-down gesture to intuitively refresh current location data on touch devices without clearing the entire app environment. 
+- **Temperature Display Logic**: Eliminated decimals uniformly across all main temperature readouts (header, tooltip, and scrubber labels).
+- **Apparent Temperature Focus**: Adjusted the threshold gap for showing apparent temperature from 1.0 to 1.5 degrees difference. The apparent temperature secondary label now distinctly prefixes its value with a dynamic icon (person) alongside.
+
+## [v1.3.41] - 2026-05-04
+### Visual Refinements
+- **Zero Degree Line**: Synchronized the text color of the "0°C" indicator with its corresponding icon for better UI consistency.
+- **Atmosphere Rendering**: Adjusted the cloudiness histogram fill to be lighter and more translucent at higher percentage levels, improving overall chart legibility in overcast conditions.
+- **Starry Sky**: Improved night sky distribution by allowing stars to appear across 85% of the vertical space (previously restricted to the top 50%).
+
 ## [v1.3.40] - 2026-04-30
 ### Stickman & UI Adjustments
 - **Stickman Logic Update**: Sunglasses are now only worn during daytime when cloud cover is below 60% (configurable via settings). Cold outfits dynamically display only a scarf, while winter boots and gloves are now strictly reserved for snowy conditions. The umbrella is correctly deployed during any liquid/storm precipitation. Stickman blushing effects are now applied with precise unified color for fill and stroke. Addressed an occasional rendering bug related to the back arm.
