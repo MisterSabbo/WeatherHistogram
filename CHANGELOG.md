@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.4.5] - 2026-05-06
+### UI & UX Improvements
+- **Modal Aesthetic Sync**: Unified the close button styling across all modals (AQI, Pollen, Settings). They now utilize the floating, circular, border-aligned "X" style originally introduced in the SPF modal.
+- **Enhanced Mobile PTR Feedback**: The Pull-To-Refresh behavior has been augmented to trigger the location search function. This forces an explicit UI loading state and re-verifies the user's geocoding to provide better interaction feedback.
+- **Micro-Scroll Prevention**: Implemented `touch-action: none` on the non-scrollable overlay modals (SPF, Pollen, AQI) to eliminate native mobile browser micro-scrolling (frequently observed on Android devices) when users interact with the overlays.
+
 ## [v1.4.4] - 2026-05-06
 ### Bug Fixes
 - **Animated Weather Zone Spacing**: Fixed a layout bug in the animated weather zone capsule where an empty gap was rendered when both AQI and Pollen warning icons were inactive due to a persistent flexing container row.

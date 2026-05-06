@@ -144,11 +144,22 @@ let weatherCache = new Map();
                         ptrIndicator.style.transform = `translateY(0%)`;
                     }
                     weatherCache.clear();
-                    fetchWeatherData(7, 7).finally(() => {
-                        if (ptrIndicator) {
-                            ptrIndicator.style.transform = `translateY(-100%)`;
-                        }
-                    });
+                    
+                    const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
+                    if (originalLocation && locationInput) {
+                        locationInput.value = originalLocation;
+                        handleSearch().finally(() => {
+                            if (ptrIndicator) {
+                                ptrIndicator.style.transform = `translateY(-100%)`;
+                            }
+                        });
+                    } else {
+                        fetchWeatherData(7, 7).finally(() => {
+                            if (ptrIndicator) {
+                                ptrIndicator.style.transform = `translateY(-100%)`;
+                            }
+                        });
+                    }
                 } else {
                     if (ptrIndicator) {
                         ptrIndicator.style.transition = 'transform 0.3s ease-out';
