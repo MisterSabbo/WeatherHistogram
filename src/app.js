@@ -95,7 +95,7 @@ let weatherCache = new Map();
             let ptrStartY = 0;
             let ptrStartX = 0;
             let ptrDist = 0;
-            const loader = document.querySelector('.loader');
+            const ptrIndicator = document.getElementById('ptr-indicator');
 
             document.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#search-results')) {
@@ -116,7 +116,7 @@ let weatherCache = new Map();
                     if (Math.abs(currentX - ptrStartX) > Math.abs(currentY - ptrStartY)) {
                         ptrStartY = 0;
                         ptrDist = 0;
-                        if (document.body.style.transform) document.body.style.transform = '';
+                        if (ptrIndicator) ptrIndicator.style.transform = `translateY(-100%)`;
                         return;
                     }
 
@@ -124,8 +124,12 @@ let weatherCache = new Map();
                         ptrDist = currentY - ptrStartY;
                         // Visual feedback
                         if (ptrDist > 20 && ptrDist < 150 && !state.isFetching) {
-                            document.body.style.transform = `translateY(${Math.min(ptrDist / 2, 60)}px)`;
-                            document.body.style.transition = 'none';
+                            if (ptrIndicator) {
+                                ptrIndicator.style.transition = 'none';
+                                let visualDist = Math.max(-100, (ptrDist / 1.5) - 100);
+                                if (ptrDist > 80) visualDist = 0;
+                                ptrIndicator.style.transform = `translateY(${visualDist}%)`;
+                            }
                         }
                     } else {
                         ptrDist = 0; 
@@ -134,18 +138,23 @@ let weatherCache = new Map();
             }, { passive: true });
 
             document.addEventListener('touchend', () => {
-                document.body.style.transition = 'transform 0.3s ease-out';
-                document.body.style.transform = '';
-
                 if (ptrDist > 80 && state.lat && state.lon && !state.isFetching) {
-                    if (loader) loader.style.display = 'block';
+                    if (ptrIndicator) {
+                        ptrIndicator.style.transition = 'transform 0.3s ease-out';
+                        ptrIndicator.style.transform = `translateY(0%)`;
+                    }
                     weatherCache.clear();
-                    fetchWeatherData(7, 7);
+                    fetchWeatherData(7, 7).finally(() => {
+                        if (ptrIndicator) {
+                            ptrIndicator.style.transform = `translateY(-100%)`;
+                        }
+                    });
+                } else {
+                    if (ptrIndicator) {
+                        ptrIndicator.style.transition = 'transform 0.3s ease-out';
+                        ptrIndicator.style.transform = `translateY(-100%)`;
+                    }
                 }
-                
-                setTimeout(() => {
-                    document.body.style.transition = '';
-                }, 300);
 
                 ptrStartY = 0;
                 ptrStartX = 0;
@@ -169,25 +178,52 @@ let weatherCache = new Map();
             if (spfInfoContainer && spfModal) {
                 spfInfoContainer.addEventListener('click', () => {
                     const uv = parseFloat(spfInfoContainer.dataset.uv || 0);
-                    document.getElementById('spf-modal-uvi').innerText = uv.toFixed(1);
+                    
+                    const elUviBox = document.getElementById('spf-modal-uvi-box');
+                    const elUviTitle = document.getElementById('spf-modal-uvi-title');
+                    const elUviDesc = document.getElementById('spf-modal-uvi-desc');
+                    
+                    elUviBox.innerText = uv.toFixed(1);
+                    
+                    let riskStr = '';
+                    let riskDesc = '';
+                    let riskColor = '';
+                    
+                    if (uv < 3) {
+                        riskStr = 'Bajo'; riskDesc = t('config.spfModalRiskLow'); riskColor = '#22c55e';
+                    } else if (uv < 6) {
+                        riskStr = 'Moderado'; riskDesc = t('config.spfModalRiskMod'); riskColor = '#eab308';
+                    } else if (uv < 8) {
+                        riskStr = 'Alto'; riskDesc = t('config.spfModalRiskHigh'); riskColor = '#f97316';
+                    } else if (uv < 11) {
+                        riskStr = 'Muy Alto'; riskDesc = t('config.spfModalRiskVHigh'); riskColor = '#ef4444';
+                    } else {
+                        riskStr = 'Extremo'; riskDesc = t('config.spfModalRiskExt'); riskColor = '#a855f7';
+                    }
+                    
+                    elUviBox.style.backgroundColor = riskColor;
+                    elUviTitle.style.color = riskColor;
+                    elUviTitle.innerText = `${t('config.spfModalTitleUVI')}: ${riskStr}`;
+                    elUviDesc.innerText = riskDesc;
                     
                     const skinTypes = ["I", "II", "III", "IV", "V", "VI"];
                     const skinBaseMins = [67, 100, 200, 300, 400, 600];
                     const sType = state.skinType || 2;
                     
-                    document.getElementById('spf-modal-skin').innerText = skinTypes[sType - 1] || "II";
-                    
                     const timeToBurn = uv > 0 ? Math.round(skinBaseMins[sType - 1] / uv) : 0;
-                    document.getElementById('spf-modal-time').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? t('config.moreThan2h') : `${timeToBurn} min`) : '--';
+                    document.getElementById('spf-modal-time-val').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? '> 120' : timeToBurn) : '--';
+                    document.getElementById('spf-modal-time-desc').innerText = `${t('config.spfModalTimeNone')} ${skinTypes[sType - 1] || "II"}`;
 
-                    let spfText = '15';
-                    if (uv >= 8) spfText = '50+';
-                    else if (uv >= 6) spfText = '50';
-                    else if (uv >= 3) spfText = '30';
-                    else if (uv > 0 && sType <= 2) spfText = '15';
+                    let spfText = 'SPF 15';
+                    if (uv >= 8) spfText = 'SPF 50+';
+                    else if (uv >= 6) spfText = 'SPF 50';
+                    else if (uv >= 3) spfText = 'SPF 30+';
+                    else if (uv > 0 && sType <= 2) spfText = 'SPF 15';
                     else spfText = '--';
-                    document.getElementById('spf-modal-rec').innerText = spfText;
-
+                    
+                    document.getElementById('spf-modal-rec-val').innerText = spfText;
+                    document.getElementById('spf-modal-rec-desc').innerText = t('config.spfModalReapply');
+                    
                     spfModal.style.display = 'flex';
                 });
 
@@ -205,6 +241,42 @@ let weatherCache = new Map();
                     spfModal.style.display = 'none';
                     if (infoModal) infoModal.style.display = 'flex';
                 });
+            }
+
+            const pollenWarningIcon = document.getElementById('pollen-warning-icon');
+            const pollenModal = document.getElementById('pollen-modal');
+            const closePollenBtn = document.getElementById('close-pollen-btn');
+            
+            if (pollenWarningIcon && pollenModal) {
+                pollenWarningIcon.addEventListener('click', () => {
+                    pollenModal.style.display = 'flex';
+                });
+                pollenModal.addEventListener('click', (e) => {
+                    if (e.target === pollenModal) pollenModal.style.display = 'none';
+                });
+                if (closePollenBtn) {
+                    closePollenBtn.addEventListener('click', () => {
+                        pollenModal.style.display = 'none';
+                    });
+                }
+            }
+
+            const aqiWarningIcon = document.getElementById('aqi-warning-icon');
+            const aqiModal = document.getElementById('aqi-modal');
+            const closeAqiBtn = document.getElementById('close-aqi-btn');
+            
+            if (aqiWarningIcon && aqiModal) {
+                aqiWarningIcon.addEventListener('click', () => {
+                    aqiModal.style.display = 'flex';
+                });
+                aqiModal.addEventListener('click', (e) => {
+                    if (e.target === aqiModal) aqiModal.style.display = 'none';
+                });
+                if (closeAqiBtn) {
+                    closeAqiBtn.addEventListener('click', () => {
+                        aqiModal.style.display = 'none';
+                    });
+                }
             }
 
             document.addEventListener('gesturestart', (e) => {
@@ -364,23 +436,39 @@ let weatherCache = new Map();
                 }
                 
                 // I18n Logic
-                const languageSelect = document.getElementById('language-select');
-                if (languageSelect) {
-                    languageSelect.value = getLanguage();
-                    languageSelect.addEventListener('change', (e) => {
-                        setLanguage(e.target.value);
-                        applyTranslations();
-                        if (state.rawForecast && state.rawAQI) {
-                            processData(state.rawForecast, state.rawAQI, false);
-                            updateTopPanel();
-                            generateDailyCards();
+                const langCards = document.querySelectorAll('.lang-card');
+                const updateLangCardsUI = (lang) => {
+                    langCards.forEach(card => {
+                        if (card.dataset.value === lang) {
+                            card.style.borderColor = '#3b82f6';
+                            card.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                        } else {
+                            card.style.borderColor = 'var(--grid-color)';
+                            card.style.backgroundColor = 'var(--card-bg)';
                         }
-                        // Redraw graphics requiring translation
-                        requestAnimationFrame(() => {
-                            tiles.forEach(t => t.drawn = false);
-                            minimapCacheCanvas = null;
-                            render();
-                            drawMinimap();
+                    });
+                };
+                
+                if (langCards.length > 0) {
+                    updateLangCardsUI(getLanguage());
+                    langCards.forEach(card => {
+                        card.addEventListener('click', () => {
+                            const newLang = card.dataset.value;
+                            setLanguage(newLang);
+                            updateLangCardsUI(newLang);
+                            applyTranslations();
+                            if (state.rawForecast && state.rawAQI) {
+                                processData(state.rawForecast, state.rawAQI, false);
+                                updateTopPanel();
+                                generateDailyCards();
+                            }
+                            // Redraw graphics requiring translation
+                            requestAnimationFrame(() => {
+                                tiles.forEach(t => t.drawn = false);
+                                minimapCacheCanvas = null;
+                                render();
+                                drawMinimap();
+                            });
                         });
                     });
                 }
@@ -1684,7 +1772,7 @@ locationInput.addEventListener('input', () => {
                     // SPF Info
                     const uv = currentData.uv || 0;
                     if (uv >= 3) {
-                        spfInfoContainer.style.visibility = 'visible';
+                        spfInfoContainer.style.display = 'flex';
                         let spfText = '';
                         if (uv >= 8) spfText = '50+';
                         else if (uv >= 6) spfText = '50';
@@ -1696,12 +1784,31 @@ locationInput.addEventListener('input', () => {
                         spfInfoContainer.dataset.uv = uv;
                     } else if (uv > 0 && state.skinType <= 2) {
                         // People with skin type I or II might need SPF 15 for UV 1-2
-                        spfInfoContainer.style.visibility = 'visible';
+                        spfInfoContainer.style.display = 'flex';
                         spfValueText.innerText = '15';
                         spfInfoContainer.dataset.uv = uv;
                     } else {
-                        spfInfoContainer.style.visibility = 'hidden';
+                        spfInfoContainer.style.display = 'none';
                         spfInfoContainer.dataset.uv = uv;
+                    }
+
+                    const riskIconsRow = document.getElementById('risk-icons-row');
+                    if (riskIconsRow) {
+                        if (pollenWarningIcon.style.display !== 'none' || aqiWarningIcon.style.display !== 'none') {
+                            riskIconsRow.style.display = 'flex';
+                        } else {
+                            riskIconsRow.style.display = 'none';
+                        }
+                    }
+
+                    let visibleIcons = 1;
+                    if (pollenWarningIcon.style.display !== 'none') visibleIcons++;
+                    if (aqiWarningIcon.style.display !== 'none') visibleIcons++;
+                    if (spfInfoContainer.style.display !== 'none') visibleIcons++;
+
+                    const animatedWeatherZone = document.getElementById('animated-weather-zone');
+                    if (animatedWeatherZone) {
+                        animatedWeatherZone.style.zIndex = visibleIcons > 2 ? '21' : '15';
                     }
                 }
                 
@@ -2132,10 +2239,19 @@ locationInput.addEventListener('input', () => {
             // AQI
             const aqiInfo = getAQIInfo(currentData.aqi);
             document.querySelector('#val-aqi .aqi-text').innerText = aqiInfo.text;
+            const headerAqiIcon = document.getElementById('header-aqi-icon');
+            if (headerAqiIcon) {
+                if (currentData.aqi === null || currentData.aqi <= 50) headerAqiIcon.style.color = '#22c55e'; // Green
+                else if (currentData.aqi <= 100) headerAqiIcon.style.color = '#eab308'; // Yellow
+                else if (currentData.aqi <= 150) headerAqiIcon.style.color = '#f97316'; // Orange
+                else if (currentData.aqi <= 200) headerAqiIcon.style.color = '#ef4444'; // Red
+                else if (currentData.aqi <= 300) headerAqiIcon.style.color = '#9333ea'; // Purple
+                else headerAqiIcon.style.color = '#831843'; // Maroon
+            }
             
             const aqiHeader = document.getElementById('aqi-header-info');
-            if (aqiHeader) {
-                aqiHeader.innerHTML = `
+            const aqiModalHeader = document.getElementById('aqi-modal-header-info');
+            const aqiHtml = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:5px;">
                         <span style="font-weight:bold;">${t('aqi.title')}</span>
                         <span style="background:var(--accent-temp); color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem;">${aqiInfo.val}</span>
@@ -2143,18 +2259,31 @@ locationInput.addEventListener('input', () => {
                     <div style="font-weight:bold; color:var(--accent-temp); margin-bottom:4px; text-align:center;">${aqiInfo.text}</div>
                     <div style="font-size:0.7rem; line-height:1.4; opacity:0.9; text-align:center;">${aqiInfo.rec}</div>
                 `;
-            }
+            if (aqiHeader) aqiHeader.innerHTML = aqiHtml;
+            if (aqiModalHeader) aqiModalHeader.innerHTML = aqiHtml;
+            
             const aqiRadar = document.getElementById('aqi-radar');
             if (aqiRadar) aqiRadar.style.display = 'block';
+            const aqiModalRadar = document.getElementById('aqi-modal-radar');
+            if (aqiModalRadar) aqiModalRadar.style.display = 'block';
 
-            // Polen
+            // Pollen
             const pollenText = getPollenText(currentData.pollen);
             document.querySelector('#val-pollen .pollen-text').innerText = pollenText;
+            const headerPollenIcon = document.getElementById('header-pollen-icon');
+            if (headerPollenIcon) {
+                if (currentData.pollen <= 10) headerPollenIcon.style.color = 'var(--text-secondary)';
+                else if (currentData.pollen <= 50) headerPollenIcon.style.color = '#fbbf24';
+                else if (currentData.pollen <= 100) headerPollenIcon.style.color = '#ef4444';
+                else headerPollenIcon.style.color = '#9333ea';
+            }
 
             // Dibujamos el radar
             requestAnimationFrame(() => {
-                drawAQIRadar(currentData);
-                drawPollenRadar(currentData);
+                drawAQIRadar(currentData, 'aqi-radar', 'aqi-details');
+                drawAQIRadar(currentData, 'aqi-modal-radar', 'aqi-modal-details');
+                drawPollenRadar(currentData, 'pollen-radar', 'pollen-details');
+                drawPollenRadar(currentData, 'pollen-modal-radar', 'pollen-modal-details');
             });
 
             document.getElementById('val-precip').innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">${getThemeIcon('header.precip', 'rainy')}</span> <span>${currentData.precip}<span class="data-unit">mm</span></span>`;

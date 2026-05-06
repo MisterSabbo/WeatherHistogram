@@ -1,7 +1,7 @@
 import { state } from '../store.js';
 
-export function drawAQIRadar(data) {
-    const canvas = document.getElementById('aqi-radar');
+export function drawAQIRadar(data, targetId = 'aqi-radar', detailsId = 'aqi-details') {
+    const canvas = document.getElementById(targetId);
     if (!canvas || !data.aqiDetails) return;
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
@@ -80,7 +80,7 @@ export function drawAQIRadar(data) {
     ctx.stroke();
 
     // Detalles texto
-    const details = document.getElementById('aqi-details');
+    const details = document.getElementById(detailsId);
     if (details) {
         details.innerHTML = pollutants.map(p => {
             const unit = 'µg/m³';

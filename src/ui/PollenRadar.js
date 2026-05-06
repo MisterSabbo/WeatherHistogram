@@ -1,8 +1,8 @@
 import { state } from '../store.js';
 import { t } from '../utils/i18n.js';
 
-export function drawPollenRadar(data) {
-    const canvas = document.getElementById('pollen-radar');
+export function drawPollenRadar(data, targetId = 'pollen-radar', detailsId = 'pollen-details') {
+    const canvas = document.getElementById(targetId);
     if (!canvas || !data.pollenDetails) return;
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
@@ -83,7 +83,7 @@ export function drawPollenRadar(data) {
     ctx.stroke();
 
     // Detalles texto
-    const details = document.getElementById('pollen-details');
+    const details = document.getElementById(detailsId);
     if (details) {
         details.innerHTML = plants.map(p => {
             return `<div style="display:flex; justify-content:space-between;"><span>${p.name}:</span> <b>${p.val ? p.val.toFixed(1) : t('pollen.noData')}</b></div>`;

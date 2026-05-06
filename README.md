@@ -16,14 +16,14 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 *   **Efficient Canvas Rendering:** Utilizes the HTML5 Canvas API to draw complex weather histograms, ensuring 60fps performance without stuttering even on iOS/mobile devices.
 *   **Dual View Navigation:** Seamlessly switch between a detailed daily cards view and a continuous interactive minimap. State is persisted via `localStorage`.
 *   **Internationalization (i18n):** Features bilingual support out of the box (English and Spanish) via a lightweight, scalable custom module that handles translation files, UI texts, dates, weather phenomena, and AQI statuses dynamically.
-*   **Zero-Lag Time Scrubber:** Features a smoothly animated present-time pulsing indicator (Now playhead) with dynamic historical shading for past weather, rendered instantly via native CSS hardware acceleration.
+*   **Zero-Lag Time Scrubber & Pull-to-Refresh:** Features a smoothly animated present-time pulsing indicator (Now playhead) with dynamic historical shading for past weather, rendered instantly via native CSS hardware acceleration. Mobile pull-to-refresh natively refreshes local coordinate data.
 *   **Animated Reaction Stickman:** An animated stickman continuously tracks user scrolling and dynamically reacts to current weather conditions (rain, snow, heat, cold, and wind) using procedural inverse kinematics.
 *   **Intelligent Interactive Graphing:** 
     *   **Advanced Atmospheric Rendering:** Features a dynamic, multi-layered volumetric neon glow for temperature lines that accurately calculates visual collisions with clouds and precipitation using native Gaussian blurs for zero-banding smooth falloffs.
     *   **Dynamic Puddles:** A continuous, fluid puddle effect that organically outlines the temperature line during rain probabilities.
     *   **Apparent Temperature vs Real:** Fill areas highlight cold/heat stress periods in intuitive icy/warm hues when the "feels-like" temperature splits from the ambient one.
     *   **Dynamic Precipitation:** Advanced visual bars to mark thunderstorms (blue/purple) and snowfall (pale frost), intelligently adapting to dark/light modes.
-    *   **UV Index & Environmental Risk:** Smart UI collision detection to stack and cleanly present UV Index and Precipitation probabilities at the scrubber point cleanly without overlapping.
+    *   **UV Index & Environmental Risk:** Smart UI dynamic presentation handles safe spacing when multiple risk indicators (UV, Pollen, AQI) cascade. Interactive elements spawn detailed environmental modals.
     *   **0°C Visual Marker:** Contextual 0-degree horizon line overlay to easily spot sub-zero plunging.
 *   **Floating Present-Time Centering:** The "Now" re-centering button floats dynamically depending on which way the horizon scroll is lost.
 *   **Offline First & Network Strategy:** Service Worker-enabled caching system that prioritizes network fetches during active connections while making static payload accessible offline.

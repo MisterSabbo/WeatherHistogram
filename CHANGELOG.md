@@ -2,6 +2,35 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.4.4] - 2026-05-06
+### Bug Fixes
+- **Animated Weather Zone Spacing**: Fixed a layout bug in the animated weather zone capsule where an empty gap was rendered when both AQI and Pollen warning icons were inactive due to a persistent flexing container row.
+
+## [v1.4.3] - 2026-05-06
+### UI Refinements
+- **Settings Modal Enhancement**: Renamed the "Sun Protection" section to "Adjust Phototype" for better technical alignment. Added a filled shield icon to the section header for improved visual signaling.
+
+## [v1.4.2] - 2026-05-06
+### UX & Aesthetic Refinements
+- **UI Consistency**: Decreased tooltip radar modal dimensions to perfectly match the size specifications of the original inline tooltips, ensuring formatting symmetry across the board.
+- **Micro-Interactions**: Hovering on dynamic risk icons in the bottom scrubber area now yields standard `pointer` cursor states. Language cards in the settings menu are realigned, resolving any vertical baseline offsets from added emojis.
+- **Dynamic Header Palette**: Header readouts for Air Quality (AQI) and Pollen now dynamically color shift along the standard hazard severity scales (Green, Yellow, Orange, Red, Purple, Maroon), mirroring the bottom-HUD alerting icons.
+- **Skin Type Modal**: Finalized UI parity for the SPF widget modal by porting it from hardcoded transparent dark overlays to the native App Theme `var()` colors.
+
+## [v1.4.1] - 2026-05-06
+### Features & UX Improvements
+- **Animated Weather Zone Priority**: Implemented dynamic z-index management for the animated weather zone. When it displays more than 2 icons, it successfully overlays above the 0°C grid reference line text to prevent visual crossover and clutter.
+- **Interactive AQI & Pollen Capsules**: The AQI and Pollen icons within the animated weather zone are now fully interactive, spawning detailed modals that match the comprehensive radar canvases provided in the header tooltips.
+- **SPF Modal Redesign**: Completely overhauled the SPF (Sun Protection) modal presentation. It now features a robust dark-themed layout displaying large colorful stats, risk descriptions, recommended SPF, and safe un-protected time limits for clear legibility on mobile formats.
+
+## [v1.4.0] - 2026-05-06
+### Features & UI Overhaul
+- **Pull-to-Refresh Indicator**: Added a visual feedback indicator with a spinner to show when data is being refreshed via the pull-down gesture on mobile.
+- **Settings Gear Icon**: Updated the info icon in the header to be a settings gear (`settings`) to better signify its functionality.
+- **Language Selector Cards**: Replaced the previous `select` dropdown with distinct, clickable cards showing country flags and ISO codes for better accessibility and design language consistency.
+- **Animated Weather Zone Redesign**: Wrapped the weather summary icon, AQI/Pollen icons, and SPF indicator into a single translucent glass pill. This unifies them visually, resolving horizontal alignment issues from their inherently varied widths.
+- **Refined Terminology**: Updated strings (e.g., "Repositorio" to "Código fuente", "Ajustes del Stickman" to "Ajustar umbrales 🧍") across both the UI and translation dictionaries (`i18n.js`).
+
 ## [v1.3.50] - 2026-05-05
 ### Visual Polish & Collision Fixes
 - **Animated Weather Zone Spacing**: Increased bottom padding of animated weather zone to properly separate the summary weather icon from the stickman's drawn position.
