@@ -101,7 +101,7 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
             uv: hourly.uv_index ? hourly.uv_index[i] : 0,
             visibility: hourly.visibility ? hourly.visibility[i] : 10000,
             weatherCode: hourly.weather_code[i],
-            aqi: aqiHourly.european_aqi ? aqiHourly.european_aqi[i] : null,
+            aqi: aqiHourly.us_aqi ? aqiHourly.us_aqi[i] : null,
             aqiDetails: aqiDetails,
             pollen: maxPollen,
             pollenDetails: pollen,

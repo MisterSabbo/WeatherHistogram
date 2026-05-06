@@ -34,5 +34,6 @@ export const state = {
         hot: parseFloat(localStorage.getItem('weatherhist_stickmanhot')) || 30,
         wind: parseFloat(localStorage.getItem('weatherhist_stickmanwind')) || 45,
         clouds: parseFloat(localStorage.getItem('weatherhist_stickmanclouds')) || 60
-    }
+    },
+    skinType: parseInt(localStorage.getItem('weatherhist_skintype')) || 2
 };

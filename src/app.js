@@ -95,8 +95,10 @@ let weatherCache = new Map();
             let ptrStartY = 0;
             let ptrStartX = 0;
             let ptrDist = 0;
+            const loader = document.querySelector('.loader');
+
             document.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#search-results')) {
+                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#search-results')) {
                     ptrStartY = e.touches[0].clientY;
                     ptrStartX = e.touches[0].clientX;
                     ptrDist = 0;
@@ -114,11 +116,17 @@ let weatherCache = new Map();
                     if (Math.abs(currentX - ptrStartX) > Math.abs(currentY - ptrStartY)) {
                         ptrStartY = 0;
                         ptrDist = 0;
+                        if (document.body.style.transform) document.body.style.transform = '';
                         return;
                     }
 
-                    if (currentY > ptrStartY && ptrStartY < 150) { 
+                    if (currentY > ptrStartY) { 
                         ptrDist = currentY - ptrStartY;
+                        // Visual feedback
+                        if (ptrDist > 20 && ptrDist < 150 && !state.isFetching) {
+                            document.body.style.transform = `translateY(${Math.min(ptrDist / 2, 60)}px)`;
+                            document.body.style.transition = 'none';
+                        }
                     } else {
                         ptrDist = 0; 
                     }
@@ -126,12 +134,19 @@ let weatherCache = new Map();
             }, { passive: true });
 
             document.addEventListener('touchend', () => {
-                if (ptrDist > 100 && state.lat && state.lon) {
-                    const loader = document.querySelector('.loader');
+                document.body.style.transition = 'transform 0.3s ease-out';
+                document.body.style.transform = '';
+
+                if (ptrDist > 80 && state.lat && state.lon && !state.isFetching) {
                     if (loader) loader.style.display = 'block';
                     weatherCache.clear();
                     fetchWeatherData(7, 7);
                 }
+                
+                setTimeout(() => {
+                    document.body.style.transition = '';
+                }, 300);
+
                 ptrStartY = 0;
                 ptrStartX = 0;
                 ptrDist = 0;
@@ -143,6 +158,54 @@ let weatherCache = new Map();
                     e.preventDefault();
                 }
             }, { passive: false });
+
+            // SPF Modal Logic
+            const spfInfoContainer = document.getElementById('spf-info-container');
+            const spfModal = document.getElementById('spf-modal');
+            const closeSpfBtn = document.getElementById('close-spf-btn');
+            const spfSettingsBtn = document.getElementById('spf-settings-btn');
+            const infoModal = document.getElementById('info-modal');
+
+            if (spfInfoContainer && spfModal) {
+                spfInfoContainer.addEventListener('click', () => {
+                    const uv = parseFloat(spfInfoContainer.dataset.uv || 0);
+                    document.getElementById('spf-modal-uvi').innerText = uv.toFixed(1);
+                    
+                    const skinTypes = ["I", "II", "III", "IV", "V", "VI"];
+                    const skinBaseMins = [67, 100, 200, 300, 400, 600];
+                    const sType = state.skinType || 2;
+                    
+                    document.getElementById('spf-modal-skin').innerText = skinTypes[sType - 1] || "II";
+                    
+                    const timeToBurn = uv > 0 ? Math.round(skinBaseMins[sType - 1] / uv) : 0;
+                    document.getElementById('spf-modal-time').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? t('config.moreThan2h') : `${timeToBurn} min`) : '--';
+
+                    let spfText = '15';
+                    if (uv >= 8) spfText = '50+';
+                    else if (uv >= 6) spfText = '50';
+                    else if (uv >= 3) spfText = '30';
+                    else if (uv > 0 && sType <= 2) spfText = '15';
+                    else spfText = '--';
+                    document.getElementById('spf-modal-rec').innerText = spfText;
+
+                    spfModal.style.display = 'flex';
+                });
+
+                spfModal.addEventListener('click', (e) => {
+                    if (e.target === spfModal) {
+                        spfModal.style.display = 'none';
+                    }
+                });
+
+                closeSpfBtn.addEventListener('click', () => {
+                    spfModal.style.display = 'none';
+                });
+
+                spfSettingsBtn.addEventListener('click', () => {
+                    spfModal.style.display = 'none';
+                    if (infoModal) infoModal.style.display = 'flex';
+                });
+            }
 
             document.addEventListener('gesturestart', (e) => {
                 e.preventDefault();
@@ -356,6 +419,36 @@ let weatherCache = new Map();
                 const stickmanWindInput = document.getElementById('stickman-wind-input');
                 const stickmanCloudsInput = document.getElementById('stickman-clouds-input');
                 
+                const skinCards = document.querySelectorAll('.skin-card');
+                if (skinCards.length > 0) {
+                    const updateActiveCard = () => {
+                        const activeVal = state.skinType || 2;
+                        skinCards.forEach(card => {
+                            if (parseInt(card.dataset.value) === activeVal) {
+                                card.style.borderColor = '#3b82f6';
+                                card.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                            } else {
+                                card.style.borderColor = 'var(--grid-color)';
+                                card.style.backgroundColor = 'var(--card-bg)';
+                            }
+                        });
+                    };
+                    
+                    updateActiveCard();
+                    
+                    skinCards.forEach(card => {
+                        card.addEventListener('click', () => {
+                            const val = parseInt(card.dataset.value);
+                            if (!isNaN(val)) {
+                                state.skinType = val;
+                                localStorage.setItem('weatherhist_skintype', val);
+                                updateActiveCard();
+                                render();
+                            }
+                        });
+                    });
+                }
+
                 if (stickmanColdInput) {
                     stickmanColdInput.value = state.stickmanThresholds.cold;
                     stickmanColdInput.addEventListener('change', (e) => {
@@ -1431,6 +1524,14 @@ locationInput.addEventListener('input', () => {
 
             // 0 Degree Marker Line Label
             const y0 = normalizeY(0, -20, 40, h);
+            
+            // Adjust animated weather zone top limit
+            const animatedWeatherZone = document.getElementById('animated-weather-zone');
+            if (animatedWeatherZone) {
+                // Ensure it's under the zero line
+                animatedWeatherZone.style.top = Math.max(0, y0) + 'px';
+            }
+
             fixedOverlayCtx.save();
             const isDark = state.theme === 'dark';
             const haloColor = isDark ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)';
@@ -1539,7 +1640,7 @@ locationInput.addEventListener('input', () => {
                     drawStickman(
                         sCtx, 
                         40, 
-                        76, // sitting at bottom of 80x80 canvas
+                        80, // sitting at bottom of 80x80 canvas
                         walkPhase, 
                         apparent, 
                         currentData ? currentData.weatherCode : 0, 
@@ -1550,6 +1651,58 @@ locationInput.addEventListener('input', () => {
                         currentData ? currentData.precip : 0,
                         currentData ? currentData.clouds : 0
                     );
+                }
+
+                // Update new DOM elements
+                const aqiWarningIcon = document.getElementById('aqi-warning-icon');
+                const pollenWarningIcon = document.getElementById('pollen-warning-icon');
+                const spfInfoContainer = document.getElementById('spf-info-container');
+                const spfValueText = document.getElementById('spf-value-text');
+
+                if (currentData && aqiWarningIcon && pollenWarningIcon && spfInfoContainer && spfValueText) {
+                    // Pollen Risk
+                    if (currentData.pollen > 10) {
+                        pollenWarningIcon.style.display = 'block';
+                        if (currentData.pollen <= 50) pollenWarningIcon.style.color = '#fbbf24'; // Yellow
+                        else if (currentData.pollen <= 100) pollenWarningIcon.style.color = '#ef4444'; // Red
+                        else pollenWarningIcon.style.color = '#9333ea'; // Purple
+                    } else {
+                        pollenWarningIcon.style.display = 'none';
+                    }
+
+                    // AQI Risk
+                    if (currentData.aqi !== null && currentData.aqi >= 101) {
+                        aqiWarningIcon.style.display = 'block';
+                        if (currentData.aqi <= 150) aqiWarningIcon.style.color = '#f97316'; // Orange
+                        else if (currentData.aqi <= 200) aqiWarningIcon.style.color = '#ef4444'; // Red
+                        else if (currentData.aqi <= 300) aqiWarningIcon.style.color = '#9333ea'; // Purple
+                        else aqiWarningIcon.style.color = '#831843'; // Maroon
+                    } else {
+                        aqiWarningIcon.style.display = 'none';
+                    }
+
+                    // SPF Info
+                    const uv = currentData.uv || 0;
+                    if (uv >= 3) {
+                        spfInfoContainer.style.visibility = 'visible';
+                        let spfText = '';
+                        if (uv >= 8) spfText = '50+';
+                        else if (uv >= 6) spfText = '50';
+                        else if (uv >= 3) spfText = '30';
+                        
+                        spfValueText.innerText = spfText;
+                        
+                        // We'll manage the onclick listener logic independently, just store data attributes
+                        spfInfoContainer.dataset.uv = uv;
+                    } else if (uv > 0 && state.skinType <= 2) {
+                        // People with skin type I or II might need SPF 15 for UV 1-2
+                        spfInfoContainer.style.visibility = 'visible';
+                        spfValueText.innerText = '15';
+                        spfInfoContainer.dataset.uv = uv;
+                    } else {
+                        spfInfoContainer.style.visibility = 'hidden';
+                        spfInfoContainer.dataset.uv = uv;
+                    }
                 }
                 
                 fixedOverlayCtx.restore();

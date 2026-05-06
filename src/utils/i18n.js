@@ -7,6 +7,15 @@ export const translations = {
             version: "Versión:",
             repository: "Repositorio:",
             stickmanConfig: "Ajustes del Stickman:",
+            skinTypeConfig: "Protección Solar:",
+            skinTypeProfile: "Tu Fototipo de Piel (Fitzpatrick):",
+            skinType1: "I - Piel muy clara, pecas, pelo rubio/pelirrojo. Se quema siempre, nunca se broncea.",
+            skinType2: "II - Piel clara, pelo rubio/castaño claro. Se quema fácilmente, se broncea poco.",
+            skinType3: "III - Piel intermedia, pelo castaño. Se quema moderadamente, se broncea gradualmente.",
+            skinType4: "IV - Piel morena, pelo oscuro. Se quema poco, se broncea con facilidad.",
+            skinType5: "V - Piel oscura. Raramente se quema, se broncea mucho.",
+            skinType6: "VI - Piel oscura. Raramente se quema, se broncea mucho.",
+            moreThan2h: "> 2h",
             coldThreshold: "Umbral de Frío (°C):",
             hotThreshold: "Umbral de Calor (°C):",
             windThreshold: "Umbral de Viento (km/h):",
@@ -45,9 +54,6 @@ export const translations = {
             olive: "Olivo",
             ragweed: "Ambrosía",
             noData: "S/D"
-        },
-        aqi: {
-            title: "Calidad del Aire"
         },
         map: {
             nowBtn: "Ir al momento actual"
@@ -102,14 +108,15 @@ export const translations = {
             unknown: "Desconocido"
         },
         aqiLevel: {
-            1: { t: 'Bueno', r: 'Calidad de aire ideal para actividades al aire libre.' },
-            2: { t: 'Regular', r: 'Los grupos sensibles deben considerar reducir el esfuerzo físico.' },
-            3: { t: 'Moderado', r: 'Se recomienda reducir actividades intensas al aire libre.' },
-            4: { t: 'Pobre', r: 'Evite el esfuerzo físico prolongado al aire libre.' },
-            5: { t: 'Muy Pobre', r: 'Mantenga las ventanas cerradas y evite salir.' },
-            6: { t: 'Extremo', r: 'Alerta de salud: evite cualquier actividad al aire libre.' }
+            1: { t: 'Buena', r: 'Calidad del aire satisfactoria, sin riesgo para la salud.' },
+            2: { t: 'Moderada', r: 'Aceptable para la mayoría, algunas personas sensibles pueden experimentar molestias.' },
+            3: { t: 'Dañina para sensibles', r: 'Grupos sensibles pueden experimentar efectos en la salud.' },
+            4: { t: 'Dañina', r: 'Todos pueden comenzar a experimentar efectos en la salud.' },
+            5: { t: 'Muy dañina', r: 'Alerta de salud: todos pueden experimentar efectos más graves.' },
+            6: { t: 'Peligrosa', r: 'Emergencia sanitaria. Toda la población en riesgo.' }
         },
         aqi: {
+            title: "Calidad del Aire",
             good: "Bueno",
             fair: "Moderado",
             moderate: "Perjudicial (Sensibles)",
@@ -140,6 +147,15 @@ export const translations = {
             version: "Version:",
             repository: "Repository:",
             stickmanConfig: "Stickman Settings:",
+            skinTypeConfig: "Sun Protection:",
+            skinTypeProfile: "Your Skin Type (Fitzpatrick):",
+            skinType1: "I - Very fair skin, freckles, blonde/red hair. Always burns, never tans.",
+            skinType2: "II - Fair skin, blonde/light brown hair. Burns easily, tans poorly.",
+            skinType3: "III - Intermediate skin, brown hair. Burns moderately, tans gradually.",
+            skinType4: "IV - Brown skin, dark hair. Burns minimally, tans easily.",
+            skinType5: "V - Dark skin. Rarely burns, tans profusely.",
+            skinType6: "VI - Dark skin. Rarely burns, tans profusely.",
+            moreThan2h: "> 2h",
             coldThreshold: "Cold Threshold (°C):",
             hotThreshold: "Hot Threshold (°C):",
             windThreshold: "Wind Threshold (km/h):",
@@ -178,9 +194,6 @@ export const translations = {
             olive: "Olive",
             ragweed: "Ragweed",
             noData: "N/A"
-        },
-        aqi: {
-            title: "Air Quality"
         },
         map: {
             nowBtn: "Go to current time"
@@ -235,14 +248,15 @@ export const translations = {
             unknown: "Unknown"
         },
         aqiLevel: {
-            1: { t: 'Good', r: 'Air quality is ideal for outdoor activities.' },
-            2: { t: 'Fair', r: 'Sensitive groups should consider reducing outdoor exertion.' },
-            3: { t: 'Moderate', r: 'Recommended to reduce intense outdoor activities.' },
-            4: { t: 'Poor', r: 'Avoid prolonged outdoor exertion.' },
-            5: { t: 'Very Poor', r: 'Keep windows closed and avoid going out.' },
-            6: { t: 'Extreme', r: 'Health alert: avoid any outdoor physical activities.' }
+            1: { t: 'Good', r: 'Air quality is satisfactory, and air pollution poses little or no risk.' },
+            2: { t: 'Moderate', r: 'Acceptable; however, there may be a risk for some sensitive people.' },
+            3: { t: 'Unhealthy for Sensitive', r: 'Members of sensitive groups may experience health effects.' },
+            4: { t: 'Unhealthy', r: 'Everyone may begin to experience health effects.' },
+            5: { t: 'Very Unhealthy', r: 'Health alert: everyone may experience more serious health effects.' },
+            6: { t: 'Hazardous', r: 'Health warnings of emergency conditions. The entire population is more likely to be affected.' }
         },
         aqi: {
+            title: "Air Quality",
             good: "Good",
             fair: "Fair",
             moderate: "Moderate",

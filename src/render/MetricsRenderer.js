@@ -462,11 +462,11 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.shadowBlur = 5;
             ctx.lineWidth = 3;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.strokeText(d.temp.toFixed(1) + '°', x, y - 10);
+            ctx.strokeText(Math.round(d.temp) + '°', x, y - 10);
         }
         
         ctx.fillStyle = textColor;
-        ctx.fillText(d.temp.toFixed(1) + '°', x, y - 10);
+        ctx.fillText(Math.round(d.temp) + '°', x, y - 10);
         ctx.restore();
     }
 }

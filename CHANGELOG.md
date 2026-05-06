@@ -2,6 +2,44 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.3.50] - 2026-05-05
+### Visual Polish & Collision Fixes
+- **Animated Weather Zone Spacing**: Increased bottom padding of animated weather zone to properly separate the summary weather icon from the stickman's drawn position.
+- **Summary Icon Rescaling**: Decreased weather summary icon down to 20px so that extreme icons don't hit the umbrella canopy top.
+
+## [v1.3.49] - 2026-05-05
+### Visual Polish & Collision Fixes
+- **Animated Weather Zone Tidy Up**: Avoid overlap between the stickman and weather summary icons by scaling down the summary icon to 22px.
+- **Stickman Bounds Re-Align**: Shifted stickman vertical rendering footprint to utilize the full extent of the canvas limits, matching zero-padding bottom anchoring constraints.
+
+## [v1.3.48] - 2026-05-05
+### Bug Fixes & Refinements
+- **SPF Icon Rendering**: Adjusted the generic Google Fonts API request ensuring `FILL` weight property gets downloaded properly and solves the issue where the SPF icon was lacking fill.
+- **Mobile Container Overflow**: Fixed an issue where the Animated Weather Zone was pushing elements outward via `overflow: hidden` by dropping the clip limit and decreasing bottom padding.
+- **SPF Burn Time Formula Algorithm**: Refined the "Time to burn" equation to rely on true UV scale factors, increasing accuracy for Fitzpatrick skin types.
+
+## [v1.3.47] - 2026-05-05
+### Refinements & Layout Adjustments
+- **Animated Weather Zone Container**: Added height restrictions and refiltered the blur effect solely to the range below the 0° Celsius threshold.
+- **SPF Shield Correction**: Remedied layout and rendering anomalies for the Sun Protection icon making the shield properly filled (`FILL` set to 1) without blurry shadows overlapping the text.
+- **Icon Alignment**: Standardized the display flow within the animated zone making sure the AQI and Pollen icons can peacefully sit next to each other within an assigned row instead of suffering overflow when both are active simultaneously.
+- **Enhanced Skin Type Display Cards**: Updated the literal explanations per card referring strictly to the Fitzpatrick Scale recommendations, applying gender alternating single-char emojis for broader support and visual distinctiveness.
+
+## [v1.3.46] - 2026-05-05
+### Features & Refinements
+- **Animated Weather Zone Redux**: The animated weather zone has strictly been confined to the lower area beneath the 0°C line, ensuring optimal visibility of upper chart elements.
+- **Icon Alignment & Consistency**: All hazard icons in the animated zone now match their top-panel counterparts (`eco` for AQI and `local_florist` for pollen) to maintain design consistency.
+- **SPF Modal & Presentation**: The SPF indicator in the main view now features a solid blue shield along with horizontal value placement. The modal view has been equipped with a new field for "Recommended SPF" and a dismiss-on-outside-click functionality.
+- **Graphic Temperature Refresh**: Decimals have been stripped entirely from the main temperature labels over the graph to eliminate clutter and provide clearer readouts.
+- **Fitzpatrick Scale Selection**: The simple dropdown for Skin Type selection has been replaced by an interactive grid of descriptive emoji cards detailing the Fitzpatrick scale classifications in the settings panel.
+
+## [v1.3.45] - 2026-05-05
+### Features & Refinements
+- **Animated Weather Zone**: We've reserved the area on the left of the scrubber for a beautifully blurred background emphasizing the current weather summary, AQI warnings, Pollen risk alerts, and SPF considerations in a vertically-aligned stack.
+- **US AQI Parsing**: Synchronized the app to use `us_aqi` explicitly instead of `european_aqi` for better predictability of Air Quality constraints.
+- **SPF Tracking**: The new SPF indicator evaluates current UV readings along with the user's selected Skin Type to provide safe sun practices, optimal SPF, and time-to-burn metrics inside a brand new modal.
+- **Mobile Pull-to-Refresh Fixed**: Corrected an issue where the pull-to-refresh logic only registered in the top 150 pixels of the screen.
+
 ## [v1.3.44] - 2026-05-04
 ### UI & Usability Updates
 - **Pull To Refresh**: Refined mobile pull-to-refresh logic to correctly identify vertical intent and ignore horizontal panning.
