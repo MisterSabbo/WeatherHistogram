@@ -657,6 +657,7 @@
             position: relative;
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
         }
 
         #scroll-container::-webkit-scrollbar { display: none; }

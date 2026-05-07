@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.4.6] - 2026-05-07
+### App Navigation & Platform Stability
+- **Pull-To-Refresh Overhaul**: The application UI logic has been fully reorganized inside an architectural `app-wrapper`. This enables a natural, fluid pull-to-refresh displacement behavior that brings the whole UI downwards securely and presents the "Cargando..." indicator directly from the top inset area.
+- **Micro-Scrolling Native Suppression**: Engineered strong Android touch heuristics via explicit CSS `touch-action: pan-x` application on `#scroll-container`, completely removing vertical mobile elastic bouncing while horizontally scanning the histogram view.
+- **PTR Geocoding Re-query System**: Updated the custom Pull-To-Refresh gesture payload trigger. Refreshing the UI now leverages the internal `geoService.searchLocation` capability using the active session label to rigorously re-resolve geo-coordinates on-the-fly and seamlessly trigger an up-to-date data fetch, all without ever injecting or disrupting the textual contents currently preserved within the visible search input field.
+
 ## [v1.4.5] - 2026-05-06
 ### UI & UX Improvements
 - **Modal Aesthetic Sync**: Unified the close button styling across all modals (AQI, Pollen, Settings). They now utilize the floating, circular, border-aligned "X" style originally introduced in the SPF modal.

@@ -90,15 +90,15 @@ let weatherCache = new Map();
 
         async function init() {
             await loadChartTheme(state.activeChartTheme);
-            
-            // Pull To Refresh Logic
+                       // Pull To Refresh Logic
             let ptrStartY = 0;
             let ptrStartX = 0;
             let ptrDist = 0;
             const ptrIndicator = document.getElementById('ptr-indicator');
+            const appWrapper = document.getElementById('app-wrapper');
 
             document.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#search-results')) {
+                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#aqi-modal') && !e.target.closest('#pollen-modal') && !e.target.closest('#search-results')) {
                     ptrStartY = e.touches[0].clientY;
                     ptrStartX = e.touches[0].clientX;
                     ptrDist = 0;
@@ -117,54 +117,71 @@ let weatherCache = new Map();
                         ptrStartY = 0;
                         ptrDist = 0;
                         if (ptrIndicator) ptrIndicator.style.transform = `translateY(-100%)`;
+                        if (appWrapper) appWrapper.style.transform = `translateY(0)`;
                         return;
                     }
 
                     if (currentY > ptrStartY) { 
+                        // Vertical dragging down -> prevent native browser scroll to avoid micro-scrolling elastic bounce
+                        if (e.cancelable) e.preventDefault();
+                        
                         ptrDist = currentY - ptrStartY;
                         // Visual feedback
-                        if (ptrDist > 20 && ptrDist < 150 && !state.isFetching) {
+                        if (ptrDist > 0 && ptrDist < 200 && !state.isFetching) {
+                            let visualDist = Math.min(75, ptrDist / 2.5); // Max pull down is 75px
                             if (ptrIndicator) {
                                 ptrIndicator.style.transition = 'none';
-                                let visualDist = Math.max(-100, (ptrDist / 1.5) - 100);
-                                if (ptrDist > 80) visualDist = 0;
-                                ptrIndicator.style.transform = `translateY(${visualDist}%)`;
+                                ptrIndicator.style.transform = `translateY(${visualDist - 75}px)`;
+                            }
+                            if (appWrapper) {
+                                appWrapper.style.transition = 'none';
+                                appWrapper.style.transform = `translateY(${visualDist}px)`;
                             }
                         }
                     } else {
                         ptrDist = 0; 
                     }
                 }
-            }, { passive: true });
+            }, { passive: false }); // Needs to be false to prevent default
 
             document.addEventListener('touchend', () => {
-                if (ptrDist > 80 && state.lat && state.lon && !state.isFetching) {
-                    if (ptrIndicator) {
-                        ptrIndicator.style.transition = 'transform 0.3s ease-out';
-                        ptrIndicator.style.transform = `translateY(0%)`;
-                    }
-                    weatherCache.clear();
-                    
-                    const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
-                    if (originalLocation && locationInput) {
-                        locationInput.value = originalLocation;
-                        handleSearch().finally(() => {
-                            if (ptrIndicator) {
-                                ptrIndicator.style.transform = `translateY(-100%)`;
-                            }
-                        });
-                    } else {
-                        fetchWeatherData(7, 7).finally(() => {
-                            if (ptrIndicator) {
-                                ptrIndicator.style.transform = `translateY(-100%)`;
-                            }
-                        });
-                    }
-                } else {
+                const resetUI = () => {
                     if (ptrIndicator) {
                         ptrIndicator.style.transition = 'transform 0.3s ease-out';
                         ptrIndicator.style.transform = `translateY(-100%)`;
                     }
+                    if (appWrapper) {
+                        appWrapper.style.transition = 'transform 0.3s ease-out';
+                        appWrapper.style.transform = `translateY(0)`;
+                    }
+                };
+
+                if (ptrDist > 60 && state.lat && state.lon && !state.isFetching) {
+                    if (ptrIndicator) {
+                        ptrIndicator.style.transition = 'transform 0.2s ease-out';
+                        ptrIndicator.style.transform = `translateY(0px)`;
+                    }
+                    if (appWrapper) {
+                        appWrapper.style.transition = 'transform 0.2s ease-out';
+                        appWrapper.style.transform = `translateY(75px)`;
+                    }
+                    weatherCache.clear();
+                    
+                    const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
+                    if (originalLocation) {
+                        geoService.searchLocation(originalLocation, 1).then(results => {
+                            if (results.length > 0) {
+                                state.lat = results[0].latitude;
+                                state.lon = results[0].longitude;
+                                state.locationName = results[0].name + (results[0].admin1 ? `, ${results[0].admin1}` : "");
+                            }
+                            return fetchWeatherData(7, 7);
+                        }).finally(resetUI);
+                    } else {
+                        fetchWeatherData(7, 7).finally(resetUI);
+                    }
+                } else {
+                    resetUI();
                 }
 
                 ptrStartY = 0;
