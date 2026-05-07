@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.4.7] - 2026-05-07
+### Bug Fixes
+- **Android Micro-Scroll Resolution**: Handled unpredictable appearance of the right vertical scrollbar on Android devices by explicitly applying `overflow: hidden`, `width: 100%`, and `height: 100%` onto the `html` root node.
+- **PTR Visual Polish**: Introduced deterministic canvas clearing during the Pull-To-Refresh lifecycle immediately prior to data fetch, giving users unequivocal visual feedback that a successful network redraw and UI synchronization procedure has initiated.
+
 ## [v1.4.6] - 2026-05-07
 ### App Navigation & Platform Stability
 - **Pull-To-Refresh Overhaul**: The application UI logic has been fully reorganized inside an architectural `app-wrapper`. This enables a natural, fluid pull-to-refresh displacement behavior that brings the whole UI downwards securely and presents the "Cargando..." indicator directly from the top inset area.

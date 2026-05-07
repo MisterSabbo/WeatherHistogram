@@ -167,6 +167,18 @@ let weatherCache = new Map();
                     }
                     weatherCache.clear();
                     
+                    // Clear canvases to provide visual feedback of refresh
+                    tiles.forEach(t => {
+                        t.drawn = false;
+                        t.ctx.clearRect(0, 0, t.canvas.width, t.canvas.height);
+                    });
+                    if (fixedOverlayCtx && fixedOverlayCanvas) {
+                        fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.width, fixedOverlayCanvas.height);
+                    }
+                    if (minimapCtx && minimapCanvas) {
+                        minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+                    }
+                    
                     const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
                     if (originalLocation) {
                         geoService.searchLocation(originalLocation, 1).then(results => {
