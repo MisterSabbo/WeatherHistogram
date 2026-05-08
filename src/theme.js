@@ -27,8 +27,8 @@ export function getThemeFont() {
 }
 
 export async function loadChartTheme(themeId) {
-    const primaryPath = `themes/${themeId}.json`;
-    const fallbackPath = `public/themes/${themeId}.json`;
+    const primaryPath = `./themes/${themeId}.json`;
+    const fallbackPath = `./public/themes/${themeId}.json`;
 
     async function doFetch(url) {
         const res = await fetch(url);

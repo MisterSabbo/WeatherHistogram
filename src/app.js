@@ -2459,21 +2459,13 @@ let weatherCache = new Map();
             if (statusText) statusText.style.display = 'none';
         }
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swPaths = ['./sw.js', './public/sw.js'];
-                let attempting = 0;
-
-                const tryNext = () => {
-                    if (attempting >= swPaths.length) return;
-                    navigator.serviceWorker.register(swPaths[attempting])
-                        .then(() => console.log('ServiceWorker registered:', swPaths[attempting]))
-                        .catch(err => {
-                            console.warn(`SW ${swPaths[attempting]} failed:`, err);
-                            attempting++;
-                            tryNext();
-                        });
-                };
-                tryNext();
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker
+                    .register("./sw.js")
+                    .then(() => console.log("ServiceWorker registered: ./sw.js"))
+                    .catch((err) => {
+                        console.warn("SW registration failed:", err);
+                    });
             });
         }

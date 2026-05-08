@@ -1,5 +1,5 @@
-const CACHE_NAME = "weather-histogram-v5";
-const ASSETS = ["./", "./index.html", "./manifest.json"];
+const CACHE_NAME = "weather-histogram-v6";
+const ASSETS = ["./", "index.html", "manifest.json"];
 
 // Recursos que deben ser cacheados agresivamente (Cache-First)
 const STATIC_ASSETS = /\.(js|css|png|jpg|jpeg|svg|woff2)$/;
@@ -56,7 +56,7 @@ self.addEventListener("fetch", (event) => {
               networkResponse.status === 200 &&
               event.request.url.startsWith("http")
             ) {
-              cache.put(event.request, networkResponse.clone());
+              cache.put(event.request, networkResponse.clone()).catch(() => {});
             }
             return networkResponse;
           })
