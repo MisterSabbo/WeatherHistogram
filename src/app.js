@@ -2,6 +2,7 @@
          * CONFIGURACIÓN Y ESTADO
          */
 import { state, CONFIG, getDPR } from './store.js';
+import { storageService } from './services/StorageService.js';
 import { getThemeColor, getThemeIcon, getThemeFont, loadChartTheme, applyThemeDOM } from './theme.js';
 import { getLocale, setLanguage, getLanguage, applyTranslations, t } from './utils/i18n.js';
 import { weatherService } from './services/WeatherService.js';
@@ -19,6 +20,7 @@ import { drawClouds, drawPrecipitation, drawPrecipitationProbability } from './r
 import { drawGrid, drawDayNames, drawAxes } from './render/GridRenderer.js';
 import { drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunMarkersOnCanvas, drawSunnyBackground, drawNightOverlay, drawNightShadow } from './render/BackgroundRenderer.js';
 import { drawStickman } from './render/StickmanRenderer.js';
+import { initMapModal } from './ui/MapSelector.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -33,7 +35,7 @@ let weatherCache = new Map();
         let minimapCacheCanvas = null;
         let tiles = [];
         const TILE_WIDTH = 1440; // 24 hours * 60px/hour to prevent overlapping artifacts
-        let scrollContainer, minimapViewport, themeToggle, locationInput, suggestionsBox, searchBtn, geoBtn;
+        let scrollContainer, minimapViewport, themeToggle;
         let isMinimapDragging = false;
         let minimapMode = 'future'; // 'past' or 'future'
         
@@ -89,6 +91,40 @@ let weatherCache = new Map();
         window.addEventListener('resize', handleResize);
 
         async function init() {
+            await storageService.init();
+            
+            // Migrate localstorage if needed
+            if (localStorage.getItem('weatherhist_skintype') !== null) {
+                await storageService.set('skinType', parseInt(localStorage.getItem('weatherhist_skintype')) || 2);
+                await storageService.set('stickmanThresholds', {
+                    cold: parseFloat(localStorage.getItem('weatherhist_stickmancold')) || 10,
+                    hot: parseFloat(localStorage.getItem('weatherhist_stickmanhot')) || 30,
+                    wind: parseFloat(localStorage.getItem('weatherhist_stickmanwind')) || 45,
+                    clouds: parseFloat(localStorage.getItem('weatherhist_stickmanclouds')) || 60
+                });
+                const lastLoc = localStorage.getItem('last_weather_location');
+                if (lastLoc) {
+                    try { await storageService.set('lastLocation', JSON.parse(lastLoc)); } catch (e) {}
+                }
+                await storageService.set('chartTheme', localStorage.getItem('chart_theme') || 'default');
+                await storageService.set('viewMode', localStorage.getItem('view_mode') || 'minimap');
+                
+                // Clear migrated items to avoid re-migration
+                localStorage.removeItem('weatherhist_skintype');
+                localStorage.removeItem('weatherhist_stickmancold');
+                localStorage.removeItem('weatherhist_stickmanhot');
+                localStorage.removeItem('weatherhist_stickmanwind');
+                localStorage.removeItem('weatherhist_stickmanclouds');
+                localStorage.removeItem('last_weather_location');
+                localStorage.removeItem('chart_theme');
+                localStorage.removeItem('view_mode');
+            }
+            
+            state.skinType = await storageService.get('skinType', 2);
+            state.stickmanThresholds = await storageService.get('stickmanThresholds', { cold: 10, hot: 30, wind: 45, clouds: 60 });
+            state.activeChartTheme = await storageService.get('chartTheme', 'default');
+            state.isDailyCardsView = await storageService.get('viewMode', 'minimap') === 'daily';
+
             await loadChartTheme(state.activeChartTheme);
                        // Pull To Refresh Logic
             let ptrStartY = 0;
@@ -174,6 +210,11 @@ let weatherCache = new Map();
                     });
                     if (fixedOverlayCtx && fixedOverlayCanvas) {
                         fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.width, fixedOverlayCanvas.height);
+                        fixedOverlayCtx.fillStyle = getThemeColor('textPrimary');
+                        fixedOverlayCtx.font = getThemeFont('16px Inter');
+                        fixedOverlayCtx.textAlign = 'center';
+                        fixedOverlayCtx.textBaseline = 'middle';
+                        fixedOverlayCtx.fillText(t('config.loading') || 'Cargando...', fixedOverlayCanvas.width / 2, fixedOverlayCanvas.height / 2);
                     }
                     if (minimapCtx && minimapCanvas) {
                         minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
@@ -335,7 +376,15 @@ let weatherCache = new Map();
             scrollContainer = document.getElementById('scroll-container');
             minimapViewport = document.getElementById('minimap-viewport');
             themeToggle = document.getElementById('theme-toggle');
-            locationInput = document.getElementById('location-input');
+
+            // Initialize map modal
+            initMapModal(async (lat, lon, name) => {
+                state.lat = lat;
+                state.lon = lon;
+                state.locationName = name;
+                updateLocationUI();
+                await loadWeather();
+            });
 
             // Initialize UV interaction block once
             const canvasWrapper = document.getElementById('canvas-wrapper');
@@ -356,24 +405,7 @@ let weatherCache = new Map();
                 uvBlock.style.fontSize = '8.5px'; // Will be responsive to theme if needed, but keeping small size
                 canvasWrapper.appendChild(uvBlock);
             }
-            suggestionsBox = document.getElementById('suggestions');
-            searchBtn = document.getElementById('search-btn');
-            geoBtn = document.getElementById('geo-btn');
-
             try {
-                // Mobile toggles
-                const toggleSearchBtn = document.getElementById('toggle-search-btn');
-                const searchBox = document.getElementById('search-box');
-                const controlsLeft = document.querySelector('.controls-left');
-
-                if (toggleSearchBtn) {
-                    toggleSearchBtn.addEventListener('click', () => {
-                        const isActive = searchBox.classList.toggle('active');
-                        toggleSearchBtn.classList.toggle('active', isActive);
-                        controlsLeft.classList.toggle('has-active', isActive);
-                    });
-                }
-
                 // Location tooltip logic for mobile/desktop
                 const locationGroup = document.querySelector('.location-group');
                 if (locationGroup) {
@@ -456,9 +488,6 @@ let weatherCache = new Map();
 
                 // Theme setup
                 themeToggle.addEventListener('click', toggleTheme);
-                searchBtn.addEventListener('click', handleSearch);
-                geoBtn.addEventListener('click', () => useMyLocation(true));
-                locationInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSearch(); });
 
                 const floatingNowBtn = document.getElementById('floating-now-btn');
                 if (floatingNowBtn) floatingNowBtn.addEventListener('click', centerOnCurrentTime);
@@ -532,7 +561,7 @@ let weatherCache = new Map();
                     chartThemeSelect.value = state.activeChartTheme;
                     chartThemeSelect.addEventListener('change', async (e) => {
                         state.activeChartTheme = e.target.value;
-                        localStorage.setItem('chart_theme', state.activeChartTheme);
+                        storageService.set('chartTheme', state.activeChartTheme);
                         await loadChartTheme(state.activeChartTheme);
                         // Redraw everything
                         tiles.forEach(t => t.drawn = false);
@@ -569,7 +598,7 @@ let weatherCache = new Map();
                             const val = parseInt(card.dataset.value);
                             if (!isNaN(val)) {
                                 state.skinType = val;
-                                localStorage.setItem('weatherhist_skintype', val);
+                                storageService.set('skinType', val);
                                 updateActiveCard();
                                 render();
                             }
@@ -583,7 +612,7 @@ let weatherCache = new Map();
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
                             state.stickmanThresholds.cold = val;
-                            localStorage.setItem('weatherhist_stickmancold', val);
+                            storageService.set('stickmanThresholds', state.stickmanThresholds);
                             drawFixedOverlay();
                         }
                     });
@@ -595,7 +624,7 @@ let weatherCache = new Map();
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
                             state.stickmanThresholds.hot = val;
-                            localStorage.setItem('weatherhist_stickmanhot', val);
+                            storageService.set('stickmanThresholds', state.stickmanThresholds);
                             drawFixedOverlay();
                         }
                     });
@@ -607,7 +636,7 @@ let weatherCache = new Map();
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
                             state.stickmanThresholds.wind = val;
-                            localStorage.setItem('weatherhist_stickmanwind', val);
+                            storageService.set('stickmanThresholds', state.stickmanThresholds);
                             drawFixedOverlay();
                             render(); // redraw to update wind gusts icons too!
                         }
@@ -620,7 +649,7 @@ let weatherCache = new Map();
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
                             state.stickmanThresholds.clouds = val;
-                            localStorage.setItem('weatherhist_stickmanclouds', val);
+                            storageService.set('stickmanThresholds', state.stickmanThresholds);
                             drawFixedOverlay();
                         }
                     });
@@ -630,7 +659,8 @@ let weatherCache = new Map();
                 const forceRefreshBtn = document.getElementById('force-refresh-btn');
                 if (forceRefreshBtn) {
                     forceRefreshBtn.addEventListener('click', async () => {
-                        localStorage.clear();
+                        // Keep userPreferences via IndexedDB (don't clear it!), but clear standard items
+                        weatherCache.clear();
                         if ('caches' in window) {
                             try {
                                 const cacheNames = await caches.keys();
@@ -649,35 +679,7 @@ let weatherCache = new Map();
                     });
                 }
 
-                // Suggestions logic
-                let lastQuery = ""; // Variable para evitar repetir la misma búsqueda
-
-locationInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    const query = locationInput.value.trim().toLowerCase();
-
-    // 1. Aumentamos el mínimo a 3 caracteres
-    if (query.length < 3) {
-        suggestionsBox.style.display = 'none';
-        return;
-    }
-
-    // 2. Si la búsqueda es idéntica a la anterior, no hacemos nada
-    if (query === lastQuery) return;
-
-    // 3. Aumentamos el delay a 500ms
-    searchTimeout = setTimeout(async () => {
-        lastQuery = query; // Actualizamos la última consulta
-        await fetchSuggestions(query);
-    }, 500);
-});
-
-                document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.search-box') && !e.target.closest('.mobile-toggles')) {
-                        closeMobilePanels();
-                    }
-                    if (!e.target.closest('.search-box')) suggestionsBox.style.display = 'none';
-                });
+                // Removed obsolete suggestion box closing logic
 
                 // Header tooltips hover reliability (Desktop)
                 document.querySelectorAll('.info-icon, .location-group').forEach(el => {
@@ -766,11 +768,10 @@ locationInput.addEventListener('input', () => {
                 const minimapContainer = document.getElementById('minimap-container');
                 const dailyCardsContainer = document.getElementById('daily-cards-container');
                 const toggleNavBtn = document.getElementById('toggle-nav-btn');
-                let isDailyCardsView = localStorage.getItem('view_mode') === 'daily';
 
                 const updateViewMode = () => {
                     const toggle = document.getElementById('minimap-toggle');
-                    if (isDailyCardsView) {
+                    if (state.isDailyCardsView) {
                         minimapContainer.style.display = 'none';
                         if (toggle) toggle.style.display = 'none';
                         dailyCardsContainer.style.display = 'flex';
@@ -787,12 +788,12 @@ locationInput.addEventListener('input', () => {
                         drawMinimap();
                         updateMinimapViewport();
                     }
-                    localStorage.setItem('view_mode', isDailyCardsView ? 'daily' : 'minimap');
+                    storageService.set('viewMode', state.isDailyCardsView ? 'daily' : 'minimap');
                 };
 
                 if (toggleNavBtn) {
                     toggleNavBtn.addEventListener('click', () => {
-                        isDailyCardsView = !isDailyCardsView;
+                        state.isDailyCardsView = !state.isDailyCardsView;
                         updateViewMode();
                     });
                     // Initialize on start
@@ -997,76 +998,17 @@ locationInput.addEventListener('input', () => {
             }
         }
 
-        async function fetchSuggestions(query) {
-            try {
-                const results = await geoService.searchLocation(query, 5);
-                showSuggestions(results);
-            } catch (err) {
-                console.error("Error fetching suggestions", err);
-                suggestionsBox.style.display = 'none';
-            }
-        }
-
-        function showSuggestions(results) {
-            suggestionsBox.innerHTML = '';
-            if (results.length === 0) {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.style.cursor = 'default';
-                div.innerText = 'No se encontraron resultados';
-                suggestionsBox.appendChild(div);
-            } else {
-                results.forEach(loc => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    
-                    const getCleanStr = (val) => (val && String(val).toLowerCase() !== 'undefined') ? val : "";
-                    const countryStr = getCleanStr(loc.country) || getCleanStr(loc.country_code) || "";
-                    const admin1Str = getCleanStr(loc.admin1);
-                    
-                    const adminParts = [];
-                    if (admin1Str) adminParts.push(admin1Str);
-                    if (countryStr) adminParts.push(countryStr);
-                    
-                    const admin = adminParts.length > 0 ? `<span class="admin">(${adminParts.join(', ')})</span>` : "";
-                    div.innerHTML = `<strong>${loc.name}</strong> ${admin}`;
-                    div.onclick = () => {
-                        state.lat = loc.latitude;
-                        state.lon = loc.longitude;
-                        
-                        const nameParts = [loc.name];
-                        if (admin1Str) nameParts.push(admin1Str);
-                        if (countryStr) nameParts.push(countryStr);
-                        state.locationName = nameParts.join(', ');
-
-                        locationInput.value = loc.name;
-                        suggestionsBox.style.display = 'none';
-                        updateLocationUI();
-                        closeMobilePanels();
-                        loadWeather();
-                    };
-                    suggestionsBox.appendChild(div);
-                });
-            }
-            suggestionsBox.style.display = 'block';
-        }
-
         async function useMyLocation(force = false) {
             if (!force) {
-                const savedLocation = localStorage.getItem('last_weather_location');
-                if (savedLocation) {
-                    try {
-                        const loc = JSON.parse(savedLocation);
-                        state.lat = loc.lat;
-                        state.lon = loc.lon;
-                        state.locationName = loc.name;
-                        updateLocationUI();
-                        closeMobilePanels();
-                        await loadWeather();
-                        return;
-                    } catch (e) {
-                        localStorage.removeItem('last_weather_location');
-                    }
+                const loc = await storageService.get('lastLocation');
+                if (loc && loc.lat && loc.lon) {
+                    state.lat = loc.lat;
+                    state.lon = loc.lon;
+                    state.locationName = loc.name || "Ubicación Guardada";
+                    updateLocationUI();
+                    closeMobilePanels();
+                    await loadWeather();
+                    return;
                 }
             }
 
@@ -1160,48 +1102,19 @@ locationInput.addEventListener('input', () => {
             drawMinimap();
         }
 
-        async function handleSearch() {
-            const query = locationInput.value.trim();
-            if (!query) return;
-
-            try {
-                const results = await geoService.searchLocation(query, 1);
-                if (results.length > 0) {
-                    const loc = results[0];
-                    state.lat = loc.latitude;
-                    state.lon = loc.longitude;
-                    state.locationName = loc.name + (loc.admin1 ? `, ${loc.admin1}` : "");
-                    updateLocationUI();
-                    closeMobilePanels();
-                    await loadWeather();
-                } else {
-                    console.warn("No se encontró la ubicación.");
-                }
-            } catch (err) {
-                console.error("Search error:", err);
-                showError("Error al buscar la ubicación.");
-            }
-        }
-
         function updateLocationUI() {
             document.getElementById('location-name').innerText = state.locationName;
             if (state.lat && state.lon) {
-                localStorage.setItem('last_weather_location', JSON.stringify({
+                storageService.set('lastLocation', {
                     lat: state.lat,
                     lon: state.lon,
                     name: state.locationName
-                }));
+                });
             }
         }
 
         function closeMobilePanels() {
-            const searchBox = document.getElementById('search-box');
-            const toggleSearchBtn = document.getElementById('toggle-search-btn');
-            const controlsLeft = document.querySelector('.controls-left');
-
-            if (searchBox) searchBox.classList.remove('active');
-            if (toggleSearchBtn) toggleSearchBtn.classList.remove('active');
-            if (controlsLeft) controlsLeft.classList.remove('has-active');
+            // No longer needed
         }
 
         /**

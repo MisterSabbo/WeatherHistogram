@@ -2,10 +2,22 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.4.7] - 2026-05-07
+## [v1.4.8] - 2026-05-08
 ### Bug Fixes
+- **Service Worker Interception Error**: Addressed an issue where strict adblockers or broken cache promises would abort `fetch` requests towards Open-Meteo with `net::ERR_FAILED`, causing the app to fail gracefully loading data. Bypassed the Service Worker network-first interception entirely for external APIs to rely wholly on native browser CORS resolution.
+- **Interactive Map Location Enhancements**: The "Ubicación actual" (Current Location) button now successfully performs an entire operation stack: resolves GPS coordinates, executes a robust reverse-geocoding pass to automatically update the region namespace, cleanly closes the dialog modals, and actively triggers a fresh UI payload reload synchronously. Redesigned the "Ir" marker popup click callback binding leveraging a time-delayed attachment pattern to survive Leaflet DOM recreation lifecycles perfectly.
+
+## [v1.4.7] - 2026-05-08
+### Features & Architecture
+- **StorageService Migration**: Completely removed synchronous `localStorage` dependencies, migrating state management and user preferences over to a robust, asynchronous `IndexedDB`-backed `StorageService`. Includes graceful fallback to `localStorage` in restricted environments.
+- **Interactive Map Location Modal**: Replaced the previous basic location input box with a dedicated, full-screen map modal. Powered by Leaflet.js and OpenStreetMap Nominatim reverse geocoding, it supports pin-dropping for highly precise location setting.
+
+### Bug Fixes
+- **Modal Overflow**: Fixed an issue causing unintended scrollable overflow on the settings modal making the close button hard to access.
+- **Interactive Map Controls**: Repaired the behavior of the "Ir" (Go) and "Ubicación actual" (Current Location) buttons on the map modal.
+- **Weather Fetching**: Updated Content-Security-Policy headers to formally allow Open Meteo's Air Quality endpoints properly to prevent network access exceptions.
 - **Android Micro-Scroll Resolution**: Handled unpredictable appearance of the right vertical scrollbar on Android devices by explicitly applying `overflow: hidden`, `width: 100%`, and `height: 100%` onto the `html` root node.
-- **PTR Visual Polish**: Introduced deterministic canvas clearing during the Pull-To-Refresh lifecycle immediately prior to data fetch, giving users unequivocal visual feedback that a successful network redraw and UI synchronization procedure has initiated.
+- **PTR Visual Polish**: Introduced deterministic canvas clearing during the Pull-To-Refresh lifecycle immediately prior to data fetch, giving users unequivocal visual feedback that a successful network redraw and UI synchronization procedure has initiated, along with new text feedback indicating "Loading".
 
 ## [v1.4.6] - 2026-05-07
 ### App Navigation & Platform Stability

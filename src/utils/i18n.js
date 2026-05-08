@@ -39,8 +39,16 @@ export const translations = {
         },
         search: {
             placeholder: "Buscar ciudad (ej: Madrid, Tokyo)...",
-            btn: "Buscar",
-            geoBtn: "Usar mi ubicación"
+            changeLocation: "Cambiar ubicación"
+        },
+        map: {
+            searchPlaceholder: "Buscar ubicación...",
+            searchBtn: "Buscar Ubicación",
+            myLocationBtn: "Mi Ubicación",
+            closeBtn: "Cerrar",
+            nowBtn: "Ir al momento actual",
+            geoNotSupported: "Geolocalización no soportada en este navegador.",
+            geoFailed: "No se pudo obtener la ubicación. Verifica los permisos de tu navegador o dispositivo."
         },
         nav: {
             infoBtn: "Información y Ajustes",
@@ -63,9 +71,6 @@ export const translations = {
             olive: "Olivo",
             ragweed: "Ambrosía",
             noData: "S/D"
-        },
-        map: {
-            nowBtn: "Ir al momento actual"
         },
         minimap: {
             past: "Pasado",
@@ -188,8 +193,16 @@ export const translations = {
         },
         search: {
             placeholder: "Search city (e.g. London, Tokyo)...",
-            btn: "Search",
-            geoBtn: "Use my location"
+            changeLocation: "Change location"
+        },
+        map: {
+            searchPlaceholder: "Search location...",
+            searchBtn: "Search Location",
+            myLocationBtn: "My Location",
+            closeBtn: "Close",
+            nowBtn: "Go to current time",
+            geoNotSupported: "Geolocation is not supported by this browser.",
+            geoFailed: "Failed to get location. Please check your browser or device permissions."
         },
         nav: {
             infoBtn: "Info & Settings",
@@ -212,9 +225,6 @@ export const translations = {
             olive: "Olive",
             ragweed: "Ragweed",
             noData: "N/A"
-        },
-        map: {
-            nowBtn: "Go to current time"
         },
         minimap: {
             past: "Past",
