@@ -176,7 +176,7 @@ export function initMapModal(onLocationSelected) {
             "No se pudo obtener la ubicación. Verifica los permisos de tu navegador o dispositivo.",
         );
       },
-      { timeout: 10000, enableHighAccuracy: false },
+      { timeout: 15000, enableHighAccuracy: true, maximumAge: 0 },
     );
   });
 

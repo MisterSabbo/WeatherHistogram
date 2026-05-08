@@ -1,4 +1,4 @@
-const CACHE_NAME = "weather-histogram-v4";
+const CACHE_NAME = "weather-histogram-v5";
 const ASSETS = ["./", "./index.html", "./manifest.json"];
 
 // Recursos que deben ser cacheados agresivamente (Cache-First)
@@ -41,15 +41,21 @@ self.addEventListener("fetch", (event) => {
     return; // Dejar que el navegador lo maneje sin Service Worker
   }
 
-  // Solo manejar peticiones GET
-  if (event.request.method !== "GET") return;
+  // Solo manejar peticiones GET y esquemas http/https
+  if (event.request.method !== "GET" || !url.protocol.startsWith("http")) {
+    return;
+  }
 
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request)
           .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
+            if (
+              networkResponse &&
+              networkResponse.status === 200 &&
+              event.request.url.startsWith("http")
+            ) {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
