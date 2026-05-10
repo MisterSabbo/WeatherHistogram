@@ -45,10 +45,16 @@ export const translations = {
             searchPlaceholder: "Buscar ubicación...",
             searchBtn: "Buscar Ubicación",
             myLocationBtn: "Mi Ubicación",
+            currentLocation: "Ubicación actual",
             closeBtn: "Cerrar",
             nowBtn: "Ir al momento actual",
             geoNotSupported: "Geolocalización no soportada en este navegador.",
-            geoFailed: "No se pudo obtener la ubicación. Verifica los permisos de tu navegador o dispositivo."
+            geoFailed: "No se pudo obtener la ubicación. Verifica los permisos de tu navegador o dispositivo.",
+            favorites: "Favoritos",
+            addFavorite: "Añadir a favoritas",
+            noFavorites: "No hay ubicaciones favoritas.",
+            goToLocation: "Ir a ubicación",
+            remove: "Eliminar"
         },
         nav: {
             infoBtn: "Información y Ajustes",
@@ -199,10 +205,16 @@ export const translations = {
             searchPlaceholder: "Search location...",
             searchBtn: "Search Location",
             myLocationBtn: "My Location",
+            currentLocation: "Current Location",
             closeBtn: "Close",
             nowBtn: "Go to current time",
             geoNotSupported: "Geolocation is not supported by this browser.",
-            geoFailed: "Failed to get location. Please check your browser or device permissions."
+            geoFailed: "Failed to get location. Please check your browser or device permissions.",
+            favorites: "Favorites",
+            addFavorite: "Add to favorites",
+            noFavorites: "No favorite locations yet.",
+            goToLocation: "Go to location",
+            remove: "Remove"
         },
         nav: {
             infoBtn: "Info & Settings",

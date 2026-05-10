@@ -61,35 +61,88 @@ export function initMapModal(onLocationSelected) {
     searchOverlay.style.display = "none";
   });
 
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+      searchOverlay.style.display = "none";
+    }
+  });
+
   function placeMarker(lat, lon, nameLabel) {
     if (currentMarker) {
       map.removeLayer(currentMarker);
     }
     currentMarker = L.marker([lat, lon]).addTo(map);
 
-    const popupContent = `
-            <div style="text-align: center; color: #000;">
-                <div style="font-weight: 600; margin-bottom: 4px;" id="popup-loc-name">${nameLabel}</div>
-                <div style="font-size: 11px; margin-bottom: 8px; color: #666;">${lat.toFixed(4)}, ${lon.toFixed(4)}</div>
-                <button id="popup-go-btn" style="background: #3b82f6; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;">Ir</button>
-            </div>
-        `;
+    const isLoading = nameLabel === "Cargando..." || nameLabel === t("config.loading");
 
-    const attachGoBtnListener = () => {
-      const goBtn = document.getElementById("popup-go-btn");
-      if (goBtn) {
-        goBtn.onclick = () => {
-          const finalName = document.getElementById("popup-loc-name").innerText;
-          document.getElementById("map-location-modal").style.display = "none";
-          document.getElementById("map-search-overlay").style.display = "none";
-          onLocationSelected(lat, lon, finalName);
-        };
-      }
+    const div = document.createElement("div");
+    div.style.textAlign = "center";
+    div.style.color = "#000";
+    div.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 4px;" id="popup-loc-name">${nameLabel}</div>
+        <div style="font-size: 11px; margin-bottom: 8px; color: #666;">${lat.toFixed(4)}, ${lon.toFixed(4)}</div>
+    `;
+    
+    // Contenedor para botones
+    const btnContainer = document.createElement("div");
+    btnContainer.style.display = "flex";
+    btnContainer.style.gap = "8px";
+    btnContainer.style.justifyContent = "center";
+    btnContainer.style.marginTop = "4px";
+
+    const goBtn = document.createElement("button");
+    goBtn.id = "popup-go-btn-id";
+    goBtn.textContent = "Ir";
+    goBtn.style.cssText =
+      "background: #3b82f6; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; display: flex; align-items: center;";
+      
+    if (isLoading) {
+      goBtn.disabled = true;
+      goBtn.style.opacity = "0.5";
+      goBtn.style.cursor = "not-allowed";
+    }
+
+    goBtn.onclick = () => {
+      const nameEl = div.querySelector("#popup-loc-name");
+      const finalName = nameEl ? nameEl.innerText : nameLabel;
+      document.getElementById("map-location-modal").style.display = "none";
+      document.getElementById("map-search-overlay").style.display = "none";
+      onLocationSelected(lat, lon, finalName);
     };
 
-    currentMarker.on("popupopen", attachGoBtnListener);
-    currentMarker.bindPopup(popupContent).openPopup();
-    setTimeout(attachGoBtnListener, 50);
+    const favBtn = document.createElement("button");
+    favBtn.id = "popup-fav-btn-id";
+    favBtn.title = "Añadir a favoritas";
+    favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: \'FILL\' 0;">add_circle</span>';
+    favBtn.style.cssText =
+      "background: transparent; color: #eab308; border: 1px solid #eab308; padding: 6px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;";
+    
+    if (isLoading) {
+      favBtn.disabled = true;
+      favBtn.style.opacity = "0.5";
+      favBtn.style.cursor = "not-allowed";
+    }
+
+    favBtn.onclick = async () => {
+      const nameEl = div.querySelector("#popup-loc-name");
+      const finalName = nameEl ? nameEl.innerText : nameLabel;
+      const { favoritesService } = await import('../services/FavoritesService.js');
+      await favoritesService.add(lat, lon, finalName);
+      
+      // Feedback visual
+      const icon = favBtn.querySelector('span');
+      icon.style.fontVariationSettings = "'FILL' 1";
+      setTimeout(() => {
+         icon.style.fontVariationSettings = "'FILL' 0";
+      }, 1000);
+    };
+
+    btnContainer.appendChild(goBtn);
+    btnContainer.appendChild(favBtn);
+    div.appendChild(btnContainer);
+
+    currentMarker.bindPopup(div).openPopup();
   }
 
   async function resolveLocationName(lat, lon) {
@@ -113,6 +166,20 @@ export function initMapModal(onLocationSelected) {
       const nameEl = document.getElementById("popup-loc-name");
       if (nameEl) {
         nameEl.innerText = name;
+        
+        const goBtn = document.getElementById("popup-go-btn-id");
+        if (goBtn) {
+          goBtn.disabled = false;
+          goBtn.style.opacity = "1";
+          goBtn.style.cursor = "pointer";
+        }
+        
+        const favBtn = document.getElementById("popup-fav-btn-id");
+        if (favBtn) {
+          favBtn.disabled = false;
+          favBtn.style.opacity = "1";
+          favBtn.style.cursor = "pointer";
+        }
       } else {
         // If popup was closed but we wanted to update the marker's bind
         placeMarker(lat, lon, name);
@@ -176,7 +243,7 @@ export function initMapModal(onLocationSelected) {
             "No se pudo obtener la ubicación. Verifica los permisos de tu navegador o dispositivo.",
         );
       },
-      { timeout: 15000, enableHighAccuracy: true, maximumAge: 0 },
+      { timeout: 30000, enableHighAccuracy: false, maximumAge: 60000 },
     );
   });
 
@@ -208,7 +275,7 @@ export function initMapModal(onLocationSelected) {
 
   async function fetchMapSuggestions(query) {
     try {
-      const results = await geoService.searchLocation(query);
+      const results = await geoService.searchLocation(query, 4);
       suggestionsBox.innerHTML = "";
       if (results.length > 0) {
         results.forEach((loc) => {
@@ -216,9 +283,33 @@ export function initMapModal(onLocationSelected) {
           div.style.padding = "12px";
           div.style.cursor = "pointer";
           div.style.borderBottom = "1px solid var(--grid-color)";
+          div.style.display = "flex";
+          div.style.alignItems = "center";
+          div.style.gap = "8px";
 
+          const favBtn = document.createElement("button");
+          favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: \'FILL\' 0;">add_circle</span>';
+          favBtn.style.cssText = "background: transparent; color: #eab308; border: none; padding: 4px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;";
+          
           const admin1Str = loc.admin1 || "";
           const countryStr = loc.country || "";
+          const nameParts = [loc.name];
+          if (admin1Str) nameParts.push(admin1Str);
+          if (countryStr) nameParts.push(countryStr);
+          const fullName = nameParts.join(", ");
+
+          favBtn.onclick = async (e) => {
+             e.stopPropagation();
+             const { favoritesService } = await import('../services/FavoritesService.js');
+             await favoritesService.add(loc.latitude, loc.longitude, fullName);
+             const icon = favBtn.querySelector('span');
+             icon.style.fontVariationSettings = "'FILL' 1";
+             setTimeout(() => icon.style.fontVariationSettings = "'FILL' 0", 1000);
+          };
+
+          const textWrapper = document.createElement("div");
+          textWrapper.style.flex = "1";
+
           const adminParts = [];
           if (admin1Str) adminParts.push(admin1Str);
           if (countryStr) adminParts.push(countryStr);
@@ -227,14 +318,12 @@ export function initMapModal(onLocationSelected) {
             adminParts.length > 0
               ? `<span style="font-size:12px; color:var(--text-secondary);">(${adminParts.join(", ")})</span>`
               : "";
-          div.innerHTML = `<strong style="color:var(--text-primary);">${loc.name}</strong> ${admin}`;
+          textWrapper.innerHTML = `<strong style="color:var(--text-primary);">${loc.name}</strong> ${admin}`;
+
+          div.appendChild(favBtn);
+          div.appendChild(textWrapper);
 
           div.onclick = () => {
-            const nameParts = [loc.name];
-            if (admin1Str) nameParts.push(admin1Str);
-            if (countryStr) nameParts.push(countryStr);
-            const fullName = nameParts.join(", ");
-
             map.setView([loc.latitude, loc.longitude], 10);
             placeMarker(loc.latitude, loc.longitude, fullName);
 

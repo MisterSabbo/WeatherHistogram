@@ -132,6 +132,26 @@
               >Ubicación</span
             >
           </button>
+          <button
+            id="main-current-location-btn"
+            title="Mi Ubicación"
+            data-i18n-title="map.myLocationBtn"
+            style="
+              background: var(--bg-color);
+              border: 1px solid var(--grid-color);
+              color: var(--text-primary);
+              border-radius: 8px;
+              padding: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              height: 36px;
+              width: 36px;
+            "
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px">my_location</span>
+          </button>
         </div>
 
         <div class="controls-right">
@@ -1130,6 +1150,66 @@
       </div>
     </div>
 
+    <!-- Favorites Modal -->
+    <div
+      id="favorites-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 6000;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      "
+    >
+      <div
+        style="
+          position: relative;
+          background: var(--card-bg);
+          border: 1px solid var(--grid-color);
+          border-radius: 12px;
+          padding: 24px;
+          width: 100%;
+          max-width: 400px;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        "
+      >
+        <button
+          id="close-favorites-btn"
+          style="
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-right: 24px;">
+          <h2 data-i18n="map.favorites" style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Favoritos</h2>
+        </div>
+        
+        <div id="favorites-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+           <!-- Lista generada dinámicamente -->
+        </div>
+      </div>
+    </div>
+
     <!-- Map Location Modal -->
     <div
       id="map-location-modal"
@@ -1230,9 +1310,9 @@
         "
       >
         <button
-          id="map-toggle-search-btn"
-          title="Buscar Ubicación"
-          data-i18n-title="map.searchBtn"
+          id="close-map-modal-btn"
+          title="Cerrar"
+          data-i18n-title="map.closeBtn"
           style="
             background: transparent;
             border: none;
@@ -1245,7 +1325,25 @@
           "
         >
           <span class="material-symbols-outlined" style="font-size: 24px"
-            >search</span
+            >close</span
+          >
+        </button>
+        <button
+          id="map-favorites-btn"
+          title="Favoritos"
+          style="
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 4px;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 24px"
+            >book</span
           >
         </button>
         <button
@@ -1268,9 +1366,9 @@
           >
         </button>
         <button
-          id="close-map-modal-btn"
-          title="Cerrar"
-          data-i18n-title="map.closeBtn"
+          id="map-toggle-search-btn"
+          title="Buscar Ubicación"
+          data-i18n-title="map.searchBtn"
           style="
             background: transparent;
             border: none;
@@ -1283,7 +1381,7 @@
           "
         >
           <span class="material-symbols-outlined" style="font-size: 24px"
-            >close</span
+            >search</span
           >
         </button>
       </div>
@@ -1366,7 +1464,7 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.5.0</span>
+            <span id="app-version-label">v1.6.1</span>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
             <strong data-i18n="config.repository">Repositorio:</strong> <br /><a

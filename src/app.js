@@ -21,6 +21,7 @@ import { drawGrid, drawDayNames, drawAxes } from './render/GridRenderer.js';
 import { drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunMarkersOnCanvas, drawSunnyBackground, drawNightOverlay, drawNightShadow } from './render/BackgroundRenderer.js';
 import { drawStickman } from './render/StickmanRenderer.js';
 import { initMapModal } from './ui/MapSelector.js';
+import { initFavoritesModal } from './ui/FavoritesModal.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -385,6 +386,25 @@ let weatherCache = new Map();
                 updateLocationUI();
                 await loadWeather();
             });
+
+            initFavoritesModal(async (lat, lon, name) => {
+                state.lat = lat;
+                state.lon = lon;
+                state.locationName = name;
+                updateLocationUI();
+                await loadWeather();
+            });
+
+            // Agrega botón principal para mi ubicación
+            const mainLocBtn = document.getElementById('main-current-location-btn');
+            if (mainLocBtn) {
+                mainLocBtn.addEventListener('click', async () => {
+                    const originalHTML = mainLocBtn.innerHTML;
+                    mainLocBtn.innerHTML = '<span class="loader" style="width:16px;height:16px;border-width:2px;display:block;"></span>';
+                    await useMyLocation(true);
+                    mainLocBtn.innerHTML = originalHTML;
+                });
+            }
 
             // Initialize UV interaction block once
             const canvasWrapper = document.getElementById('canvas-wrapper');
@@ -1001,7 +1021,8 @@ let weatherCache = new Map();
         async function useMyLocation(force = false) {
             if (!force) {
                 const loc = await storageService.get('lastLocation');
-                if (loc && loc.lat && loc.lon) {
+                const isDefault = loc && Math.abs(loc.lat - DEFAULT_COORDS.lat) < 0.001 && Math.abs(loc.lon - DEFAULT_COORDS.lon) < 0.001;
+                if (loc && loc.lat && loc.lon && !isDefault) {
                     state.lat = loc.lat;
                     state.lon = loc.lon;
                     state.locationName = loc.name || "Ubicación Guardada";
@@ -1077,7 +1098,7 @@ let weatherCache = new Map();
             return new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
                     reject(new Error("Timeout obteniendo ubicación"));
-                }, 8000);
+                }, 4000);
 
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
@@ -1088,7 +1109,7 @@ let weatherCache = new Map();
                         clearTimeout(timeout);
                         reject(err);
                     },
-                    { timeout: 7000, enableHighAccuracy: false }
+                    { timeout: 3500, enableHighAccuracy: false, maximumAge: 60000 }
                 );
             });
         }

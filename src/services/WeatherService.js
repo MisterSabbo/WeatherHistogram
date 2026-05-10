@@ -11,8 +11,8 @@ export class WeatherService {
         console.log("Fetching weather with:", forecastUrl, aqiUrl);
 
         const [forecastRes, aqiRes] = await Promise.all([
-            fetch(forecastUrl, { signal }),
-            fetch(aqiUrl, { signal })
+            fetch(forecastUrl, { signal, cache: 'reload' }),
+            fetch(aqiUrl, { signal, cache: 'reload' })
         ]);
 
         if (!forecastRes.ok || !aqiRes.ok) {

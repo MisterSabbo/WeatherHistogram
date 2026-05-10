@@ -8,7 +8,15 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS))
+      .then(async (cache) => {
+        for (const asset of ASSETS) {
+          try {
+            await cache.add(asset);
+          } catch (e) {
+            console.warn("[SW] Failed to cache asset:", asset, e);
+          }
+        }
+      })
       .then(() => self.skipWaiting()),
   );
 });
