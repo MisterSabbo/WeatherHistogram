@@ -686,27 +686,85 @@ let weatherCache = new Map();
                     });
                 }
 
+                // Function to show confirm modal
+                const showConfirm = (title, message, onOk) => {
+                    const modal = document.getElementById('confirm-modal');
+                    const titleEl = document.getElementById('confirm-title');
+                    const msgEl = document.getElementById('confirm-message');
+                    const cancelBtn = document.getElementById('confirm-cancel-btn');
+                    const okBtn = document.getElementById('confirm-ok-btn');
+                    
+                    titleEl.textContent = title;
+                    msgEl.textContent = message;
+                    
+                    cancelBtn.textContent = t('config.cancel') || 'Cancelar';
+                    okBtn.textContent = t('config.accept') || 'Aceptar';
+                    
+                    const newOk = okBtn.cloneNode(true);
+                    okBtn.parentNode.replaceChild(newOk, okBtn);
+                    const newCancel = cancelBtn.cloneNode(true);
+                    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                    
+                    modal.style.display = 'flex';
+                    
+                    newCancel.addEventListener('click', () => {
+                        modal.style.display = 'none';
+                    });
+                    
+                    newOk.addEventListener('click', () => {
+                        modal.style.display = 'none';
+                        onOk();
+                    });
+                };
+
                 // Force refresh
                 const forceRefreshBtn = document.getElementById('force-refresh-btn');
                 if (forceRefreshBtn) {
-                    forceRefreshBtn.addEventListener('click', async () => {
-                        // Keep userPreferences via IndexedDB (don't clear it!), but clear standard items
-                        weatherCache.clear();
-                        if ('caches' in window) {
-                            try {
-                                const cacheNames = await caches.keys();
-                                await Promise.all(cacheNames.map(name => caches.delete(name)));
-                            } catch(e) { console.warn(e); }
-                        }
-                        if ('serviceWorker' in navigator) {
-                            try {
-                                const registrations = await navigator.serviceWorker.getRegistrations();
-                                for (let reg of registrations) {
-                                    await reg.unregister();
+                    forceRefreshBtn.addEventListener('click', () => {
+                        showConfirm(
+                            t('config.clearCache') || "Limpiar caché", 
+                            t('config.clearCacheMsg') || "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?", 
+                            async () => {
+                                weatherCache.clear();
+                                if ('caches' in window) {
+                                    try {
+                                        const cacheNames = await caches.keys();
+                                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                                    } catch(e) { console.warn(e); }
                                 }
-                            } catch(e) { console.warn(e); }
-                        }
-                        window.location.reload(true);
+                                if ('serviceWorker' in navigator) {
+                                    try {
+                                        const registrations = await navigator.serviceWorker.getRegistrations();
+                                        for (let reg of registrations) {
+                                            await reg.unregister();
+                                        }
+                                    } catch(e) { console.warn(e); }
+                                }
+                                window.location.reload(true);
+                            }
+                        );
+                    });
+                }
+
+                // Clear persisted data
+                const clearDataBtn = document.getElementById('clear-data-btn');
+                if (clearDataBtn) {
+                    clearDataBtn.addEventListener('click', () => {
+                        showConfirm(
+                            t('config.clearData') || "Borrar datos guardados", 
+                            t('config.clearDataMsg') || "¿Estás seguro de que quieres eliminar todos los datos persistentes (favoritos, configuraciones)? Esta acción no se puede deshacer.", 
+                            async () => {
+                                const { favoritesService } = await import('./services/FavoritesService.js');
+                                await favoritesService.clear();
+                                try {
+                                    indexedDB.deleteDatabase("WeatherHistDB");
+                                } catch(e) {}
+                                try {
+                                    localStorage.clear();
+                                } catch(e) {}
+                                window.location.reload(true);
+                            }
+                        );
                     });
                 }
 

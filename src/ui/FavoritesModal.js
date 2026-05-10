@@ -70,11 +70,12 @@ export function initFavoritesModal(onSelect) {
             nameDiv.style.minWidth = '0';
             
             const parts = fav.originName.split(',').map(s => s.trim());
-            const city = parts[0] || 'Ubicación Desconocida';
-            const rest = parts.slice(1).join(', ') || '';
+            const city = parts[0] ? parts[0].trim() : 'Ubicación Desconocida';
+            const rest = parts.slice(1).map(s => s.trim()).filter(s => s).join(', ');
 
             const aliasDisplay = document.createElement('div');
-            aliasDisplay.textContent = fav.alias || city;
+            // If alias matches originName (or if no alias), show city
+            aliasDisplay.textContent = (fav.alias && fav.alias !== fav.originName) ? fav.alias : city;
             aliasDisplay.style.cssText = `
                 width: 100%;
                 color: var(--text-primary);
@@ -86,11 +87,12 @@ export function initFavoritesModal(onSelect) {
             `;
             
             const subName = document.createElement('div');
-            subName.textContent = rest;
+            // If alias is set and differs from originName, show the full originName. Otherwise show 'rest'.
+            subName.textContent = (fav.alias && fav.alias !== fav.originName) ? fav.originName : rest;
             subName.style.cssText = 'font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
             
             nameDiv.appendChild(aliasDisplay);
-            if (rest) nameDiv.appendChild(subName);
+            if (subName.textContent) nameDiv.appendChild(subName);
 
             const actionsDiv = document.createElement('div');
             actionsDiv.style.display = 'flex';
@@ -104,10 +106,49 @@ export function initFavoritesModal(onSelect) {
                 editNameBtn.style.cssText = 'background: transparent; color: var(--text-primary); border: 1px solid var(--grid-color); padding: 6px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
                 editNameBtn.onclick = (e) => {
                     e.stopPropagation();
-                    const newAlias = prompt(t('config.edit') || "Editar nombre", fav.alias || city);
-                    if (newAlias !== null && newAlias.trim() !== '') {
-                        favoritesService.updateAlias(index, newAlias.trim()).then(renderFavorites);
+                    const promptModal = document.getElementById('prompt-modal');
+                    const promptInput = document.getElementById('prompt-input');
+                    const promptCancel = document.getElementById('prompt-cancel-btn');
+                    const promptOk = document.getElementById('prompt-ok-btn');
+                    const promptTitle = document.getElementById('prompt-title');
+                    
+                    if (!promptModal) {
+                        console.error('Prompt modal not found');
+                        return;
                     }
+                    
+                    promptTitle.textContent = t('config.edit') || "Editar nombre";
+                    promptInput.value = (fav.alias && fav.alias !== fav.originName) ? fav.alias : city;
+                    promptCancel.textContent = t('config.cancel') || 'Cancelar';
+                    promptOk.textContent = t('config.accept') || 'Aceptar';
+                    
+                    promptModal.style.display = 'flex';
+                    promptInput.focus();
+                    
+                    // cleanup old listeners
+                    const newOk = promptOk.cloneNode(true);
+                    promptOk.parentNode.replaceChild(newOk, promptOk);
+                    const newCancel = promptCancel.cloneNode(true);
+                    promptCancel.parentNode.replaceChild(newCancel, promptCancel);
+                    
+                    newCancel.onclick = () => { promptModal.style.display = 'none'; };
+                    newOk.onclick = () => {
+                        const newAlias = promptInput.value;
+                        if (newAlias !== null && newAlias.trim() !== '') {
+                            favoritesService.updateAlias(index, newAlias.trim()).then(() => {
+                                promptModal.style.display = 'none';
+                                renderFavorites().then(() => {
+                                    // Make sure we keep the edit mode active
+                                    if(!isEditMode) {
+                                        isEditMode = true; 
+                                        renderFavorites();
+                                    }
+                                });
+                            });
+                        } else {
+                            promptModal.style.display = 'none';
+                        }
+                    };
                 };
 
                 const delBtn = document.createElement('button');
@@ -162,29 +203,22 @@ export function initFavoritesModal(onSelect) {
             listContainer.appendChild(card);
         });
 
-        // Toggle edit mode button at bottom
-        const toggleEditBtnContainer = document.createElement('div');
-        toggleEditBtnContainer.style.cssText = 'text-align: center; margin-top: auto; padding-top: 16px;';
-        
-        const toggleEditBtn = document.createElement('button');
-        toggleEditBtn.innerHTML = isEditMode 
-            ? '<span class="material-symbols-outlined" style="font-size: 18px;">check</span> <span data-i18n="config.done">Hecho</span>'
-            : '<span class="material-symbols-outlined" style="font-size: 18px;">edit</span> <span data-i18n="config.edit">Editar</span>';
-        
-        toggleEditBtn.style.cssText = 'background: transparent; border: 1px solid var(--grid-color); color: var(--text-primary); border-radius: 8px; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; width: 100%; max-width: 200px;';
-        
-        toggleEditBtn.onclick = () => {
-            isEditMode = !isEditMode;
-            renderFavorites();
-        };
-
-        toggleEditBtnContainer.appendChild(toggleEditBtn);
-        // Translate button text manually as it's generated dynamically
-        const spanText = toggleEditBtn.querySelector('span[data-i18n]');
-        if (spanText) {
-            spanText.textContent = isEditMode ? (t('config.done') || 'Hecho') : (t('config.edit') || 'Editar');
+        // Toggle edit mode button at bottom has been moved to HTML overlay
+        const toggleEditBtn = document.getElementById('toggle-edit-favorites-btn');
+        if (toggleEditBtn) {
+            toggleEditBtn.innerHTML = isEditMode 
+                ? '<span class="material-symbols-outlined" style="font-size: 18px;">check</span> <span data-i18n="config.done">Hecho</span>'
+                : '<span class="material-symbols-outlined" style="font-size: 18px;">edit</span> <span data-i18n="config.edit">Editar</span>';
+            
+            toggleEditBtn.onclick = () => {
+                isEditMode = !isEditMode;
+                renderFavorites();
+            };
+            
+            const spanText = toggleEditBtn.querySelector('span[data-i18n]');
+            if (spanText) {
+                spanText.textContent = isEditMode ? (t('config.done') || 'Hecho') : (t('config.edit') || 'Editar');
+            }
         }
-
-        listContainer.appendChild(toggleEditBtnContainer);
     }
 }

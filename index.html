@@ -1207,11 +1207,16 @@
           <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
         </button>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-right: 24px;">
-          <h2 data-i18n="map.favorites" style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Favoritos</h2>
+          <h2 data-i18n="map.saved" style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Guardados</h2>
         </div>
         
         <div id="favorites-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
            <!-- Lista generada dinámicamente -->
+        </div>
+        <div id="favorites-actions" style="margin-top: 16px; border-top: 1px dashed var(--grid-color); padding-top: 16px; display: flex; justify-content: center;">
+          <button id="toggle-edit-favorites-btn" style="background: transparent; border: 1px solid var(--grid-color); color: var(--text-primary); border-radius: 8px; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; width: 100%; max-width: 200px;">
+             <!-- Content injected dynamically -->
+          </button>
         </div>
       </div>
     </div>
@@ -1969,29 +1974,75 @@
               </div>
             </div>
           </details>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--grid-color); padding: 12px 24px; background: var(--card-bg); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; gap: 12px;">
+           <button
+             id="force-refresh-btn"
+             title="Limpiar caché y recargar"
+             data-i18n-title="config.clearCache"
+             style="
+               flex: 1;
+               padding: 10px;
+               border-radius: 8px;
+               border: 1px solid var(--grid-color);
+               background: transparent;
+               color: var(--text-primary);
+               cursor: pointer;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               transition: background 0.2s;
+             "
+           >
+             <span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+           </button>
+           
+           <button
+             id="clear-data-btn"
+             title="Borrar datos guardados"
+             data-i18n-title="config.clearData"
+             style="
+               flex: 1;
+               padding: 10px;
+               border-radius: 8px;
+               border: 1px solid var(--grid-color);
+               background: transparent;
+               color: #ef4444;
+               cursor: pointer;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               transition: background 0.2s;
+             "
+           >
+             <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+           </button>
+        </div>
 
-          <button
-            id="force-refresh-btn"
-            style="
-              width: 100%;
-              padding: 10px;
-              border-radius: 8px;
-              border: none;
-              background: #ef4444;
-              color: white;
-              font-weight: 600;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 8px;
-            "
-          >
-            <span class="material-symbols-outlined" style="font-size: 18px"
-              >delete_history</span
-            >
-            <span data-i18n="config.clearCache">Limpiar Caché y Recargar</span>
-          </button>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6000; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 320px; padding: 24px; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center;">
+        <h3 id="confirm-title" style="margin-top: 0; margin-bottom: 12px; font-size: 1.2rem;">Confirmar</h3>
+        <p id="confirm-message" style="margin-bottom: 24px; font-size: 0.95rem; color: var(--text-secondary);"></p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="confirm-cancel-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cancelar</button>
+          <button id="confirm-ok-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: #ef4444; color: white; font-weight: bold; cursor: pointer;">Aceptar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="prompt-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6000; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 320px; padding: 24px; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <h3 id="prompt-title" style="margin-top: 0; margin-bottom: 16px; font-size: 1.2rem; text-align: center;">Editar</h3>
+        <input type="text" id="prompt-input" style="width: 100%; padding: 10px; margin-bottom: 24px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary); font-family: inherit; font-size: 1rem; outline: none; box-sizing: border-box;" />
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="prompt-cancel-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cancelar</button>
+          <button id="prompt-ok-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: #3b82f6; color: white; font-weight: bold; cursor: pointer;">Guardar</button>
         </div>
       </div>
     </div>
