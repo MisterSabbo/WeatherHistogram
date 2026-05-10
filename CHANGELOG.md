@@ -2,6 +2,17 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.6.4] - 2026-05-10
+### Bug Fixes & Refinements
+- **Reverse Geocoding Precision Enhancement**: Increased Nominatim querying precision to level `18` to flawlessly resolve exact coordinates and villages gracefully, directly overcoming previous imprecise larger-region fallbacks (e.g., retrieving Ferrol instead of Ares). 
+- **Popup Resolution Flow Integrity**: Rewrote the interactive Map's async pointer logic, explicitly isolating concurrent aborted queries from wrongly overwriting new marker names natively. Markers dynamically fetch and reflect full contextual names natively alongside the current location GPS action consistently centering and tracking correctly without jarring refreshes.
+
+## [v1.6.3] - 2026-05-10
+### Bug Fixes & Refinements
+- **Geo-Resolution Restore**: Reverted back to the robust Nominatim provider for reverse geocoding interactions optimally.
+- **Throttling Systems**: Introduced native 2-second rate-limiting queue controls to Nominatim reverse-geocode fetches, ensuring usage compliance (`<1req/s`) across concurrent or aggressive map clicks seamlessly.
+- **Map Selection Precision**: Increased geographical string accuracy explicitly on both the interactive popup and main dashboard interfaces, delivering thorough contextual locality naming (City, County, State, Country).
+
 ## [v1.6.2] - 2026-05-10
 ### Bug Fixes & Refinements
 - **Geo-resolution Expansion**: Substituted Nominatim for BigDataCloud fallback querying to systematically unblock reverse geocoding API CORS limitations entirely. Loading markers inside interactive maps now reliably resolve names.

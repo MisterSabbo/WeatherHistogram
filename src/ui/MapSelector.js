@@ -148,6 +148,13 @@ export function initMapModal(onLocationSelected) {
     try {
       const name = await geoService.reverseGeocode(lat, lon);
 
+      // Check if the marker the user clicked is still the one on these coordinates
+      const isCurrent = currentMarker && 
+                        Math.abs(currentMarker.getLatLng().lat - lat) < 0.0001 && 
+                        Math.abs(currentMarker.getLatLng().lng - lon) < 0.0001;
+      
+      if (!isCurrent) return;
+
       // Update popup if still open
       const nameEl = document.getElementById("popup-loc-name");
       if (nameEl) {
@@ -172,8 +179,13 @@ export function initMapModal(onLocationSelected) {
       }
     } catch (e) {
       console.warn("Reverse geocode error:", e);
+      const isCurrent = currentMarker && 
+                        Math.abs(currentMarker.getLatLng().lat - lat) < 0.0001 && 
+                        Math.abs(currentMarker.getLatLng().lng - lon) < 0.0001;
+      if (!isCurrent) return;
+
       const nameEl = document.getElementById("popup-loc-name");
-      if (nameEl) {
+      if (nameEl && e.message !== "Cancelled") {
         nameEl.innerText = "Ubicación Seleccionada";
         const goBtn = document.getElementById("popup-go-btn-id");
         if (goBtn) {
@@ -207,20 +219,14 @@ export function initMapModal(onLocationSelected) {
       '<span class="loader" style="width:16px;height:16px;border-width:2px;display:block;"></span>';
 
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-
-        let finalName = t("map.currentLocation") || "Ubicación actual";
-        try {
-          finalName = await geoService.reverseGeocode(lat, lon);
-        } catch (e) {
-          console.warn("Reverse geocode failed", e);
-        }
-
         currentLocBtn.innerHTML = originalContent;
+
         map.setView([lat, lon], 10);
-        placeMarker(lat, lon, finalName);
+        placeMarker(lat, lon, t("config.loading") || "Cargando...");
+        resolveLocationName(lat, lon);
       },
       (err) => {
         currentLocBtn.innerHTML = originalContent;
