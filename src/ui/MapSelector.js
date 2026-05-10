@@ -131,11 +131,10 @@ export function initMapModal(onLocationSelected) {
       await favoritesService.add(lat, lon, finalName);
       
       // Feedback visual
-      const icon = favBtn.querySelector('span');
-      icon.style.fontVariationSettings = "'FILL' 1";
-      setTimeout(() => {
-         icon.style.fontVariationSettings = "'FILL' 0";
-      }, 1000);
+      favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px; color: #22c55e;">check_circle</span>';
+      favBtn.disabled = true;
+      favBtn.style.cursor = "default";
+      favBtn.style.border = "1px solid #22c55e";
     };
 
     btnContainer.appendChild(goBtn);
@@ -147,20 +146,7 @@ export function initMapModal(onLocationSelected) {
 
   async function resolveLocationName(lat, lon) {
     try {
-      // Reverse geocoding can be done with nominatim or open-meteo if they have it
-      // GeoService doesn't have reverse geocoding right now, let's use nominatim directly
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-      );
-      if (!response.ok) throw new Error("Reverse geocoding failed");
-      const data = await response.json();
-      const name =
-        data.address.city ||
-        data.address.town ||
-        data.address.village ||
-        data.address.county ||
-        data.address.state ||
-        "Ubicación Desconocida";
+      const name = await geoService.reverseGeocode(lat, lon);
 
       // Update popup if still open
       const nameEl = document.getElementById("popup-loc-name");
@@ -187,7 +173,21 @@ export function initMapModal(onLocationSelected) {
     } catch (e) {
       console.warn("Reverse geocode error:", e);
       const nameEl = document.getElementById("popup-loc-name");
-      if (nameEl) nameEl.innerText = "Ubicación Seleccionada";
+      if (nameEl) {
+        nameEl.innerText = "Ubicación Seleccionada";
+        const goBtn = document.getElementById("popup-go-btn-id");
+        if (goBtn) {
+          goBtn.disabled = false;
+          goBtn.style.opacity = "1";
+          goBtn.style.cursor = "pointer";
+        }
+        const favBtn = document.getElementById("popup-fav-btn-id");
+        if (favBtn) {
+          favBtn.disabled = false;
+          favBtn.style.opacity = "1";
+          favBtn.style.cursor = "pointer";
+        }
+      }
     }
   }
 
@@ -213,27 +213,14 @@ export function initMapModal(onLocationSelected) {
 
         let finalName = t("map.currentLocation") || "Ubicación actual";
         try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-          );
-          if (response.ok) {
-            const data = await response.json();
-            finalName =
-              data.address.city ||
-              data.address.town ||
-              data.address.village ||
-              data.address.county ||
-              data.address.state ||
-              finalName;
-          }
+          finalName = await geoService.reverseGeocode(lat, lon);
         } catch (e) {
           console.warn("Reverse geocode failed", e);
         }
 
         currentLocBtn.innerHTML = originalContent;
-        document.getElementById("map-location-modal").style.display = "none";
-        document.getElementById("map-search-overlay").style.display = "none";
-        onLocationSelected(lat, lon, finalName);
+        map.setView([lat, lon], 10);
+        placeMarker(lat, lon, finalName);
       },
       (err) => {
         currentLocBtn.innerHTML = originalContent;
@@ -275,7 +262,7 @@ export function initMapModal(onLocationSelected) {
 
   async function fetchMapSuggestions(query) {
     try {
-      const results = await geoService.searchLocation(query, 4);
+      const results = await geoService.searchLocation(query, 5);
       suggestionsBox.innerHTML = "";
       if (results.length > 0) {
         results.forEach((loc) => {
@@ -302,9 +289,9 @@ export function initMapModal(onLocationSelected) {
              e.stopPropagation();
              const { favoritesService } = await import('../services/FavoritesService.js');
              await favoritesService.add(loc.latitude, loc.longitude, fullName);
-             const icon = favBtn.querySelector('span');
-             icon.style.fontVariationSettings = "'FILL' 1";
-             setTimeout(() => icon.style.fontVariationSettings = "'FILL' 0", 1000);
+             favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px; color: #22c55e;">check_circle</span>';
+             favBtn.disabled = true;
+             favBtn.style.cursor = "default";
           };
 
           const textWrapper = document.createElement("div");

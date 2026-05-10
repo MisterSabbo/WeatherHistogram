@@ -135,7 +135,7 @@ let weatherCache = new Map();
             const appWrapper = document.getElementById('app-wrapper');
 
             document.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#aqi-modal') && !e.target.closest('#pollen-modal') && !e.target.closest('#search-results')) {
+                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#aqi-modal') && !e.target.closest('#pollen-modal') && !e.target.closest('#search-results') && !e.target.closest('#map-location-modal') && !e.target.closest('#favorites-modal')) {
                     ptrStartY = e.touches[0].clientY;
                     ptrStartX = e.touches[0].clientX;
                     ptrDist = 0;
@@ -222,18 +222,29 @@ let weatherCache = new Map();
                     }
                     
                     const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
-                    if (originalLocation) {
-                        geoService.searchLocation(originalLocation, 1).then(results => {
-                            if (results.length > 0) {
-                                state.lat = results[0].latitude;
-                                state.lon = results[0].longitude;
-                                state.locationName = results[0].name + (results[0].admin1 ? `, ${results[0].admin1}` : "");
+                    const doRefresh = async () => {
+                        const overlay = document.getElementById('overlay');
+                        const statusText = document.getElementById('status-text');
+                        overlay.classList.remove('hidden');
+                        statusText.innerText = t('config.loading') || 'Cargando...';
+                        statusText.style.display = 'block';
+                        document.querySelector('.loader').style.display = 'block';
+                        document.getElementById('error-msg').style.display = 'none';
+                        try {
+                            if (originalLocation) {
+                                const results = await geoService.searchLocation(originalLocation, 1);
+                                if (results.length > 0) {
+                                    state.lat = results[0].latitude;
+                                    state.lon = results[0].longitude;
+                                    state.locationName = results[0].name + (results[0].admin1 ? `, ${results[0].admin1}` : "");
+                                }
                             }
-                            return fetchWeatherData(7, 7);
-                        }).finally(resetUI);
-                    } else {
-                        fetchWeatherData(7, 7).finally(resetUI);
-                    }
+                            await loadWeather();
+                        } finally {
+                            resetUI();
+                        }
+                    };
+                    doRefresh();
                 } else {
                     resetUI();
                 }

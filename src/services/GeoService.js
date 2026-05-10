@@ -12,10 +12,10 @@ export class GeoService {
     }
 
     async reverseGeocode(lat, lon) {
-        const res = await fetch(`${this.baseReverseURL}?lat=${lat}&lon=${lon}&format=json`);
+        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`);
         if (!res.ok) throw new Error("Error during reverse geocoding");
         const data = await res.json();
-        return data.address ? (data.address.city || data.address.town || data.address.village || data.address.county || "Ubicación actual") : "Ubicación actual";
+        return data.city || data.locality || data.principalSubdivision || "Ubicación actual";
     }
 }
 

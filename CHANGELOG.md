@@ -2,6 +2,13 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.6.2] - 2026-05-10
+### Bug Fixes & Refinements
+- **Geo-resolution Expansion**: Substituted Nominatim for BigDataCloud fallback querying to systematically unblock reverse geocoding API CORS limitations entirely. Loading markers inside interactive maps now reliably resolve names.
+- **Smart Location Fetching**: Relocated the pull-to-refresh mechanism ensuring it solely interacts within the main weather view. Introduced explicit visual overlays stating "Cargando..." to unify background data synchronization.
+- **Enhanced Map Actions**: Refined the "current location" routine inside the Map interface to explicitly re-focus and label the point intuitively instead of violently redirecting the entire application window dynamically.
+- **Visual Micro-Interactions**: Improved bookmark actions with instant confirmation state swapping (displaying a static green check post-addition). Increased search dropdown sizing optimally for 5 results alongside switching header location icons smoothly.
+
 ## [v1.6.1] - 2026-05-10
 ### Bug Fixes & Refinements
 - **Unified Location Name Resolution**: Rewrote location fetching to prioritize real names (`originName`) obtained directly from native Search or native Geocoding APIs universally.
