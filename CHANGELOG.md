@@ -2,6 +2,13 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.6.5] - 2026-05-10
+### Bug Fixes & Refinements
+- **Favorites UX Overhaul**: Redesigned the bookmarks panel to operate seamlessly via touch, directly loading favorite locations when tapped. Introduced a dedicated 'Edit Mode' toggle to manage deletions or renaming aliases, protecting active interactions. Smartly compartmentalized extensive geographical naming components (City vs Region vs Country) for extreme readability.
+- **Iconography Standardization**: Replaced the generalized "+" addition symbols across map tooltips and suggestions with linear bookmark outlines universally, aligning closely with typical bookmarking design metaphors.
+- **Top Bar Truncation**: Enforced strict text-ellipsis rendering over extensive string boundaries inside the core header. Disabled layout-breaking "text expansion" behavior dynamically in favor of hovering tooltips solely.
+- **Modal Visual Uniformity**: Migrated the minimal inline trailing close button design (top right negative offset X) natively deployed within SPF contexts uniformly towards primary system modals (Favorites, Info Panel).
+
 ## [v1.6.4] - 2026-05-10
 ### Bug Fixes & Refinements
 - **Reverse Geocoding Precision Enhancement**: Increased Nominatim querying precision to level `18` to flawlessly resolve exact coordinates and villages gracefully, directly overcoming previous imprecise larger-region fallbacks (e.g., retrieving Ferrol instead of Ares). 

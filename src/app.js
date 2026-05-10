@@ -954,14 +954,6 @@ let weatherCache = new Map();
                     }
                 }, { passive: true });
 
-                // Eventos de expansión de texto
-                document.getElementById('location-name').addEventListener('click', function() {
-                    this.classList.toggle('expanded');
-                });
-                document.getElementById('weather-summary').addEventListener('click', function() {
-                    this.classList.toggle('expanded');
-                });
-
                 document.addEventListener('click', () => {
                     if (window.innerWidth < 600) {
                         document.querySelectorAll('.custom-tooltip').forEach(t => {

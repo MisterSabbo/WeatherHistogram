@@ -1186,19 +1186,25 @@
           id="close-favorites-btn"
           style="
             position: absolute;
-            top: 12px;
-            right: 12px;
-            background: transparent;
-            border: none;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
             color: var(--text-primary);
             cursor: pointer;
-            padding: 4px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 0;
+            z-index: 10;
           "
         >
-          <span class="material-symbols-outlined">close</span>
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
         </button>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-right: 24px;">
           <h2 data-i18n="map.favorites" style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Favoritos</h2>
@@ -1423,10 +1429,10 @@
           id="close-info-btn"
           style="
             position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(128, 128, 128, 0.1);
-            border: none;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
             font-size: 20px;
             color: var(--text-primary);
             cursor: pointer;
@@ -1436,6 +1442,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 0;
             z-index: 10;
           "
         >
@@ -1464,7 +1472,7 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.6.4</span>
+            <span id="app-version-label">v1.6.5</span>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
             <strong data-i18n="config.repository">Repositorio:</strong> <br /><a

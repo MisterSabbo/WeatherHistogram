@@ -20,8 +20,17 @@ export function initMapModal(onLocationSelected) {
 
   let searchTimeout = null;
 
-  openBtn.addEventListener("click", () => {
+  openBtn.addEventListener("click", async () => {
     modal.style.display = "flex";
+    
+    // Check if user has favorites, if so automatically open the favorites modal on top of map
+    const { favoritesService } = await import('../services/FavoritesService.js');
+    const favs = await favoritesService.load();
+    if (favs && favs.length > 0) {
+       const mapFavBtn = document.getElementById("map-favorites-btn");
+       if (mapFavBtn) mapFavBtn.click();
+    }
+
     // Initialize map if it doesn't exist yet
     if (!map) {
       // Leaflet requires container to be visible before initializing size properly
@@ -114,7 +123,7 @@ export function initMapModal(onLocationSelected) {
     const favBtn = document.createElement("button");
     favBtn.id = "popup-fav-btn-id";
     favBtn.title = "Añadir a favoritas";
-    favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: \'FILL\' 0;">add_circle</span>';
+    favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: \'FILL\' 0;">bookmark</span>';
     favBtn.style.cssText =
       "background: transparent; color: #eab308; border: 1px solid #eab308; padding: 6px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;";
     
@@ -281,7 +290,7 @@ export function initMapModal(onLocationSelected) {
           div.style.gap = "8px";
 
           const favBtn = document.createElement("button");
-          favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: \'FILL\' 0;">add_circle</span>';
+          favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: \'FILL\' 0;">bookmark</span>';
           favBtn.style.cssText = "background: transparent; color: #eab308; border: none; padding: 4px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;";
           
           const admin1Str = loc.admin1 || "";

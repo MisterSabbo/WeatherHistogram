@@ -288,12 +288,6 @@
             transition: white-space 0.2s;
         }
 
-        #location-name.expanded {
-            white-space: normal;
-            overflow: visible;
-            text-overflow: clip;
-        }
-
         #weather-summary {
             font-size: 0.6rem;
             color: var(--text-secondary);
@@ -306,12 +300,6 @@
             text-overflow: ellipsis;
             cursor: pointer;
             transition: white-space 0.2s;
-        }
-
-        #weather-summary.expanded {
-            white-space: normal;
-            overflow: visible;
-            text-overflow: clip;
         }
 
         #current-time-display {
