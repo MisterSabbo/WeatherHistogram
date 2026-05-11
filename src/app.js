@@ -22,6 +22,7 @@ import { drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunMarkersOnCa
 import { drawStickman } from './render/StickmanRenderer.js';
 import { initMapModal } from './ui/MapSelector.js';
 import { initFavoritesModal } from './ui/FavoritesModal.js';
+import { initYearInPixels } from './ui/YearInPixels.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -169,6 +170,12 @@ let weatherCache = new Map();
                             if (ptrIndicator) {
                                 ptrIndicator.style.transition = 'none';
                                 ptrIndicator.style.transform = `translateY(${visualDist - 75}px)`;
+                                const ptrIcon = document.getElementById('ptr-icon');
+                                if (ptrIcon) {
+                                    const rotation = Math.min(360, (visualDist / 75) * 360);
+                                    ptrIcon.style.transform = `rotate(${rotation}deg)`;
+                                    ptrIcon.style.opacity = Math.min(1, visualDist / 40);
+                                }
                             }
                             if (appWrapper) {
                                 appWrapper.style.transition = 'none';
@@ -183,6 +190,13 @@ let weatherCache = new Map();
 
             document.addEventListener('touchend', () => {
                 const resetUI = () => {
+                    const ptrIcon = document.getElementById('ptr-icon');
+                    if (ptrIcon) {
+                        ptrIcon.dataset.spinning = 'false';
+                        if (ptrIcon.dataset.spinInterval) {
+                            clearInterval(parseInt(ptrIcon.dataset.spinInterval));
+                        }
+                    }
                     if (ptrIndicator) {
                         ptrIndicator.style.transition = 'transform 0.3s ease-out';
                         ptrIndicator.style.transform = `translateY(-100%)`;
@@ -194,6 +208,24 @@ let weatherCache = new Map();
                 };
 
                 if (ptrDist > 60 && state.lat && state.lon && !state.isFetching) {
+                    const ptrIcon = document.getElementById('ptr-icon');
+                    if (ptrIcon) {
+                        ptrIcon.style.transition = 'transform 0.5s linear';
+                        // Keep rotating
+                        ptrIcon.dataset.spinning = 'true';
+                        let spinDeg = 360;
+                        const spinInterval = setInterval(() => {
+                           if (ptrIcon.dataset.spinning !== 'true') {
+                               clearInterval(spinInterval);
+                               return;
+                           }
+                           spinDeg += 360;
+                           ptrIcon.style.transform = `rotate(${spinDeg}deg)`;
+                        }, 500);
+                        // Save interval id to stop it later
+                        ptrIcon.dataset.spinInterval = spinInterval;
+                    }
+
                     if (ptrIndicator) {
                         ptrIndicator.style.transition = 'transform 0.2s ease-out';
                         ptrIndicator.style.transform = `translateY(0px)`;
@@ -405,6 +437,8 @@ let weatherCache = new Map();
                 updateLocationUI();
                 await loadWeather();
             });
+
+            initYearInPixels();
 
             // Agrega botón principal para mi ubicación
             const mainLocBtn = document.getElementById('main-current-location-btn');

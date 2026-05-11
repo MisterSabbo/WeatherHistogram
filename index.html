@@ -63,16 +63,16 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       "
     >
-      <div
-        class="loader"
+      <span
+        id="ptr-icon"
+        class="material-symbols-outlined"
         style="
           display: block;
-          position: static;
-          width: 24px;
-          height: 24px;
-          border-width: 2px;
+          font-size: 28px;
+          color: var(--accent-precip);
+          transition: transform 0.1s;
         "
-      ></div>
+      >refresh</span>
       <span
         style="
           margin-left: 12px;
@@ -151,6 +151,26 @@
             "
           >
             <span class="material-symbols-outlined" style="font-size: 20px">my_location</span>
+          </button>
+          <button
+            id="year-in-pixels-btn"
+            title="Año en Píxeles"
+            data-i18n-title="nav.yearInPixelsBtn"
+            style="
+              background: var(--bg-color);
+              border: 1px solid var(--grid-color);
+              color: var(--accent-temp);
+              border-radius: 8px;
+              padding: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              height: 36px;
+              width: 36px;
+            "
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px">grid_view</span>
           </button>
         </div>
 
@@ -1478,7 +1498,7 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.6.8</span>
+            <span id="app-version-label">v1.7.0</span>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
             <strong data-i18n="config.repository">Repositorio:</strong> <br /><a
@@ -2066,6 +2086,41 @@
         <div style="padding: 16px 24px; border-top: 1px solid var(--grid-color); display: flex; gap: 12px; justify-content: flex-end;">
           <button id="changelog-close-btn" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cerrar</button>
           <button id="changelog-update-btn" style="padding: 10px 20px; border-radius: 8px; border: none; background: var(--accent-precip); color: white; font-weight: bold; cursor: pointer;">Actualizar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Year In Pixels Modal -->
+    <div id="yip-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--accent-temp)">grid_view</span>
+            <span data-i18n="config.yearInPixels">Año en Píxeles</span>
+          </h3>
+          <button id="close-yip-modal-btn" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer;"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);" data-i18n="config.location">Ubicación</label>
+              <select id="yip-location-select" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary);"></select>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);" data-i18n="config.parameter">Parámetro</label>
+              <select id="yip-param-select" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary);">
+                <option value="maxTemp">Temperatura Máxima</option>
+                <option value="minTemp">Temperatura Mínima</option>
+                <option value="precip">Precipitación</option>
+              </select>
+            </div>
+          </div>
+          <div id="yip-grid-container" style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 10px; background: var(--bg-color); border-radius: 8px; overflow-x: auto;">
+            <!-- Grid dynamically generated -->
+          </div>
+          <div id="yip-legend" style="display: flex; gap: 8px; justify-content: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; align-items: center; flex-wrap: wrap;">
+            <!-- Legend dynamically generated -->
+          </div>
         </div>
       </div>
     </div>

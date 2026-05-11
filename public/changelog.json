@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.7.0",
+    "changes": [
+      "Added visual tactile feedback for cards and buttons.",
+      "Added pull-to-refresh dynamic icon rotation feedback.",
+      "Enhanced map search results with country flags and subregions.",
+      "Added offline weather history saving utilizing IndexedDB (auto cleanup > 1 year).",
+      "Added 'Year in Pixels' feature to visualize stored history.",
+      "Improved UI and transitions for active daily cards."
+    ]
+  },
+  {
     "version": "1.6.8",
     "changes": [
       "Added version update detection mechanism.",

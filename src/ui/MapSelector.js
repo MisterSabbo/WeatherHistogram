@@ -310,6 +310,12 @@ export function initMapModal(onLocationSelected) {
 
           const textWrapper = document.createElement("div");
           textWrapper.style.flex = "1";
+          
+          let flagEmoji = "";
+          if (loc.country_code) {
+             const code = loc.country_code.toUpperCase();
+             flagEmoji = code.replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397)) + " ";
+          }
 
           const adminParts = [];
           if (admin1Str) adminParts.push(admin1Str);
@@ -319,10 +325,15 @@ export function initMapModal(onLocationSelected) {
             adminParts.length > 0
               ? `<span style="font-size:12px; color:var(--text-secondary);">(${adminParts.join(", ")})</span>`
               : "";
-          textWrapper.innerHTML = `<strong style="color:var(--text-primary);">${loc.name}</strong> ${admin}`;
+          textWrapper.innerHTML = `<div><strong style="color:var(--text-primary); font-size:1.1em;">${flagEmoji}${loc.name}</strong></div><div style="margin-top:2px;">${admin}</div>`;
 
-          div.appendChild(favBtn);
           div.appendChild(textWrapper);
+          div.appendChild(favBtn);
+          
+          // Tactile feedback
+          div.addEventListener('touchstart', () => { div.style.backgroundColor = 'var(--grid-color)'; }, {passive: true});
+          div.addEventListener('touchend', () => { div.style.backgroundColor = 'transparent'; });
+          div.addEventListener('touchcancel', () => { div.style.backgroundColor = 'transparent'; });
 
           div.onclick = () => {
             map.setView([loc.latitude, loc.longitude], 10);

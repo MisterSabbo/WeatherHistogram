@@ -41,7 +41,10 @@ export const translations = {
             coldThreshold: "Umbral de Frío (°C):",
             hotThreshold: "Umbral de Calor (°C):",
             windThreshold: "Umbral de Viento (km/h):",
-            cloudsThreshold: "Umbral de Nubes para Gafas (%):"
+            cloudsThreshold: "Umbral de Nubes para Gafas (%):",
+            yearInPixels: "Año en Píxeles",
+            location: "Ubicación",
+            parameter: "Parámetro"
         },
         theme: {
         },
@@ -72,7 +75,8 @@ export const translations = {
         },
         nav: {
             infoBtn: "Información y Ajustes",
-            changeViewBtn: "Cambiar vista"
+            changeViewBtn: "Cambiar vista",
+            yearInPixelsBtn: "Año en Píxeles"
         },
         topPanel: {
             loading: "Cargando...",
@@ -215,7 +219,10 @@ export const translations = {
             coldThreshold: "Cold Threshold (°C):",
             hotThreshold: "Hot Threshold (°C):",
             windThreshold: "Wind Threshold (km/h):",
-            cloudsThreshold: "Cloudiness threshold for sunglasses (%):"
+            cloudsThreshold: "Cloudiness threshold for sunglasses (%):",
+            yearInPixels: "Year in Pixels",
+            location: "Location",
+            parameter: "Parameter"
         },
         theme: {
         },
@@ -246,7 +253,8 @@ export const translations = {
         },
         nav: {
             infoBtn: "Info & Settings",
-            changeViewBtn: "Toggle view"
+            changeViewBtn: "Toggle view",
+            yearInPixelsBtn: "Year in Pixels"
         },
         topPanel: {
             loading: "Loading...",

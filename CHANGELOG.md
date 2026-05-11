@@ -2,6 +2,14 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.7.0] - 2026-05-11
+### Features & UX
+- **Tactile Feedback**: Implemented active states, scale transforms, and CSS gradients to provide responsive push-down feedback on UI components, buttons, and daily cards.
+- **Pull-To-Refresh Upgrade**: Introduced a dynamic SVG icon rotation that correlates natively with the user's drag distance before firing the refresh event.
+- **Map Refinement**: Appended visual unicode flags corresponding directly to `country_code` in map search results, drastically improving visual scanning when selecting identical regional names.
+- **Historical Database (StorageService)**: Implemented an additive caching mechanism using `IndexedDB` (`HistoryStore`). Forecast fetches natively append unseen data grouped by location, preserving historical conditions safely across app closures and retaining data continuously up to 1 year before auto-purging.
+- **Year In Pixels (YIP)**: Added a new visual grid reporting tool bound to the top action header. Users can seamlessly launch the YIP grid for any historically tracked location natively to identify thermal patterns (`maxTemp`, `minTemp`) mapping backwards 365 days.
+
 ## [v1.6.8] - 2026-05-11
 ### Updates & Notifications
 - **In-App Update System**: Implemented a comprehensive Service Worker update detection mechanism. Users now receive an elegant, non-intrusive bottom toast notification exactly when a new application version is successfully staged in the background.

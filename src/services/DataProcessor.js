@@ -2,6 +2,8 @@ import { state } from '../store.js';
 import { getLocale } from '../utils/i18n.js';
 import { generateDailyCards } from '../ui/DailyCards.js';
 
+import { storageService } from './StorageService.js';
+
 export function processData(forecastData, aqiData, centerOnCurrentTime) {
     if (!forecastData || !forecastData.hourly || !forecastData.hourly.time || !aqiData || !aqiData.hourly || !aqiData.hourly.time) {
         throw new Error("Datos de API incompletos o inválidos");
@@ -113,4 +115,56 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
     
     // Generate daily cards if the container exists
     generateDailyCards(centerOnCurrentTime);
+
+    saveHistoryData(state);
+}
+
+async function saveHistoryData(state) {
+    let locClean = state.locationName || '';
+    if (locClean.endsWith('*')) locClean = locClean.slice(0, -1);
+    if (!locClean || locClean === 'Ninguna' || locClean === 'Desconocido' || locClean === 'Unknown') return;
+    
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone: state.timezone });
+    
+    let history = await storageService.getHistory(locClean);
+    let changed = false;
+    
+    const pastHourly = state.hourlyData.filter(h => {
+        const dStr = new Date(h.time).toLocaleDateString('en-CA', { timeZone: state.timezone });
+        return dStr < todayStr;
+    });
+    
+    const pastDaily = state.dailyData.filter(d => {
+        const dStr = new Date(d.time).toLocaleDateString('en-CA', { timeZone: state.timezone });
+        return dStr < todayStr;
+    });
+
+    // Hashset for faster hourly lookup
+    const hourlyTimes = new Set(history.hourly.map(h => h.time));
+    pastHourly.forEach(h => {
+        if (!hourlyTimes.has(h.time)) {
+            history.hourly.push(h);
+            hourlyTimes.add(h.time);
+            changed = true;
+        }
+    });
+
+    const dailyTimes = new Set(history.daily.map(d => new Date(d.time).toLocaleDateString('en-CA', { timeZone: state.timezone })));
+    pastDaily.forEach(d => {
+        const dStr = new Date(d.time).toLocaleDateString('en-CA', { timeZone: state.timezone });
+        if (!dailyTimes.has(dStr)) {
+            history.daily.push(d);
+            dailyTimes.add(dStr);
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000);
+        history.daily = history.daily.filter(d => d.time >= oneYearAgo);
+        history.hourly = history.hourly.filter(h => h.time >= oneYearAgo);
+        
+        await storageService.setHistory(locClean, history);
+    }
 }

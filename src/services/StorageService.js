@@ -2,6 +2,7 @@ export class StorageService {
   constructor() {
     this.dbName = "WeatherHistDB";
     this.storeName = "userPreferences";
+    this.historyStoreName = "historyData";
     this.db = null;
   }
 
@@ -9,7 +10,7 @@ export class StorageService {
     if (this.db) return;
     return new Promise((resolve, reject) => {
       try {
-        const request = indexedDB.open(this.dbName, 1);
+        const request = indexedDB.open(this.dbName, 2);
         request.onerror = (e) => reject(request.error);
         request.onsuccess = (e) => {
           this.db = e.target.result;
@@ -19,6 +20,9 @@ export class StorageService {
           const db = e.target.result;
           if (!db.objectStoreNames.contains(this.storeName)) {
             db.createObjectStore(this.storeName);
+          }
+          if (!db.objectStoreNames.contains(this.historyStoreName)) {
+            db.createObjectStore(this.historyStoreName);
           }
         };
       } catch (e) {
@@ -67,6 +71,33 @@ export class StorageService {
         // ignore
       }
     }
+  }
+  async getHistory(locationName) {
+    try {
+      await this.init();
+      return new Promise((resolve, reject) => {
+        const transaction = this.db.transaction([this.historyStoreName], "readonly");
+        const store = transaction.objectStore(this.historyStoreName);
+        const request = store.get(locationName);
+        request.onsuccess = () => resolve(request.result || { hourly: [], daily: [] });
+        request.onerror = () => resolve({ hourly: [], daily: [] });
+      });
+    } catch(e) {
+      return { hourly: [], daily: [] };
+    }
+  }
+
+  async setHistory(locationName, pastData) {
+    try {
+      await this.init();
+      return new Promise((resolve, reject) => {
+        const transaction = this.db.transaction([this.historyStoreName], "readwrite");
+        const store = transaction.objectStore(this.historyStoreName);
+        const request = store.put(pastData, locationName);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch(e) {}
   }
 }
 
