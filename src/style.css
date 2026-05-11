@@ -647,6 +647,8 @@
         /* Contenedor de Scroll */
         #scroll-container {
             flex: 1;
+            display: flex;
+            flex-direction: column;
             overflow-x: auto;
             overflow-y: hidden;
             position: relative;
@@ -675,7 +677,7 @@
 
         #canvas-wrapper {
             position: relative;
-            height: 100%;
+            flex: 1 0 auto;
             min-height: 250px;
             width: 100%;
         }
@@ -694,7 +696,6 @@
             border-top: 1px solid var(--grid-color);
             position: relative;
             flex-shrink: 0;
-            margin-bottom: env(safe-area-inset-bottom);
         }
 
         .toggle-nav-btn {

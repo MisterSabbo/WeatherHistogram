@@ -35,10 +35,13 @@ export function initMapModal(onLocationSelected) {
     if (!map) {
       // Leaflet requires container to be visible before initializing size properly
       setTimeout(() => {
-        map = L.map("leaflet-map").setView(
+        map = L.map("leaflet-map", {
+          zoomControl: false
+        }).setView(
           [state.lat || 40.4167, state.lon || -3.70325],
           state.lat ? 10 : 2,
         );
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
           attribution: "© OpenStreetMap",

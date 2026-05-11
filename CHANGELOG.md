@@ -2,6 +2,13 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.6.7] - 2026-05-11
+### UI & Mobile First Fixes
+- **Histogram Height Expansion**: Fixed an implicit flex-height collapse rendering issue. Safari and modern mobile browsers will now accurately expand the `#scroll-container` and its inner `#canvas-wrapper` utilizing the entire available remaining screen real-estate instead of truncating to intermediate `min-height` values.
+- **Safe Area Insets (Notches & Home Indicators)**: Meticulously recalibrated `safe-area-inset` padding parameters. The Maps view search overlay is now automatically protected from bleeding into the top notch zones.
+- **Leaflet Overlay Restructuring**: Relocated the Leaflet interactive zoom controls natively to `bottom-left` resolving UI blockage with iOS notification banners and overlapping DOM nodes.
+- **Dynamic Mobile Padding**: Action bars at the bottom inherently adapt to variable safe-areas, avoiding unwanted clipping or double-pad spacing.
+
 ## [v1.6.6] - 2026-05-11
 ### Bug Fixes
 - **Map Geolocation Popups**: Resolved an issue where using the "My Location" button within the map view would hang infinitely on "Cargando..." due to DOM node replacement overlap during Leaflet's zoom/pan animations. Swapped ID-based mapping with Class-based NodeList iterations.
