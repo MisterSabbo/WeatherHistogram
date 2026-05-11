@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.6.8] - 2026-05-11
+### Updates & Notifications
+- **In-App Update System**: Implemented a comprehensive Service Worker update detection mechanism. Users now receive an elegant, non-intrusive bottom toast notification exactly when a new application version is successfully staged in the background.
+- **Smart Changelog Modal**: Introduced an automated changelog presentation layer. Tapping on "Ver Novedades" securely triggers a unified modal detailing explicit semantic versions and specific patch notes natively derived from `changelog.json`.
+- **Cache-Clearing Routine Integration**: Bound the changelog modal's final "Actualizar" action to the robust, pre-existing structural reset sequence (wiping SW registrations, HTTP caches, and performing a hard reload), ensuring a 100% clean boot execution when adapting new major/minor changes.
+
 ## [v1.6.7] - 2026-05-11
 ### UI & Mobile First Fixes
 - **Histogram Height Expansion**: Fixed an implicit flex-height collapse rendering issue. Safari and modern mobile browsers will now accurately expand the `#scroll-container` and its inner `#canvas-wrapper` utilizing the entire available remaining screen real-estate instead of truncating to intermediate `min-height` values.

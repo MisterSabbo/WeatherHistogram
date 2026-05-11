@@ -1,0 +1,26 @@
+[
+  {
+    "version": "1.6.8",
+    "changes": [
+      "Added version update detection mechanism.",
+      "Introduced toast notifications for available updates.",
+      "Added recent changes modal dialog on updates."
+    ]
+  },
+  {
+    "version": "1.6.7",
+    "changes": [
+      "Histogram Height Expansion: Fixed an implicit flex-height collapse rendering issue.",
+      "Safe Area Insets: Meticulously recalibrated safe-area-inset padding parameters.",
+      "Leaflet Overlay Restructuring: Relocated the Leaflet interactive zoom controls natively to bottom-left.",
+      "Dynamic Mobile Padding: Action bars at the bottom inherently adapt to variable safe-areas."
+    ]
+  },
+  {
+    "version": "1.6.6",
+    "changes": [
+      "Map Geolocation Popups: Resolved an issue where using the 'My Location' button within the map view would hang infinitely.",
+      "Cache Clearing Regression: Fixed a missing FavoritesService.clear() method implementation."
+    ]
+  }
+]

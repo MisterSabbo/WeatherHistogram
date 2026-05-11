@@ -2542,12 +2542,134 @@ let weatherCache = new Map();
         }
 
         if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker
-                    .register("./sw.js")
-                    .then(() => console.log("ServiceWorker registered: ./sw.js"))
-                    .catch((err) => {
-                        console.warn("SW registration failed:", err);
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("ServiceWorker registered: ./sw.js");
+                    
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    showUpdateToast();
+                                }
+                            });
+                        }
                     });
+                } catch(err) {
+                    console.warn("SW registration failed:", err);
+                }
+                
+                checkAppVersion();
             });
+        }
+        
+        async function checkAppVersion() {
+            try {
+                const response = await fetch('./version.json?t=' + Date.now());
+                if (!response.ok) return;
+                const data = await response.json();
+                const remoteVersion = data.version;
+                const localVersion = localStorage.getItem('appVersion');
+                
+                if (localVersion && remoteVersion && localVersion !== remoteVersion) {
+                    localStorage.setItem('appVersion', remoteVersion);
+                    showChangelogModal(remoteVersion);
+                } else if (!localVersion && remoteVersion) {
+                    localStorage.setItem('appVersion', remoteVersion);
+                }
+            } catch (error) {
+                console.warn('Failed to check app version:', error);
+            }
+        }
+        
+        function showUpdateToast() {
+            const toast = document.getElementById('update-toast');
+            const text = document.getElementById('update-toast-text');
+            const btn = document.getElementById('update-toast-btn');
+            
+            if (document.getElementById('changelog-modal').style.display === 'flex') {
+                return;
+            }
+            
+            if (toast && text && btn) {
+                text.textContent = t('config.newVersionAvailable') || 'Nueva versión disponible';
+                btn.textContent = t('config.whatsNew') || 'Ver Novedades';
+                
+                btn.onclick = () => {
+                    toast.style.display = 'none';
+                    checkAppVersion(); 
+                };
+                
+                toast.style.display = 'flex';
+            }
+        }
+        
+        async function showChangelogModal(version) {
+            const modal = document.getElementById('changelog-modal');
+            const titleEl = document.getElementById('changelog-title');
+            const listEl = document.getElementById('changelog-list');
+            const closeBtn = document.getElementById('changelog-close-btn');
+            const updateBtn = document.getElementById('changelog-update-btn');
+            
+            if (!modal || !titleEl || !listEl || !closeBtn || !updateBtn) return;
+            
+            const titleFormat = t('config.changelogTitle') || 'Novedades v{version}';
+            titleEl.textContent = titleFormat.replace('{version}', version);
+            
+            closeBtn.textContent = t('config.close') || 'Cerrar';
+            updateBtn.textContent = t('config.update') || 'Actualizar';
+            
+            try {
+                const response = await fetch('./changelog.json?t=' + Date.now());
+                if (!response.ok) throw new Error('Network response was not ok');
+                const changelogData = await response.json();
+                
+                const currentVersionData = changelogData.find(item => item.version === version);
+                const changes = currentVersionData ? currentVersionData.changes : [];
+                
+                listEl.innerHTML = '';
+                if (changes.length > 0) {
+                    changes.forEach(change => {
+                        const li = document.createElement('li');
+                        li.textContent = change;
+                        li.style.marginBottom = '8px';
+                        listEl.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.textContent = 'Actualizaciones menores y corrección de errores.';
+                    listEl.appendChild(li);
+                }
+                
+                closeBtn.onclick = () => { modal.style.display = 'none'; };
+                updateBtn.onclick = async () => {
+                    modal.style.display = 'none';
+                    await performClearCacheAndReload();
+                };
+                
+                modal.style.display = 'flex';
+            } catch(e) {
+                console.warn('Failed to fetch changelog:', e);
+            }
+        }
+        
+        async function performClearCacheAndReload() {
+            weatherCache.clear();
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                } catch(e) { console.warn(e); }
+            }
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let reg of registrations) {
+                        await reg.unregister();
+                    }
+                } catch(e) { console.warn(e); }
+            }
+            window.location.reload(true);
         }
