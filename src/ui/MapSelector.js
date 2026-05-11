@@ -89,7 +89,7 @@ export function initMapModal(onLocationSelected) {
     div.style.textAlign = "center";
     div.style.color = "#000";
     div.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 4px;" id="popup-loc-name">${nameLabel}</div>
+        <div style="font-weight: 600; margin-bottom: 4px;" class="popup-loc-name">${nameLabel}</div>
         <div style="font-size: 11px; margin-bottom: 8px; color: #666;">${lat.toFixed(4)}, ${lon.toFixed(4)}</div>
     `;
     
@@ -101,7 +101,7 @@ export function initMapModal(onLocationSelected) {
     btnContainer.style.marginTop = "4px";
 
     const goBtn = document.createElement("button");
-    goBtn.id = "popup-go-btn-id";
+    goBtn.className = "popup-go-btn";
     goBtn.textContent = "Ir";
     goBtn.style.cssText =
       "background: #3b82f6; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; display: flex; align-items: center;";
@@ -113,7 +113,7 @@ export function initMapModal(onLocationSelected) {
     }
 
     goBtn.onclick = () => {
-      const nameEl = div.querySelector("#popup-loc-name");
+      const nameEl = div.querySelector(".popup-loc-name");
       const finalName = nameEl ? nameEl.innerText : nameLabel;
       document.getElementById("map-location-modal").style.display = "none";
       document.getElementById("map-search-overlay").style.display = "none";
@@ -121,7 +121,7 @@ export function initMapModal(onLocationSelected) {
     };
 
     const favBtn = document.createElement("button");
-    favBtn.id = "popup-fav-btn-id";
+    favBtn.className = "popup-fav-btn";
     favBtn.title = "Añadir a favoritas";
     favBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: \'FILL\' 0;">bookmark</span>';
     favBtn.style.cssText =
@@ -134,7 +134,7 @@ export function initMapModal(onLocationSelected) {
     }
 
     favBtn.onclick = async () => {
-      const nameEl = div.querySelector("#popup-loc-name");
+      const nameEl = div.querySelector(".popup-loc-name");
       const finalName = nameEl ? nameEl.innerText : nameLabel;
       const { favoritesService } = await import('../services/FavoritesService.js');
       await favoritesService.add(lat, lon, finalName);
@@ -165,23 +165,21 @@ export function initMapModal(onLocationSelected) {
       if (!isCurrent) return;
 
       // Update popup if still open
-      const nameEl = document.getElementById("popup-loc-name");
-      if (nameEl) {
-        nameEl.innerText = name;
+      const nameEls = document.querySelectorAll(".popup-loc-name");
+      if (nameEls.length > 0) {
+        nameEls.forEach(el => el.innerText = name);
         
-        const goBtn = document.getElementById("popup-go-btn-id");
-        if (goBtn) {
+        document.querySelectorAll(".popup-go-btn").forEach(goBtn => {
           goBtn.disabled = false;
           goBtn.style.opacity = "1";
           goBtn.style.cursor = "pointer";
-        }
+        });
         
-        const favBtn = document.getElementById("popup-fav-btn-id");
-        if (favBtn) {
+        document.querySelectorAll(".popup-fav-btn").forEach(favBtn => {
           favBtn.disabled = false;
           favBtn.style.opacity = "1";
           favBtn.style.cursor = "pointer";
-        }
+        });
       } else {
         // If popup was closed but we wanted to update the marker's bind
         placeMarker(lat, lon, name);
@@ -193,21 +191,19 @@ export function initMapModal(onLocationSelected) {
                         Math.abs(currentMarker.getLatLng().lng - lon) < 0.0001;
       if (!isCurrent) return;
 
-      const nameEl = document.getElementById("popup-loc-name");
-      if (nameEl && e.message !== "Cancelled") {
-        nameEl.innerText = "Ubicación Seleccionada";
-        const goBtn = document.getElementById("popup-go-btn-id");
-        if (goBtn) {
+      const nameEls = document.querySelectorAll(".popup-loc-name");
+      if (nameEls.length > 0 && e.message !== "Cancelled") {
+        nameEls.forEach(el => el.innerText = "Ubicación Seleccionada");
+        document.querySelectorAll(".popup-go-btn").forEach(goBtn => {
           goBtn.disabled = false;
           goBtn.style.opacity = "1";
           goBtn.style.cursor = "pointer";
-        }
-        const favBtn = document.getElementById("popup-fav-btn-id");
-        if (favBtn) {
+        });
+        document.querySelectorAll(".popup-fav-btn").forEach(favBtn => {
           favBtn.disabled = false;
           favBtn.style.opacity = "1";
           favBtn.style.cursor = "pointer";
-        }
+        });
       }
     }
   }

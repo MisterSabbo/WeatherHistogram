@@ -44,6 +44,11 @@ export class FavoritesService {
         this.cache.splice(newIndex, 0, item);
         await this.save();
     }
+
+    async clear() {
+        this.cache = [];
+        await this.save();
+    }
 }
 
 export const favoritesService = new FavoritesService();

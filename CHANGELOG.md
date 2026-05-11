@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.6.6] - 2026-05-11
+### Bug Fixes
+- **Map Geolocation Popups**: Resolved an issue where using the "My Location" button within the map view would hang infinitely on "Cargando..." due to DOM node replacement overlap during Leaflet's zoom/pan animations. Swapped ID-based mapping with Class-based NodeList iterations.
+- **Cache Clearing Regression**: Fixed a missing `FavoritesService.clear()` method implementation that caused unhandled promise rejections internally when users confirmed the deletion of all locally saved persistent data.
+
 ## [v1.6.5] - 2026-05-10
 ### Bug Fixes & Refinements
 - **Favorites UX Overhaul**: Redesigned the bookmarks panel to operate seamlessly via touch, directly loading favorite locations when tapped. Introduced a dedicated 'Edit Mode' toggle to manage deletions or renaming aliases, protecting active interactions. Smartly compartmentalized extensive geographical naming components (City vs Region vs Country) for extreme readability.
