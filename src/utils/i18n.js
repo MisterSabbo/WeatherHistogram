@@ -4,8 +4,16 @@ export const translations = {
             language: "Idioma / Language:",
             chartTheme: "Tema de Gráficas:",
             clearCache: "Limpiar Caché y Recargar",
+            clearData: "Borrar datos guardados",
+            confirmAction: "Confirmar",
+            cancel: "Cancelar",
+            accept: "Aceptar",
+            clearCacheMsg: "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?",
+            clearDataMsg: "¿Estás seguro de que quieres eliminar todos los datos persistentes (favoritos, configuraciones)? Esta acción no se puede deshacer.",
             loading: "Cargando...",
             version: "Versión:",
+            edit: "Editar",
+            done: "Hecho",
             repository: "Código fuente:",
             stickmanConfig: "Ajustar umbrales:",
             skinTypeConfig: "Ajustar fototipo:",
@@ -39,8 +47,23 @@ export const translations = {
         },
         search: {
             placeholder: "Buscar ciudad (ej: Madrid, Tokyo)...",
-            btn: "Buscar",
-            geoBtn: "Usar mi ubicación"
+            changeLocation: "Cambiar ubicación"
+        },
+        map: {
+            searchPlaceholder: "Buscar ubicación...",
+            searchBtn: "Buscar Ubicación",
+            myLocationBtn: "Mi Ubicación",
+            currentLocation: "Ubicación actual",
+            closeBtn: "Cerrar",
+            nowBtn: "Ir al momento actual",
+            geoNotSupported: "Geolocalización no soportada en este navegador.",
+            geoFailed: "No se pudo obtener la ubicación. Verifica los permisos de tu navegador o dispositivo.",
+            favorites: "Favoritos",
+            saved: "Guardados",
+            addFavorite: "Añadir a favoritas",
+            noFavorites: "No hay ubicaciones favoritas.",
+            goToLocation: "Ir a ubicación",
+            remove: "Eliminar"
         },
         nav: {
             infoBtn: "Información y Ajustes",
@@ -63,9 +86,6 @@ export const translations = {
             olive: "Olivo",
             ragweed: "Ambrosía",
             noData: "S/D"
-        },
-        map: {
-            nowBtn: "Ir al momento actual"
         },
         minimap: {
             past: "Pasado",
@@ -153,8 +173,16 @@ export const translations = {
             language: "Language / Idioma:",
             chartTheme: "Chart Theme:",
             clearCache: "Clear Cache & Reload",
+            clearData: "Clear saved data",
+            confirmAction: "Confirm",
+            cancel: "Cancel",
+            accept: "Accept",
+            clearCacheMsg: "Are you sure you want to clear the cache and reload the application?",
+            clearDataMsg: "Are you sure you want to clear all persistent data (favorites, settings)? This action cannot be undone.",
             loading: "Loading...",
             version: "Version:",
+            edit: "Edit",
+            done: "Done",
             repository: "Source Code:",
             stickmanConfig: "Adjust thresholds:",
             skinTypeConfig: "Adjust phototype:",
@@ -188,8 +216,23 @@ export const translations = {
         },
         search: {
             placeholder: "Search city (e.g. London, Tokyo)...",
-            btn: "Search",
-            geoBtn: "Use my location"
+            changeLocation: "Change location"
+        },
+        map: {
+            searchPlaceholder: "Search location...",
+            searchBtn: "Search Location",
+            myLocationBtn: "My Location",
+            currentLocation: "Current Location",
+            closeBtn: "Close",
+            nowBtn: "Go to current time",
+            geoNotSupported: "Geolocation is not supported by this browser.",
+            geoFailed: "Failed to get location. Please check your browser or device permissions.",
+            favorites: "Favorites",
+            saved: "Saved",
+            addFavorite: "Add to favorites",
+            noFavorites: "No favorite locations yet.",
+            goToLocation: "Go to location",
+            remove: "Remove"
         },
         nav: {
             infoBtn: "Info & Settings",
@@ -212,9 +255,6 @@ export const translations = {
             olive: "Olive",
             ragweed: "Ragweed",
             noData: "N/A"
-        },
-        map: {
-            nowBtn: "Go to current time"
         },
         minimap: {
             past: "Past",

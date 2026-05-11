@@ -2,10 +2,75 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.4.7] - 2026-05-07
+## [v1.6.6] - 2026-05-11
 ### Bug Fixes
+- **Map Geolocation Popups**: Resolved an issue where using the "My Location" button within the map view would hang infinitely on "Cargando..." due to DOM node replacement overlap during Leaflet's zoom/pan animations. Swapped ID-based mapping with Class-based NodeList iterations.
+- **Cache Clearing Regression**: Fixed a missing `FavoritesService.clear()` method implementation that caused unhandled promise rejections internally when users confirmed the deletion of all locally saved persistent data.
+
+## [v1.6.5] - 2026-05-10
+### Bug Fixes & Refinements
+- **Favorites UX Overhaul**: Redesigned the bookmarks panel to operate seamlessly via touch, directly loading favorite locations when tapped. Introduced a dedicated 'Edit Mode' toggle to manage deletions or renaming aliases, protecting active interactions. Smartly compartmentalized extensive geographical naming components (City vs Region vs Country) for extreme readability.
+- **Iconography Standardization**: Replaced the generalized "+" addition symbols across map tooltips and suggestions with linear bookmark outlines universally, aligning closely with typical bookmarking design metaphors.
+- **Top Bar Truncation**: Enforced strict text-ellipsis rendering over extensive string boundaries inside the core header. Disabled layout-breaking "text expansion" behavior dynamically in favor of hovering tooltips solely.
+- **Modal Visual Uniformity**: Migrated the minimal inline trailing close button design (top right negative offset X) natively deployed within SPF contexts uniformly towards primary system modals (Favorites, Info Panel).
+
+## [v1.6.4] - 2026-05-10
+### Bug Fixes & Refinements
+- **Reverse Geocoding Precision Enhancement**: Increased Nominatim querying precision to level `18` to flawlessly resolve exact coordinates and villages gracefully, directly overcoming previous imprecise larger-region fallbacks (e.g., retrieving Ferrol instead of Ares). 
+- **Popup Resolution Flow Integrity**: Rewrote the interactive Map's async pointer logic, explicitly isolating concurrent aborted queries from wrongly overwriting new marker names natively. Markers dynamically fetch and reflect full contextual names natively alongside the current location GPS action consistently centering and tracking correctly without jarring refreshes.
+
+## [v1.6.3] - 2026-05-10
+### Bug Fixes & Refinements
+- **Geo-Resolution Restore**: Reverted back to the robust Nominatim provider for reverse geocoding interactions optimally.
+- **Throttling Systems**: Introduced native 2-second rate-limiting queue controls to Nominatim reverse-geocode fetches, ensuring usage compliance (`<1req/s`) across concurrent or aggressive map clicks seamlessly.
+- **Map Selection Precision**: Increased geographical string accuracy explicitly on both the interactive popup and main dashboard interfaces, delivering thorough contextual locality naming (City, County, State, Country).
+
+## [v1.6.2] - 2026-05-10
+### Bug Fixes & Refinements
+- **Geo-resolution Expansion**: Substituted Nominatim for BigDataCloud fallback querying to systematically unblock reverse geocoding API CORS limitations entirely. Loading markers inside interactive maps now reliably resolve names.
+- **Smart Location Fetching**: Relocated the pull-to-refresh mechanism ensuring it solely interacts within the main weather view. Introduced explicit visual overlays stating "Cargando..." to unify background data synchronization.
+- **Enhanced Map Actions**: Refined the "current location" routine inside the Map interface to explicitly re-focus and label the point intuitively instead of violently redirecting the entire application window dynamically.
+- **Visual Micro-Interactions**: Improved bookmark actions with instant confirmation state swapping (displaying a static green check post-addition). Increased search dropdown sizing optimally for 5 results alongside switching header location icons smoothly.
+
+## [v1.6.1] - 2026-05-10
+### Bug Fixes & Refinements
+- **Unified Location Name Resolution**: Rewrote location fetching to prioritize real names (`originName`) obtained directly from native Search or native Geocoding APIs universally.
+- **Top Bar Relocations**: Promoted the "Current Location" button permanently to the top-right navigational bar, alongside the map search toggle, clearing visual clutter from the application's header.
+- **UI & Modal Polish**: Updated visual iconography for saving locations to favorites (`add_circle_outline`) inside map popups and autocomplete lists. Modal panels (Favorites, Configuration, Maps) now natively auto-close when clicking on their outer backdrop.
+- **Smart Launch Detection**: Startup routines will now strictly load via live GPS location whenever the locally stored location indicates system-defined defaults (e.g. Madrid), ensuring faster personal location loading on first load or wiped states.
+
+## [v1.6.0] - 2026-05-09
+### Features
+- **Favorites System**: Introduced a new Favorites Management System. Users can now bookmark locations directly from the map selection popup. These favorites are easily accessible via a new modal interface featuring alias renaming, drag/reordering, and deletion for streamlined access.
+- **Current Location Quick Access**: Restored the quick-action "My Location" shortcut button to the main app navigation header for instant location resets without opening the map modal.
+
+### Bug Fixes & Refinements
+- **Initial Load Data Refresh**: Replaced implicit browser HTTP caching rules with strict `cache: 'reload'` API fetches during application startups, assuring that loaded saved locations accurately fetch fresh forecasts.
+- **Map Interaction State Locks**: Disables action buttons (like "Go" or "Favorite") natively while a reverse-geocoding request is pending ("Cargando..."), preventing empty names or mislabeled location insertions entirely.
+
+## [v1.5.1] - 2026-05-09
+### Bug Fixes & Refinements
+- **Service Worker Cache Enhancement**: Further optimized the PWA Service Worker caching by isolating `cache.add` calls iteratively, preventing solitary asset download failures (e.g. 404 on manifest) from aborting the entire installation phase safely.
+- **Initial Geolocation Load Time**: Substantially decreased the first-paint timeout wait interval strictly given to the native navigator Geolocation API down to 4.0 seconds (and 3.5s for its high-accuracy internal resolver). This effectively ensures that users refusing location prompts or browsing inside restricted iframes do not face indefinite initial blank screens before falling back intelligently to defaults.
+- **Interactive Map Selection Improvements**: Rewrote the logic governing Leaflet's internal Popup DOM bindings. Bypassed HTML-string injection parsing entirely by explicitly appending a manually constructed `<div>` equipped with a deterministic click-handler reference. This fundamentally secures the "Ir" (Go) button action across mobile environments indiscriminately.
+- **Map Input Interface**: Swapped the "Search" and "Close" UI positioning to provide better tactile reach. Augmented search capabilities to output an enhanced limit of 4 localized query suggestions.
+
+## [v1.4.8] - 2026-05-08
+### Bug Fixes
+- **Service Worker Interception Error**: Addressed an issue where strict adblockers or broken cache promises would abort `fetch` requests towards Open-Meteo with `net::ERR_FAILED`, causing the app to fail gracefully loading data. Bypassed the Service Worker network-first interception entirely for external APIs to rely wholly on native browser CORS resolution.
+- **Interactive Map Location Enhancements**: The "Ubicación actual" (Current Location) button now successfully performs an entire operation stack: resolves GPS coordinates, executes a robust reverse-geocoding pass to automatically update the region namespace, cleanly closes the dialog modals, and actively triggers a fresh UI payload reload synchronously. Redesigned the "Ir" marker popup click callback binding leveraging a time-delayed attachment pattern to survive Leaflet DOM recreation lifecycles perfectly.
+
+## [v1.4.7] - 2026-05-08
+### Features & Architecture
+- **StorageService Migration**: Completely removed synchronous `localStorage` dependencies, migrating state management and user preferences over to a robust, asynchronous `IndexedDB`-backed `StorageService`. Includes graceful fallback to `localStorage` in restricted environments.
+- **Interactive Map Location Modal**: Replaced the previous basic location input box with a dedicated, full-screen map modal. Powered by Leaflet.js and OpenStreetMap Nominatim reverse geocoding, it supports pin-dropping for highly precise location setting.
+
+### Bug Fixes
+- **Modal Overflow**: Fixed an issue causing unintended scrollable overflow on the settings modal making the close button hard to access.
+- **Interactive Map Controls**: Repaired the behavior of the "Ir" (Go) and "Ubicación actual" (Current Location) buttons on the map modal.
+- **Weather Fetching**: Updated Content-Security-Policy headers to formally allow Open Meteo's Air Quality endpoints properly to prevent network access exceptions.
 - **Android Micro-Scroll Resolution**: Handled unpredictable appearance of the right vertical scrollbar on Android devices by explicitly applying `overflow: hidden`, `width: 100%`, and `height: 100%` onto the `html` root node.
-- **PTR Visual Polish**: Introduced deterministic canvas clearing during the Pull-To-Refresh lifecycle immediately prior to data fetch, giving users unequivocal visual feedback that a successful network redraw and UI synchronization procedure has initiated.
+- **PTR Visual Polish**: Introduced deterministic canvas clearing during the Pull-To-Refresh lifecycle immediately prior to data fetch, giving users unequivocal visual feedback that a successful network redraw and UI synchronization procedure has initiated, along with new text feedback indicating "Loading".
 
 ## [v1.4.6] - 2026-05-07
 ### App Navigation & Platform Stability

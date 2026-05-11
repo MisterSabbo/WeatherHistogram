@@ -26,14 +26,15 @@ export const state = {
     isDragging: false,
     startX: 0,
     scrollLeft: 0,
-    activeChartTheme: localStorage.getItem('chart_theme') || 'default',
+    activeChartTheme: 'default',
+    isDailyCardsView: false,
     themeConfig: null,
     PIXELS_PER_HOUR: window.innerWidth < 600 ? 50 : 60,
     stickmanThresholds: {
-        cold: parseFloat(localStorage.getItem('weatherhist_stickmancold')) || 10,
-        hot: parseFloat(localStorage.getItem('weatherhist_stickmanhot')) || 30,
-        wind: parseFloat(localStorage.getItem('weatherhist_stickmanwind')) || 45,
-        clouds: parseFloat(localStorage.getItem('weatherhist_stickmanclouds')) || 60
+        cold: 10,
+        hot: 30,
+        wind: 45,
+        clouds: 60
     },
-    skinType: parseInt(localStorage.getItem('weatherhist_skintype')) || 2
+    skinType: 2
 };

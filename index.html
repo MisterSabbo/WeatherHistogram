@@ -1,369 +1,2052 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="WeatherHist">
-    <link rel="apple-touch-icon" href="./assets/images/icon-192.png">
-    <link rel="icon" type="image/png" href="./assets/images/icon-192.png">
-    <link rel="manifest" href="./manifest.json">
-    <!-- El manifest también podría estar en public/ si se sirve el repo directamente -->
-    <link rel="manifest" href="./public/manifest.json">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0" rel="stylesheet" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="WeatherHist" />
+    <link rel="apple-touch-icon" href="./assets/images/icon-192.png" />
+    <link rel="icon" type="image/png" href="./assets/images/icon-192.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Quicksand:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0"
+      rel="stylesheet"
+    />
     <title>Weather Histogram</title>
-    <link rel="stylesheet" href="./src/style.css">
-    <!-- CSP override attempts (often ignored by browser if headers are stricter, but good for context) -->
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://mistersabbo.github.io; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
-
-</head>
-<body>
-    <div id="ptr-indicator" style="position: absolute; top: 0; left: 0; right: 0; height: 75px; padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; transform: translateY(-100%); transition: transform 0.2s; z-index: 9999; background: var(--bg-color); box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-        <div class="loader" style="display: block; position: static; width: 24px; height: 24px; border-width: 2px;"></div>
-        <span style="margin-left: 12px; font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-i18n="config.loading">Cargando...</span>
+    <link rel="stylesheet" href="./src/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <!-- CSP override attempts -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://mistersabbo.github.io https://unpkg.com; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://nominatim.openstreetmap.org https://unpkg.com; worker-src 'self' blob:;"
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+  </head>
+  <body>
+    <div
+      id="ptr-indicator"
+      style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 75px;
+        padding-top: env(safe-area-inset-top);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translateY(-100%);
+        transition: transform 0.2s;
+        z-index: 9999;
+        background: var(--bg-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      "
+    >
+      <div
+        class="loader"
+        style="
+          display: block;
+          position: static;
+          width: 24px;
+          height: 24px;
+          border-width: 2px;
+        "
+      ></div>
+      <span
+        style="
+          margin-left: 12px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: var(--text-primary);
+        "
+        data-i18n="config.loading"
+        >Cargando...</span
+      >
     </div>
     <div id="overlay">
-        <div class="loader"></div>
-        <p id="status-text" data-i18n="overlay.fetchingLocation">Obteniendo ubicación...</p>
-        <div id="error-msg"></div>
+      <div class="loader"></div>
+      <p id="status-text" data-i18n="overlay.fetchingLocation">
+        Obteniendo ubicación...
+      </p>
+      <div id="error-msg"></div>
     </div>
 
-    <div id="app-wrapper" style="display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%; position: relative; z-index: 1;">
-    <div id="controls-bar">
-        <div class="mobile-toggles">
-            <button id="toggle-search-btn" title="Cambiar ubicación"><span class="material-symbols-outlined">location_on</span></button>
-        </div>
-
-        <div class="controls-left">
-            <div class="search-box" id="search-box">
-                <input type="text" id="location-input" placeholder="Buscar ciudad (ej: Madrid, Tokyo)..." autocomplete="off" data-i18n-placeholder="search.placeholder">
-                <div id="suggestions"></div>
-                <button id="search-btn" data-i18n="search.btn">Buscar</button>
-                <button id="geo-btn" title="Usar mi ubicación" data-i18n-title="search.geoBtn"><span class="material-symbols-outlined">my_location</span></button>
-            </div>
+    <div
+      id="app-wrapper"
+      style="
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+      "
+    >
+      <div id="controls-bar" style="justify-content: space-between">
+        <div class="controls-left" style="display: flex; gap: 8px">
+          <button
+            id="open-location-modal-btn"
+            title="Cambiar ubicación"
+            data-i18n-title="search.changeLocation"
+            style="
+              background: var(--bg-color);
+              border: 1px solid var(--grid-color);
+              color: var(--text-primary);
+              border-radius: 8px;
+              padding: 4px 12px;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              cursor: pointer;
+              height: 36px;
+            "
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px"
+              >map</span
+            >
+            <span
+              id="current-location-btn-text"
+              style="font-weight: 500; font-size: 14px"
+              >Ubicación</span
+            >
+          </button>
+          <button
+            id="main-current-location-btn"
+            title="Mi Ubicación"
+            data-i18n-title="map.myLocationBtn"
+            style="
+              background: var(--bg-color);
+              border: 1px solid var(--grid-color);
+              color: var(--text-primary);
+              border-radius: 8px;
+              padding: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              height: 36px;
+              width: 36px;
+            "
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px">my_location</span>
+          </button>
         </div>
 
         <div class="controls-right">
-            <button class="theme-toggle" id="btn-info" title="Información y Ajustes" data-i18n-title="nav.infoBtn" style="display: flex; align-items: center; justify-content: center; background:transparent; border:none; color:inherit; cursor:pointer;"><span class="material-symbols-outlined">settings</span></button>
-            <button class="theme-toggle" id="theme-toggle" style="display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined">light_mode</span></button>
+          <button
+            class="theme-toggle"
+            id="btn-info"
+            title="Información y Ajustes"
+            data-i18n-title="nav.infoBtn"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: transparent;
+              border: none;
+              color: inherit;
+              cursor: pointer;
+            "
+          >
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+          <button
+            class="theme-toggle"
+            id="theme-toggle"
+            style="display: flex; align-items: center; justify-content: center"
+          >
+            <span class="material-symbols-outlined">light_mode</span>
+          </button>
         </div>
-    </div>
+      </div>
 
-    <header id="top-panel">
+      <header id="top-panel">
         <div class="top-panel-info">
-            <div class="location-group">
-                <div id="location-name" data-i18n="topPanel.loading">Cargando...</div>
-                <div id="weather-summary">--</div>
-                <div class="custom-tooltip" id="location-tooltip">
-                    <strong id="tt-location" data-i18n="topPanel.ttLocation">Ubicación</strong><br>
-                    <span id="tt-summary" data-i18n="topPanel.ttSummary">Resumen del tiempo</span>
-                </div>
+          <div class="location-group">
+            <div id="location-name" data-i18n="topPanel.loading">
+              Cargando...
             </div>
-            <div id="current-time-display" style="display:flex; align-items:center; gap:6px;">
-                <div class="time-block">
-                    <div class="time-main" style="line-height:1;">--:--</div>
-                    <div class="date-sub" style="line-height:1; padding-top:2px;">--</div>
-                </div>
-                <div id="alerts-container" class="mobile-alerts" style="display:none; position:relative; cursor:pointer; color:var(--accent-temp); align-items:center; justify-content:center; margin-left: 2px;">
-                    <span class="material-symbols-outlined" style="font-size: 16px; line-height: 1;">warning</span>
-                    <div id="alerts-tooltip"></div>
-                </div>
+            <div id="weather-summary">--</div>
+            <div class="custom-tooltip" id="location-tooltip">
+              <strong id="tt-location" data-i18n="topPanel.ttLocation"
+                >Ubicación</strong
+              ><br />
+              <span id="tt-summary" data-i18n="topPanel.ttSummary"
+                >Resumen del tiempo</span
+              >
             </div>
+          </div>
+          <div
+            id="current-time-display"
+            style="display: flex; align-items: center; gap: 6px"
+          >
+            <div class="time-block">
+              <div class="time-main" style="line-height: 1">--:--</div>
+              <div class="date-sub" style="line-height: 1; padding-top: 2px">
+                --
+              </div>
+            </div>
+            <div
+              id="alerts-container"
+              class="mobile-alerts"
+              style="
+                display: none;
+                position: relative;
+                cursor: pointer;
+                color: var(--accent-temp);
+                align-items: center;
+                justify-content: center;
+                margin-left: 2px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 16px; line-height: 1"
+                >warning</span
+              >
+              <div id="alerts-tooltip"></div>
+            </div>
+          </div>
         </div>
 
         <div class="scroll-indicator scroll-indicator-left">
-            <span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>
+          <span class="material-symbols-outlined" style="font-size: 20px"
+            >chevron_left</span
+          >
         </div>
         <div class="top-panel-metrics">
-            <div class="data-card" id="wind-card">
-                <div id="wind-compass-container" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                    <div id="wind-compass-dir" style="font-size: 10px; font-weight: bold; line-height: 1; color: var(--text-secondary);" data-i18n="topPanel.windN">N</div>
-                    <div id="wind-compass" style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); position: relative; display: flex; align-items: center; justify-content: center;">
-                        <div id="wind-arrow" style="width: 2px; height: 14px; background: var(--text-primary); position: relative; transition: transform 0.5s;">
-                            <div style="position: absolute; top: -2px; left: -3px; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 6px solid var(--text-primary);"></div>
-                        </div>
-                    </div>
-                    <div class="data-value" id="val-wind" style="font-size: 0.9rem !important;">--<span class="data-unit">km/h</span></div>
+          <div class="data-card" id="wind-card">
+            <div
+              id="wind-compass-container"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+              "
+            >
+              <div
+                id="wind-compass-dir"
+                style="
+                  font-size: 10px;
+                  font-weight: bold;
+                  line-height: 1;
+                  color: var(--text-secondary);
+                "
+                data-i18n="topPanel.windN"
+              >
+                N
+              </div>
+              <div
+                id="wind-compass"
+                style="
+                  width: 24px;
+                  height: 24px;
+                  border-radius: 50%;
+                  border: 1.5px solid var(--text-secondary);
+                  position: relative;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div
+                  id="wind-arrow"
+                  style="
+                    width: 2px;
+                    height: 14px;
+                    background: var(--text-primary);
+                    position: relative;
+                    transition: transform 0.5s;
+                  "
+                >
+                  <div
+                    style="
+                      position: absolute;
+                      top: -2px;
+                      left: -3px;
+                      width: 0;
+                      height: 0;
+                      border-left: 4px solid transparent;
+                      border-right: 4px solid transparent;
+                      border-bottom: 6px solid var(--text-primary);
+                    "
+                  ></div>
                 </div>
+              </div>
+              <div
+                class="data-value"
+                id="val-wind"
+                style="font-size: 0.9rem !important"
+              >
+                --<span class="data-unit">km/h</span>
+              </div>
             </div>
-            <div class="data-card">
-                <div class="data-value" id="val-aqi" style="font-size: 1.1rem; display: flex; align-items: center; gap: 4px;">
-                    <span id="header-aqi-icon" class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary); font-variation-settings: 'FILL' 1; transition: color 0.3s;">eco</span>
-                    <span class="aqi-text">--</span>
-                    <span class="info-icon">i</span>
-                    <div class="custom-tooltip" id="aqi-tooltip" style="min-width: 240px; padding: 12px;">
-                        <div id="aqi-header-info" style="margin-bottom:8px;"></div>
-                        <canvas id="aqi-radar" width="220" height="220" style="display:none; margin: 0 auto;"></canvas>
-                        <div id="aqi-details" style="font-size: 0.75rem; line-height: 1.3; margin-top:5px;"></div>
-                    </div>
+          </div>
+          <div class="data-card">
+            <div
+              class="data-value"
+              id="val-aqi"
+              style="
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              <span
+                id="header-aqi-icon"
+                class="material-symbols-outlined"
+                style="
+                  font-size: 18px;
+                  color: var(--text-secondary);
+                  font-variation-settings: &quot;FILL&quot; 1;
+                  transition: color 0.3s;
+                "
+                >eco</span
+              >
+              <span class="aqi-text">--</span>
+              <span class="info-icon">i</span>
+              <div
+                class="custom-tooltip"
+                id="aqi-tooltip"
+                style="min-width: 240px; padding: 12px"
+              >
+                <div id="aqi-header-info" style="margin-bottom: 8px"></div>
+                <canvas
+                  id="aqi-radar"
+                  width="220"
+                  height="220"
+                  style="display: none; margin: 0 auto"
+                ></canvas>
+                <div
+                  id="aqi-details"
+                  style="font-size: 0.75rem; line-height: 1.3; margin-top: 5px"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div
+              class="data-value"
+              id="val-pollen"
+              style="
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              <span
+                id="header-pollen-icon"
+                class="material-symbols-outlined"
+                style="
+                  font-size: 18px;
+                  color: var(--text-secondary);
+                  font-variation-settings: &quot;FILL&quot; 1;
+                  transition: color 0.3s;
+                "
+                >local_florist</span
+              >
+              <span class="pollen-text">--</span>
+              <span class="info-icon">i</span>
+              <div
+                class="custom-tooltip"
+                style="min-width: 240px; padding: 12px"
+              >
+                <div
+                  style="
+                    text-align: center;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                  "
+                  data-i18n="pollen.riskTitle"
+                >
+                  Riesgo por Planta
                 </div>
+                <canvas
+                  id="pollen-radar"
+                  width="220"
+                  height="220"
+                  style="margin: 0 auto"
+                ></canvas>
+                <div
+                  id="pollen-details"
+                  style="font-size: 0.75rem; line-height: 1.3"
+                ></div>
+              </div>
             </div>
-            <div class="data-card">
-                <div class="data-value" id="val-pollen" style="font-size: 1.1rem; display: flex; align-items: center; gap: 4px;">
-                    <span id="header-pollen-icon" class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary); font-variation-settings: 'FILL' 1; transition: color 0.3s;">local_florist</span>
-                    <span class="pollen-text">--</span>
-                    <span class="info-icon">i</span>
-                    <div class="custom-tooltip" style="min-width: 240px; padding: 12px;">
-                        <div style="text-align:center; font-weight:bold; margin-bottom:5px;" data-i18n="pollen.riskTitle">Riesgo por Planta</div>
-                        <canvas id="pollen-radar" width="220" height="220" style="margin: 0 auto;"></canvas>
-                        <div id="pollen-details" style="font-size: 0.75rem; line-height: 1.3;"></div>
-                    </div>
-                </div>
+          </div>
+          <div class="data-card">
+            <div class="data-value" id="val-temp" style="font-size: 1.3rem">
+              --<span class="data-unit">°C</span>
             </div>
-            <div class="data-card">
-                <div class="data-value" id="val-temp" style="font-size: 1.3rem;">--<span class="data-unit">°C</span></div>
-                <div class="data-label" id="val-apparent" style="font-size: 0.6rem; margin-top: 1px;">ST: --°C</div>
+            <div
+              class="data-label"
+              id="val-apparent"
+              style="font-size: 0.6rem; margin-top: 1px"
+            >
+              ST: --°C
             </div>
-            <div class="data-card">
-                <div class="data-value" id="val-precip" style="font-size: 1.3rem; display: flex; align-items: center; gap: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">rainy</span>
-                    <span>--<span class="data-unit">mm</span></span>
-                </div>
+          </div>
+          <div class="data-card">
+            <div
+              class="data-value"
+              id="val-precip"
+              style="
+                font-size: 1.3rem;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: var(--text-secondary)"
+                >rainy</span
+              >
+              <span>--<span class="data-unit">mm</span></span>
             </div>
-            <div class="data-card">
-                <div class="data-value" id="val-precip-prob" style="font-size: 1.3rem; display: flex; align-items: center; gap: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">water_drop</span>
-                    <span>--<span class="data-unit">%</span></span>
-                </div>
+          </div>
+          <div class="data-card">
+            <div
+              class="data-value"
+              id="val-precip-prob"
+              style="
+                font-size: 1.3rem;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: var(--text-secondary)"
+                >water_drop</span
+              >
+              <span>--<span class="data-unit">%</span></span>
             </div>
-            <div class="data-card">
-                <div class="data-value" id="val-clouds" style="font-size: 1.3rem; display: flex; align-items: center; gap: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-secondary);">cloud</span>
-                    <span>--<span class="data-unit">%</span></span>
-                </div>
+          </div>
+          <div class="data-card">
+            <div
+              class="data-value"
+              id="val-clouds"
+              style="
+                font-size: 1.3rem;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: var(--text-secondary)"
+                >cloud</span
+              >
+              <span>--<span class="data-unit">%</span></span>
             </div>
+          </div>
         </div>
         <div class="scroll-indicator scroll-indicator-right">
-            <span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+          <span class="material-symbols-outlined" style="font-size: 20px"
+            >chevron_right</span
+          >
         </div>
-    </header>
+      </header>
 
-    <div id="chart-area" style="position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f5f5f5;">
-        <div id="reference-line" style="position: absolute; left: 59px; top: 0; bottom: 0; width: 2px; background: rgba(0,0,0,0.4); z-index: 10; pointer-events: none;"></div>
-        
-        <div id="animated-weather-zone" style="position: absolute; left: 0; bottom: 0; width: 59px; z-index: 15; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 58px;">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--card-bg); border-radius: 24px; padding: 8px 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border: 1px solid var(--grid-color); pointer-events: auto;">
-                <div id="risk-icons-row" style="display: flex; flex-direction: row; gap: 4px; align-items: center; justify-content: center; width: 100%; display: none;">
-                    <div id="aqi-warning-icon" class="material-symbols-outlined" title="Calidad del Aire (AQI)" style="display: none; font-size: 20px; color: var(--text-primary); font-variation-settings: 'FILL' 1; pointer-events: auto; cursor: pointer;">eco</div>
-                    <div id="pollen-warning-icon" class="material-symbols-outlined" title="Riesgo de Polen" style="display: none; font-size: 20px; color: var(--text-primary); font-variation-settings: 'FILL' 1; pointer-events: auto; cursor: pointer;">local_florist</div>
-                </div>
-                
-                <div id="spf-info-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; display: none; pointer-events: auto; padding: 2px; width: 100%;" title="Protección Solar (SPF)">
-                    <span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: 'FILL' 1; color: #3b82f6;">shield</span>
-                    <span id="spf-value-text" style="font-size: 11px; font-weight: 800; color: #3b82f6; margin-top: -2px;">50+</span>
-                </div>
-                
-                <div id="summary-icon-dom" class="material-symbols-outlined" style="font-size: 20px; z-index: 25; pointer-events: none; color: var(--text-primary); font-variation-settings: 'FILL' 1;">clear_day</div>
+      <div
+        id="chart-area"
+        style="
+          position: relative;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f5f5;
+        "
+      >
+        <div
+          id="reference-line"
+          style="
+            position: absolute;
+            left: 59px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            pointer-events: none;
+          "
+        ></div>
+
+        <div
+          id="animated-weather-zone"
+          style="
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 59px;
+            z-index: 15;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 58px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              background: var(--card-bg);
+              border-radius: 24px;
+              padding: 8px 4px;
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+              border: 1px solid var(--grid-color);
+              pointer-events: auto;
+            "
+          >
+            <div
+              id="risk-icons-row"
+              style="
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                display: none;
+              "
+            >
+              <div
+                id="aqi-warning-icon"
+                class="material-symbols-outlined"
+                title="Calidad del Aire (AQI)"
+                style="
+                  display: none;
+                  font-size: 20px;
+                  color: var(--text-primary);
+                  font-variation-settings: &quot;FILL&quot; 1;
+                  pointer-events: auto;
+                  cursor: pointer;
+                "
+              >
+                eco
+              </div>
+              <div
+                id="pollen-warning-icon"
+                class="material-symbols-outlined"
+                title="Riesgo de Polen"
+                style="
+                  display: none;
+                  font-size: 20px;
+                  color: var(--text-primary);
+                  font-variation-settings: &quot;FILL&quot; 1;
+                  pointer-events: auto;
+                  cursor: pointer;
+                "
+              >
+                local_florist
+              </div>
             </div>
+
+            <div
+              id="spf-info-container"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                display: none;
+                pointer-events: auto;
+                padding: 2px;
+                width: 100%;
+              "
+              title="Protección Solar (SPF)"
+            >
+              <span
+                class="material-symbols-outlined"
+                style="
+                  font-size: 20px;
+                  font-variation-settings: &quot;FILL&quot; 1;
+                  color: #3b82f6;
+                "
+                >shield</span
+              >
+              <span
+                id="spf-value-text"
+                style="
+                  font-size: 11px;
+                  font-weight: 800;
+                  color: #3b82f6;
+                  margin-top: -2px;
+                "
+                >50+</span
+              >
+            </div>
+
+            <div
+              id="summary-icon-dom"
+              class="material-symbols-outlined"
+              style="
+                font-size: 20px;
+                z-index: 25;
+                pointer-events: none;
+                color: var(--text-primary);
+                font-variation-settings: &quot;FILL&quot; 1;
+              "
+            >
+              clear_day
+            </div>
+          </div>
         </div>
 
-        <canvas id="stickman-canvas" width="80" height="80" style="position: absolute; bottom: 0; left: -10px; z-index: 25; pointer-events: none;"></canvas>
-        <canvas id="fixed-overlay-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20;"></canvas>
-        <button id="floating-now-btn" title="Ir al momento actual" data-i18n-title="map.nowBtn" style="position: absolute; top: 20px; right: 20px; z-index: 100; display: none; background: var(--card-bg); border: 1px solid var(--grid-color); color: var(--text-primary); width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; align-items: center; justify-content: center;">
-            <span class="material-symbols-outlined" style="font-size: 20px;">my_location</span>
+        <canvas
+          id="stickman-canvas"
+          width="80"
+          height="80"
+          style="
+            position: absolute;
+            bottom: 0;
+            left: -10px;
+            z-index: 25;
+            pointer-events: none;
+          "
+        ></canvas>
+        <canvas
+          id="fixed-overlay-canvas"
+          style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+          "
+        ></canvas>
+        <button
+          id="floating-now-btn"
+          title="Ir al momento actual"
+          data-i18n-title="map.nowBtn"
+          style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--grid-color);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 20px"
+            >my_location</span
+          >
         </button>
         <main id="scroll-container">
-            <div id="canvas-wrapper" style="position: relative;">
-                <div id="past-shadow" style="position: absolute; top: 0; left: 0; bottom: 0; width: 0; pointer-events: none; z-index: 5;"></div>
-                <div id="now-indicator" style="position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(239, 68, 68, 0.5); pointer-events: none; z-index: 10; display: none; transform: translateX(-50%);">
-                    <div style="position: absolute; top: 22px; left: -4px; transform: translateY(-50%); width: 10px; height: 10px; box-sizing: border-box; background: #ef4444; border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 12px rgba(239, 68, 68, 0.9); animation: pulse-breathing 2s infinite ease-in-out;"></div>
-                </div>
-                <canvas id="main-canvas" style="position: relative; z-index: 1;"></canvas>
+          <div id="canvas-wrapper" style="position: relative">
+            <div
+              id="past-shadow"
+              style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 0;
+                pointer-events: none;
+                z-index: 5;
+              "
+            ></div>
+            <div
+              id="now-indicator"
+              style="
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: rgba(239, 68, 68, 0.5);
+                pointer-events: none;
+                z-index: 10;
+                display: none;
+                transform: translateX(-50%);
+              "
+            >
+              <div
+                style="
+                  position: absolute;
+                  top: 22px;
+                  left: -4px;
+                  transform: translateY(-50%);
+                  width: 10px;
+                  height: 10px;
+                  box-sizing: border-box;
+                  background: #ef4444;
+                  border-radius: 50%;
+                  border: 1.5px solid white;
+                  box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+                  animation: pulse-breathing 2s infinite ease-in-out;
+                "
+              ></div>
             </div>
+            <canvas
+              id="main-canvas"
+              style="position: relative; z-index: 1"
+            ></canvas>
+          </div>
         </main>
-    </div>
+      </div>
 
-    <footer id="bottom-nav-container">
-        <button id="toggle-nav-btn" class="toggle-nav-btn" title="Cambiar vista" data-i18n-title="nav.changeViewBtn">
-            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+      <footer id="bottom-nav-container">
+        <button
+          id="toggle-nav-btn"
+          class="toggle-nav-btn"
+          title="Cambiar vista"
+          data-i18n-title="nav.changeViewBtn"
+        >
+          <span class="material-symbols-outlined" style="font-size: 20px"
+            >calendar_month</span
+          >
         </button>
 
         <div id="minimap-container">
-            <canvas id="minimap-canvas"></canvas>
-            <div id="minimap-viewport"></div>
+          <canvas id="minimap-canvas"></canvas>
+          <div id="minimap-viewport"></div>
         </div>
 
         <div id="daily-cards-container">
-            <!-- Cards will be generated here -->
+          <!-- Cards will be generated here -->
         </div>
-    </footer>
+      </footer>
     </div>
 
     <!-- AQI Modal -->
-    <div id="aqi-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 5000; align-items: center; justify-content: center; touch-action: none;">
-        <div style="background: var(--card-bg); padding: 16px; border-radius: 12px; width: max-content; min-width: 260px; max-width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative; color: var(--text-primary); border: 1px solid var(--grid-color);">
-            <button id="close-aqi-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"><span class="material-symbols-outlined" style="font-size: 18px;">close</span></button>
-            <div id="aqi-modal-header-info" style="margin-bottom:8px;"></div>
-            <canvas id="aqi-modal-radar" width="220" height="220" style="display:none; margin: 0 auto;"></canvas>
-            <div id="aqi-modal-details" style="font-size: 0.75rem; line-height: 1.3; margin-top:5px;"></div>
-        </div>
+    <div
+      id="aqi-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 5000;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+      "
+    >
+      <div
+        style="
+          background: var(--card-bg);
+          padding: 16px;
+          border-radius: 12px;
+          width: max-content;
+          min-width: 260px;
+          max-width: 280px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          position: relative;
+          color: var(--text-primary);
+          border: 1px solid var(--grid-color);
+        "
+      >
+        <button
+          id="close-aqi-btn"
+          style="
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px"
+            >close</span
+          >
+        </button>
+        <div id="aqi-modal-header-info" style="margin-bottom: 8px"></div>
+        <canvas
+          id="aqi-modal-radar"
+          width="220"
+          height="220"
+          style="display: none; margin: 0 auto"
+        ></canvas>
+        <div
+          id="aqi-modal-details"
+          style="font-size: 0.75rem; line-height: 1.3; margin-top: 5px"
+        ></div>
+      </div>
     </div>
 
     <!-- Pollen Modal -->
-    <div id="pollen-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 5000; align-items: center; justify-content: center; touch-action: none;">
-        <div style="background: var(--card-bg); padding: 16px; border-radius: 12px; width: max-content; min-width: 260px; max-width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative; color: var(--text-primary); border: 1px solid var(--grid-color);">
-            <button id="close-pollen-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"><span class="material-symbols-outlined" style="font-size: 18px;">close</span></button>
-            <div style="text-align:center; font-weight:bold; margin-bottom:5px;" data-i18n="pollen.riskTitle">Riesgo por Planta</div>
-            <canvas id="pollen-modal-radar" width="220" height="220" style="margin: 0 auto;"></canvas>
-            <div id="pollen-modal-details" style="font-size: 0.75rem; line-height: 1.3;"></div>
+    <div
+      id="pollen-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 5000;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+      "
+    >
+      <div
+        style="
+          background: var(--card-bg);
+          padding: 16px;
+          border-radius: 12px;
+          width: max-content;
+          min-width: 260px;
+          max-width: 280px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          position: relative;
+          color: var(--text-primary);
+          border: 1px solid var(--grid-color);
+        "
+      >
+        <button
+          id="close-pollen-btn"
+          style="
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px"
+            >close</span
+          >
+        </button>
+        <div
+          style="text-align: center; font-weight: bold; margin-bottom: 5px"
+          data-i18n="pollen.riskTitle"
+        >
+          Riesgo por Planta
         </div>
+        <canvas
+          id="pollen-modal-radar"
+          width="220"
+          height="220"
+          style="margin: 0 auto"
+        ></canvas>
+        <div
+          id="pollen-modal-details"
+          style="font-size: 0.75rem; line-height: 1.3"
+        ></div>
+      </div>
     </div>
-    
-    <div id="spf-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 5000; align-items: center; justify-content: center; touch-action: none;">
-        <div style="background: var(--card-bg); padding: 20px; width: 90%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; position: relative; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid var(--grid-color);">
-            <button id="close-spf-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"><span class="material-symbols-outlined" style="font-size: 18px;">close</span></button>
-            
-            <div style="background: var(--input-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--grid-color); display: flex; align-items: center; gap: 16px;">
-                <div id="spf-modal-uvi-box" style="background: #eab308; color: #fff; width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; flex-shrink: 0;">
-                    4.5
-                </div>
-                <div>
-                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; color: #eab308;" id="spf-modal-uvi-title">Índice UV: Moderado</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;" id="spf-modal-uvi-desc">Riesgo moderado de daño por exposición solar sin protección.</div>
-                </div>
+
+    <div
+      id="spf-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 5000;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+      "
+    >
+      <div
+        style="
+          background: var(--card-bg);
+          padding: 20px;
+          width: 90%;
+          max-width: 360px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          position: relative;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--grid-color);
+        "
+      >
+        <button
+          id="close-spf-btn"
+          style="
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px"
+            >close</span
+          >
+        </button>
+
+        <div
+          style="
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--grid-color);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+          "
+        >
+          <div
+            id="spf-modal-uvi-box"
+            style="
+              background: #eab308;
+              color: #fff;
+              width: 56px;
+              height: 56px;
+              border-radius: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.5rem;
+              font-weight: 800;
+              flex-shrink: 0;
+            "
+          >
+            4.5
+          </div>
+          <div>
+            <div
+              style="
+                font-weight: 700;
+                font-size: 0.95rem;
+                margin-bottom: 4px;
+                color: #eab308;
+              "
+              id="spf-modal-uvi-title"
+            >
+              Índice UV: Moderado
             </div>
-
-            <div style="display: flex; gap: 12px;">
-                <div style="flex: 1; background: var(--input-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--grid-color);">
-                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
-                        <span class="material-symbols-outlined" style="font-size: 16px; color: #f97316;">schedule</span>
-                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Tiempo hasta quemadura</span>
-                    </div>
-                    <div style="font-size: 1.8rem; font-weight: 800; color: #f97316; margin-bottom: 8px;">
-                        <span id="spf-modal-time-val">22</span> <span style="font-size: 1rem;">min</span>
-                    </div>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;" id="spf-modal-time-desc">
-                        Sin protección solar, para Fototipo II
-                    </div>
-                </div>
-
-                <div style="flex: 1; background: var(--input-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--grid-color);">
-                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
-                        <span class="material-symbols-outlined" style="font-size: 16px; color: #3b82f6;">shield</span>
-                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">SPF recomendado</span>
-                    </div>
-                    <div style="font-size: 1.8rem; font-weight: 800; color: #3b82f6; margin-bottom: 8px;" id="spf-modal-rec-val">
-                        SPF 30+
-                    </div>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;" id="spf-modal-rec-desc">
-                        Protección media. Reaplica cada 2 horas y después de sudar o bañarte.
-                    </div>
-                </div>
+            <div
+              style="
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+                line-height: 1.4;
+              "
+              id="spf-modal-uvi-desc"
+            >
+              Riesgo moderado de daño por exposición solar sin protección.
             </div>
-
-            <button id="spf-settings-btn" style="width: 100%; border:none; padding: 12px; border-radius: 12px; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--grid-color); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; transition: background 0.2s;">
-                <span class="material-symbols-outlined" style="font-size: 18px;">settings</span> Cambiar Fototipo
-            </button>
+          </div>
         </div>
+
+        <div style="display: flex; gap: 12px">
+          <div
+            style="
+              flex: 1;
+              background: var(--input-bg);
+              border-radius: 12px;
+              padding: 16px;
+              border: 1px solid var(--grid-color);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 12px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 16px; color: #f97316"
+                >schedule</span
+              >
+              <span
+                style="
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                "
+                >Tiempo hasta quemadura</span
+              >
+            </div>
+            <div
+              style="
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #f97316;
+                margin-bottom: 8px;
+              "
+            >
+              <span id="spf-modal-time-val">22</span>
+              <span style="font-size: 1rem">min</span>
+            </div>
+            <div
+              style="
+                font-size: 0.75rem;
+                color: var(--text-secondary);
+                line-height: 1.3;
+              "
+              id="spf-modal-time-desc"
+            >
+              Sin protección solar, para Fototipo II
+            </div>
+          </div>
+
+          <div
+            style="
+              flex: 1;
+              background: var(--input-bg);
+              border-radius: 12px;
+              padding: 16px;
+              border: 1px solid var(--grid-color);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 12px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-size: 16px; color: #3b82f6"
+                >shield</span
+              >
+              <span
+                style="
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                "
+                >SPF recomendado</span
+              >
+            </div>
+            <div
+              style="
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #3b82f6;
+                margin-bottom: 8px;
+              "
+              id="spf-modal-rec-val"
+            >
+              SPF 30+
+            </div>
+            <div
+              style="
+                font-size: 0.75rem;
+                color: var(--text-secondary);
+                line-height: 1.3;
+              "
+              id="spf-modal-rec-desc"
+            >
+              Protección media. Reaplica cada 2 horas y después de sudar o
+              bañarte.
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="spf-settings-btn"
+          style="
+            width: 100%;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--grid-color);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+            transition: background 0.2s;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px"
+            >settings</span
+          >
+          Cambiar Fototipo
+        </button>
+      </div>
+    </div>
+
+    <!-- Favorites Modal -->
+    <div
+      id="favorites-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 6000;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      "
+    >
+      <div
+        style="
+          position: relative;
+          background: var(--card-bg);
+          border: 1px solid var(--grid-color);
+          border-radius: 12px;
+          padding: 24px;
+          width: 100%;
+          max-width: 400px;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        "
+      >
+        <button
+          id="close-favorites-btn"
+          style="
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 0;
+            z-index: 10;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+        </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-right: 24px;">
+          <h2 data-i18n="map.saved" style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Guardados</h2>
+        </div>
+        
+        <div id="favorites-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+           <!-- Lista generada dinámicamente -->
+        </div>
+        <div id="favorites-actions" style="margin-top: 16px; border-top: 1px dashed var(--grid-color); padding-top: 16px; display: flex; justify-content: center;">
+          <button id="toggle-edit-favorites-btn" style="background: transparent; border: 1px solid var(--grid-color); color: var(--text-primary); border-radius: 8px; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; width: 100%; max-width: 200px;">
+             <!-- Content injected dynamically -->
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Location Modal -->
+    <div
+      id="map-location-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-color);
+        z-index: 5000;
+        flex-direction: column;
+      "
+    >
+      <div style="flex: 1; position: relative">
+        <div
+          id="leaflet-map"
+          style="width: 100%; height: 100%; border: none"
+        ></div>
+
+        <div
+          id="map-search-overlay"
+          style="
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            z-index: 5001;
+            display: none;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          "
+        >
+          <div style="display: flex; align-items: center; padding: 8px">
+            <span
+              class="material-symbols-outlined"
+              style="margin-right: 8px; color: var(--text-secondary)"
+              >search</span
+            >
+            <input
+              type="text"
+              id="map-search-input"
+              placeholder="Buscar ubicación..."
+              data-i18n-placeholder="map.searchPlaceholder"
+              autocomplete="off"
+              style="
+                flex: 1;
+                min-width: 0;
+                background: transparent;
+                border: none;
+                color: var(--text-primary);
+                outline: none;
+                font-size: 16px;
+              "
+            />
+            <button
+              id="close-map-search-btn"
+              style="
+                background: transparent;
+                border: none;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                padding: 4px;
+              "
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div
+            id="map-search-suggestions"
+            style="
+              max-height: 400px;
+              overflow-y: auto;
+              border-top: 1px solid var(--grid-color);
+              display: none;
+            "
+          ></div>
+        </div>
+      </div>
+
+      <!-- Botonera inferior -->
+      <div
+        style="
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          padding: 16px;
+          background: var(--card-bg);
+          border-top: 1px solid var(--grid-color);
+          z-index: 5001;
+          height: 72px;
+        "
+      >
+        <button
+          id="close-map-modal-btn"
+          title="Cerrar"
+          data-i18n-title="map.closeBtn"
+          style="
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 4px;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 24px"
+            >close</span
+          >
+        </button>
+        <button
+          id="map-favorites-btn"
+          title="Favoritos"
+          style="
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 4px;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 24px"
+            >book</span
+          >
+        </button>
+        <button
+          id="map-current-location-btn"
+          title="Mi Ubicación"
+          data-i18n-title="map.myLocationBtn"
+          style="
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 4px;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 24px"
+            >my_location</span
+          >
+        </button>
+        <button
+          id="map-toggle-search-btn"
+          title="Buscar Ubicación"
+          data-i18n-title="map.searchBtn"
+          style="
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 4px;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 24px"
+            >search</span
+          >
+        </button>
+      </div>
     </div>
 
     <!-- Info & Settings Modal -->
-    <div id="info-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 5000; align-items: center; justify-content: center;">
-        <div style="background: var(--card-bg); padding: 24px; border-radius: 12px; width: 90%; max-width: 320px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative; color: var(--text-primary); border: 1px solid var(--grid-color); overflow: visible !important;">
-            <button id="close-info-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"><span class="material-symbols-outlined" style="font-size: 18px;">close</span></button>
-            <h2 style="font-size: 1.2rem; margin-bottom: 20px; margin-top:0; font-weight: 600;">WeatherHist</h2>
-            <p style="font-size: 0.9rem; margin-bottom: 8px;"><strong data-i18n="config.version">Versión:</strong> <span id="app-version-label">v1.4.6</span></p>
-            <p style="font-size: 0.9rem; margin-bottom: 20px;"><strong data-i18n="config.repository">Repositorio:</strong> <br><a href="https://github.com/MisterSabbo/WeatherHistogram" target="_blank" style="color: #3b82f6; text-decoration: none; word-break: break-all;">GitHub / MisterSabbo</a></p>
-            
-            <div style="margin-bottom: 24px;">
-                <label style="font-size: 0.9rem; display: block; margin-bottom: 8px; font-weight: 500;" data-i18n="config.language">Language / Idioma:</label>
-                <div id="language-cards" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="lang-card" data-value="es" style="display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--grid-color); border-radius: 8px; padding: 12px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                        <span style="font-size: 20px; line-height: 1; display: flex; align-items: center;">🇪🇸</span>
-                        <span style="font-size: 0.95rem; font-weight: 600; line-height: 1;">ES</span>
-                    </div>
-                    <div class="lang-card" data-value="en" style="display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--grid-color); border-radius: 8px; padding: 12px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                        <span style="font-size: 20px; line-height: 1; display: flex; align-items: center;">🇬🇧</span>
-                        <span style="font-size: 0.95rem; font-weight: 600; line-height: 1;">EN</span>
-                    </div>
-                </div>
+    <div
+      id="info-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 5000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: var(--card-bg);
+          border-radius: 12px;
+          width: 100%;
+          max-width: 320px;
+          max-height: calc(100vh - 40px);
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          color: var(--text-primary);
+          border: 1px solid var(--grid-color);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        "
+      >
+        <button
+          id="close-info-btn"
+          style="
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 0;
+            z-index: 10;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px"
+            >close</span
+          >
+        </button>
+        <div
+          style="
+            padding: 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-radius: 12px;
+          "
+        >
+          <h2
+            style="
+              font-size: 1.2rem;
+              margin-bottom: 20px;
+              margin-top: 0;
+              font-weight: 600;
+              padding-right: 30px;
+            "
+          >
+            WeatherHist
+          </h2>
+          <p style="font-size: 0.9rem; margin-bottom: 8px">
+            <strong data-i18n="config.version">Versión:</strong>
+            <span id="app-version-label">v1.6.6</span>
+          </p>
+          <p style="font-size: 0.9rem; margin-bottom: 20px">
+            <strong data-i18n="config.repository">Repositorio:</strong> <br /><a
+              href="https://github.com/MisterSabbo/WeatherHistogram"
+              target="_blank"
+              style="
+                color: #3b82f6;
+                text-decoration: none;
+                word-break: break-all;
+              "
+              >GitHub / MisterSabbo</a
+            >
+          </p>
+
+          <div style="margin-bottom: 24px">
+            <label
+              style="
+                font-size: 0.9rem;
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+              "
+              data-i18n="config.language"
+              >Language / Idioma:</label
+            >
+            <div
+              id="language-cards"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
+            >
+              <div
+                class="lang-card"
+                data-value="es"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                  border: 1px solid var(--grid-color);
+                  border-radius: 8px;
+                  padding: 12px;
+                  cursor: pointer;
+                  background: var(--card-bg);
+                  transition: all 0.2s;
+                "
+              >
+                <span
+                  style="
+                    font-size: 20px;
+                    line-height: 1;
+                    display: flex;
+                    align-items: center;
+                  "
+                  >🇪🇸</span
+                >
+                <span
+                  style="font-size: 0.95rem; font-weight: 600; line-height: 1"
+                  >ES</span
+                >
+              </div>
+              <div
+                class="lang-card"
+                data-value="en"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                  border: 1px solid var(--grid-color);
+                  border-radius: 8px;
+                  padding: 12px;
+                  cursor: pointer;
+                  background: var(--card-bg);
+                  transition: all 0.2s;
+                "
+              >
+                <span
+                  style="
+                    font-size: 20px;
+                    line-height: 1;
+                    display: flex;
+                    align-items: center;
+                  "
+                  >🇬🇧</span
+                >
+                <span
+                  style="font-size: 0.95rem; font-weight: 600; line-height: 1"
+                  >EN</span
+                >
+              </div>
             </div>
+          </div>
 
-            <div style="margin-bottom: 24px;">
-                <label for="chart-theme-select" style="font-size: 0.9rem; display: block; margin-bottom: 8px; font-weight: 500;" data-i18n="config.chartTheme">Tema de Gráficas:</label>
-                <select id="chart-theme-select" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--input-bg); color: var(--text-primary); font-family: Inter;">
-                    <option value="default">Cargando...</option>
-                </select>
+          <div style="margin-bottom: 24px">
+            <label
+              for="chart-theme-select"
+              style="
+                font-size: 0.9rem;
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+              "
+              data-i18n="config.chartTheme"
+              >Tema de Gráficas:</label
+            >
+            <select
+              id="chart-theme-select"
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--grid-color);
+                background: var(--input-bg);
+                color: var(--text-primary);
+                font-family: Inter;
+              "
+            >
+              <option value="default">Cargando...</option>
+            </select>
+          </div>
+
+          <details
+            style="
+              margin-bottom: 24px;
+              padding: 12px;
+              border: 1px solid var(--grid-color);
+              border-radius: 8px;
+              background: rgba(0, 0, 0, 0.05);
+            "
+          >
+            <summary
+              style="
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                outline: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <span class="material-symbols-outlined">directions_walk</span>
+              <span data-i18n="config.stickmanConfig">Ajustar umbrales:</span>
+            </summary>
+            <div style="padding-top: 12px">
+              <div style="margin-bottom: 12px">
+                <label
+                  for="stickman-cold-input"
+                  style="font-size: 0.85rem; display: block; margin-bottom: 4px"
+                  data-i18n="config.coldThreshold"
+                  >Umbral de Frío (°C):</label
+                >
+                <input
+                  type="number"
+                  id="stickman-cold-input"
+                  style="
+                    width: 100%;
+                    padding: 8px;
+                    border-radius: 6px;
+                    border: 1px solid var(--grid-color);
+                    background: var(--input-bg);
+                    color: var(--text-primary);
+                  "
+                  value="10"
+                />
+              </div>
+
+              <div style="margin-bottom: 12px">
+                <label
+                  for="stickman-hot-input"
+                  style="font-size: 0.85rem; display: block; margin-bottom: 4px"
+                  data-i18n="config.hotThreshold"
+                  >Umbral de Calor (°C):</label
+                >
+                <input
+                  type="number"
+                  id="stickman-hot-input"
+                  style="
+                    width: 100%;
+                    padding: 8px;
+                    border-radius: 6px;
+                    border: 1px solid var(--grid-color);
+                    background: var(--input-bg);
+                    color: var(--text-primary);
+                  "
+                  value="30"
+                />
+              </div>
+
+              <div style="margin-bottom: 12px">
+                <label
+                  for="stickman-wind-input"
+                  style="font-size: 0.85rem; display: block; margin-bottom: 4px"
+                  data-i18n="config.windThreshold"
+                  >Umbral de Viento (km/h):</label
+                >
+                <input
+                  type="number"
+                  id="stickman-wind-input"
+                  style="
+                    width: 100%;
+                    padding: 8px;
+                    border-radius: 6px;
+                    border: 1px solid var(--grid-color);
+                    background: var(--input-bg);
+                    color: var(--text-primary);
+                  "
+                  value="45"
+                />
+              </div>
+
+              <div style="margin-bottom: 12px">
+                <label
+                  for="stickman-clouds-input"
+                  style="font-size: 0.85rem; display: block; margin-bottom: 4px"
+                  data-i18n="config.cloudsThreshold"
+                  >Umbral de Nubes para Gafas (%):</label
+                >
+                <input
+                  type="number"
+                  id="stickman-clouds-input"
+                  style="
+                    width: 100%;
+                    padding: 8px;
+                    border-radius: 6px;
+                    border: 1px solid var(--grid-color);
+                    background: var(--input-bg);
+                    color: var(--text-primary);
+                  "
+                  value="60"
+                />
+              </div>
             </div>
+          </details>
 
-            <details style="margin-bottom: 24px; padding: 12px; border: 1px solid var(--grid-color); border-radius: 8px; background: rgba(0,0,0,0.05);">
-                <summary style="font-size: 0.95rem; font-weight: 600; cursor: pointer; outline: none; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined">directions_walk</span> <span data-i18n="config.stickmanConfig">Ajustar umbrales:</span></summary>
-                <div style="padding-top: 12px;">
-                    <div style="margin-bottom: 12px;">
-                        <label for="stickman-cold-input" style="font-size: 0.85rem; display: block; margin-bottom: 4px;" data-i18n="config.coldThreshold">Umbral de Frío (°C):</label>
-                        <input type="number" id="stickman-cold-input" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--grid-color); background: var(--input-bg); color: var(--text-primary);" value="10">
+          <details
+            style="
+              margin-bottom: 20px;
+              padding: 12px;
+              border: 1px solid var(--grid-color);
+              border-radius: 8px;
+              background: rgba(0, 0, 0, 0.05);
+            "
+          >
+            <summary
+              style="
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                outline: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <span
+                class="material-symbols-outlined"
+                style="font-variation-settings: &quot;FILL&quot; 1"
+                >shield</span
+              >
+              <span data-i18n="config.skinTypeConfig">Ajustar fototipo:</span>
+            </summary>
+            <div style="padding-top: 12px">
+              <div style="margin-bottom: 10px">
+                <label
+                  style="font-size: 0.85rem; display: block; margin-bottom: 8px"
+                  data-i18n="config.skinTypeProfile"
+                  >Tu Fototipo de Piel (Fitzpatrick):</label
+                >
+                <div
+                  id="skin-type-cards"
+                  style="display: flex; flex-direction: column; gap: 8px"
+                >
+                  <!-- I -->
+                  <div
+                    class="skin-card"
+                    data-value="1"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      border: 1px solid var(--grid-color);
+                      border-radius: 6px;
+                      padding: 8px;
+                      cursor: pointer;
+                      background: var(--card-bg);
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 28px;
+                        margin-right: 12px;
+                        margin-bottom: 0;
+                      "
+                    >
+                      👩🏻
                     </div>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <label for="stickman-hot-input" style="font-size: 0.85rem; display: block; margin-bottom: 4px;" data-i18n="config.hotThreshold">Umbral de Calor (°C):</label>
-                        <input type="number" id="stickman-hot-input" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--grid-color); background: var(--input-bg); color: var(--text-primary);" value="30">
+                    <div
+                      style="
+                        font-size: 0.7rem;
+                        color: var(--text-secondary);
+                        line-height: 1.3;
+                        text-align: left;
+                      "
+                      data-i18n="config.skinType1"
+                    >
+                      I - Piel muy clara, pecas, pelo rubio/pelirrojo. Se quema
+                      siempre, nunca se broncea.
                     </div>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <label for="stickman-wind-input" style="font-size: 0.85rem; display: block; margin-bottom: 4px;" data-i18n="config.windThreshold">Umbral de Viento (km/h):</label>
-                        <input type="number" id="stickman-wind-input" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--grid-color); background: var(--input-bg); color: var(--text-primary);" value="45">
+                  </div>
+                  <!-- II -->
+                  <div
+                    class="skin-card"
+                    data-value="2"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      border: 1px solid var(--grid-color);
+                      border-radius: 6px;
+                      padding: 8px;
+                      cursor: pointer;
+                      background: var(--card-bg);
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 28px;
+                        margin-right: 12px;
+                        margin-bottom: 0;
+                      "
+                    >
+                      👨🏼
                     </div>
-    
-                    <div style="margin-bottom: 12px;">
-                        <label for="stickman-clouds-input" style="font-size: 0.85rem; display: block; margin-bottom: 4px;" data-i18n="config.cloudsThreshold">Umbral de Nubes para Gafas (%):</label>
-                        <input type="number" id="stickman-clouds-input" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--grid-color); background: var(--input-bg); color: var(--text-primary);" value="60">
+                    <div
+                      style="
+                        font-size: 0.7rem;
+                        color: var(--text-secondary);
+                        line-height: 1.3;
+                        text-align: left;
+                      "
+                      data-i18n="config.skinType2"
+                    >
+                      II - Piel clara, pelo rubio/castaño claro. Se quema
+                      fácilmente, se broncea poco.
                     </div>
+                  </div>
+                  <!-- III -->
+                  <div
+                    class="skin-card"
+                    data-value="3"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      border: 1px solid var(--grid-color);
+                      border-radius: 6px;
+                      padding: 8px;
+                      cursor: pointer;
+                      background: var(--card-bg);
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 28px;
+                        margin-right: 12px;
+                        margin-bottom: 0;
+                      "
+                    >
+                      👩🏽
+                    </div>
+                    <div
+                      style="
+                        font-size: 0.7rem;
+                        color: var(--text-secondary);
+                        line-height: 1.3;
+                        text-align: left;
+                      "
+                      data-i18n="config.skinType3"
+                    >
+                      III - Piel intermedia, pelo castaño. Se quema
+                      moderadamente, se broncea gradualmente.
+                    </div>
+                  </div>
+                  <!-- IV -->
+                  <div
+                    class="skin-card"
+                    data-value="4"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      border: 1px solid var(--grid-color);
+                      border-radius: 6px;
+                      padding: 8px;
+                      cursor: pointer;
+                      background: var(--card-bg);
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 28px;
+                        margin-right: 12px;
+                        margin-bottom: 0;
+                      "
+                    >
+                      👨🏾
+                    </div>
+                    <div
+                      style="
+                        font-size: 0.7rem;
+                        color: var(--text-secondary);
+                        line-height: 1.3;
+                        text-align: left;
+                      "
+                      data-i18n="config.skinType4"
+                    >
+                      IV - Piel morena, pelo oscuro. Se quema poco, se broncea
+                      con facilidad.
+                    </div>
+                  </div>
+                  <!-- V -->
+                  <div
+                    class="skin-card"
+                    data-value="5"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      border: 1px solid var(--grid-color);
+                      border-radius: 6px;
+                      padding: 8px;
+                      cursor: pointer;
+                      background: var(--card-bg);
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 28px;
+                        margin-right: 12px;
+                        margin-bottom: 0;
+                      "
+                    >
+                      👩🏿
+                    </div>
+                    <div
+                      style="
+                        font-size: 0.7rem;
+                        color: var(--text-secondary);
+                        line-height: 1.3;
+                        text-align: left;
+                      "
+                      data-i18n="config.skinType5"
+                    >
+                      V - Piel oscura. Raramente se quema, se broncea mucho.
+                    </div>
+                  </div>
+                  <!-- VI -->
+                  <div
+                    class="skin-card"
+                    data-value="6"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      border: 1px solid var(--grid-color);
+                      border-radius: 6px;
+                      padding: 8px;
+                      cursor: pointer;
+                      background: var(--card-bg);
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 28px;
+                        margin-right: 12px;
+                        margin-bottom: 0;
+                      "
+                    >
+                      👨🏿
+                    </div>
+                    <div
+                      style="
+                        font-size: 0.7rem;
+                        color: var(--text-secondary);
+                        line-height: 1.3;
+                        text-align: left;
+                      "
+                      data-i18n="config.skinType6"
+                    >
+                      VI - Piel oscura. Raramente se quema, se broncea mucho.
+                    </div>
+                  </div>
                 </div>
-            </details>
-
-            <details style="margin-bottom: 20px; padding: 12px; border: 1px solid var(--grid-color); border-radius: 8px; background: rgba(0,0,0,0.05);">
-                <summary style="font-size: 0.95rem; font-weight: 600; cursor: pointer; outline: none; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield</span> <span data-i18n="config.skinTypeConfig">Ajustar fototipo:</span></summary>
-                <div style="padding-top: 12px;">
-                    <div style="margin-bottom: 10px;">
-                        <label style="font-size: 0.85rem; display: block; margin-bottom: 8px;" data-i18n="config.skinTypeProfile">Tu Fototipo de Piel (Fitzpatrick):</label>
-                        <div id="skin-type-cards" style="display: flex; flex-direction: column; gap: 8px;">
-                            <!-- I -->
-                            <div class="skin-card" data-value="1" style="display: flex; align-items: center; border: 1px solid var(--grid-color); border-radius: 6px; padding: 8px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                                <div style="font-size: 28px; margin-right: 12px; margin-bottom: 0;">👩🏻</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; text-align: left;" data-i18n="config.skinType1">I - Piel muy clara, pecas, pelo rubio/pelirrojo. Se quema siempre, nunca se broncea.</div>
-                            </div>
-                            <!-- II -->
-                            <div class="skin-card" data-value="2" style="display: flex; align-items: center; border: 1px solid var(--grid-color); border-radius: 6px; padding: 8px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                                <div style="font-size: 28px; margin-right: 12px; margin-bottom: 0;">👨🏼</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; text-align: left;" data-i18n="config.skinType2">II - Piel clara, pelo rubio/castaño claro. Se quema fácilmente, se broncea poco.</div>
-                            </div>
-                            <!-- III -->
-                            <div class="skin-card" data-value="3" style="display: flex; align-items: center; border: 1px solid var(--grid-color); border-radius: 6px; padding: 8px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                                <div style="font-size: 28px; margin-right: 12px; margin-bottom: 0;">👩🏽</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; text-align: left;" data-i18n="config.skinType3">III - Piel intermedia, pelo castaño. Se quema moderadamente, se broncea gradualmente.</div>
-                            </div>
-                            <!-- IV -->
-                            <div class="skin-card" data-value="4" style="display: flex; align-items: center; border: 1px solid var(--grid-color); border-radius: 6px; padding: 8px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                                <div style="font-size: 28px; margin-right: 12px; margin-bottom: 0;">👨🏾</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; text-align: left;" data-i18n="config.skinType4">IV - Piel morena, pelo oscuro. Se quema poco, se broncea con facilidad.</div>
-                            </div>
-                            <!-- V -->
-                            <div class="skin-card" data-value="5" style="display: flex; align-items: center; border: 1px solid var(--grid-color); border-radius: 6px; padding: 8px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                                <div style="font-size: 28px; margin-right: 12px; margin-bottom: 0;">👩🏿</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; text-align: left;" data-i18n="config.skinType5">V - Piel oscura. Raramente se quema, se broncea mucho.</div>
-                            </div>
-                            <!-- VI -->
-                            <div class="skin-card" data-value="6" style="display: flex; align-items: center; border: 1px solid var(--grid-color); border-radius: 6px; padding: 8px; cursor: pointer; background: var(--card-bg); transition: all 0.2s;">
-                                <div style="font-size: 28px; margin-right: 12px; margin-bottom: 0;">👨🏿</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; text-align: left;" data-i18n="config.skinType6">VI - Piel oscura. Raramente se quema, se broncea mucho.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </details>
-
-            <button id="force-refresh-btn" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: #ef4444; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <span class="material-symbols-outlined" style="font-size: 18px;">delete_history</span> <span data-i18n="config.clearCache">Limpiar Caché y Recargar</span>
-            </button>
+              </div>
+            </div>
+          </details>
         </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--grid-color); padding: 12px 24px; background: var(--card-bg); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; gap: 12px;">
+           <button
+             id="force-refresh-btn"
+             title="Limpiar caché y recargar"
+             data-i18n-title="config.clearCache"
+             style="
+               flex: 1;
+               padding: 10px;
+               border-radius: 8px;
+               border: 1px solid var(--grid-color);
+               background: transparent;
+               color: var(--text-primary);
+               cursor: pointer;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               transition: background 0.2s;
+             "
+           >
+             <span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+           </button>
+           
+           <button
+             id="clear-data-btn"
+             title="Borrar datos guardados"
+             data-i18n-title="config.clearData"
+             style="
+               flex: 1;
+               padding: 10px;
+               border-radius: 8px;
+               border: 1px solid var(--grid-color);
+               background: transparent;
+               color: #ef4444;
+               cursor: pointer;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               transition: background 0.2s;
+             "
+           >
+             <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+           </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6000; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 320px; padding: 24px; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center;">
+        <h3 id="confirm-title" style="margin-top: 0; margin-bottom: 12px; font-size: 1.2rem;">Confirmar</h3>
+        <p id="confirm-message" style="margin-bottom: 24px; font-size: 0.95rem; color: var(--text-secondary);"></p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="confirm-cancel-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cancelar</button>
+          <button id="confirm-ok-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: #ef4444; color: white; font-weight: bold; cursor: pointer;">Aceptar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="prompt-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6000; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 320px; padding: 24px; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <h3 id="prompt-title" style="margin-top: 0; margin-bottom: 16px; font-size: 1.2rem; text-align: center;">Editar</h3>
+        <input type="text" id="prompt-input" style="width: 100%; padding: 10px; margin-bottom: 24px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary); font-family: inherit; font-size: 1rem; outline: none; box-sizing: border-box;" />
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="prompt-cancel-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cancelar</button>
+          <button id="prompt-ok-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: #3b82f6; color: white; font-weight: bold; cursor: pointer;">Guardar</button>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="./src/app.js"></script>
-
-</body>
+  </body>
 </html>
