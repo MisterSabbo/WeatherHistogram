@@ -10,11 +10,16 @@ export const translations = {
             accept: "Aceptar",
             clearCacheMsg: "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?",
             clearDataMsg: "¿Estás seguro de que quieres eliminar todos los datos persistentes (favoritos, configuraciones)? Esta acción no se puede deshacer.",
+            deleteLocConfirm: "¿Borrar todos los datos históricos de esta ubicación?",
+            deleteMonthDataConfirm: "¿Borrar todos los datos de este mes en esta ubicación?",
+            deleteMonthData: "Borrar datos del mes",
             loading: "Cargando...",
             version: "Versión:",
             newVersionAvailable: "Nueva versión disponible",
             whatsNew: "Ver Novedades",
             changelogTitle: "Novedades v{version}",
+            changelogTitleAll: "Todos los cambios",
+            changelogLink: "Ver Changelog",
             close: "Cerrar",
             update: "Actualizar",
             edit: "Editar",
@@ -44,7 +49,28 @@ export const translations = {
             cloudsThreshold: "Umbral de Nubes para Gafas (%):",
             yearInPixels: "Año en Píxeles",
             location: "Ubicación",
-            parameter: "Parámetro"
+            parameter: "Parámetro",
+            yipMaxTemp: "Temperatura Máxima",
+            yipMinTemp: "Temperatura Mínima",
+            yipApparentMax: "Sensación Térmica",
+            yipPrecip: "Precipitación",
+            yipWindMax: "Viento (Máximo)",
+            yipGustMax: "Rachas (Máximo)",
+            yipAqi: "Calidad del Aire (AQI)",
+            yipPollen: "Nivel de Polen",
+            yipPollenAlder: "Polen (Aliso)",
+            yipPollenBirch: "Polen (Abedul)",
+            yipPollenGrass: "Polen (Gramíneas)",
+            yipPollenMugwort: "Polen (Artemisa)",
+            yipPollenOlive: "Polen (Olivo)",
+            yipPollenRagweed: "Polen (Ambrosía)",
+            legendGood: "Bueno",
+            legendMod: "Mod.",
+            legendUnhealthyS: "Malo S.",
+            legendBad: "Malo",
+            legendLow: "Bajo",
+            legendHigh: "Alto",
+            legendVeryHigh: "Muy A."
         },
         theme: {
         },
@@ -174,7 +200,8 @@ export const translations = {
             long: ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"]
         },
         months: {
-            short: ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
+            short: ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"],
+            long: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
         }
     },
     en: {
@@ -188,11 +215,16 @@ export const translations = {
             accept: "Accept",
             clearCacheMsg: "Are you sure you want to clear the cache and reload the application?",
             clearDataMsg: "Are you sure you want to clear all persistent data (favorites, settings)? This action cannot be undone.",
+            deleteLocConfirm: "Delete all historical data for this location?",
+            deleteMonthDataConfirm: "Delete all data for this month in this location?",
+            deleteMonthData: "Delete month data",
             loading: "Loading...",
             version: "Version:",
             newVersionAvailable: "New version available",
             whatsNew: "What's New",
             changelogTitle: "What's New v{version}",
+            changelogTitleAll: "Full Changelog",
+            changelogLink: "View Changelog",
             close: "Close",
             update: "Update",
             edit: "Edit",
@@ -222,7 +254,28 @@ export const translations = {
             cloudsThreshold: "Cloudiness threshold for sunglasses (%):",
             yearInPixels: "Year in Pixels",
             location: "Location",
-            parameter: "Parameter"
+            parameter: "Parameter",
+            yipMaxTemp: "Max Temperature",
+            yipMinTemp: "Min Temperature",
+            yipApparentMax: "Apparent Temperature",
+            yipPrecip: "Precipitation",
+            yipWindMax: "Wind (Max)",
+            yipGustMax: "Gusts (Max)",
+            yipAqi: "Air Quality (AQI)",
+            yipPollen: "Pollen Level",
+            yipPollenAlder: "Pollen (Alder)",
+            yipPollenBirch: "Pollen (Birch)",
+            yipPollenGrass: "Pollen (Grass)",
+            yipPollenMugwort: "Pollen (Mugwort)",
+            yipPollenOlive: "Pollen (Olive)",
+            yipPollenRagweed: "Pollen (Ragweed)",
+            legendGood: "Good",
+            legendMod: "Mod.",
+            legendUnhealthyS: "Unhealthy S.",
+            legendBad: "Unhealthy",
+            legendLow: "Low",
+            legendHigh: "High",
+            legendVeryHigh: "Very H."
         },
         theme: {
         },
@@ -352,7 +405,8 @@ export const translations = {
             long: ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
         },
         months: {
-            short: ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+            short: ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
+            long: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         }
     }
 };
@@ -371,14 +425,14 @@ export function getLanguage() {
     return currentLanguage;
 }
 
-export function t(key) {
+export function t(key, fallback = null) {
     const keys = key.split('.');
     let value = translations[currentLanguage];
     for (const k of keys) {
         if (value && value[k] !== undefined) {
             value = value[k];
         } else {
-            return key; // Fallback to key if not found
+            return fallback !== null ? fallback : key; // Fallback to key if not found
         }
     }
     return value;

@@ -1,5 +1,48 @@
 [
   {
+    "version": "1.8.2",
+    "changes": [
+      "Refactored the confirmation dialog globally into a bottom sheet for improved mobile UX and consistency, resolving z-index overlap issues within the Year in Pixels view."
+    ]
+  },
+  {
+    "version": "1.8.1",
+    "changes": [
+      "Fixed incorrect month translations in the 'Year in Pixels' dashboard.",
+      "Added confirm dialog and fixed the 'delete location data' functionality in 'Year in Pixels', which was previously throwing a reference error.",
+      "Converted the SPF, AQI, and Pollen modals into swipeable bottom sheets matching the UX of the changelog detail view.",
+      "Ensured newly introduced configuration strings are fully supported in English and Spanish."
+    ]
+  },
+  {
+    "version": "1.8.0",
+    "changes": [
+      "Completely redesigned 'Year in Pixels' using CSS Grid structure optimized for mobile layout with vertical scroll snapping.",
+      "Added detailed micro-interactions (staggered hover scale) and structural empty-future state patterns in 'Year in Pixels'.",
+      "Added interactive bottom-sheet in 'Year in Pixels' revealing all tracked historical metrics when a specific daily cell is tapped.",
+      "Expanded pollen data tracking in the background processor to permanently store individualized historical details per seed type (Alder, Birch, Grass, Mugwort, Olive, Ragweed).",
+      "Added visualization dropdown options for the new individual pollen trackers in the 'Year in Pixels' dashboard."
+    ]
+  },
+  {
+    "version": "1.7.2",
+    "changes": [
+      "Added 'View Changelog' link in the settings modal to view all application changes at any time.",
+      "Fixed Pollen level calculation in 'Year in Pixels' mapping incorrect pollen states.",
+      "Fixed Precipitation calculation logic in 'Year in Pixels' to exactly match the rendered precipitation bars in the histogram."
+    ]
+  },
+  {
+    "version": "1.7.1",
+    "changes": [
+      "Added tracking and storage of AQI, pollen, wind speed, gusts, and apparent temperature in IndexedDB.",
+      "Fixed precipitation tracking missing or inaccurate values in Year In Pixels.",
+      "Added new visualization options (AQI, pollen, wind, apparent temp) to the Year In Pixels grid.",
+      "Improved Year In Pixels modal styling to match the SPF modal (absolute positioned close button).",
+      "Added functionality to close Year In Pixels modal by clicking outside."
+    ]
+  },
+  {
     "version": "1.7.0",
     "changes": [
       "Added visual tactile feedback for cards and buttons.",

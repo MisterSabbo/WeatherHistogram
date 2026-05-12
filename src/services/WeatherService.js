@@ -5,7 +5,7 @@ export class WeatherService {
     }
 
     async getWeatherData(lat, lon, pastDays, forecastDays, signal) {
-        const forecastUrl = `${this.baseURLForecast}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility,is_day&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
+        const forecastUrl = `${this.baseURLForecast}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,relative_humidity_2m,surface_pressure,uv_index,visibility,is_day&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,apparent_temperature_max&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
         const aqiUrl = `${this.baseURLAQI}?latitude=${lat}&longitude=${lon}&hourly=us_aqi,european_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&past_days=${pastDays}&forecast_days=${forecastDays}&timeformat=unixtime`;
 
         console.log("Fetching weather with:", forecastUrl, aqiUrl);

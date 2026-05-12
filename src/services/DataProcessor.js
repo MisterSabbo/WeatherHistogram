@@ -38,6 +38,10 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
             weatherCode: daily.weather_code ? daily.weather_code[i] : 0,
             tempMax: daily.temperature_2m_max ? daily.temperature_2m_max[i] : 0,
             tempMin: daily.temperature_2m_min ? daily.temperature_2m_min[i] : 0,
+            precipTotal: daily.precipitation_sum ? daily.precipitation_sum[i] : 0,
+            windMax: daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : 0,
+            gustMax: daily.wind_gusts_10m_max ? daily.wind_gusts_10m_max[i] : 0,
+            apparentMax: daily.apparent_temperature_max ? daily.apparent_temperature_max[i] : 0,
         }));
     }
 
@@ -112,6 +116,39 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
     });
 
     state.hourlyData = newHourly.sort((a, b) => a.time - b.time);
+    
+    // Add AQI and Pollen aggregates to dailyData
+    if (state.dailyData) {
+        state.dailyData.forEach(d => {
+            const dDateStr = new Date(d.time).toLocaleDateString('en-CA', { timeZone: state.timezone });
+            const dayHours = state.hourlyData.filter(h => {
+                return new Date(h.time).toLocaleDateString('en-CA', { timeZone: state.timezone }) === dDateStr;
+            });
+            
+            if (dayHours.length > 0) {
+                d.aqi = Math.max(...dayHours.map(h => h.aqi || 0));
+                d.pollen = Math.max(...dayHours.map(h => h.pollen || 0));
+                
+                d.pollenDetails = {
+                    alder: Math.max(...dayHours.map(h => (h.pollenDetails && h.pollenDetails.alder) || 0)),
+                    birch: Math.max(...dayHours.map(h => (h.pollenDetails && h.pollenDetails.birch) || 0)),
+                    grass: Math.max(...dayHours.map(h => (h.pollenDetails && h.pollenDetails.grass) || 0)),
+                    mugwort: Math.max(...dayHours.map(h => (h.pollenDetails && h.pollenDetails.mugwort) || 0)),
+                    olive: Math.max(...dayHours.map(h => (h.pollenDetails && h.pollenDetails.olive) || 0)),
+                    ragweed: Math.max(...dayHours.map(h => (h.pollenDetails && h.pollenDetails.ragweed) || 0))
+                };
+                
+                // Re-calculate precipTotal based on sum of the hourly data (to match visually drawn histogram data exactly for the day)
+                const sumPrecip = dayHours.reduce((acc, h) => acc + (h.precip || 0), 0);
+                d.precipTotal = sumPrecip;
+            } else {
+                d.aqi = 0;
+                d.pollen = 0;
+                d.pollenDetails = { alder: 0, birch: 0, grass: 0, mugwort: 0, olive: 0, ragweed: 0 };
+                d.precipTotal = 0;
+            }
+        });
+    }
     
     // Generate daily cards if the container exists
     generateDailyCards(centerOnCurrentTime);

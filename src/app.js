@@ -349,21 +349,13 @@ let weatherCache = new Map();
                     document.getElementById('spf-modal-rec-val').innerText = spfText;
                     document.getElementById('spf-modal-rec-desc').innerText = t('config.spfModalReapply');
                     
-                    spfModal.style.display = 'flex';
-                });
-
-                spfModal.addEventListener('click', (e) => {
-                    if (e.target === spfModal) {
-                        spfModal.style.display = 'none';
-                    }
-                });
-
-                closeSpfBtn.addEventListener('click', () => {
-                    spfModal.style.display = 'none';
+                    openBottomSheet('spf-modal');
                 });
 
                 spfSettingsBtn.addEventListener('click', () => {
-                    spfModal.style.display = 'none';
+                    spfModal.classList.remove('open');
+                    const backdrop = document.getElementById('pill-sheet-backdrop');
+                    if (backdrop) backdrop.classList.remove('open');
                     if (infoModal) infoModal.style.display = 'flex';
                 });
             }
@@ -374,16 +366,8 @@ let weatherCache = new Map();
             
             if (pollenWarningIcon && pollenModal) {
                 pollenWarningIcon.addEventListener('click', () => {
-                    pollenModal.style.display = 'flex';
+                    openBottomSheet('pollen-modal');
                 });
-                pollenModal.addEventListener('click', (e) => {
-                    if (e.target === pollenModal) pollenModal.style.display = 'none';
-                });
-                if (closePollenBtn) {
-                    closePollenBtn.addEventListener('click', () => {
-                        pollenModal.style.display = 'none';
-                    });
-                }
             }
 
             const aqiWarningIcon = document.getElementById('aqi-warning-icon');
@@ -392,16 +376,8 @@ let weatherCache = new Map();
             
             if (aqiWarningIcon && aqiModal) {
                 aqiWarningIcon.addEventListener('click', () => {
-                    aqiModal.style.display = 'flex';
+                    openBottomSheet('aqi-modal');
                 });
-                aqiModal.addEventListener('click', (e) => {
-                    if (e.target === aqiModal) aqiModal.style.display = 'none';
-                });
-                if (closeAqiBtn) {
-                    closeAqiBtn.addEventListener('click', () => {
-                        aqiModal.style.display = 'none';
-                    });
-                }
             }
 
             document.addEventListener('gesturestart', (e) => {
@@ -569,6 +545,15 @@ let weatherCache = new Map();
                     });
                 }
                 
+                const openChangelogLink = document.getElementById('open-changelog-link');
+                if (openChangelogLink) {
+                    openChangelogLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (infoModal) infoModal.style.display = 'none';
+                        showChangelogModal();
+                    });
+                }
+                
                 // I18n Logic
                 const langCards = document.querySelectorAll('.lang-card');
                 const updateLangCardsUI = (lang) => {
@@ -722,31 +707,30 @@ let weatherCache = new Map();
 
                 // Function to show confirm modal
                 const showConfirm = (title, message, onOk) => {
-                    const modal = document.getElementById('confirm-modal');
                     const titleEl = document.getElementById('confirm-title');
                     const msgEl = document.getElementById('confirm-message');
                     const cancelBtn = document.getElementById('confirm-cancel-btn');
                     const okBtn = document.getElementById('confirm-ok-btn');
                     
-                    titleEl.textContent = title;
-                    msgEl.textContent = message;
+                    if (titleEl) titleEl.textContent = title;
+                    if (msgEl) msgEl.textContent = message;
                     
-                    cancelBtn.textContent = t('config.cancel') || 'Cancelar';
-                    okBtn.textContent = t('config.accept') || 'Aceptar';
+                    if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
+                    if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
                     
                     const newOk = okBtn.cloneNode(true);
                     okBtn.parentNode.replaceChild(newOk, okBtn);
                     const newCancel = cancelBtn.cloneNode(true);
                     cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
                     
-                    modal.style.display = 'flex';
+                    const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => {};
                     
                     newCancel.addEventListener('click', () => {
-                        modal.style.display = 'none';
+                        closeFn();
                     });
                     
                     newOk.addEventListener('click', () => {
-                        modal.style.display = 'none';
+                        closeFn();
                         onOk();
                     });
                 };
@@ -2640,42 +2624,256 @@ let weatherCache = new Map();
             }
         }
         
+        function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop') {
+            const sheet = document.getElementById(sheetId);
+            const backdrop = document.getElementById(backdropId);
+            
+            if (!sheet || !backdrop) return () => {};
+
+            sheet.style.transform = '';
+            sheet.classList.add('open');
+            backdrop.classList.add('open');
+            
+            const closeSheet = () => {
+                sheet.classList.remove('open');
+                backdrop.classList.remove('open');
+                sheet.style.transform = '';
+            };
+            
+            backdrop.onclick = closeSheet;
+            
+            // Swipe down to close logic
+            let startY = 0;
+            let currentY = 0;
+            
+            let handleId = sheetId.replace('-modal', '-sheet-drag-handle');
+            const handle = document.getElementById(handleId);
+            
+            if (handle) {
+                const onTouchStart = (e) => {
+                    startY = e.touches[0].clientY;
+                    sheet.style.transition = 'none';
+                };
+                
+                const onTouchMove = (e) => {
+                    currentY = e.touches[0].clientY;
+                    const diff = currentY - startY;
+                    if (diff > 0) { // only swipe down
+                        sheet.style.transform = `translateY(${diff}px)`;
+                    }
+                };
+                
+                const onTouchEnd = () => {
+                    sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                    if (currentY - startY > 100) {
+                        closeSheet();
+                    } else {
+                        sheet.style.transform = 'translateY(0)';
+                    }
+                    
+                    const el = document.getElementById(handleId);
+                    if (el) {
+                        el.removeEventListener('touchstart', onTouchStart);
+                        el.removeEventListener('touchmove', onTouchMove);
+                    }
+                    window.removeEventListener('touchend', onTouchEnd);
+                };
+                
+                const clone = handle.cloneNode(true);
+                handle.parentNode.replaceChild(clone, handle);
+                clone.addEventListener('touchstart', onTouchStart, { passive: true });
+                clone.addEventListener('touchmove', onTouchMove, { passive: true });
+                window.addEventListener('touchend', onTouchEnd);
+            }
+            
+            return closeSheet;
+        }
+        window.openBottomSheet = openBottomSheet;
+
+        function openChangelogDetail(item) {
+            const sheet = document.getElementById('changelog-detail-sheet');
+            const backdrop = document.getElementById('changelog-sheet-backdrop');
+            
+            document.getElementById('changelog-detail-title').textContent = `v${item.version}`;
+            document.getElementById('changelog-detail-subtitle').textContent = "Detalles de esta versión";
+            
+            const listEl = document.getElementById('changelog-detail-list');
+            listEl.innerHTML = '';
+            
+            if (item.changes && item.changes.length > 0) {
+                item.changes.forEach(change => {
+                    const li = document.createElement('li');
+                    li.textContent = change;
+                    li.style.marginBottom = '12px';
+                    listEl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'Actualizaciones menores y corrección de errores.';
+                listEl.appendChild(li);
+            }
+            
+            sheet.style.transform = '';
+            sheet.classList.add('open');
+            backdrop.classList.add('open');
+            
+            const closeSheet = () => {
+                sheet.classList.remove('open');
+                backdrop.classList.remove('open');
+                sheet.style.transform = '';
+            };
+            
+            backdrop.onclick = closeSheet;
+            
+            // Swipe down to close logic
+            let startY = 0;
+            let currentY = 0;
+            const handle = document.getElementById('changelog-sheet-drag-handle');
+            
+            const onTouchStart = (e) => {
+                startY = e.touches[0].clientY;
+                sheet.style.transition = 'none';
+            };
+            
+            const onTouchMove = (e) => {
+                currentY = e.touches[0].clientY;
+                const diff = currentY - startY;
+                if (diff > 0) { // only swipe down
+                    sheet.style.transform = `translateY(${diff}px)`;
+                }
+            };
+            
+            const onTouchEnd = () => {
+                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                if (currentY - startY > 100) {
+                    closeSheet();
+                } else {
+                    sheet.style.transform = 'translateY(0)';
+                }
+                
+                handle.removeEventListener('touchstart', onTouchStart);
+                handle.removeEventListener('touchmove', onTouchMove);
+                window.removeEventListener('touchend', onTouchEnd);
+            };
+            
+            // cleanup if already added
+            const clone = handle.cloneNode(true);
+            handle.parentNode.replaceChild(clone, handle);
+            clone.addEventListener('touchstart', onTouchStart, { passive: true });
+            clone.addEventListener('touchmove', onTouchMove, { passive: true });
+            window.addEventListener('touchend', onTouchEnd);
+        }
+
         async function showChangelogModal(version) {
             const modal = document.getElementById('changelog-modal');
             const titleEl = document.getElementById('changelog-title');
             const listEl = document.getElementById('changelog-list');
             const closeBtn = document.getElementById('changelog-close-btn');
+            const updateContainer = document.getElementById('changelog-update-container');
             const updateBtn = document.getElementById('changelog-update-btn');
             
             if (!modal || !titleEl || !listEl || !closeBtn || !updateBtn) return;
             
-            const titleFormat = t('config.changelogTitle') || 'Novedades v{version}';
-            titleEl.textContent = titleFormat.replace('{version}', version);
-            
-            closeBtn.textContent = t('config.close') || 'Cerrar';
-            updateBtn.textContent = t('config.update') || 'Actualizar';
+            if (version) {
+                const titleFormat = t('config.changelogTitle') || 'Novedades v{version}';
+                titleEl.textContent = titleFormat.replace('{version}', version);
+                updateContainer.style.display = 'flex';
+                updateBtn.textContent = (t('config.update') || 'Actualizar') + ' a v' + version;
+            } else {
+                titleEl.textContent = t('config.changelogTitleAll') || 'Todos los cambios';
+                updateContainer.style.display = 'none';
+            }
             
             try {
                 const response = await fetch('./changelog.json?t=' + Date.now());
                 if (!response.ok) throw new Error('Network response was not ok');
                 const changelogData = await response.json();
                 
-                const currentVersionData = changelogData.find(item => item.version === version);
-                const changes = currentVersionData ? currentVersionData.changes : [];
-                
                 listEl.innerHTML = '';
-                if (changes.length > 0) {
-                    changes.forEach(change => {
-                        const li = document.createElement('li');
-                        li.textContent = change;
-                        li.style.marginBottom = '8px';
-                        listEl.appendChild(li);
-                    });
-                } else {
+                
+                const renderData = version ? [changelogData.find(item => item.version === version) || {version: version, changes: []}] : changelogData;
+                
+                renderData.forEach((item, index) => {
                     const li = document.createElement('li');
-                    li.textContent = 'Actualizaciones menores y corrección de errores.';
+                    li.style.position = 'relative';
+                    li.style.paddingLeft = '30px';
+                    li.style.cursor = 'pointer';
+                    li.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.1}s`;
+                    li.style.opacity = '0';
+                    li.style.transform = 'translateY(10px)';
+                    
+                    const isMajor = item.version.endsWith('.0');
+                    
+                    const marker = document.createElement('div');
+                    marker.style.position = 'absolute';
+                    marker.style.left = '-7px';
+                    marker.style.top = '16px';
+                    marker.style.width = '16px';
+                    marker.style.height = '16px';
+                    marker.style.borderRadius = '50%';
+                    marker.style.background = isMajor ? 'var(--accent-temp)' : 'var(--grid-color)';
+                    marker.style.border = '3px solid var(--bg-color)';
+                    marker.style.zIndex = '2';
+                    li.appendChild(marker);
+                    
+                    const content = document.createElement('div');
+                    content.style.background = 'var(--card-bg)';
+                    content.style.borderRadius = '12px';
+                    content.style.padding = '16px';
+                    content.style.border = '1px solid var(--grid-color)';
+                    
+                    const header = document.createElement('div');
+                    header.style.display = 'flex';
+                    header.style.alignItems = 'center';
+                    header.style.gap = '8px';
+                    header.style.marginBottom = '8px';
+                    
+                    const tag = document.createElement('span');
+                    tag.textContent = isMajor ? 'Major' : 'Patch';
+                    tag.style.fontSize = '0.7rem';
+                    tag.style.fontWeight = 'bold';
+                    tag.style.padding = '2px 8px';
+                    tag.style.borderRadius = '12px';
+                    tag.style.background = isMajor ? 'rgba(59, 130, 246, 0.1)' : 'rgba(156, 163, 175, 0.1)';
+                    tag.style.color = isMajor ? '#3b82f6' : 'var(--text-secondary)';
+                    header.appendChild(tag);
+                    
+                    const title = document.createElement('div');
+                    title.textContent = `v${item.version}`;
+                    title.style.fontWeight = 'bold';
+                    title.style.fontSize = isMajor ? '1.1rem' : '1rem';
+                    title.style.color = 'var(--text-primary)';
+                    header.appendChild(title);
+                    
+                    // Unread state dot for new versions
+                    if (version && index === 0) {
+                        const unreadDot = document.createElement('div');
+                        unreadDot.style.width = '8px';
+                        unreadDot.style.height = '8px';
+                        unreadDot.style.borderRadius = '50%';
+                        unreadDot.style.background = '#3b82f6';
+                        unreadDot.style.marginLeft = 'auto';
+                        header.appendChild(unreadDot);
+                    }
+                    
+                    content.appendChild(header);
+                    
+                    const desc = document.createElement('div');
+                    desc.style.fontSize = '0.85rem';
+                    desc.style.color = 'var(--text-secondary)';
+                    desc.style.display = '-webkit-box';
+                    desc.style.webkitLineClamp = '2';
+                    desc.style.webkitBoxOrient = 'vertical';
+                    desc.style.overflow = 'hidden';
+                    desc.textContent = (item.changes && item.changes.length > 0) ? item.changes[0] : 'Actualizaciones menores y corrección de errores.';
+                    content.appendChild(desc);
+                    
+                    li.appendChild(content);
+                    
+                    li.onclick = () => openChangelogDetail(item);
+                    
                     listEl.appendChild(li);
-                }
+                });
                 
                 closeBtn.onclick = () => { modal.style.display = 'none'; };
                 updateBtn.onclick = async () => {

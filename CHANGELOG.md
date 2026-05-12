@@ -2,6 +2,36 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.2] - 2026-05-12
+### Bug Fixes & Enchancements
+- **Confirm Dialog Refactor**: Converted the global confirm modal into a swipe-to-dismiss bottom sheet, conforming to mobile-first UX principles and resolving z-index overlap issues whenever a confirmation prompt is triggered from inside an already opened modal (e.g., Year in Pixels).
+
+## [v1.8.1] - 2026-05-12
+### Bug Fixes & Enchancements
+- **I18n Corrections**: Fixed a bug where 'Year In Pixels' couldn't correctly query localized Spanish translations for month names (`t('months.long')` missing mapping).
+- **YIP Deletion Safeguard**: Added the missing location reference definition alongside mandatory confirm prompts resolving the console crashing bug when explicitly deleting locally-saved daily historical location metrics natively.
+- **Unified UX Paradigms**: Formally transformed the native static overlay modals for SPF Index, AQI, and Pollen Data over into fluid, gesture-friendly, swipe-to-dismiss bottom sheets.
+
+## [v1.8.0] - 2026-05-12
+### Features & UX Engine
+- **Year in Pixels 2.0 Redesign**: Entirely reconstructed the historical "Year in Pixels" view relying on CSS Grid. On narrow device viewports it features a fluid vertical mobile-first stacked list with `scroll-snap-type` alignments, expanding efficiently onto a classic modular 4-column layout on larger screens.
+- **Detailed Historial Introspection**: Daily cells are now fully interactive touch targets. Engaging a valid day spawns a fluid Bottom-Sheet overlay detailing every historically recorded metric for that cycle simultaneously (Precipitation exactness, Winds, Max/Min, AQI, and detailed Pollens).
+- **Nuanced Pollen Telemetry**: Extracted and securely mapped granular pollen telemetry directly into `IndexedDB`. Instead of just a generic historical "Pollen" index, the system permanently records specific severity ranges for individual tree and plant types per day (Alder, Birch, Grass, Mugwort, Olive, Ragweed) making it a powerful retrospective tracking tool for allergy sufferers.
+- **Micro-interactions & Void States**: Enhanced YIP pixels with spring-based CSS hover scaling and structurally implemented striped CSS pattern voids for structurally invalid/future unwritten periods.
+
+## [v1.7.2] - 2026-05-12
+### Fixes & Enhancements
+- **Global Changelog Access**: Embedded a new 'View Changelog' deep-link strictly coupled to the application version inside the Settings pane, smoothly allowing users to navigate through retrospective changes effortlessly.
+- **YIP Precipitation Sync Matrix**: Fixed an aggregation logic bug in the `DataProcessor`. The historical database now natively calculates the *exact sum* of all generated 'hourly visible' precipitation drops for a day, matching 100% with the displayed histogram logic.
+- **Pollen Level Matrix Fix**: Recalibrated the raw pollen calculation mapping in `YearInPixels.js` that caused low/moderate pollen readings to erroneously default to 'Very High / Red'. It now correctly aligns linearly with the exact thresholds assigned in `AqiManager.js`.
+
+## [v1.7.1] - 2026-05-12
+### Features & Refinements
+- **Extended History Tracking**: The `IndexedDB` backend now safely stores comprehensive daily aggregates for AQI (Air Quality Index), General Pollen Levels, Wind Speeds, Max Gusts, and Apparent Temperature (Sensación Térmica) silently in the background.
+- **Year In Pixels (YIP) Upgrade**: Added dynamic options to the Year In Pixels dialog. Users can now visualize color-coded thermal maps for AQI, Pollen, Wind, Gusts, and Apparent Measurements, alongside standard Max/Min temperatures.
+- **Precipitation Data Fix**: Resolved an issue where precipitation metrics were dropped during daily cache aggregation. Precipitacion sums natively track back properly in the grid layout now.
+- **YIP UX Enhancements**: Revamped the Year In Pixels modal architecture to replicate the exact visual specs of the SPF Modal (absolute positioned circular close-btn) and added strict bounding-box checks allowing users to touch the outer backdrop to cleanly dismiss the modal.
+
 ## [v1.7.0] - 2026-05-11
 ### Features & UX
 - **Tactile Feedback**: Implemented active states, scale transforms, and CSS gradients to provide responsive push-down feedback on UI components, buttons, and daily cards.

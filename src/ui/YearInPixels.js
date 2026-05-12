@@ -1,5 +1,6 @@
 import { storageService } from '../services/StorageService.js';
 import { getThemeColor } from '../theme.js';
+import { t } from '../utils/i18n.js';
 
 export function initYearInPixels() {
   const openBtn = document.getElementById('year-in-pixels-btn');
@@ -7,8 +8,35 @@ export function initYearInPixels() {
   const closeBtn = document.getElementById('close-yip-modal-btn');
   const locSelect = document.getElementById('yip-location-select');
   const paramSelect = document.getElementById('yip-param-select');
+  const delLocBtn = document.getElementById('yip-delete-loc-btn');
 
   if (!openBtn || !modal) return;
+  
+  if (delLocBtn) {
+      delLocBtn.addEventListener('click', async () => {
+          const locSelectValue = document.getElementById('yip-location-select')?.value;
+          if (!locSelectValue) return;
+          
+          const confirmed = await showConfirm(
+              t('config.confirmAction', 'Confirmar'),
+              t('config.deleteLocConfirm', `¿Borrar todos los datos históricos de ${locSelectValue}?`)
+          );
+
+          if (confirmed) {
+              await storageService.init();
+              const db = storageService.db;
+              const tx = db.transaction([storageService.historyStoreName], 'readwrite');
+              const store = tx.objectStore(storageService.historyStoreName);
+              const req = store.delete(locSelectValue);
+              req.onsuccess = () => {
+                  modal.style.display = 'none'; // close it entirely on wipe
+              };
+              req.onerror = (e) => {
+                  console.error('Error deleting location historical data:', e);
+              };
+          }
+      });
+  }
 
   openBtn.addEventListener('click', async () => {
      // Fetch all available keys in historyStoreName
@@ -38,6 +66,7 @@ export function initYearInPixels() {
              });
              // Select the first one or the currently viewed one
              if (keys.length > 0) {
+                locSelect.value = keys[0];
                 await loadLocationData(keys[0]);
              }
          }
@@ -47,6 +76,12 @@ export function initYearInPixels() {
 
   closeBtn.addEventListener('click', () => {
       modal.style.display = 'none';
+  });
+
+  modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+          modal.style.display = 'none';
+      }
   });
 
   locSelect.addEventListener('change', async (e) => {
@@ -74,6 +109,9 @@ async function loadLocationData(locationName) {
 function renderYIPGrid(history, param) {
     const container = document.getElementById('yip-grid-container');
     const legend = document.getElementById('yip-legend');
+    const locSelect = document.getElementById('yip-location-select');
+    const paramSelect = document.getElementById('yip-param-select');
+    
     container.innerHTML = '';
     legend.innerHTML = '';
 
@@ -84,9 +122,12 @@ function renderYIPGrid(history, param) {
 
     const today = new Date();
     const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const currentDay = today.getDate();
     
-    // Group days by month (0-11) and day (1-31)
+    // Group days by month (0-11) and day (0-30)
     const yearGrid = Array.from({length: 12}, () => new Array(31).fill(null));
+    const yearFullData = Array.from({length: 12}, () => new Array(31).fill(null));
     
     history.daily.forEach(d => {
         const date = new Date(d.time);
@@ -96,67 +137,168 @@ function renderYIPGrid(history, param) {
             
             let val = null;
             if (param === 'maxTemp') val = d.tempMax;
-            if (param === 'minTemp') val = d.tempMin;
-            if (param === 'precip') val = d.precipTotal || 0; // precip might not be tracked right in daily, usually it is sum or we can extract it if needed. Wait, open-meteo daily has short info. We will use tempMax for now.
+            else if (param === 'minTemp') val = d.tempMin;
+            else if (param === 'apparentMax') val = d.apparentMax !== undefined ? d.apparentMax : d.tempMax;
+            else if (param === 'precip') val = d.precipTotal || 0;
+            else if (param === 'windMax') val = d.windMax || 0;
+            else if (param === 'gustMax') val = d.gustMax || 0;
+            else if (param === 'aqi') val = d.aqi || 0;
+            else if (param === 'pollen') val = d.pollen || 0;
+            else if (param.startsWith('pollen_')) {
+                const type = param.replace('pollen_', '');
+                val = (d.pollenDetails && d.pollenDetails[type]) ? d.pollenDetails[type] : 0;
+            }
             
             yearGrid[m][day] = val;
+            yearFullData[m][day] = d;
         }
     });
 
-    // We draw columns as months and rows as days to fit "Year in pixels" standard.
-    // Or normally it is 12 columns (months) x 31 rows (days)
-    
-    // Header row: empty corner + 12 months
-    const monthNames = ["E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-    // Since our container uses repeat(12, 1fr), we maybe should make it 13 cols to include row numbers?
-    container.style.gridTemplateColumns = 'repeat(13, 1fr)';
-    
-    // Empty top-left
-    let headerHTML = '<div></div>';
+    const monthNames = [
+        t('months.long.0', 'Enero'), t('months.long.1', 'Febrero'), t('months.long.2', 'Marzo'), 
+        t('months.long.3', 'Abril'), t('months.long.4', 'Mayo'), t('months.long.5', 'Junio'), 
+        t('months.long.6', 'Julio'), t('months.long.7', 'Agosto'), t('months.long.8', 'Septiembre'), 
+        t('months.long.9', 'Octubre'), t('months.long.10', 'Noviembre'), t('months.long.11', 'Diciembre')
+    ];
+
     for (let m=0; m<12; m++) {
-        headerHTML += `<div style="text-align: center; font-size: 0.7rem; font-weight: bold; color: var(--text-secondary);">${monthNames[m]}</div>`;
-    }
-    container.insertAdjacentHTML('beforeend', headerHTML);
-
-    for (let day=0; day<31; day++) {
-        // Row header
-        const rowHeader = document.createElement('div');
-        rowHeader.style.fontSize = '0.7rem';
-        rowHeader.style.color = 'var(--text-secondary)';
-        rowHeader.style.textAlign = 'right';
-        rowHeader.style.paddingRight = '4px';
-        rowHeader.style.display = 'flex';
-        rowHeader.style.alignItems = 'center';
-        rowHeader.style.justifyContent = 'flex-end';
-        rowHeader.innerText = (day + 1).toString();
-        container.appendChild(rowHeader);
-
-        for (let m=0; m<12; m++) {
-            const cell = document.createElement('div');
-            cell.style.aspectRatio = '1 / 1';
-            cell.style.borderRadius = '2px';
-            cell.style.backgroundColor = 'var(--grid-color)';
+        const monthBlock = document.createElement('div');
+        monthBlock.className = 'yip-month-block';
+        
+        const titleRow = document.createElement('div');
+        titleRow.style.display = 'flex';
+        titleRow.style.justifyContent = 'space-between';
+        titleRow.style.alignItems = 'center';
+        titleRow.style.marginBottom = '8px';
+        
+        const title = document.createElement('div');
+        title.className = 'yip-month-title';
+        title.style.marginBottom = '0';
+        title.textContent = monthNames[m];
+        
+        const delBtn = document.createElement('button');
+        delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span>';
+        delBtn.style.background = 'transparent';
+        delBtn.style.border = 'none';
+        delBtn.style.color = 'var(--text-secondary)';
+        delBtn.style.cursor = 'pointer';
+        delBtn.title = t('config.deleteMonthData', 'Borrar datos del mes');
+        delBtn.onclick = async () => {
+            const dloc = document.getElementById('yip-location-select')?.value;
+            const confirmed = await showConfirm(
+                t('config.confirmAction', 'Confirmar'),
+                t('config.deleteMonthDataConfirm', `¿Borrar todos los datos de ${monthNames[m]} en ${dloc}?`)
+            );
             
-            const val = yearGrid[m][day];
-            if (val !== null && val !== undefined) {
-               cell.style.backgroundColor = getColorForParam(param, val);
-               cell.title = `Día ${day+1} ${monthNames[m]}: ${Math.round(val)}`;
-            } else {
-               // Check if date is valid
-               const tempDate = new Date(currentYear, m, day+1);
-               if (tempDate.getMonth() !== m) {
-                   cell.style.backgroundColor = 'transparent'; // invalid date like Feb 30
-               }
+            if (confirmed && dloc) {
+                await storageService.init();
+                const db = storageService.db;
+                const tx = db.transaction([storageService.historyStoreName], 'readwrite');
+                const store = tx.objectStore(storageService.historyStoreName);
+                const getReq = store.get(dloc);
+                getReq.onsuccess = () => {
+                    if (getReq.result && getReq.result.daily) {
+                        getReq.result.daily = getReq.result.daily.filter(d => {
+                            const dDate = new Date(d.time);
+                            return !(dDate.getMonth() === m && dDate.getFullYear() === currentYear);
+                        });
+                        const putReq = store.put(getReq.result, dloc);
+                        putReq.onsuccess = () => {
+                            // Re-render
+                            renderYIPGrid(getReq.result, paramSelect.value);
+                        };
+                    }
+                };
             }
-            container.appendChild(cell);
+        };
+        
+        titleRow.appendChild(title);
+        titleRow.appendChild(delBtn);
+        monthBlock.appendChild(titleRow);
+        
+        const monthGrid = document.createElement('div');
+        monthGrid.className = 'yip-month-grid';
+        
+        const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+        const firstDay = new Date(currentYear, m, 1).getDay(); // 0 is Sunday, 1 is Monday
+        const emptyDays = firstDay === 0 ? 6 : firstDay - 1; // Assuming Monday is first
+        
+        for (let e=0; e<emptyDays; e++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.style.pointerEvents = 'none';
+            monthGrid.appendChild(emptyCell);
         }
+        
+        for (let day=0; day<daysInMonth; day++) {
+            const cell = document.createElement('div');
+            cell.className = 'yip-day-cell';
+            
+            const isFuture = (m > currentMonth) || (m === currentMonth && day > currentDay - 1);
+            if (isFuture) {
+                cell.classList.add('future');
+            } else {
+                const val = yearGrid[m][day];
+                if (val !== null && val !== undefined) {
+                    cell.style.backgroundColor = getColorForParam(param, val);
+                    cell.classList.add('completed');
+                    cell.onclick = () => openYIPDetail(yearFullData[m][day], `${day+1} ${monthNames[m]} ${currentYear}`);
+                }
+            }
+            monthGrid.appendChild(cell);
+        }
+        
+        monthBlock.appendChild(monthGrid);
+        container.appendChild(monthBlock);
     }
 
     renderLegend(param, legend);
 }
 
+function openYIPDetail(data, dateStr) {
+    if (!data) return;
+    const sheet = document.getElementById('yip-detail-sheet');
+    const backdrop = document.getElementById('yip-sheet-backdrop');
+    
+    document.getElementById('yip-detail-date').textContent = dateStr;
+    const desc = document.getElementById('yip-detail-desc');
+    desc.textContent = `T. Máx: ${data.tempMax !== undefined ? Math.round(data.tempMax) : '-'}°C | T. Mín: ${data.tempMin !== undefined ? Math.round(data.tempMin) : '-'}°C`;
+    
+    const details = data.pollenDetails || {};
+    const pollenHtml = Object.keys(details).length > 0 ? 
+        `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Gramíneas: ${details.grass||0} | Olivo: ${details.olive||0} | Abedul: ${details.birch||0}</div>` : '';
+
+    const metricsHtml = `
+        <div class="yip-detail-item">
+            <span class="yip-detail-label">Precipitación</span>
+            <span class="yip-detail-value">${data.precipTotal?.toFixed(1) || 0} mm</span>
+        </div>
+        <div class="yip-detail-item">
+            <span class="yip-detail-label">Viento / Rachas</span>
+            <span class="yip-detail-value">${Math.round(data.windMax || 0)} / ${Math.round(data.gustMax || 0)} km/h</span>
+        </div>
+        <div class="yip-detail-item">
+            <span class="yip-detail-label">Calidad Aire (AQI)</span>
+            <span class="yip-detail-value">${data.aqi || 0}</span>
+        </div>
+        <div class="yip-detail-item">
+            <span class="yip-detail-label">Polen (Máx)</span>
+            <span class="yip-detail-value">${data.pollen || 0}</span>
+            ${pollenHtml}
+        </div>
+    `;
+    document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
+    
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+    
+    backdrop.onclick = () => {
+        sheet.classList.remove('open');
+        backdrop.classList.remove('open');
+    };
+}
+
 function getColorForParam(param, value) {
-    if (param === 'maxTemp' || param === 'minTemp') {
+    if (param === 'maxTemp' || param === 'minTemp' || param === 'apparentMax') {
         if (value < 0) return '#3b82f6';
         if (value < 10) return '#60a5fa';
         if (value < 15) return '#93c5fd';
@@ -171,13 +313,32 @@ function getColorForParam(param, value) {
         if (value < 5) return '#60a5fa';
         if (value < 15) return '#3b82f6';
         return '#1d4ed8';
+    } else if (param === 'windMax' || param === 'gustMax') {
+        if (value < 10) return '#ccfbf1'; // teal-50
+        if (value < 20) return '#5eead4'; // teal-300
+        if (value < 40) return '#06b6d4'; // cyan-500
+        if (value < 60) return '#6366f1'; // indigo-500
+        return '#d946ef'; // fuchsia-500
+    } else if (param === 'aqi') {
+        if (value <= 50) return '#22c55e'; // green
+        if (value <= 100) return '#eab308'; // yellow
+        if (value <= 150) return '#f97316'; // orange
+        if (value <= 200) return '#ef4444'; // red
+        if (value <= 300) return '#a855f7'; // purple
+        return '#9f1239'; // rose-800
+    } else if (param.startsWith('pollen')) {
+        if (value === 0) return 'var(--grid-color)';
+        if (value === 1) return '#a3e635'; // lime
+        if (value === 2) return '#facc15'; // yellow
+        if (value === 3) return '#f97316'; // orange
+        return '#dc2626'; // red
     }
     return 'var(--grid-color)';
 }
 
 function renderLegend(param, legendContainer) {
     let steps = [];
-    if (param === 'maxTemp' || param === 'minTemp') {
+    if (param === 'maxTemp' || param === 'minTemp' || param === 'apparentMax') {
         steps = [
             { c: '#3b82f6', l: '<0°' },
             { c: '#93c5fd', l: '10°' },
@@ -192,6 +353,28 @@ function renderLegend(param, legendContainer) {
             { c: '#3b82f6', l: '15mm' },
             { c: '#1d4ed8', l: '>15mm' }
         ];
+    } else if (param === 'windMax' || param === 'gustMax') {
+        steps = [
+            { c: '#ccfbf1', l: '<10' },
+            { c: '#5eead4', l: '20' },
+            { c: '#06b6d4', l: '40' },
+            { c: '#6366f1', l: '60' },
+            { c: '#d946ef', l: '60+' }
+        ];
+    } else if (param === 'aqi') {
+        steps = [
+            { c: '#22c55e', l: t('config.legendGood') },
+            { c: '#eab308', l: t('config.legendMod') },
+            { c: '#f97316', l: t('config.legendUnhealthyS') },
+            { c: '#ef4444', l: t('config.legendBad') }
+        ];
+    } else if (param.startsWith('pollen')) {
+        steps = [
+            { c: '#a3e635', l: t('config.legendLow') },
+            { c: '#facc15', l: t('config.legendMod') },
+            { c: '#f97316', l: t('config.legendHigh') },
+            { c: '#dc2626', l: t('config.legendVeryHigh') }
+        ];
     }
 
     steps.forEach(s => {
@@ -201,5 +384,43 @@ function renderLegend(param, legendContainer) {
                 <span>${s.l}</span>
             </div>
         `);
+    });
+}
+
+/**
+ * Shared confirm modal logic for YIP
+ */
+async function showConfirm(title, message) {
+    return new Promise((resolve) => {
+        const titleEl = document.getElementById('confirm-title');
+        const msgEl = document.getElementById('confirm-message');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+        const okBtn = document.getElementById('confirm-ok-btn');
+        
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+        
+        if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
+        if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
+        
+        // Clone to remove old listeners
+        if (okBtn) {
+            const newOk = okBtn.cloneNode(true);
+            okBtn.parentNode.replaceChild(newOk, okBtn);
+            newOk.onclick = () => {
+                closeFn();
+                resolve(true);
+            };
+        }
+        if (cancelBtn) {
+            const newCancel = cancelBtn.cloneNode(true);
+            cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+            newCancel.onclick = () => {
+                closeFn();
+                resolve(false);
+            };
+        }
+        
+        const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => { resolve(confirm(message)); };
     });
 }

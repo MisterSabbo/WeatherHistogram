@@ -775,57 +775,26 @@
       </footer>
     </div>
 
+    <!-- Pill Modals Backdrop -->
+    <div id="pill-sheet-backdrop" class="yip-sheet-backdrop"></div>
+
     <!-- AQI Modal -->
     <div
       id="aqi-modal"
-      style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 5000;
-        align-items: center;
-        justify-content: center;
-        touch-action: none;
-      "
+      class="yip-bottom-sheet"
+      style="display: flex; flex-direction: column;"
     >
+      <div id="aqi-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
       <div
         style="
-          background: var(--card-bg);
-          padding: 16px;
-          border-radius: 12px;
-          width: max-content;
-          min-width: 260px;
-          max-width: 280px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
           position: relative;
           color: var(--text-primary);
-          border: 1px solid var(--grid-color);
+          width: 100%;
         "
       >
         <button
           id="close-aqi-btn"
-          style="
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            background: var(--bg-color);
-            border: 1px solid var(--grid-color);
-            font-size: 20px;
-            color: var(--text-primary);
-            cursor: pointer;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          "
+          style="display: none;"
         >
           <span class="material-symbols-outlined" style="font-size: 18px"
             >close</span
@@ -848,54 +817,20 @@
     <!-- Pollen Modal -->
     <div
       id="pollen-modal"
-      style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 5000;
-        align-items: center;
-        justify-content: center;
-        touch-action: none;
-      "
+      class="yip-bottom-sheet"
+      style="display: flex; flex-direction: column;"
     >
+      <div id="pollen-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
       <div
         style="
-          background: var(--card-bg);
-          padding: 16px;
-          border-radius: 12px;
-          width: max-content;
-          min-width: 260px;
-          max-width: 280px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
           position: relative;
           color: var(--text-primary);
-          border: 1px solid var(--grid-color);
+          width: 100%;
         "
       >
         <button
           id="close-pollen-btn"
-          style="
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            background: var(--bg-color);
-            border: 1px solid var(--grid-color);
-            font-size: 20px;
-            color: var(--text-primary);
-            cursor: pointer;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          "
+          style="display: none;"
         >
           <span class="material-symbols-outlined" style="font-size: 18px"
             >close</span
@@ -922,55 +857,23 @@
 
     <div
       id="spf-modal"
-      style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 5000;
-        align-items: center;
-        justify-content: center;
-        touch-action: none;
-      "
+      class="yip-bottom-sheet"
+      style="display: flex; flex-direction: column;"
     >
+      <div id="spf-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
       <div
         style="
-          background: var(--card-bg);
-          padding: 20px;
-          width: 90%;
-          max-width: 360px;
+          color: var(--text-primary);
           display: flex;
           flex-direction: column;
           gap: 12px;
           position: relative;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-          border: 1px solid var(--grid-color);
+          width: 100%;
         "
       >
         <button
           id="close-spf-btn"
-          style="
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            background: var(--bg-color);
-            border: 1px solid var(--grid-color);
-            font-size: 20px;
-            color: var(--text-primary);
-            cursor: pointer;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          "
+          style="display: none;"
         >
           <span class="material-symbols-outlined" style="font-size: 18px"
             >close</span
@@ -1498,7 +1401,8 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.7.0</span>
+            <span id="app-version-label">v1.8.2</span>
+            <a href="#" id="open-changelog-link" style="color: #3b82f6; text-decoration: none; margin-left: 8px; font-weight: 600;" data-i18n="config.changelogLink">Changelog</a>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
             <strong data-i18n="config.repository">Repositorio:</strong> <br /><a
@@ -2044,9 +1948,13 @@
       </div>
     </div>
 
+    <!-- Confirm Sheet Backdrop -->
+    <div id="confirm-sheet-backdrop" class="yip-sheet-backdrop" style="z-index: 6002;"></div>
+
     <!-- Confirm Modal -->
-    <div id="confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6000; align-items: center; justify-content: center; padding: 20px;">
-      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 320px; padding: 24px; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center;">
+    <div id="confirm-modal" class="yip-bottom-sheet" style="display: flex; flex-direction: column; z-index: 6005;">
+      <div id="confirm-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
+      <div style="background: transparent; border-radius: 0; width: 100%; text-align: center;">
         <h3 id="confirm-title" style="margin-top: 0; margin-bottom: 12px; font-size: 1.2rem;">Confirmar</h3>
         <p id="confirm-message" style="margin-bottom: 24px; font-size: 0.95rem; color: var(--text-secondary);"></p>
         <div style="display: flex; gap: 12px; justify-content: center;">
@@ -2075,47 +1983,74 @@
     </div>
 
     <!-- Changelog Modal -->
-    <div id="changelog-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: 20px;">
-      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-        <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color);">
-          <h3 id="changelog-title" style="margin: 0; font-size: 1.25rem;">Novedades</h3>
-        </div>
-        <div style="padding: 20px 24px; overflow-y: auto; flex: 1;">
-          <ul id="changelog-list" style="margin: 0; padding-left: 20px; line-height: 1.5; font-size: 0.95rem; color: var(--text-secondary);"></ul>
-        </div>
-        <div style="padding: 16px 24px; border-top: 1px solid var(--grid-color); display: flex; gap: 12px; justify-content: flex-end;">
-          <button id="changelog-close-btn" style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cerrar</button>
-          <button id="changelog-update-btn" style="padding: 10px 20px; border-radius: 8px; border: none; background: var(--accent-precip); color: white; font-weight: bold; cursor: pointer;">Actualizar</button>
-        </div>
+    <div id="changelog-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 6001; flex-direction: column;">
+      <div style="position: sticky; top: 0; background: var(--bg-color); padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center; justify-content: space-between; z-index: 10;">
+        <h3 id="changelog-title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Novedades</h3>
+        <button id="changelog-close-btn" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 8px;"><span class="material-symbols-outlined">close</span></button>
       </div>
+      <div style="padding: 20px 24px; overflow-y: auto; flex: 1; position: relative;">
+        <!-- The Timeline line -->
+        <div style="position: absolute; left: 35px; top: 20px; bottom: 20px; width: 2px; background: var(--grid-color); z-index: 1;"></div>
+        <div id="changelog-list" style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 24px; list-style: none; margin: 0; padding: 0;"></div>
+      </div>
+      <div id="changelog-update-container" style="padding: 16px 24px; border-top: 1px solid var(--grid-color); display: none; justify-content: center; background: var(--card-bg);">
+        <button id="changelog-update-btn" style="padding: 12px 24px; border-radius: 8px; border: none; background: var(--accent-precip); color: white; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px;">Actualizar Aplicación</button>
+      </div>
+    </div>
+    
+    <!-- Changelog Detail Bottom Sheet -->
+    <div id="changelog-sheet-backdrop" class="yip-sheet-backdrop"></div>
+    <div id="changelog-detail-sheet" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column;">
+        <div id="changelog-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 12px auto; cursor: grab;"></div>
+        <div style="padding: 0 24px 24px 24px; overflow-y: auto; flex: 1;">
+          <h3 id="changelog-detail-title" style="margin-bottom: 4px; color: var(--text-primary); font-size: 1.25rem;"></h3>
+          <p id="changelog-detail-subtitle" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;"></p>
+          <ul id="changelog-detail-list" style="margin: 0; padding-left: 20px; color: var(--text-primary); line-height: 1.6; font-size: 0.95rem;"></ul>
+        </div>
     </div>
 
     <!-- Year In Pixels Modal -->
     <div id="yip-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: 20px;">
-      <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-        <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; justify-content: space-between; align-items: center;">
+      <div style="position: relative; background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <button id="close-yip-modal-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-symbols-outlined" style="font-size: 18px">close</span></button>
+        <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center;">
           <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
             <span class="material-symbols-outlined" style="color: var(--accent-temp)">grid_view</span>
             <span data-i18n="config.yearInPixels">Año en Píxeles</span>
           </h3>
-          <button id="close-yip-modal-btn" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer;"><span class="material-symbols-outlined">close</span></button>
         </div>
         <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
           <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);" data-i18n="config.location">Ubicación</label>
-              <select id="yip-location-select" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary);"></select>
+            <div style="flex: 1; min-width: 200px; display: flex; align-items: flex-end; gap: 8px;">
+              <div style="flex: 1;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);" data-i18n="config.location">Ubicación</label>
+                <select id="yip-location-select" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary);"></select>
+              </div>
+              <button id="yip-delete-loc-btn" style="background: transparent; border: 1px solid var(--grid-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer; height: 35px; width: 35px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" title="Borrar datos de esta ubicación">
+                <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+              </button>
             </div>
             <div style="flex: 1; min-width: 200px;">
               <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);" data-i18n="config.parameter">Parámetro</label>
               <select id="yip-param-select" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary);">
-                <option value="maxTemp">Temperatura Máxima</option>
-                <option value="minTemp">Temperatura Mínima</option>
-                <option value="precip">Precipitación</option>
+                <option value="maxTemp" data-i18n="config.yipMaxTemp">Temperatura Máxima</option>
+                <option value="minTemp" data-i18n="config.yipMinTemp">Temperatura Mínima</option>
+                <option value="apparentMax" data-i18n="config.yipApparentMax">Sensación Térmica</option>
+                <option value="precip" data-i18n="config.yipPrecip">Precipitación</option>
+                <option value="windMax" data-i18n="config.yipWindMax">Viento (Máximo)</option>
+                <option value="gustMax" data-i18n="config.yipGustMax">Rachas (Máximo)</option>
+                <option value="aqi" data-i18n="config.yipAqi">Calidad del Aire (AQI)</option>
+                <option value="pollen" data-i18n="config.yipPollen">Nivel de Polen (General)</option>
+                <option value="pollen_alder" data-i18n="config.yipPollenAlder">Polen (Aliso)</option>
+                <option value="pollen_birch" data-i18n="config.yipPollenBirch">Polen (Abedul)</option>
+                <option value="pollen_grass" data-i18n="config.yipPollenGrass">Polen (Gramíneas)</option>
+                <option value="pollen_mugwort" data-i18n="config.yipPollenMugwort">Polen (Artemisa)</option>
+                <option value="pollen_olive" data-i18n="config.yipPollenOlive">Polen (Olivo)</option>
+                <option value="pollen_ragweed" data-i18n="config.yipPollenRagweed">Polen (Ambrosía)</option>
               </select>
             </div>
           </div>
-          <div id="yip-grid-container" style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 10px; background: var(--bg-color); border-radius: 8px; overflow-x: auto;">
+          <div id="yip-grid-container" class="yip-year-grid">
             <!-- Grid dynamically generated -->
           </div>
           <div id="yip-legend" style="display: flex; gap: 8px; justify-content: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; align-items: center; flex-wrap: wrap;">
@@ -2123,6 +2058,16 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Year In Pixels Detail Bottom Sheet -->
+    <div id="yip-sheet-backdrop" class="yip-sheet-backdrop"></div>
+    <div id="yip-detail-sheet" class="yip-bottom-sheet">
+        <h3 id="yip-detail-date" style="margin-bottom: 8px;"></h3>
+        <p id="yip-detail-desc" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+        <div id="yip-detail-metrics" class="yip-detail-grid">
+            <!-- Detailed metrics generated dynamically -->
+        </div>
     </div>
 
     <script type="module" src="./src/app.js"></script>
