@@ -2,6 +2,17 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.3] - 2026-05-12
+### iOS Compatibility & Mobile Enhancements
+- **iOS Safe Areas**: Added `env(safe-area-inset-*)` padding to `#top-panel`, `#bottom-nav-container`, `.yip-bottom-sheet`, and `#ptr-indicator` to prevent overlap with notch and home indicator.
+- **iOS Viewport Fix**: Replaced `100vh` with `-webkit-fill-available` on `body` and added `min-height: -webkit-fill-available` to `#app-wrapper` to prevent Safari dynamic toolbar from hiding content.
+- **Momentum Scroll**: Added `-webkit-overflow-scrolling: touch` and `overscroll-behavior: contain` to `#daily-cards-container`, `.yip-year-grid`, `.yip-bottom-sheet`, `#overlay`, and `.custom-tooltip` for native iOS scrolling feel.
+- **iOS Zoom Prevention**: Set `font-size: 16px` on all `input` and `textarea` elements to prevent Safari auto-zoom on input focus.
+- **Tap Highlight**: Added `-webkit-tap-highlight-color: transparent` globally on buttons, links, select elements, `.daily-card`, and `.yip-day-cell`.
+- **Pull-to-Refresh Guard**: Refactored PTR logic with `isAnyModalOpen()` helper covering all 10 modals/bottom sheets; pull-to-refresh is now disabled whenever any modal or sheet is visible.
+- **WebP Support**: Added `window.supportsWebP` detection script in `index.html` and `getImageUrl()` helper in `app.js` for automatic image format fallback.
+- **iOS Extras**: Added `apple-touch-fullscreen` meta tag, `text-size-adjust: 100%` on body, and `-webkit-overflow-scrolling` on info modal.
+
 ## [v1.8.2] - 2026-05-12
 ### Bug Fixes & Enchancements
 - **Confirm Dialog Refactor**: Converted the global confirm modal into a swipe-to-dismiss bottom sheet, conforming to mobile-first UX principles and resolving z-index overlap issues whenever a confirmation prompt is triggered from inside an already opened modal (e.g., Year in Pixels).

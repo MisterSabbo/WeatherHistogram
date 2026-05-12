@@ -128,25 +128,42 @@ let weatherCache = new Map();
             state.isDailyCardsView = await storageService.get('viewMode', 'minimap') === 'daily';
 
             await loadChartTheme(state.activeChartTheme);
-                       // Pull To Refresh Logic
-            let ptrStartY = 0;
-            let ptrStartX = 0;
-            let ptrDist = 0;
-            const ptrIndicator = document.getElementById('ptr-indicator');
-            const appWrapper = document.getElementById('app-wrapper');
+// WebP image support helper
+             const getImageUrl = (baseUrl, ext) => {
+                 if (window.supportsWebP) {
+                     return baseUrl.replace(/\.\w+$/, '.webp');
+                 }
+                 return baseUrl;
+             };
+             let ptrStartY = 0;
+             let ptrStartX = 0;
+             let ptrDist = 0;
+             const ptrIndicator = document.getElementById('ptr-indicator');
+             const appWrapper = document.getElementById('app-wrapper');
 
-            document.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1 && !e.target.closest('#info-modal') && !e.target.closest('#spf-modal') && !e.target.closest('#aqi-modal') && !e.target.closest('#pollen-modal') && !e.target.closest('#search-results') && !e.target.closest('#map-location-modal') && !e.target.closest('#favorites-modal')) {
-                    ptrStartY = e.touches[0].clientY;
-                    ptrStartX = e.touches[0].clientX;
-                    ptrDist = 0;
-                } else {
-                    ptrStartY = 0;
-                }
-            }, { passive: true });
+             const isAnyModalOpen = () => {
+                 const modals = ['#info-modal', '#spf-modal', '#aqi-modal', '#pollen-modal', '#favorites-modal', '#map-location-modal', '#yip-modal', '#changelog-modal', '#prompt-modal', '#confirm-modal'];
+                 const sheets = document.querySelectorAll('.yip-bottom-sheet.open');
+                 if (sheets.length > 0) return true;
+                 for (const sel of modals) {
+                     const el = document.querySelector(sel);
+                     if (el && (el.style.display === 'flex' || el.style.display === 'block')) return true;
+                 }
+                 return false;
+             };
 
-            document.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1 && ptrStartY > 0) {
+             document.addEventListener('touchstart', (e) => {
+                 if (e.touches.length === 1 && !isAnyModalOpen() && !e.target.closest('#search-results')) {
+                     ptrStartY = e.touches[0].clientY;
+                     ptrStartX = e.touches[0].clientX;
+                     ptrDist = 0;
+                 } else {
+                     ptrStartY = 0;
+                 }
+             }, { passive: true });
+
+             document.addEventListener('touchmove', (e) => {
+                 if (e.touches.length === 1 && ptrStartY > 0 && !isAnyModalOpen()) {
                     const currentY = e.touches[0].clientY;
                     const currentX = e.touches[0].clientX;
                     
