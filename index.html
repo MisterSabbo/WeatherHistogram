@@ -44,6 +44,21 @@
        crossorigin=""
      ></script>
 
+     <script>
+     // DVH Polyfill para Safari iOS y PWA standalone
+     (function() {
+       function setDVH() {
+         var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+         document.documentElement.style.setProperty('--dvh', (vh / 100) + 'px');
+         document.documentElement.style.setProperty('--svh', (window.innerHeight / 100) + 'px');
+       }
+       setDVH();
+       window.visualViewport && window.visualViewport.addEventListener('resize', setDVH);
+       window.addEventListener('resize', setDVH);
+       window.addEventListener('orientationchange', function() { setTimeout(setDVH, 100); });
+     })();
+   </script>
+
      <!-- WebP Support Detection -->
      <script>
        (function() {
@@ -113,16 +128,6 @@
 
 <div
        id="app-wrapper"
-       style="
-         display: flex;
-         flex-direction: column;
-         flex: 1;
-         min-height: 0;
-         min-height: -webkit-fill-available;
-         width: 100%;
-         position: relative;
-         z-index: 1;
-       "
      >
        <div id="controls-bar" style="justify-content: space-between">
         <div class="controls-left" style="display: flex; gap: 8px">
@@ -1342,38 +1347,39 @@
       </div>
     </div>
 
-    <!-- Info & Settings Modal -->
-    <div
-      id="info-modal"
-      style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 5000;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      "
-    >
-      <div
-        style="
-          background: var(--card-bg);
-          border-radius: 12px;
-          width: 100%;
-          max-width: 320px;
-          max-height: calc(100vh - 40px);
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          color: var(--text-primary);
-          border: 1px solid var(--grid-color);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        "
-      >
+<!-- Info & Settings Modal -->
+     <div
+       id="info-modal"
+       style="
+         display: none;
+         position: fixed;
+         top: 0;
+         left: 0;
+         right: 0;
+         bottom: 0;
+         background: rgba(0, 0, 0, 0.6);
+         z-index: 5000;
+         align-items: center;
+         justify-content: center;
+         padding: 20px;
+       "
+     >
+       <div
+         style="
+           background: var(--card-bg);
+           border-radius: 12px;
+           width: 100%;
+           max-width: 320px;
+           overflow-y: auto;
+           max-height: calc(var(--dvh, 1dvh) * 100 - 40px);
+           display: flex;
+           flex-direction: column;
+           position: relative;
+           color: var(--text-primary);
+           border: 1px solid var(--grid-color);
+           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+         "
+       >
         <button
           id="close-info-btn"
           style="

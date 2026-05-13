@@ -397,9 +397,13 @@ let weatherCache = new Map();
                 });
             }
 
-            document.addEventListener('gesturestart', (e) => {
-                e.preventDefault();
-            }, { passive: false });
+// Bloquear zoom/pinch SOLO fuera de modals y areas scrollables
+             document.addEventListener('gesturestart', (e) => {
+                 const modals = document.querySelectorAll('.yip-bottom-sheet.open, #info-modal[style*="flex"], #info-modal[style*="block"]');
+                 if (modals.length > 0) return;
+                 if (e.target.closest('#scroll-container')) return;
+                 e.preventDefault();
+             }, { passive: false });
 
             // mainCanvas ya no se usa como un único canvas gigante, sino que usaremos tiles.
             // Pero mantendremos la referencia para compatibilidad si es necesario o la eliminamos.
@@ -562,14 +566,15 @@ let weatherCache = new Map();
                     });
                 }
                 
-                const openChangelogLink = document.getElementById('open-changelog-link');
-                if (openChangelogLink) {
-                    openChangelogLink.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        if (infoModal) infoModal.style.display = 'none';
-                        showChangelogModal();
-                    });
-                }
+const openChangelogLink = document.getElementById('open-changelog-link');
+                 if (openChangelogLink) {
+                     openChangelogLink.addEventListener('click', (e) => {
+                         console.log('[DEBUG] Changelog link clicked', e.type, e.target);
+                         e.preventDefault();
+                         if (infoModal) infoModal.style.display = 'none';
+                         showChangelogModal();
+                     });
+                 }
                 
                 // I18n Logic
                 const langCards = document.querySelectorAll('.lang-card');
