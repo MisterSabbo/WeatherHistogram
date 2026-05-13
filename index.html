@@ -5,16 +5,15 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-/>
-     <meta name="apple-mobile-web-app-capable" content="yes" />
-     <meta name="apple-touch-fullscreen" content="yes" />
-     <meta name="mobile-web-app-capable" content="yes" />
-     <meta
-       name="apple-mobile-web-app-status-bar-style"
-       content="black-translucent"
-     />
-     <meta name="apple-mobile-web-app-title" content="WeatherHist" />
-     <link rel="apple-touch-icon" href="./assets/images/icon-192.png" />
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="WeatherHist" />
+    <link rel="apple-touch-icon" href="./assets/images/icon-192.png" />
     <link rel="icon" type="image/png" href="./assets/images/icon-192.png" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -39,43 +38,10 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://mistersabbo.github.io https://unpkg.com; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://nominatim.openstreetmap.org https://unpkg.com; worker-src 'self' blob:;"
     />
-<script
-       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-       crossorigin=""
-     ></script>
-
-     <script>
-     // DVH Polyfill para Safari iOS y PWA standalone
-     (function() {
-       function setDVH() {
-         var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-         document.documentElement.style.setProperty('--dvh', (vh / 100) + 'px');
-         document.documentElement.style.setProperty('--svh', (window.innerHeight / 100) + 'px');
-       }
-       setDVH();
-       window.visualViewport && window.visualViewport.addEventListener('resize', setDVH);
-       window.addEventListener('resize', setDVH);
-       window.addEventListener('orientationchange', function() { setTimeout(setDVH, 100); });
-     })();
-   </script>
-
-     <!-- WebP Support Detection -->
-     <script>
-       (function() {
-         var elem = document.createElement('canvas');
-         if (!!(elem.getContext && elem.getContext('2d'))) {
-           elem.toDataURL('image/webp');
-           try {
-             var result = elem.toDataURL('image/webp');
-             window.supportsWebP = result.indexOf('data:image/webp') === 0;
-           } catch(e) {
-             window.supportsWebP = false;
-           }
-         } else {
-           window.supportsWebP = false;
-         }
-       })();
-     </script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
   </head>
   <body>
     <div
@@ -124,12 +90,21 @@
         Obteniendo ubicación...
       </p>
       <div id="error-msg"></div>
-</div>
+    </div>
 
-<div
-       id="app-wrapper"
-     >
-       <div id="controls-bar" style="justify-content: space-between">
+    <div
+      id="app-wrapper"
+      style="
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+      "
+    >
+      <div id="controls-bar" style="justify-content: space-between">
         <div class="controls-left" style="display: flex; gap: 8px">
           <button
             id="open-location-modal-btn"
@@ -815,6 +790,9 @@
           position: relative;
           color: var(--text-primary);
           width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         "
       >
         <button
@@ -825,7 +803,7 @@
             >close</span
           >
         </button>
-        <div id="aqi-modal-header-info" style="margin-bottom: 8px"></div>
+        <div id="aqi-modal-header-info" style="margin-bottom: 8px; width: 100%;"></div>
         <canvas
           id="aqi-modal-radar"
           width="220"
@@ -834,7 +812,7 @@
         ></canvas>
         <div
           id="aqi-modal-details"
-          style="font-size: 0.75rem; line-height: 1.3; margin-top: 5px"
+          style="font-size: 0.75rem; line-height: 1.3; margin-top: 5px; width: 100%;"
         ></div>
       </div>
     </div>
@@ -851,6 +829,9 @@
           position: relative;
           color: var(--text-primary);
           width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         "
       >
         <button
@@ -862,7 +843,7 @@
           >
         </button>
         <div
-          style="text-align: center; font-weight: bold; margin-bottom: 5px"
+          style="text-align: center; font-weight: bold; margin-bottom: 5px; width: 100%;"
           data-i18n="pollen.riskTitle"
         >
           Riesgo por Planta
@@ -871,11 +852,11 @@
           id="pollen-modal-radar"
           width="220"
           height="220"
-          style="margin: 0 auto"
+          style="margin: 0 auto; display: block;"
         ></canvas>
         <div
           id="pollen-modal-details"
-          style="font-size: 0.75rem; line-height: 1.3"
+          style="font-size: 0.75rem; line-height: 1.3; width: 100%;"
         ></div>
       </div>
     </div>
@@ -1347,39 +1328,38 @@
       </div>
     </div>
 
-<!-- Info & Settings Modal -->
-     <div
-       id="info-modal"
-       style="
-         display: none;
-         position: fixed;
-         top: 0;
-         left: 0;
-         right: 0;
-         bottom: 0;
-         background: rgba(0, 0, 0, 0.6);
-         z-index: 5000;
-         align-items: center;
-         justify-content: center;
-         padding: 20px;
-       "
-     >
-       <div
-         style="
-           background: var(--card-bg);
-           border-radius: 12px;
-           width: 100%;
-           max-width: 320px;
-           overflow-y: auto;
-           max-height: calc(var(--dvh, 1dvh) * 100 - 40px);
-           display: flex;
-           flex-direction: column;
-           position: relative;
-           color: var(--text-primary);
-           border: 1px solid var(--grid-color);
-           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-         "
-       >
+    <!-- Info & Settings Modal -->
+    <div
+      id="info-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 5000;
+        align-items: center;
+        justify-content: center;
+        padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+      "
+    >
+      <div
+        style="
+          background: var(--card-bg);
+          border-radius: 12px;
+          width: 100%;
+          max-width: 320px;
+          max-height: calc(100vh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          color: var(--text-primary);
+          border: 1px solid var(--grid-color);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        "
+      >
         <button
           id="close-info-btn"
           style="
@@ -1427,7 +1407,7 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.8.3</span>
+            <span id="app-version-label">v1.8.2</span>
             <a href="#" id="open-changelog-link" style="color: #3b82f6; text-decoration: none; margin-left: 8px; font-weight: 600;" data-i18n="config.changelogLink">Changelog</a>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
@@ -2010,16 +1990,16 @@
 
     <!-- Changelog Modal -->
     <div id="changelog-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 6001; flex-direction: column;">
-      <div style="position: sticky; top: 0; background: var(--bg-color); padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center; justify-content: space-between; z-index: 10;">
+      <div style="position: sticky; top: 0; background: var(--bg-color); padding: calc(20px + env(safe-area-inset-top)) 24px 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center; justify-content: space-between; z-index: 10;">
         <h3 id="changelog-title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Novedades</h3>
         <button id="changelog-close-btn" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 8px;"><span class="material-symbols-outlined">close</span></button>
       </div>
-      <div style="padding: 20px 24px; overflow-y: auto; flex: 1; position: relative;">
+      <div style="padding: 20px 24px calc(20px + env(safe-area-inset-bottom)) 24px; overflow-y: auto; flex: 1; position: relative;">
         <!-- The Timeline line -->
         <div style="position: absolute; left: 35px; top: 20px; bottom: 20px; width: 2px; background: var(--grid-color); z-index: 1;"></div>
         <div id="changelog-list" style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 24px; list-style: none; margin: 0; padding: 0;"></div>
       </div>
-      <div id="changelog-update-container" style="padding: 16px 24px; border-top: 1px solid var(--grid-color); display: none; justify-content: center; background: var(--card-bg);">
+      <div id="changelog-update-container" style="padding: 16px 24px calc(16px + env(safe-area-inset-bottom)) 24px; border-top: 1px solid var(--grid-color); display: none; justify-content: center; background: var(--card-bg);">
         <button id="changelog-update-btn" style="padding: 12px 24px; border-radius: 8px; border: none; background: var(--accent-precip); color: white; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px;">Actualizar Aplicación</button>
       </div>
     </div>
@@ -2036,8 +2016,8 @@
     </div>
 
     <!-- Year In Pixels Modal -->
-    <div id="yip-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: 20px;">
-      <div style="position: relative; background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    <div id="yip-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;">
+      <div style="position: relative; background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: calc(100vh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <button id="close-yip-modal-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-symbols-outlined" style="font-size: 18px">close</span></button>
         <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center;">
           <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">

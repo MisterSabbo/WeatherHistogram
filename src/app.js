@@ -128,42 +128,26 @@ let weatherCache = new Map();
             state.isDailyCardsView = await storageService.get('viewMode', 'minimap') === 'daily';
 
             await loadChartTheme(state.activeChartTheme);
-// WebP image support helper
-             const getImageUrl = (baseUrl, ext) => {
-                 if (window.supportsWebP) {
-                     return baseUrl.replace(/\.\w+$/, '.webp');
-                 }
-                 return baseUrl;
-             };
-             let ptrStartY = 0;
-             let ptrStartX = 0;
-             let ptrDist = 0;
-             const ptrIndicator = document.getElementById('ptr-indicator');
-             const appWrapper = document.getElementById('app-wrapper');
+                       // Pull To Refresh Logic
+            let ptrStartY = 0;
+            let ptrStartX = 0;
+            let ptrDist = 0;
+            const ptrIndicator = document.getElementById('ptr-indicator');
+            const appWrapper = document.getElementById('app-wrapper');
 
-             const isAnyModalOpen = () => {
-                 const modals = ['#info-modal', '#spf-modal', '#aqi-modal', '#pollen-modal', '#favorites-modal', '#map-location-modal', '#yip-modal', '#changelog-modal', '#prompt-modal', '#confirm-modal'];
-                 const sheets = document.querySelectorAll('.yip-bottom-sheet.open');
-                 if (sheets.length > 0) return true;
-                 for (const sel of modals) {
-                     const el = document.querySelector(sel);
-                     if (el && (el.style.display === 'flex' || el.style.display === 'block')) return true;
-                 }
-                 return false;
-             };
+            document.addEventListener('touchstart', (e) => {
+                const hasOverlayOpen = document.querySelectorAll('.yip-sheet-backdrop.open, #info-modal[style*="display: flex"], #favorites-modal[style*="display: flex"], #map-location-modal[style*="display: flex"], #prompt-modal[style*="display: flex"], #changelog-modal[style*="display: flex"], #yip-modal[style*="display: flex"]').length > 0;
+                if (e.touches.length === 1 && !hasOverlayOpen && !e.target.closest('#search-results')) {
+                    ptrStartY = e.touches[0].clientY;
+                    ptrStartX = e.touches[0].clientX;
+                    ptrDist = 0;
+                } else {
+                    ptrStartY = 0;
+                }
+            }, { passive: true });
 
-             document.addEventListener('touchstart', (e) => {
-                 if (e.touches.length === 1 && !isAnyModalOpen() && !e.target.closest('#search-results')) {
-                     ptrStartY = e.touches[0].clientY;
-                     ptrStartX = e.touches[0].clientX;
-                     ptrDist = 0;
-                 } else {
-                     ptrStartY = 0;
-                 }
-             }, { passive: true });
-
-             document.addEventListener('touchmove', (e) => {
-                 if (e.touches.length === 1 && ptrStartY > 0 && !isAnyModalOpen()) {
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && ptrStartY > 0) {
                     const currentY = e.touches[0].clientY;
                     const currentX = e.touches[0].clientX;
                     
@@ -397,13 +381,9 @@ let weatherCache = new Map();
                 });
             }
 
-// Bloquear zoom/pinch SOLO fuera de modals y areas scrollables
-             document.addEventListener('gesturestart', (e) => {
-                 const modals = document.querySelectorAll('.yip-bottom-sheet.open, #info-modal[style*="flex"], #info-modal[style*="block"]');
-                 if (modals.length > 0) return;
-                 if (e.target.closest('#scroll-container')) return;
-                 e.preventDefault();
-             }, { passive: false });
+            document.addEventListener('gesturestart', (e) => {
+                e.preventDefault();
+            }, { passive: false });
 
             // mainCanvas ya no se usa como un único canvas gigante, sino que usaremos tiles.
             // Pero mantendremos la referencia para compatibilidad si es necesario o la eliminamos.
@@ -566,15 +546,20 @@ let weatherCache = new Map();
                     });
                 }
                 
-const openChangelogLink = document.getElementById('open-changelog-link');
-                 if (openChangelogLink) {
-                     openChangelogLink.addEventListener('click', (e) => {
-                         console.log('[DEBUG] Changelog link clicked', e.type, e.target);
-                         e.preventDefault();
-                         if (infoModal) infoModal.style.display = 'none';
-                         showChangelogModal();
-                     });
-                 }
+                const openChangelogLink = document.getElementById('open-changelog-link');
+                if (openChangelogLink) {
+                    const onChangelogOpen = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (infoModal) infoModal.style.display = 'none';
+                        showChangelogModal().catch(err => console.error("Changelog err:", err));
+                    };
+                    openChangelogLink.addEventListener('click', onChangelogOpen);
+                    openChangelogLink.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        onChangelogOpen(e);
+                    }, { passive: false });
+                }
                 
                 // I18n Logic
                 const langCards = document.querySelectorAll('.lang-card');
@@ -2807,7 +2792,7 @@ const openChangelogLink = document.getElementById('open-changelog-link');
             }
             
             try {
-                const response = await fetch('./changelog.json?t=' + Date.now());
+                const response = await fetch('changelog.json?t=' + Date.now());
                 if (!response.ok) throw new Error('Network response was not ok');
                 const changelogData = await response.json();
                 

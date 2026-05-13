@@ -17,9 +17,10 @@ export function initYearInPixels() {
           const locSelectValue = document.getElementById('yip-location-select')?.value;
           if (!locSelectValue) return;
           
+          const confirmText = (t('config.deleteLocConfirm') || `¿Borrar todos los datos históricos de {loc}?`).replace('{loc}', locSelectValue);
           const confirmed = await showConfirm(
               t('config.confirmAction', 'Confirmar'),
-              t('config.deleteLocConfirm', `¿Borrar todos los datos históricos de ${locSelectValue}?`)
+              confirmText
           );
 
           if (confirmed) {
@@ -185,9 +186,10 @@ function renderYIPGrid(history, param) {
         delBtn.title = t('config.deleteMonthData', 'Borrar datos del mes');
         delBtn.onclick = async () => {
             const dloc = document.getElementById('yip-location-select')?.value;
+            const confirmText = (t('config.deleteMonthDataConfirm') || `¿Borrar todos los datos de {month} en {loc}?`).replace('{loc}', dloc).replace('{month}', monthNames[m]);
             const confirmed = await showConfirm(
                 t('config.confirmAction', 'Confirmar'),
-                t('config.deleteMonthDataConfirm', `¿Borrar todos los datos de ${monthNames[m]} en ${dloc}?`)
+                confirmText
             );
             
             if (confirmed && dloc) {
@@ -197,15 +199,23 @@ function renderYIPGrid(history, param) {
                 const store = tx.objectStore(storageService.historyStoreName);
                 const getReq = store.get(dloc);
                 getReq.onsuccess = () => {
-                    if (getReq.result && getReq.result.daily) {
-                        getReq.result.daily = getReq.result.daily.filter(d => {
-                            const dDate = new Date(d.time);
-                            return !(dDate.getMonth() === m && dDate.getFullYear() === currentYear);
-                        });
+                    if (getReq.result) {
+                        if (getReq.result.daily) {
+                            getReq.result.daily = getReq.result.daily.filter(d => {
+                                const dDate = new Date(d.time);
+                                return !(dDate.getMonth() === m && dDate.getFullYear() === currentYear);
+                            });
+                        }
+                        if (getReq.result.hourly) {
+                            getReq.result.hourly = getReq.result.hourly.filter(h => {
+                                const hDate = new Date(h.time);
+                                return !(hDate.getMonth() === m && hDate.getFullYear() === currentYear);
+                            });
+                        }
                         const putReq = store.put(getReq.result, dloc);
                         putReq.onsuccess = () => {
-                            // Re-render
                             renderYIPGrid(getReq.result, paramSelect.value);
+                            // Cierra el modal de confirmación si procede, aunque como es de fondo ya debería
                         };
                     }
                 };

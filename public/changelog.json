@@ -1,21 +1,17 @@
 [
   {
-    "version": "1.8.3",
-    "changes": [
-      "iOS Safe Areas: Added env(safe-area-inset-*) padding to #top-panel, #bottom-nav-container, .yip-bottom-sheet, and #ptr-indicator to prevent overlap with notch and home indicator.",
-      "iOS Viewport Fix: Replaced 100vh with -webkit-fill-available on body and added min-height: -webkit-fill-available to #app-wrapper to prevent Safari dynamic toolbar from hiding content.",
-      "Momentum Scroll: Added -webkit-overflow-scrolling: touch and overscroll-behavior: contain to #daily-cards-container, .yip-year-grid, .yip-bottom-sheet, #overlay, and .custom-tooltip for native iOS scrolling feel.",
-      "iOS Zoom Prevention: Set font-size: 16px on all input and textarea elements to prevent Safari auto-zoom on input focus.",
-      "Tap Highlight: Added -webkit-tap-highlight-color: transparent globally on buttons, links, select elements, .daily-card, and .yip-day-cell.",
-      "Pull-to-Refresh Guard: Refactored PTR logic with isAnyModalOpen() helper covering all 10 modals/bottom sheets; pull-to-refresh is now disabled whenever any modal or sheet is visible.",
-      "WebP Support: Added window.supportsWebP detection script in index.html and getImageUrl() helper in app.js for automatic image format fallback.",
-      "iOS Extras: Added apple-touch-fullscreen meta tag, text-size-adjust: 100% on body, and -webkit-overflow-scrolling on info modal."
-    ]
-  },
-  {
     "version": "1.8.2",
     "changes": [
-      "Refactored the confirmation dialog globally into a bottom sheet for improved mobile UX and consistency, resolving z-index overlap issues within the Year in Pixels view."
+      "Refactored the confirmation dialog globally into a bottom sheet for improved mobile UX and consistency.",
+      "Added strictly enforced safe-area paddings via CSS matching the Safari responsive DOM models.",
+      "Prevented Safari auto-zoom on inputs enforcing font-sizes to minimum values.",
+      "Enabled native `-webkit-overflow-scrolling` elasticity throughout modal views and grids.",
+      "Fixed IndexedDB bug failing to wipe background 'hourly' data entries during a specific 'YearInPixels' month wipe.",
+      "Fixed an iOS Safari touch event listener issue silently omitting the Changelog modal initialization.",
+      "Hardened gestures so Pull-To-Refresh overrides remain inaccessible while overlays exist.",
+      "Fixed daily cards container and minimap overlapping with bottom safe-area in mobile browsers.",
+      "Properly scaled safe areas on Info, YIP and Changelog modals to prevent overlaps with iOS/Android top status bars.",
+      "Centered correctly the AQI and Pollen components logic across the bottom sheets layer."
     ]
   },
   {
