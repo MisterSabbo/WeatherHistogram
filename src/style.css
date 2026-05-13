@@ -726,9 +726,9 @@
         #minimap-container {
             position: absolute;
             top: 0;
-            bottom: env(safe-area-inset-bottom);
             left: 0;
             width: 100%;
+            height: 100%;
             cursor: pointer;
             overflow-x: auto;
             overflow-y: hidden;
@@ -743,9 +743,9 @@
         #daily-cards-container {
             position: absolute;
             top: 0;
-            bottom: env(safe-area-inset-bottom);
             left: 0;
             width: 100%;
+            height: 100%;
             display: none;
             overflow-x: auto;
             overflow-y: hidden;
@@ -777,7 +777,7 @@
             cursor: pointer;
             transition: background 0.2s;
             position: relative;
-            padding: 8px 10px; /* Slightly reduced padding */
+            padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
             box-sizing: border-box;
             overflow: hidden;
         }

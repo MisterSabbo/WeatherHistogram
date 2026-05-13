@@ -2,7 +2,7 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.8.2] - 2026-05-12
+## [v1.8.3] - 2026-05-13
 ### Bug Fixes & Enhancements
 - **iOS 16+ & PWA Optimizations**: Strictly integrated CSS environment variables (`env(safe-area-inset-top/bottom)`) mapped natively into layout controls and nav bars to bypass layout collision with the dynamic Safari address bar and 'notch' cutouts. Forced `min-height: -webkit-fill-available;` targeting rigid viewport layouts on mobile browsers. Extended to Info, YIP and Changelog modals to prevent overlaps.
 - **Scroll momentum & Touch Controls**: Globally enabled native momentum scrolling for internal layout boundaries utilizing `-webkit-overflow-scrolling: touch;`. Restricted auto-zoom mechanics in mobile Safari enforcing `16px` bases, alongside explicitly disabling annoying tap highlighting boxes.

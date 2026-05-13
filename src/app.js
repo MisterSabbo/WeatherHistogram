@@ -2882,13 +2882,14 @@ let weatherCache = new Map();
                     listEl.appendChild(li);
                 });
                 
-                closeBtn.onclick = () => { modal.style.display = 'none'; };
+                const closeSheet = openBottomSheet('changelog-modal', 'pill-sheet-backdrop', 'changelog-drag-handle');
+                
+                closeBtn.onclick = () => closeSheet();
                 updateBtn.onclick = async () => {
-                    modal.style.display = 'none';
+                    closeSheet();
                     await performClearCacheAndReload();
                 };
                 
-                modal.style.display = 'flex';
             } catch(e) {
                 console.warn('Failed to fetch changelog:', e);
             }
