@@ -544,21 +544,24 @@ let weatherCache = new Map();
                     infoModal.addEventListener('click', (e) => {
                         if (e.target === infoModal) infoModal.style.display = 'none';
                     });
-                }
-                
+}
+
+                let isChangelogLoading = false;
+
                 const openChangelogLink = document.getElementById('open-changelog-link');
                 if (openChangelogLink) {
                     const onChangelogOpen = (e) => {
-                        e.preventDefault();
+                        if (e.type === 'touchend') e.preventDefault();
+                        if (isChangelogLoading) return;
+                        isChangelogLoading = true;
                         e.stopPropagation();
                         if (infoModal) infoModal.style.display = 'none';
-                        showChangelogModal().catch(err => console.error("Changelog err:", err));
+                        showChangelogModal()
+                            .catch(err => console.error("Changelog err:", err))
+                            .finally(() => { isChangelogLoading = false; });
                     };
                     openChangelogLink.addEventListener('click', onChangelogOpen);
-                    openChangelogLink.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        onChangelogOpen(e);
-                    }, { passive: false });
+                    openChangelogLink.addEventListener('touchend', onChangelogOpen, { passive: false });
                 }
                 
                 // I18n Logic
@@ -2735,7 +2738,7 @@ let weatherCache = new Map();
             // Swipe down to close logic
             let startY = 0;
             let currentY = 0;
-            const handle = document.getElementById('changelog-sheet-drag-handle');
+            const handle = document.getElementById('changelog-detail-sheet-drag-handle');
             
             const onTouchStart = (e) => {
                 startY = e.touches[0].clientY;
@@ -2778,9 +2781,12 @@ let weatherCache = new Map();
             const closeBtn = document.getElementById('changelog-close-btn');
             const updateContainer = document.getElementById('changelog-update-container');
             const updateBtn = document.getElementById('changelog-update-btn');
-            
+
             if (!modal || !titleEl || !listEl || !closeBtn || !updateBtn) return;
-            
+
+            // Clear previous content immediately to avoid stale items
+            listEl.innerHTML = '';
+
             if (version) {
                 const titleFormat = t('config.changelogTitle') || 'Novedades v{version}';
                 titleEl.textContent = titleFormat.replace('{version}', version);
@@ -2789,16 +2795,14 @@ let weatherCache = new Map();
             } else {
                 titleEl.textContent = t('config.changelogTitleAll') || 'Todos los cambios';
                 updateContainer.style.display = 'none';
-            }
-            
+}
+
             try {
                 const response = await fetch('changelog.json?t=' + Date.now());
                 if (!response.ok) throw new Error('Network response was not ok');
                 const changelogData = await response.json();
-                
-                listEl.innerHTML = '';
-                
-                const renderData = version ? [changelogData.find(item => item.version === version) || {version: version, changes: []}] : changelogData;
+
+                 const renderData = version ? [changelogData.find(item => item.version === version) || {version: version, changes: []}] : changelogData;
                 
                 renderData.forEach((item, index) => {
                     const li = document.createElement('li');

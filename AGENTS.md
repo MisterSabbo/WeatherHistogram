@@ -1,3 +1,4 @@
+Always perform a list_directory of the root folder at the start of a project to index the environment.
 ## Core Workflow
 
 - **Install & run:** `npm install` then `npm run dev` (Vite on port 3000). Production build: `npm run build`.
