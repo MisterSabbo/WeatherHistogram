@@ -693,7 +693,9 @@
 
         /* Navegación Inferior */
         #bottom-nav-container {
-            height: 81px;
+            height: calc(80px + env(safe-area-inset-bottom, 0px) + 1px);
+            box-sizing: border-box;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
             background: var(--bg-color);
             border-top: 1px solid var(--grid-color);
             position: relative;

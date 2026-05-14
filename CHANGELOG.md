@@ -4,7 +4,8 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 
 ## [v1.8.5] - 2026-05-14
 ### Bug Fixes
-- **iOS PWA Bottom Gap**: Removed `env(safe-area-inset-bottom)` from `#bottom-nav-container` height so the histogram fills the full viewport in standalone PWA mode, eliminating the empty gap below the minimap when the Safari address bar is absent.
+- **iOS PWA Bottom Gap & Home Indicator Overlap**: Restored `env(safe-area-inset-bottom)` in `#bottom-nav-container` with `box-sizing: border-box` and `padding-bottom` so the home indicator floats over the background instead of clipping the daily cards, while the histogram still fills the viewport in standalone PWA mode.
+- **iOS Changelog Modal Not Opening**: Fixed the "View Changelog" button inside the settings modal by wrapping the modal open call in `requestAnimationFrame` to prevent iOS event timing conflicts, and added a user-visible error message when the changelog fetch fails.
 
 ## [v1.8.4] - 2026-05-13
 ### Bug Fixes

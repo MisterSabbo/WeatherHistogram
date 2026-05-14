@@ -555,9 +555,11 @@ let weatherCache = new Map();
                         if (isChangelogLoading) return;
                         isChangelogLoading = true;
                         if (infoModal) infoModal.style.display = 'none';
-                        showChangelogModal()
-                            .catch(err => console.error("Changelog err:", err))
-                            .finally(() => { isChangelogLoading = false; });
+                        requestAnimationFrame(() => {
+                            showChangelogModal()
+                                .catch(err => console.error("Changelog err:", err))
+                                .finally(() => { isChangelogLoading = false; });
+                        });
                     };
                     openChangelogLink.addEventListener('click', onChangelogOpen);
                 }
@@ -2894,6 +2896,9 @@ let weatherCache = new Map();
                 
             } catch(e) {
                 console.warn('Failed to fetch changelog:', e);
+                listEl.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px;font-size:0.9rem;">Could not load changelog. Please check your connection.</p>';
+                const closeSheet = openBottomSheet('changelog-modal');
+                closeBtn.onclick = () => closeSheet();
             }
         }
         
