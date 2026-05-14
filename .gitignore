@@ -7,3 +7,6 @@ coverage/
 .env*
 package-lock.json
 !.env.example
+.agents/
+.opencode
+skills-lock.json
