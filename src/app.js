@@ -2882,7 +2882,7 @@ let weatherCache = new Map();
                     listEl.appendChild(li);
                 });
                 
-                const closeSheet = openBottomSheet('changelog-modal', 'pill-sheet-backdrop', 'changelog-drag-handle');
+                const closeSheet = openBottomSheet('changelog-modal');
                 
                 closeBtn.onclick = () => closeSheet();
                 updateBtn.onclick = async () => {

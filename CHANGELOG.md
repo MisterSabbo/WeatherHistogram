@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.4] - 2026-05-13
+### Bug Fixes
+- **Visual Bottom Padding Regression**: Fixed a regression where daily cards stretched and deformed under the minimap on mobile browsers. Fixed height constraints to 80px and centered AQI/Pollen radar graphics securely within the bottom sheets layer.
+- **Changelog Instantiation**: Repaired dynamic IDs across drag handles preventing the new Swipe-to-Dismiss bottom-sheet version of the Changelog from rendering successfully upon clicking the version link from Settings.
+
 ## [v1.8.3] - 2026-05-13
 ### Bug Fixes & Enhancements
 - **iOS 16+ & PWA Optimizations**: Strictly integrated CSS environment variables (`env(safe-area-inset-top/bottom)`) mapped natively into layout controls and nav bars to bypass layout collision with the dynamic Safari address bar and 'notch' cutouts. Forced `min-height: -webkit-fill-available;` targeting rigid viewport layouts on mobile browsers. Extended to Info, YIP and Changelog modals to prevent overlaps.

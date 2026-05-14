@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.8.4",
+    "changes": [
+      "Visual Bottom Padding Regression: Fixed a regression where daily cards stretched and deformed under the minimap on mobile browsers.",
+      "Fixed height constraints forcing them to 80px and centered AQI/Pollen radar graphics securely within the bottom sheets layer.",
+      "Changelog Instantiation: Repaired dynamic IDs across drag handles preventing the Swipe-to-Dismiss bottom-sheet version of the Changelog from rendering."
+    ]
+  },
+  {
     "version": "1.8.3",
     "changes": [
       "Refactored the confirmation dialog globally into a bottom sheet for improved mobile UX and consistency.",

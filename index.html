@@ -1407,7 +1407,7 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.8.2</span>
+            <span id="app-version-label">v1.8.4</span>
             <a href="#" id="open-changelog-link" style="color: #3b82f6; text-decoration: none; margin-left: 8px; font-weight: 600;" data-i18n="config.changelogLink">Changelog</a>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
@@ -1989,8 +1989,8 @@
     </div>
 
     <!-- Changelog Modal -->
-    <div id="changelog-modal" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column;">
-      <div id="changelog-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 12px auto; cursor: grab;"></div>
+    <div id="changelog-modal" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column; z-index: 7000;">
+      <div id="changelog-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 12px auto; cursor: grab;"></div>
       <div style="padding: 0 24px 16px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center; justify-content: space-between; z-index: 10; flex-shrink: 0;">
         <h3 id="changelog-title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Novedades</h3>
         <button id="changelog-close-btn" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 8px;"><span class="material-symbols-outlined">close</span></button>
