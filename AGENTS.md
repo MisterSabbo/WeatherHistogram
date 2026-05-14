@@ -67,6 +67,7 @@ Always perform a list_directory of the root folder at the start of a project to 
 - **ALWAYS** stage all modified and new files with `git add` so that changes remain staged.
 - Use `git status` to verify what is staged, but never proceed to `git commit`.
 - If asked to commit, stage the changes instead and inform the user that commits are disabled.
+- **Commit message proposal:** After making changes to any project file, run `git diff --cached` and `git diff` to inspect both staged and unstaged changes, then propose a commit message to the user summarizing all changes for a potential commit. Do not commit automatically — only propose the message.
 
 ## Memory Persistence Rules
 To ensure project continuity across sessions, you must strictly adhere to the following rules using the `memory` MCP server:

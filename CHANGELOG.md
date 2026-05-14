@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.5] - 2026-05-14
+### Bug Fixes
+- **iOS PWA Bottom Gap**: Removed `env(safe-area-inset-bottom)` from `#bottom-nav-container` height so the histogram fills the full viewport in standalone PWA mode, eliminating the empty gap below the minimap when the Safari address bar is absent.
+
 ## [v1.8.4] - 2026-05-13
 ### Bug Fixes
 - **Visual Bottom Padding Regression**: Fixed a regression where daily cards stretched and deformed under the minimap on mobile browsers. Fixed height constraints to 80px and centered AQI/Pollen radar graphics securely within the bottom sheets layer.

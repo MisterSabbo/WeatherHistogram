@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.5",
+    "changes": [
+      "iOS PWA Bottom Gap: Removed env(safe-area-inset-bottom) from bottom-nav-container height so the histogram fills the full viewport in standalone PWA mode, eliminating the empty gap below the minimap when the Safari address bar is absent."
+    ]
+  },
+  {
     "version": "1.8.4",
     "changes": [
       "Visual Bottom Padding Regression: Fixed a regression where daily cards stretched and deformed under the minimap on mobile browsers.",
