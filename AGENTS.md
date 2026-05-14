@@ -62,6 +62,12 @@ Always perform a list_directory of the root folder at the start of a project to 
 - **No test framework, no linter, no type checker** in this repo. Tests would need to be added.
 - **package.json scripts:** `dev`, `build`, `preview`, `clean`.
 
+## Agent Git Rules
+- **NEVER** run `git commit`. Do not create commits under any circumstances.
+- **ALWAYS** stage all modified and new files with `git add` so that changes remain staged.
+- Use `git status` to verify what is staged, but never proceed to `git commit`.
+- If asked to commit, stage the changes instead and inform the user that commits are disabled.
+
 ## Memory Persistence Rules
 To ensure project continuity across sessions, you must strictly adhere to the following rules using the `memory` MCP server:
 
@@ -74,3 +80,25 @@ To ensure project continuity across sessions, you must strictly adhere to the fo
     - The exact "Next Step" for the following session.
 5. **Memory Overrides**: If local files (filesystem) conflict with the recorded "design intent" in memory, prioritize the memory data and consult the user before making destructive changes.
 6. **Self-Correction**: Do not mark a task as "Complete" until the memory server has been updated with the latest session insights.
+
+## Code Quality & Maintenance Rules
+
+- **SOLID Principles**: All code changes must respect SOLID principles:
+  - **Single Responsibility**: Each module/class/file must have one well-defined responsibility.
+  - **Open/Closed**: Extend behavior via new modules, not by modifying existing stable code.
+  - **Liskov Substitution**: Subtypes must be substitutable for their base types without altering correctness.
+  - **Interface Segregation**: Keep interfaces focused and minimal; avoid forcing consumers to depend on methods they don't use.
+  - **Dependency Inversion**: Depend on abstractions, not concrete implementations. Use the `WeatherAPI` → `WeatherService` → `app.js` pattern as reference.
+
+- **i18n Updates**: Whenever new UI strings are introduced, add corresponding entries to both `es` and `en` sections in `src/utils/i18n.js` under the appropriate namespace (e.g., `config`, `map`, `nav`).
+
+- **Changelog**: Both `CHANGELOG.md` and `public/changelog.json` must be updated with every significant change. Entries must be in English. Follow existing format:
+  - `CHANGELOG.md`: `## [vX.Y.Z] - YYYY-MM-DD` with entries categorized under `### Features`, `### Bug Fixes`, etc.
+  - `public/changelog.json`: Append a new object with `"version"` and `"changes"` array.
+
+- **README**: Update `README.md` if the change affects documented features, architecture, or setup instructions. Always in English.
+
+- **Version Bump**: If the change introduces new features or breaking modifications, update the version in:
+  - `index.html` (line 1410: `<span id="app-version-label">vX.Y.Z</span>`)
+  - `public/version.json` (`"version": "X.Y.Z"`)
+  Follow semver: patch for bug fixes, minor for new features, major for breaking changes.

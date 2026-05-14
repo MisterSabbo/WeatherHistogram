@@ -551,17 +551,15 @@ let weatherCache = new Map();
                 const openChangelogLink = document.getElementById('open-changelog-link');
                 if (openChangelogLink) {
                     const onChangelogOpen = (e) => {
-                        if (e.type === 'touchend') e.preventDefault();
+                        e.preventDefault();
                         if (isChangelogLoading) return;
                         isChangelogLoading = true;
-                        e.stopPropagation();
                         if (infoModal) infoModal.style.display = 'none';
                         showChangelogModal()
                             .catch(err => console.error("Changelog err:", err))
                             .finally(() => { isChangelogLoading = false; });
                     };
                     openChangelogLink.addEventListener('click', onChangelogOpen);
-                    openChangelogLink.addEventListener('touchend', onChangelogOpen, { passive: false });
                 }
                 
                 // I18n Logic
