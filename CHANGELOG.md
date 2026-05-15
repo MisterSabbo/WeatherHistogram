@@ -2,9 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.8.6a] - 2026-05-15
-### Refactoring
-- **Big Refactor Phase 8 — Verification & Cleanup**: Removed 32 unused imports from `src/app.js` (clean up of dead code migrated to extracted modules). Verified no circular dependencies in the module graph. Verified build passes without errors. Documented files exceeding 150-line threshold for future splitting.
+## [v1.8.6] - 2026-05-15
+### Bug Fixes
+- **iOS Daily Cards Scroll Jank**: Removed `scroll-behavior: smooth` from `#daily-cards-container` and changed `updateActiveDailyCard()` scroll behavior from `'smooth'` to `'instant'` to prevent scroll-driven animation feedback loops on iOS. Added GPU layer promotion (`transform: translate3d(0,0,0)`, `will-change: scroll-position`) to the container and removed expensive `transition: background` from `.daily-card` to eliminate repaint storms. Added `lastActiveDateStr` guard to skip heavy layout operations (`getBoundingClientRect`, `scrollTo`) when the active day has not changed.
+- **Changelog Bottom Sheet Fetch Error on iOS**: Removed `{ cache: 'reload' }` from the `fetch('changelog.json')` call to avoid a WebKit bug where `cache: 'reload'` + Service Worker interaction causes fetch rejection on iOS 18. Added in-memory caching (`changelogCacheData`) so the data is only fetched once per session. Added a `caches` API fallback in the catch block that serves the changelog from the SW cache when the network fetch fails.
 
 ## [v1.8.4] - 2026-05-13
 ### Bug Fixes

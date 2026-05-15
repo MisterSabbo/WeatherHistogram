@@ -1,14 +1,10 @@
-import { CHART_HEIGHT, MINIMAP_HEIGHT, DEFAULT_COORDS, CACHE_DURATION, TILE_WIDTH, PIXELS_PER_MM, PIXELS_PER_HOUR_DESKTOP, PIXELS_PER_HOUR_MOBILE, MOBILE_BREAKPOINT } from './constants/index.js';
-
-export { CHART_HEIGHT, MINIMAP_HEIGHT, DEFAULT_COORDS, CACHE_DURATION, TILE_WIDTH, PIXELS_PER_MM, PIXELS_PER_HOUR_DESKTOP, PIXELS_PER_HOUR_MOBILE, MOBILE_BREAKPOINT };
-
 export const CONFIG = {
-    CHART_HEIGHT,
-    MINIMAP_HEIGHT,
-    DEFAULT_COORDS,
-    CACHE_DURATION,
-    TILE_WIDTH,
-    PIXELS_PER_MM
+    CHART_HEIGHT: 250,
+    MINIMAP_HEIGHT: 80,
+    DEFAULT_COORDS: { lat: 40.4167, lon: -3.70325, name: "Madrid" },
+    CACHE_DURATION: 5 * 60 * 1000,
+    TILE_WIDTH: 1024,
+    PIXELS_PER_MM: 10
 };
 
 export const getDPR = () => Math.min(window.devicePixelRatio || 1, 2);
@@ -33,7 +29,7 @@ export const state = {
     activeChartTheme: 'default',
     isDailyCardsView: false,
     themeConfig: null,
-    PIXELS_PER_HOUR: window.innerWidth < MOBILE_BREAKPOINT ? PIXELS_PER_HOUR_MOBILE : PIXELS_PER_HOUR_DESKTOP,
+    PIXELS_PER_HOUR: window.innerWidth < 600 ? 50 : 60,
     stickmanThresholds: {
         cold: 10,
         hot: 30,
