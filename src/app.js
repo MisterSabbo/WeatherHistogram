@@ -754,11 +754,15 @@ let weatherCache = new Map();
                     
                     const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => {};
                     
+                    let confirmed = false;
+                    
                     newCancel.addEventListener('click', () => {
                         closeFn();
                     });
                     
                     newOk.addEventListener('click', () => {
+                        if (confirmed) return;
+                        confirmed = true;
                         closeFn();
                         onOk();
                     });
@@ -772,22 +776,8 @@ let weatherCache = new Map();
                             t('config.clearCache') || "Limpiar caché", 
                             t('config.clearCacheMsg') || "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?", 
                             async () => {
-                                weatherCache.clear();
-                                if ('caches' in window) {
-                                    try {
-                                        const cacheNames = await caches.keys();
-                                        await Promise.all(cacheNames.map(name => caches.delete(name)));
-                                    } catch(e) { console.warn(e); }
-                                }
-                                if ('serviceWorker' in navigator) {
-                                    try {
-                                        const registrations = await navigator.serviceWorker.getRegistrations();
-                                        for (let reg of registrations) {
-                                            await reg.unregister();
-                                        }
-                                    } catch(e) { console.warn(e); }
-                                }
-                                window.location.reload(true);
+                                state.isFetching = true;
+                                await performClearCacheAndReload();
                             }
                         );
                     });
@@ -801,6 +791,7 @@ let weatherCache = new Map();
                             t('config.clearData') || "Borrar datos guardados", 
                             t('config.clearDataMsg') || "¿Estás seguro de que quieres eliminar todos los datos persistentes (favoritos, configuraciones)? Esta acción no se puede deshacer.", 
                             async () => {
+                                state.isFetching = true;
                                 const { favoritesService } = await import('./services/FavoritesService.js');
                                 await favoritesService.clear();
                                 try {
