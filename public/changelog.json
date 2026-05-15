@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.8",
+    "changes": [
+      "iOS 18 PWA Changelog Load Fix: Bypassed Service Worker for changelog.json and version.json to avoid WebKit Cache API empty-body bug on iOS 18.x. Added body-content validation with automatic bad cache entry deletion in the fallback. Removed changelog.json from SW pre-cache to prevent corrupted entries. Bumped CACHE_NAME to v7 for clean cache on upgrade."
+    ]
+  },
+  {
     "version": "1.8.7",
     "changes": [
       "PWA Installability: Added beforeinstallprompt handler with install button in header, appinstalled tracking, and controllerchange listener for auto-reload on SW update.",

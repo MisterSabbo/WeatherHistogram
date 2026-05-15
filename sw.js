@@ -1,5 +1,5 @@
-const CACHE_NAME = "weather-histogram-v6";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./changelog.json", "./offline.html"];
+const CACHE_NAME = "weather-histogram-v7";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./offline.html"];
 
 // Recursos que deben ser cacheados agresivamente (Cache-First)
 const STATIC_ASSETS = /\.(js|css|png|jpg|jpeg|svg|woff2)$/;
@@ -47,6 +47,11 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("openstreetmap.org")
   ) {
     return; // Dejar que el navegador lo maneje sin Service Worker
+  }
+
+  // Bypass SW for JSON config files to avoid iOS 18 Cache API empty-body bug
+  if (url.pathname.endsWith('/changelog.json') || url.pathname.endsWith('/version.json')) {
+    return;
   }
 
   // Solo manejar peticiones GET y esquemas http/https

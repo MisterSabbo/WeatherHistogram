@@ -2973,14 +2973,27 @@ let weatherCache = new Map();
                 console.warn('Failed to fetch changelog:', e);
                 try {
                     const cacheNames = await caches.keys();
+                    const changelogUrl = new URL('./changelog.json', window.location.href).href;
                     for (const name of cacheNames) {
                         const cache = await caches.open(name);
-                        const cachedResp = await cache.match('./changelog.json');
+                        const cachedResp = await cache.match(changelogUrl);
                         if (cachedResp && cachedResp.ok) {
-                            const cachedData = await cachedResp.json();
-                            changelogCacheData = cachedData;
-                            renderChangelogData(cachedData, version, listEl, closeBtn, updateBtn);
-                            return;
+                            // iOS 18 may return ok=true with empty body – validate before parsing
+                            const text = await cachedResp.clone().text();
+                            if (!text || text.trim().length === 0) {
+                                console.warn('Cache entry had empty body, deleting:', name);
+                                cache.delete(changelogUrl).catch(() => {});
+                                continue;
+                            }
+                            try {
+                                const cachedData = JSON.parse(text);
+                                changelogCacheData = cachedData;
+                                renderChangelogData(cachedData, version, listEl, closeBtn, updateBtn);
+                                return;
+                            } catch (parseErr) {
+                                console.warn('Cache entry had invalid JSON, deleting:', name);
+                                cache.delete(changelogUrl).catch(() => {});
+                            }
                         }
                     }
                 } catch (cacheErr) {

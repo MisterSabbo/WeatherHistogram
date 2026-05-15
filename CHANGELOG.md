@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.8] - 2026-05-16
+### Bug Fixes
+- **Changelog Not Loading on iOS 18 PWA**: Root-caused to a WebKit Cache API bug on iOS 18.x where `cache.match()` returns a `Response` with `ok: true` but an empty body. Bypassed the Service Worker for `changelog.json` and `version.json` so fetches go directly to the network when online. Removed `changelog.json` from the SW pre-cache list to prevent storing corrupted entries during installation. Added body-content validation with automatic cache-entry deletion in the cache fallback, so empty-body responses are detected and cleaned up rather than served. Bumped CACHE_NAME to `v7` to force a fresh cache on upgrade.
+
 ## [v1.8.7] - 2026-05-15
 ### Features & Bug Fixes
 - **PWA Installability**: Added `beforeinstallprompt` event handler with install button in the header, `appinstalled` tracking, and `controllerchange` listener for automatic reload on SW update.
