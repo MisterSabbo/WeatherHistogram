@@ -2758,6 +2758,7 @@ let weatherCache = new Map();
         function openChangelogDetail(item) {
             const sheet = document.getElementById('changelog-detail-sheet');
             const backdrop = document.getElementById('changelog-sheet-backdrop');
+            const changelogModal = document.getElementById('changelog-modal');
             
             document.getElementById('changelog-detail-title').textContent = `v${item.version}`;
             document.getElementById('changelog-detail-subtitle').textContent = "Detalles de esta versión";
@@ -2786,8 +2787,11 @@ let weatherCache = new Map();
                 sheet.classList.remove('open');
                 backdrop.classList.remove('open');
                 sheet.style.transform = '';
+                changelogModal.removeEventListener('click', onChangelogModalClick);
             };
-            
+
+            const onChangelogModalClick = () => closeSheet();
+            changelogModal.addEventListener('click', onChangelogModalClick);
             backdrop.onclick = closeSheet;
             
             // Swipe down to close logic

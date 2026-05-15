@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.9",
+    "changes": [
+      "Changelog detail close behavior: Clicking outside the version detail sheet (including on the changelog modal) now closes the detail, instead of requiring a click outside both modals."
+    ]
+  },
+  {
     "version": "1.8.8",
     "changes": [
       "Changelog Load Fix (iOS 18 PWA): Embedded changelog data directly in JS module as an ES import, eliminating the fetch() and Service Worker interception entirely — matching the same pattern used by i18n translations. This permanently avoids the WebKit Cache API empty-body bug on iOS 18.x."
