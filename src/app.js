@@ -136,7 +136,7 @@ let weatherCache = new Map();
             const appWrapper = document.getElementById('app-wrapper');
 
             document.addEventListener('touchstart', (e) => {
-                const hasOverlayOpen = document.querySelectorAll('.yip-sheet-backdrop.open, #info-modal[style*="display: flex"], #favorites-modal[style*="display: flex"], #map-location-modal[style*="display: flex"], #prompt-modal[style*="display: flex"], #changelog-modal[style*="display: flex"], #yip-modal[style*="display: flex"]').length > 0;
+                const hasOverlayOpen = document.querySelectorAll('.yip-sheet-backdrop.open, #info-modal[style*="display: flex"], #favorites-modal[style*="display: flex"], #map-location-modal[style*="display: flex"], #prompt-modal[style*="display: flex"], #changelog-modal.open, #yip-modal[style*="display: flex"]').length > 0;
                 if (e.touches.length === 1 && !hasOverlayOpen && !e.target.closest('#search-results')) {
                     ptrStartY = e.touches[0].clientY;
                     ptrStartX = e.touches[0].clientX;
@@ -2617,7 +2617,7 @@ let weatherCache = new Map();
             const text = document.getElementById('update-toast-text');
             const btn = document.getElementById('update-toast-btn');
             
-            if (document.getElementById('changelog-modal').style.display === 'flex') {
+            if (document.getElementById('changelog-modal').classList.contains('open')) {
                 return;
             }
             
@@ -2860,7 +2860,7 @@ let weatherCache = new Map();
                 listEl.appendChild(li);
             });
 
-            const closeSheet = openBottomSheet('changelog-modal');
+            const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop');
 
             closeBtn.onclick = () => closeSheet();
             updateBtn.onclick = async () => {
@@ -2924,7 +2924,7 @@ let weatherCache = new Map();
                 }
                 const errorMsg = t('config.changelogError') || 'No se ha podido cargar el changelog. Verifica tu conexión.';
                 listEl.innerHTML = `<p style="text-align:center;color:var(--text-secondary);padding:40px;font-size:0.9rem;">${errorMsg}</p>`;
-                const closeSheet = openBottomSheet('changelog-modal');
+                const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop');
                 closeBtn.onclick = () => closeSheet();
             }
         }
