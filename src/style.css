@@ -702,6 +702,13 @@
             flex-shrink: 0;
         }
 
+        @media all and (display-mode: standalone) {
+            #bottom-nav-container {
+                height: calc(80px + 8px + 1px);
+                padding-bottom: 8px;
+            }
+        }
+
         .toggle-nav-btn {
             position: absolute;
             top: 5px;

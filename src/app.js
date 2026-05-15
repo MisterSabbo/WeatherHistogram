@@ -2798,7 +2798,7 @@ let weatherCache = new Map();
 }
 
             try {
-                const response = await fetch('changelog.json?t=' + Date.now());
+                const response = await fetch('changelog.json', { cache: 'reload' });
                 if (!response.ok) throw new Error('Network response was not ok');
                 const changelogData = await response.json();
 

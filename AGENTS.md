@@ -1,4 +1,14 @@
 Always perform a list_directory of the root folder at the start of a project to index the environment.
+
+## Skill Loading Policy
+
+Load skills contextually based on the task:
+- **/mobile-first** — for any CSS, responsive layout, or mobile interaction changes
+- **/frontend-design** — when creating new UI components, pages, or visual/design work
+- **/pwa-cross-platform** — when dealing with iOS/Android differences or cross-platform PWA behavior
+- **/pwa-github-pages** — when configuring deployment or SPA routing for GitHub Pages
+- **/web-design-guidelines** — when auditing UX, accessibility, or reviewing UI against best practices
+
 ## Core Workflow
 
 - **Install & run:** `npm install` then `npm run dev` (Vite on port 3000). Production build: `npm run build`.
@@ -99,7 +109,11 @@ To ensure project continuity across sessions, you must strictly adhere to the fo
 
 - **README**: Update `README.md` if the change affects documented features, architecture, or setup instructions. Always in English.
 
-- **Version Bump**: If the change introduces new features or breaking modifications, update the version in:
-  - `index.html` (line 1410: `<span id="app-version-label">vX.Y.Z</span>`)
-  - `public/version.json` (`"version": "X.Y.Z"`)
-  Follow semver: patch for bug fixes, minor for new features, major for breaking changes.
+- **Version Bump**: Update the version following semver:
+  - Major (X) for breaking changes, minor (Y) for new features, patch (Z) for bug fixes.
+  - For trivial changes (typos, minor refactors, docs, etc.), append a letter suffix instead:
+    - `v1.2.3` → `v1.2.3a` → `v1.2.3b` → ... → `v1.2.3z` → `v1.2.3aa` → `v1.2.3ab` ...
+    - The suffix **resets** when X, Y, or Z changes (e.g., `v1.2.3c` → `v1.2.4` has no suffix).
+  Update the version in:
+    - `index.html` (line 1410: `<span id="app-version-label">vX.Y.Z</span>`)
+    - `public/version.json` (`"version": "X.Y.Z"`)

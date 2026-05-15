@@ -2,8 +2,8 @@
   {
     "version": "1.8.5",
     "changes": [
-      "iOS PWA Bottom Gap & Home Indicator Overlap: Restored env(safe-area-inset-bottom) in bottom-nav-container with box-sizing: border-box and padding-bottom so the home indicator floats over the background instead of clipping the daily cards, while the histogram still fills the viewport in standalone PWA mode.",
-      "iOS Changelog Modal Not Opening: Fixed the 'View Changelog' button inside the settings modal by wrapping the modal open call in requestAnimationFrame to prevent iOS event timing conflicts, and added a user-visible error message when the changelog fetch fails."
+      "Adaptive Bottom Safe Area: Added @media (display-mode: standalone) with 8px padding for PWA mode and env(safe-area-inset-bottom) for browser mode, so the daily cards' bottom zone remains fully visible while avoiding gaps across both Safari and PWA contexts.",
+      "Changelog Data Not Loading: Removed the cache-busting query string from the changelog.json fetch that prevented the Service Worker from matching cached responses, and added the file to the SW asset pre-cache list so it is always available even when the network fetch fails."
     ]
   },
   {
