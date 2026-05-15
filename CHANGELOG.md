@@ -2,6 +2,14 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.7] - 2026-05-15
+### Features & Bug Fixes
+- **PWA Installability**: Added `beforeinstallprompt` event handler with install button in the header, `appinstalled` tracking, and `controllerchange` listener for automatic reload on SW update.
+- **PWA Standalone Mode**: Added standalone mode detection via `display-mode: standalone` + `navigator.standalone`, with CSS adjustments for safe areas in controls-bar and bottom-nav-container.
+- **Offline Support**: Created `offline.html` fallback page with friendly offline messaging. Added offline fallback to service worker for navigation requests. Added `online`/`offline` event listeners with visual indicator on the controls bar.
+- **iOS Compatibility**: Added apple-touch-icon meta tags for multiple sizes (120, 152, 167, 180). Added dynamic `<meta name="theme-color">` that updates on theme change.
+- **Manifest**: Added `scope` field to manifest.json for proper PWA boundary definition.
+
 ## [v1.8.6] - 2026-05-15
 ### Bug Fixes
 - **iOS Daily Cards Scroll Jank**: Removed `scroll-behavior: smooth` from `#daily-cards-container` and changed `updateActiveDailyCard()` scroll behavior from `'smooth'` to `'instant'` to prevent scroll-driven animation feedback loops on iOS. Added GPU layer promotion (`transform: translate3d(0,0,0)`, `will-change: scroll-position`) to the container and removed expensive `transition: background` from `.daily-card` to eliminate repaint storms. Added `lastActiveDateStr` guard to skip heavy layout operations (`getBoundingClientRect`, `scrollTo`) when the active day has not changed.

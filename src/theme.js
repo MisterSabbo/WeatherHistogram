@@ -52,6 +52,11 @@ export async function loadChartTheme(themeId) {
 
 export function applyThemeDOM() {
     document.body.style.fontFamily = getThemeFont();
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+        const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
+        metaTheme.content = bg || '#2B2D31';
+    }
     const elPrecip = document.querySelector('#val-precip .material-symbols-outlined');
     if (elPrecip) elPrecip.textContent = getThemeIcon('header.precip', 'rainy');
     

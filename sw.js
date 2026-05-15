@@ -1,5 +1,5 @@
 const CACHE_NAME = "weather-histogram-v6";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./changelog.json"];
+const ASSETS = ["./", "./index.html", "./manifest.json", "./changelog.json", "./offline.html"];
 
 // Recursos que deben ser cacheados agresivamente (Cache-First)
 const STATIC_ASSETS = /\.(js|css|png|jpg|jpeg|svg|woff2)$/;
@@ -73,6 +73,16 @@ self.addEventListener("fetch", (event) => {
         // Estrategia para assets estáticos: Cache-First con actualización en background
         if (STATIC_ASSETS.test(url.pathname)) {
           return cachedResponse || fetchPromise;
+        }
+
+        // Fallback para navegaciones: si no hay cacheado ni red, servir offline.html
+        if (event.request.mode === 'navigate') {
+          return fetchPromise.then((response) => {
+            if (!response) throw new Error('No network');
+            return response;
+          }).catch(() => {
+            return caches.match('./offline.html');
+          });
         }
 
         // Estrategia Stale-While-Revalidate para el resto

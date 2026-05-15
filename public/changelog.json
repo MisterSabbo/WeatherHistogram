@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.8.7",
+    "changes": [
+      "PWA Installability: Added beforeinstallprompt handler with install button in header, appinstalled tracking, and controllerchange listener for auto-reload on SW update.",
+      "PWA Standalone Mode: Added standalone detection via display-mode + navigator.standalone with safe-area CSS adjustments.",
+      "Offline Support: Created offline.html fallback page, SW navigation fallback, and online/offline event listeners with visual indicator.",
+      "iOS Compatibility: Added apple-touch-icon meta tags for 120/152/167/180 sizes. Dynamic theme-color meta that updates on theme change.",
+      "Manifest: Added scope field for proper PWA boundary definition."
+    ]
+  },
+  {
     "version": "1.8.6",
     "changes": [
       "iOS Daily Cards Scroll Jank: Removed scroll-behavior:smooth, added GPU layer promotion to #daily-cards-container, changed scroll behavior to 'instant', added active-day guard to skip heavy layout ops, and removed expensive CSS transitions on .daily-card.",

@@ -128,6 +128,25 @@ let weatherCache = new Map();
             state.isDailyCardsView = await storageService.get('viewMode', 'minimap') === 'daily';
 
             await loadChartTheme(state.activeChartTheme);
+
+            // PWA Standalone Mode Detection
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (isStandalone) {
+                document.documentElement.classList.add('pwa-standalone');
+            }
+            window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+                document.documentElement.classList.toggle('pwa-standalone', e.matches);
+            });
+
+            // Network Status Listeners
+            const updateNetworkStatus = () => {
+                const isOnline = navigator.onLine;
+                document.documentElement.classList.toggle('app-offline', !isOnline);
+            };
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+            updateNetworkStatus();
+
                        // Pull To Refresh Logic
             let ptrStartY = 0;
             let ptrStartX = 0;
@@ -2585,12 +2604,57 @@ let weatherCache = new Map();
                             });
                         }
                     });
+
+                    // Reload when new SW takes over
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        window.location.reload();
+                    });
                 } catch(err) {
                     console.warn("SW registration failed:", err);
                 }
                 
                 checkAppVersion();
             });
+        }
+
+        // PWA Install Prompt
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            showInstallButton();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) installBtn.style.display = 'none';
+            console.log('PWA installed successfully');
+        });
+
+        function showInstallButton() {
+            const existing = document.getElementById('pwa-install-btn');
+            if (existing) {
+                existing.style.display = 'flex';
+                return;
+            }
+            const container = document.querySelector('.controls-right');
+            if (!container || !deferredInstallPrompt) return;
+
+            const btn = document.createElement('button');
+            btn.id = 'pwa-install-btn';
+            btn.title = t('config.installApp');
+            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; background:transparent; border:none; color:inherit; cursor:pointer; margin-right:4px;';
+            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">download</span>';
+            btn.addEventListener('click', async () => {
+                if (!deferredInstallPrompt) return;
+                deferredInstallPrompt.prompt();
+                const result = await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                btn.style.display = 'none';
+            });
+            container.insertBefore(btn, container.firstChild);
         }
         
         async function checkAppVersion() {
