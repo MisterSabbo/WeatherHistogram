@@ -1,0 +1,199 @@
+#controls-bar {
+    display: flex;
+    gap: 15px;
+    padding: calc(10px + env(safe-area-inset-top)) 20px 10px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--grid-color);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    position: relative;
+    z-index: 4000;
+}
+
+.mobile-toggles {
+    display: none;
+    gap: 10px;
+}
+
+.mobile-toggles button {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--grid-color);
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.mobile-toggles button.active {
+    background: var(--accent-precip);
+    color: white;
+    border-color: var(--accent-precip);
+}
+
+.controls-left {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex: 1;
+    min-width: 300px;
+    flex-wrap: wrap;
+}
+
+.controls-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.search-box {
+    display: flex;
+    gap: 5px;
+    flex: 1;
+    max-width: 400px;
+    position: relative;
+    align-items: center;
+}
+
+#location-input {
+    min-width: 0;
+}
+
+#search-btn, #geo-btn {
+    flex-shrink: 0;
+}
+
+#suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--grid-color);
+    border-radius: 6px;
+    margin-top: 5px;
+    z-index: 2000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--grid-color);
+    font-size: 0.9rem;
+}
+
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: var(--input-bg); }
+.suggestion-item .admin { font-size: 0.75rem; color: var(--text-secondary); margin-left: 5px; }
+
+input, textarea, select {
+    background: var(--input-bg);
+    border: 1px solid var(--grid-color);
+    color: var(--text-primary);
+    padding: 0 12px;
+    border-radius: 6px;
+    flex: 1;
+    outline: none;
+    font-size: 16px !important;
+    height: 36px;
+    box-sizing: border-box;
+}
+
+button {
+    background: var(--accent-precip);
+    color: white;
+    border: 1px solid transparent;
+    padding: 0 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    height: 36px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button:hover { opacity: 0.9; }
+button:active, .daily-card:active { transform: scale(0.95); opacity: 0.7; transition: transform 0.1s, opacity 0.1s; }
+
+.theme-toggle {
+    background: var(--text-primary) !important;
+    color: var(--bg-color) !important;
+    border: 1px solid var(--grid-color);
+    padding: 0;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s, color 0.3s;
+}
+
+.github-link {
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    transition: color 0.2s;
+    text-decoration: none;
+}
+
+.github-link:hover {
+    color: var(--text-primary);
+}
+
+#geo-btn {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--grid-color);
+    width: 36px;
+    padding: 0;
+}
+
+@media (max-width: 600px) {
+    #controls-bar {
+        padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+        gap: 5px;
+        flex-wrap: nowrap;
+    }
+    .mobile-toggles {
+        display: flex;
+        flex-shrink: 0;
+    }
+    .controls-left {
+        flex: 1;
+        min-width: 0;
+        order: 2;
+        gap: 5px;
+        display: none;
+        margin: 0 5px;
+    }
+    .controls-left.has-active {
+        display: flex;
+    }
+    .search-box {
+        display: none;
+        width: 100%;
+        max-width: none;
+    }
+    .search-box.active {
+        display: flex;
+    }
+    .controls-right {
+        margin-left: 0;
+        width: auto;
+        order: 3;
+        flex-shrink: 0;
+    }
+}

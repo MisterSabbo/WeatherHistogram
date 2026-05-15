@@ -1,0 +1,40 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: auto;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+html {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+html, body {
+    overscroll-behavior: none;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    overflow: hidden;
+    width: 100%;
+    height: 100vh;
+    height: -webkit-fill-available;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+input, textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
+}

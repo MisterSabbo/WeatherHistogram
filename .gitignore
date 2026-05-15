@@ -10,3 +10,4 @@ package-lock.json
 .agents/
 .opencode
 skills-lock.json
+plans/

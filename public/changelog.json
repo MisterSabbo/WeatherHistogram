@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.6a",
+    "changes": [
+      "Big Refactor Phase 8 — Verification & Cleanup: Removed 32 unused imports from app.js, verified no circular dependencies, build passes cleanly."
+    ]
+  },
+  {
     "version": "1.8.6",
     "changes": [
       "iOS Daily Cards Scroll Jank: Removed scroll-behavior:smooth, added GPU layer promotion to #daily-cards-container, changed scroll behavior to 'instant', added active-day guard to skip heavy layout ops, and removed expensive CSS transitions on .daily-card.",
