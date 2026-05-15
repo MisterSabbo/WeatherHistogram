@@ -1,5 +1,5 @@
 const CACHE_NAME = "weather-histogram-v6";
-const ASSETS = ["./", "index.html", "manifest.json", "changelog.json"];
+const ASSETS = ["./", "./index.html", "./manifest.json", "./changelog.json"];
 
 // Recursos que deben ser cacheados agresivamente (Cache-First)
 const STATIC_ASSETS = /\.(js|css|png|jpg|jpeg|svg|woff2)$/;

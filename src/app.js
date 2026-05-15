@@ -2897,7 +2897,7 @@ let weatherCache = new Map();
                 if (changelogCacheData) {
                     changelogData = changelogCacheData;
                 } else {
-                    const response = await fetch('changelog.json');
+                    const response = await fetch('./changelog.json');
                     if (!response.ok) throw new Error('Network response was not ok');
                     changelogData = await response.json();
                     changelogCacheData = changelogData;
@@ -2908,18 +2908,22 @@ let weatherCache = new Map();
             } catch(e) {
                 console.warn('Failed to fetch changelog:', e);
                 try {
-                    const swCache = await caches.open('weather-histogram-v6');
-                    const cachedResp = await swCache.match('changelog.json');
-                    if (cachedResp && cachedResp.ok) {
-                        const cachedData = await cachedResp.json();
-                        changelogCacheData = cachedData;
-                        renderChangelogData(cachedData, version, listEl, closeBtn, updateBtn);
-                        return;
+                    const cacheNames = await caches.keys();
+                    for (const name of cacheNames) {
+                        const cache = await caches.open(name);
+                        const cachedResp = await cache.match('./changelog.json');
+                        if (cachedResp && cachedResp.ok) {
+                            const cachedData = await cachedResp.json();
+                            changelogCacheData = cachedData;
+                            renderChangelogData(cachedData, version, listEl, closeBtn, updateBtn);
+                            return;
+                        }
                     }
                 } catch (cacheErr) {
                     console.warn('Cache fallback also failed:', cacheErr);
                 }
-                listEl.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px;font-size:0.9rem;">Could not load changelog. Please check your connection.</p>';
+                const errorMsg = t('config.changelogError') || 'No se ha podido cargar el changelog. Verifica tu conexión.';
+                listEl.innerHTML = `<p style="text-align:center;color:var(--text-secondary);padding:40px;font-size:0.9rem;">${errorMsg}</p>`;
                 const closeSheet = openBottomSheet('changelog-modal');
                 closeBtn.onclick = () => closeSheet();
             }
