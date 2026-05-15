@@ -2,10 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.8.5] - 2026-05-14
+## [v1.8.6] - 2026-05-15
 ### Bug Fixes
-- **Adaptive Bottom Safe Area**: Added `@media (display-mode: standalone)` with 8px padding for PWA mode and `env(safe-area-inset-bottom)` for browser mode, so the daily cards' bottom zone remains fully visible while avoiding gaps across both Safari and PWA contexts.
-- **Changelog Data Not Loading**: Removed the cache-busting query string from the `changelog.json` fetch that prevented the Service Worker from matching cached responses, and added the file to the SW asset pre-cache list so it is always available even when the network fetch fails.
+- **iOS Daily Cards Scroll Jank**: Removed `scroll-behavior: smooth` from `#daily-cards-container` and changed `updateActiveDailyCard()` scroll behavior from `'smooth'` to `'instant'` to prevent scroll-driven animation feedback loops on iOS. Added GPU layer promotion (`transform: translate3d(0,0,0)`, `will-change: scroll-position`) to the container and removed expensive `transition: background` from `.daily-card` to eliminate repaint storms. Added `lastActiveDateStr` guard to skip heavy layout operations (`getBoundingClientRect`, `scrollTo`) when the active day has not changed.
+- **Changelog Bottom Sheet Fetch Error on iOS**: Removed `{ cache: 'reload' }` from the `fetch('changelog.json')` call to avoid a WebKit bug where `cache: 'reload'` + Service Worker interaction causes fetch rejection on iOS 18. Added in-memory caching (`changelogCacheData`) so the data is only fetched once per session. Added a `caches` API fallback in the catch block that serves the changelog from the SW cache when the network fetch fails.
 
 ## [v1.8.4] - 2026-05-13
 ### Bug Fixes

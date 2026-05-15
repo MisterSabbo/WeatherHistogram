@@ -762,10 +762,12 @@
             white-space: nowrap;
             padding: 0;
             box-sizing: border-box;
-            scroll-behavior: smooth;
             gap: 0;
             align-items: center;
             scrollbar-width: none; /* Firefox */
+            will-change: scroll-position;
+            transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
         }
         #daily-cards-container::-webkit-scrollbar {
             display: none; /* Chrome/Safari */
@@ -784,7 +786,6 @@
             border-radius: 0;
             box-shadow: none;
             cursor: pointer;
-            transition: background 0.2s;
             position: relative;
             padding: 8px 10px;
             box-sizing: border-box;

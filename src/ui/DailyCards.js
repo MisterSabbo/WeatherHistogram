@@ -107,6 +107,8 @@ export function generateDailyCards(centerOnCurrentTimeCallback) {
     updateActiveDailyCard();
 }
 
+let lastActiveDateStr = '';
+
 export function updateActiveDailyCard() {
     const container = document.getElementById('daily-cards-container');
     if (!container || container.style.display === 'none') return;
@@ -122,6 +124,10 @@ export function updateActiveDailyCard() {
     const currentDate = new Date(currentData.time);
     const currentDateStr = currentDate.toLocaleDateString(getLocale(), { day: '2-digit', month: '2-digit', timeZone: state.timezone });
     
+    // Skip heavy layout ops if the active day hasn't changed
+    const dayChanged = currentDateStr !== lastActiveDateStr;
+    lastActiveDateStr = currentDateStr;
+
     // Usar índice flotante para progreso exacto (incluso entre horas)
     const fraction = floatIndex - Math.floor(floatIndex);
     const dayProgress = (currentData.localHour + fraction) / 24;
@@ -139,12 +145,14 @@ export function updateActiveDailyCard() {
         if (isActive) {
             card.style.setProperty('--arrow-pos', `${Math.max(0, Math.min(1, dayProgress)) * 100}%`);
 
-            const cardRect = card.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            
-            if (cardRect.left < containerRect.left || cardRect.right > containerRect.right) {
-                const scrollLeft = card.offsetLeft - (container.clientWidth / 2) + (card.clientWidth / 2);
-                container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            if (dayChanged) {
+                const cardRect = card.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                if (cardRect.left < containerRect.left || cardRect.right > containerRect.right) {
+                    const scrollLeft = card.offsetLeft - (container.clientWidth / 2) + (card.clientWidth / 2);
+                    container.scrollTo({ left: scrollLeft, behavior: 'instant' });
+                }
             }
         }
     });

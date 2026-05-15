@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.8.6",
+    "changes": [
+      "iOS Daily Cards Scroll Jank: Removed scroll-behavior:smooth, added GPU layer promotion to #daily-cards-container, changed scroll behavior to 'instant', added active-day guard to skip heavy layout ops, and removed expensive CSS transitions on .daily-card.",
+      "Changelog Bottom Sheet Fetch Error on iOS: Removed { cache: 'reload' } from fetch to avoid WebKit+SW bug on iOS 18, added in-memory caching so data is fetched once, and added caches API fallback when network fetch fails."
+    ]
+  },
+  {
     "version": "1.8.5",
     "changes": [
       "Adaptive Bottom Safe Area: Added @media (display-mode: standalone) with 8px padding for PWA mode and env(safe-area-inset-bottom) for browser mode, so the daily cards' bottom zone remains fully visible while avoiding gaps across both Safari and PWA contexts.",
