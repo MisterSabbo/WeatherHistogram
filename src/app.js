@@ -13,6 +13,7 @@ import { generateMockData } from './services/MockData.js';
 import { getAQIInfo, getPollenText } from './services/AqiManager.js';
 import { drawAQIRadar } from './ui/AqiRadar.js';
 import { drawPollenRadar } from './ui/PollenRadar.js';
+import { changelogData } from './data/changelog.js';
 import { getWeatherDescription } from './utils/weather.js';
 import { normalizeY } from './utils/math.js';
 import { drawHumidity, drawWind, drawTemperature } from './render/MetricsRenderer.js';
@@ -575,9 +576,8 @@ let weatherCache = new Map();
                         isChangelogLoading = true;
                         if (infoModal) infoModal.style.display = 'none';
                         requestAnimationFrame(() => {
-                            showChangelogModal()
-                                .catch(err => console.error("Changelog err:", err))
-                                .finally(() => { isChangelogLoading = false; });
+                            try { showChangelogModal(); } catch (e) { console.error("Changelog err:", e); }
+                            isChangelogLoading = false;
                         });
                     };
                     openChangelogLink.addEventListener('click', onChangelogOpen);
@@ -2838,8 +2838,6 @@ let weatherCache = new Map();
             window.addEventListener('touchend', onTouchEnd);
         }
 
-        let changelogCacheData = null;
-
         function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn) {
             const renderData = version ? [changelogData.find(item => item.version === version) || {version: version, changes: []}] : changelogData;
 
@@ -2933,7 +2931,7 @@ let weatherCache = new Map();
             };
         }
 
-        async function showChangelogModal(version) {
+        function showChangelogModal(version) {
             const modal = document.getElementById('changelog-modal');
             const titleEl = document.getElementById('changelog-title');
             const listEl = document.getElementById('changelog-list');
@@ -2956,54 +2954,7 @@ let weatherCache = new Map();
                 updateContainer.style.display = 'none';
 }
 
-            try {
-                let changelogData;
-                if (changelogCacheData) {
-                    changelogData = changelogCacheData;
-                } else {
-                    const response = await fetch('./changelog.json');
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    changelogData = await response.json();
-                    changelogCacheData = changelogData;
-                }
-
-                 renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn);
-                
-            } catch(e) {
-                console.warn('Failed to fetch changelog:', e);
-                try {
-                    const cacheNames = await caches.keys();
-                    const changelogUrl = new URL('./changelog.json', window.location.href).href;
-                    for (const name of cacheNames) {
-                        const cache = await caches.open(name);
-                        const cachedResp = await cache.match(changelogUrl);
-                        if (cachedResp && cachedResp.ok) {
-                            // iOS 18 may return ok=true with empty body – validate before parsing
-                            const text = await cachedResp.clone().text();
-                            if (!text || text.trim().length === 0) {
-                                console.warn('Cache entry had empty body, deleting:', name);
-                                cache.delete(changelogUrl).catch(() => {});
-                                continue;
-                            }
-                            try {
-                                const cachedData = JSON.parse(text);
-                                changelogCacheData = cachedData;
-                                renderChangelogData(cachedData, version, listEl, closeBtn, updateBtn);
-                                return;
-                            } catch (parseErr) {
-                                console.warn('Cache entry had invalid JSON, deleting:', name);
-                                cache.delete(changelogUrl).catch(() => {});
-                            }
-                        }
-                    }
-                } catch (cacheErr) {
-                    console.warn('Cache fallback also failed:', cacheErr);
-                }
-                const errorMsg = t('config.changelogError') || 'No se ha podido cargar el changelog. Verifica tu conexión.';
-                listEl.innerHTML = `<p style="text-align:center;color:var(--text-secondary);padding:40px;font-size:0.9rem;">${errorMsg}</p>`;
-                const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop');
-                closeBtn.onclick = () => closeSheet();
-            }
+            renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn);
         }
         
         async function performClearCacheAndReload() {

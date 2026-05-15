@@ -4,7 +4,7 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 
 ## [v1.8.8] - 2026-05-16
 ### Bug Fixes
-- **Changelog Not Loading on iOS 18 PWA**: Root-caused to a WebKit Cache API bug on iOS 18.x where `cache.match()` returns a `Response` with `ok: true` but an empty body. Bypassed the Service Worker for `changelog.json` and `version.json` so fetches go directly to the network when online. Removed `changelog.json` from the SW pre-cache list to prevent storing corrupted entries during installation. Added body-content validation with automatic cache-entry deletion in the cache fallback, so empty-body responses are detected and cleaned up rather than served. Bumped CACHE_NAME to `v7` to force a fresh cache on upgrade.
+- **Changelog Not Loading on iOS 18 PWA**: Root-caused to a WebKit Cache API bug on iOS 18.x where `cache.match()` returns a `Response` with `ok: true` but an empty body. **Definitive fix**: embedded the changelog data directly in a JS module (`src/data/changelog.js`) as an ES import — the same pattern used by `i18n.js` translations. This eliminates the `fetch()` call and Service Worker interception entirely, so the WebKit Cache API bug cannot affect changelog loading. Removed all fetch/cache fallback logic from `showChangelogModal()`. The `sw.js` bypass for JSON config files and the cache name bump to `v7` are retained as defense-in-depth.
 
 ## [v1.8.7] - 2026-05-15
 ### Features & Bug Fixes

@@ -1,8 +1,8 @@
-[
+export const changelogData = [
   {
     "version": "1.8.8",
     "changes": [
-      "Changelog Load Fix (iOS 18 PWA): Embedded changelog data directly in JS module as an ES import, eliminating the fetch() and Service Worker interception entirely — matching the same pattern used by i18n translations. This permanently avoids the WebKit Cache API empty-body bug on iOS 18.x."
+      "Changelog Load Fix (iOS 18 PWA): Embedded changelog data directly in JS module, eliminating the fetch and Service Worker interception entirely — matching the same pattern used by i18n translations. This permanently avoids the WebKit Cache API empty-body bug on iOS 18.x."
     ]
   },
   {
@@ -124,4 +124,4 @@
       "Cache Clearing Regression: Fixed a missing FavoritesService.clear() method implementation."
     ]
   }
-]
+];
