@@ -16,6 +16,7 @@ import { drawPollenRadar } from './ui/PollenRadar.js';
 import { changelogData } from './data/changelog.js';
 import { getWeatherDescription } from './utils/weather.js';
 import { normalizeY } from './utils/math.js';
+import { ModalManager } from './services/ModalManager.js';
 import { drawHumidity, drawWind, drawTemperature } from './render/MetricsRenderer.js';
 import { drawClouds, drawPrecipitation, drawPrecipitationProbability } from './render/AtmosphereRenderer.js';
 import { drawGrid, drawDayNames, drawAxes } from './render/GridRenderer.js';
@@ -156,7 +157,7 @@ let weatherCache = new Map();
             const appWrapper = document.getElementById('app-wrapper');
 
             document.addEventListener('touchstart', (e) => {
-                const hasOverlayOpen = document.querySelectorAll('.yip-sheet-backdrop.open, #info-modal[style*="display: flex"], #favorites-modal[style*="display: flex"], #map-location-modal[style*="display: flex"], #prompt-modal[style*="display: flex"], #changelog-modal.open, #yip-modal[style*="display: flex"]').length > 0;
+                const hasOverlayOpen = ModalManager.isModalOpen();
                 if (e.touches.length === 1 && !hasOverlayOpen && !e.target.closest('#search-results')) {
                     ptrStartY = e.touches[0].clientY;
                     ptrStartX = e.touches[0].clientX;
@@ -374,10 +375,11 @@ let weatherCache = new Map();
                 });
 
                 spfSettingsBtn.addEventListener('click', () => {
-                    spfModal.classList.remove('open');
-                    const backdrop = document.getElementById('pill-sheet-backdrop');
-                    if (backdrop) backdrop.classList.remove('open');
-                    if (infoModal) infoModal.style.display = 'flex';
+                    ModalManager.closeModal(spfModal);
+                    ModalManager.openModal(infoModal, {
+                        show: (el) => el.style.display = 'flex',
+                        hide: (el) => el.style.display = 'none'
+                    });
                 });
             }
 
@@ -498,7 +500,7 @@ let weatherCache = new Map();
                     alertsContainer.style.pointerEvents = 'auto';
                     alertsContainer.addEventListener('click', (e) => {
                         const isMobile = window.innerWidth <= 600;
-                        if (isMobile) {
+                        if (isMobile && !ModalManager.isModalOpen()) {
                             const tooltip = document.getElementById('alerts-tooltip');
                             if (tooltip) {
                                 const isVisible = tooltip.style.opacity === '1';
@@ -559,12 +561,12 @@ let weatherCache = new Map();
                 const infoModal = document.getElementById('info-modal');
                 const closeInfoBtn = document.getElementById('close-info-btn');
                 if (btnInfo && infoModal) {
-                    btnInfo.addEventListener('click', () => infoModal.style.display = 'flex');
-                    closeInfoBtn.addEventListener('click', () => infoModal.style.display = 'none');
-                    infoModal.addEventListener('click', (e) => {
-                        if (e.target === infoModal) infoModal.style.display = 'none';
-                    });
-}
+                    btnInfo.addEventListener('click', () => ModalManager.openModal(infoModal, {
+                        show: (el) => el.style.display = 'flex',
+                        hide: (el) => el.style.display = 'none'
+                    }));
+                    closeInfoBtn.addEventListener('click', () => ModalManager.closeModal(infoModal));
+                }
 
                 let isChangelogLoading = false;
 
@@ -574,7 +576,7 @@ let weatherCache = new Map();
                         e.preventDefault();
                         if (isChangelogLoading) return;
                         isChangelogLoading = true;
-                        if (infoModal) infoModal.style.display = 'none';
+                        if (infoModal) ModalManager.closeModal(infoModal);
                         requestAnimationFrame(() => {
                             try { showChangelogModal(); } catch (e) { console.error("Changelog err:", e); }
                             isChangelogLoading = false;
@@ -736,35 +738,11 @@ let weatherCache = new Map();
 
                 // Function to show confirm modal
                 const showConfirm = (title, message, onOk) => {
-                    const titleEl = document.getElementById('confirm-title');
-                    const msgEl = document.getElementById('confirm-message');
-                    const cancelBtn = document.getElementById('confirm-cancel-btn');
-                    const okBtn = document.getElementById('confirm-ok-btn');
-                    
-                    if (titleEl) titleEl.textContent = title;
-                    if (msgEl) msgEl.textContent = message;
-                    
-                    if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
-                    if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
-                    
-                    const newOk = okBtn.cloneNode(true);
-                    okBtn.parentNode.replaceChild(newOk, okBtn);
-                    const newCancel = cancelBtn.cloneNode(true);
-                    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-                    
-                    const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => {};
-                    
-                    let confirmed = false;
-                    
-                    newCancel.addEventListener('click', () => {
-                        closeFn();
-                    });
-                    
-                    newOk.addEventListener('click', () => {
-                        if (confirmed) return;
-                        confirmed = true;
-                        closeFn();
-                        onOk();
+                    ModalManager.showConfirm(title, message, {
+                        okText: t('config.accept') || 'Aceptar',
+                        cancelText: t('config.cancel') || 'Cancelar'
+                    }).then(confirmed => {
+                        if (confirmed) onOk();
                     });
                 };
 
@@ -841,7 +819,7 @@ let weatherCache = new Map();
                 // Tooltips en móvil al tocar el valor o la ubicación
                 document.querySelectorAll('.data-value, .location-group').forEach(val => {
                     val.addEventListener('click', (e) => {
-                        if (window.innerWidth < 600) {
+                        if (window.innerWidth < 600 && !ModalManager.isModalOpen()) {
                             const tooltip = val.querySelector('.custom-tooltip');
                             if (tooltip) {
                                 // For location-group, only show if text is truncated
@@ -2672,7 +2650,7 @@ let weatherCache = new Map();
             const text = document.getElementById('update-toast-text');
             const btn = document.getElementById('update-toast-btn');
             
-            if (document.getElementById('changelog-modal').classList.contains('open')) {
+            if (ModalManager.isModalOpen()) {
                 return;
             }
             
@@ -2689,83 +2667,24 @@ let weatherCache = new Map();
             }
         }
         
-        function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop') {
+        function openBottomSheet(sheetId) {
             const sheet = document.getElementById(sheetId);
-            const backdrop = document.getElementById(backdropId);
-            
-            if (!sheet || !backdrop) return () => {};
-
-            sheet.style.transform = '';
-            sheet.classList.add('open');
-            backdrop.classList.add('open');
-            
-            const closeSheet = () => {
-                sheet.classList.remove('open');
-                backdrop.classList.remove('open');
-                sheet.style.transform = '';
-            };
-            
-            backdrop.onclick = closeSheet;
-            
-            // Swipe down to close logic
-            let startY = 0;
-            let currentY = 0;
-            
-            let handleId = sheetId.replace('-modal', '-sheet-drag-handle');
-            const handle = document.getElementById(handleId);
-            
-            if (handle) {
-                const onTouchStart = (e) => {
-                    startY = e.touches[0].clientY;
-                    sheet.style.transition = 'none';
-                };
-                
-                const onTouchMove = (e) => {
-                    currentY = e.touches[0].clientY;
-                    const diff = currentY - startY;
-                    if (diff > 0) { // only swipe down
-                        sheet.style.transform = `translateY(${diff}px)`;
-                    }
-                };
-                
-                const onTouchEnd = () => {
-                    sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                    if (currentY - startY > 100) {
-                        closeSheet();
-                    } else {
-                        sheet.style.transform = 'translateY(0)';
-                    }
-                    
-                    const el = document.getElementById(handleId);
-                    if (el) {
-                        el.removeEventListener('touchstart', onTouchStart);
-                        el.removeEventListener('touchmove', onTouchMove);
-                    }
-                    window.removeEventListener('touchend', onTouchEnd);
-                };
-                
-                const clone = handle.cloneNode(true);
-                handle.parentNode.replaceChild(clone, handle);
-                clone.addEventListener('touchstart', onTouchStart, { passive: true });
-                clone.addEventListener('touchmove', onTouchMove, { passive: true });
-                window.addEventListener('touchend', onTouchEnd);
-            }
-            
-            return closeSheet;
+            if (!sheet) return () => {};
+            const { close } = ModalManager.openModal(sheet, { canSwipeClose: true });
+            return close;
         }
         window.openBottomSheet = openBottomSheet;
 
         function openChangelogDetail(item) {
             const sheet = document.getElementById('changelog-detail-sheet');
-            const backdrop = document.getElementById('changelog-sheet-backdrop');
             const changelogModal = document.getElementById('changelog-modal');
-            
+
             document.getElementById('changelog-detail-title').textContent = `v${item.version}`;
             document.getElementById('changelog-detail-subtitle').textContent = "Detalles de esta versión";
-            
+
             const listEl = document.getElementById('changelog-detail-list');
             listEl.innerHTML = '';
-            
+
             if (item.changes && item.changes.length > 0) {
                 item.changes.forEach(change => {
                     const li = document.createElement('li');
@@ -2778,58 +2697,16 @@ let weatherCache = new Map();
                 li.textContent = 'Actualizaciones menores y corrección de errores.';
                 listEl.appendChild(li);
             }
-            
-            sheet.style.transform = '';
-            sheet.classList.add('open');
-            backdrop.classList.add('open');
+
             changelogModal.style.pointerEvents = 'none';
 
-            const closeSheet = () => {
-                sheet.classList.remove('open');
-                backdrop.classList.remove('open');
-                sheet.style.transform = '';
-                changelogModal.style.pointerEvents = '';
-            };
-
-            backdrop.onclick = closeSheet;
-            
-            // Swipe down to close logic
-            let startY = 0;
-            let currentY = 0;
-            const handle = document.getElementById('changelog-detail-sheet-drag-handle');
-            
-            const onTouchStart = (e) => {
-                startY = e.touches[0].clientY;
-                sheet.style.transition = 'none';
-            };
-            
-            const onTouchMove = (e) => {
-                currentY = e.touches[0].clientY;
-                const diff = currentY - startY;
-                if (diff > 0) { // only swipe down
-                    sheet.style.transform = `translateY(${diff}px)`;
+            const { close } = ModalManager.openModal(sheet, {
+                canSwipeClose: true,
+                handleId: 'changelog-detail-sheet-drag-handle',
+                onClose: () => {
+                    changelogModal.style.pointerEvents = '';
                 }
-            };
-            
-            const onTouchEnd = () => {
-                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                if (currentY - startY > 100) {
-                    closeSheet();
-                } else {
-                    sheet.style.transform = 'translateY(0)';
-                }
-                
-                handle.removeEventListener('touchstart', onTouchStart);
-                handle.removeEventListener('touchmove', onTouchMove);
-                window.removeEventListener('touchend', onTouchEnd);
-            };
-            
-            // cleanup if already added
-            const clone = handle.cloneNode(true);
-            handle.parentNode.replaceChild(clone, handle);
-            clone.addEventListener('touchstart', onTouchStart, { passive: true });
-            clone.addEventListener('touchmove', onTouchMove, { passive: true });
-            window.addEventListener('touchend', onTouchEnd);
+            });
         }
 
         function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn) {
@@ -2916,7 +2793,7 @@ let weatherCache = new Map();
                 listEl.appendChild(li);
             });
 
-            const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop');
+            const closeSheet = openBottomSheet('changelog-modal');
 
             closeBtn.onclick = () => closeSheet();
             updateBtn.onclick = async () => {

@@ -1214,22 +1214,11 @@
             transform: translateY(0);
         }
 
-        .yip-sheet-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 6999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .yip-sheet-backdrop.open {
-            opacity: 1;
-            pointer-events: auto;
+        body[data-modal-open] .custom-tooltip,
+        body[data-modal-open] #alerts-tooltip {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
         }
 
         .yip-detail-grid {

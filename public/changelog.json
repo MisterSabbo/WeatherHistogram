@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.9.0",
+    "changes": [
+      "Unified Modal Manager: Created ModalManager.js with stack-based z-index management, dynamic per-modal overlays, Escape key support, and tooltip suppression when modals are open.",
+      "Consolidated confirm modal: Removed duplicated showConfirm logic from app.js and YearInPixels.js into ModalManager.showConfirm().",
+      "Eliminated shared backdrops: Removed pill-sheet-backdrop, changelog-sheet-backdrop, confirm-sheet-backdrop, and yip-sheet-backdrop in favor of dynamically created per-modal overlays."
+    ]
+  },
+  {
     "version": "1.8.9",
     "changes": [
       "Changelog detail close behavior: Clicking outside the version detail sheet (including on the changelog modal) now closes the detail, instead of requiring a click outside both modals."

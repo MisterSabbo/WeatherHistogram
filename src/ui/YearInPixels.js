@@ -1,6 +1,7 @@
 import { storageService } from '../services/StorageService.js';
 import { getThemeColor } from '../theme.js';
 import { t } from '../utils/i18n.js';
+import { ModalManager } from '../services/ModalManager.js';
 
 export function initYearInPixels() {
   const openBtn = document.getElementById('year-in-pixels-btn');
@@ -23,15 +24,15 @@ export function initYearInPixels() {
               confirmText
           );
 
-          if (confirmed) {
-              await storageService.init();
-              const db = storageService.db;
-              const tx = db.transaction([storageService.historyStoreName], 'readwrite');
-              const store = tx.objectStore(storageService.historyStoreName);
-              const req = store.delete(locSelectValue);
-              req.onsuccess = () => {
-                  modal.style.display = 'none'; // close it entirely on wipe
-              };
+            if (confirmed) {
+                await storageService.init();
+                const db = storageService.db;
+                const tx = db.transaction([storageService.historyStoreName], 'readwrite');
+                const store = tx.objectStore(storageService.historyStoreName);
+                const req = store.delete(locSelectValue);
+                req.onsuccess = () => {
+                    ModalManager.closeAll();
+                };
               req.onerror = (e) => {
                   console.error('Error deleting location historical data:', e);
               };
@@ -71,17 +72,20 @@ export function initYearInPixels() {
                 await loadLocationData(keys[0]);
              }
          }
-         modal.style.display = 'flex';
+          ModalManager.openModal(modal, {
+              show: (el) => el.style.display = 'flex',
+              hide: (el) => el.style.display = 'none'
+          });
      };
   });
 
   closeBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
+      ModalManager.closeModal(modal);
   });
 
   modal.addEventListener('click', (e) => {
       if (e.target === modal) {
-          modal.style.display = 'none';
+          ModalManager.closeModal(modal);
       }
   });
 
@@ -267,7 +271,6 @@ function renderYIPGrid(history, param) {
 function openYIPDetail(data, dateStr) {
     if (!data) return;
     const sheet = document.getElementById('yip-detail-sheet');
-    const backdrop = document.getElementById('yip-sheet-backdrop');
     
     document.getElementById('yip-detail-date').textContent = dateStr;
     const desc = document.getElementById('yip-detail-desc');
@@ -298,13 +301,7 @@ function openYIPDetail(data, dateStr) {
     `;
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
     
-    sheet.classList.add('open');
-    backdrop.classList.add('open');
-    
-    backdrop.onclick = () => {
-        sheet.classList.remove('open');
-        backdrop.classList.remove('open');
-    };
+    ModalManager.openModal(sheet, { canSwipeClose: true, handleId: 'yip-detail-sheet-drag-handle' });
 }
 
 function getColorForParam(param, value) {
@@ -401,36 +398,8 @@ function renderLegend(param, legendContainer) {
  * Shared confirm modal logic for YIP
  */
 async function showConfirm(title, message) {
-    return new Promise((resolve) => {
-        const titleEl = document.getElementById('confirm-title');
-        const msgEl = document.getElementById('confirm-message');
-        const cancelBtn = document.getElementById('confirm-cancel-btn');
-        const okBtn = document.getElementById('confirm-ok-btn');
-        
-        if (titleEl) titleEl.textContent = title;
-        if (msgEl) msgEl.textContent = message;
-        
-        if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
-        if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
-        
-        // Clone to remove old listeners
-        if (okBtn) {
-            const newOk = okBtn.cloneNode(true);
-            okBtn.parentNode.replaceChild(newOk, okBtn);
-            newOk.onclick = () => {
-                closeFn();
-                resolve(true);
-            };
-        }
-        if (cancelBtn) {
-            const newCancel = cancelBtn.cloneNode(true);
-            cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-            newCancel.onclick = () => {
-                closeFn();
-                resolve(false);
-            };
-        }
-        
-        const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => { resolve(confirm(message)); };
+    return ModalManager.showConfirm(title, message, {
+        okText: t('config.accept') || 'Aceptar',
+        cancelText: t('config.cancel') || 'Cancelar'
     });
 }
