@@ -2782,16 +2782,15 @@ let weatherCache = new Map();
             sheet.style.transform = '';
             sheet.classList.add('open');
             backdrop.classList.add('open');
-            
+            changelogModal.style.pointerEvents = 'none';
+
             const closeSheet = () => {
                 sheet.classList.remove('open');
                 backdrop.classList.remove('open');
                 sheet.style.transform = '';
-                changelogModal.removeEventListener('click', onChangelogModalClick);
+                changelogModal.style.pointerEvents = '';
             };
 
-            const onChangelogModalClick = () => closeSheet();
-            changelogModal.addEventListener('click', onChangelogModalClick);
             backdrop.onclick = closeSheet;
             
             // Swipe down to close logic
