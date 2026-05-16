@@ -2,6 +2,16 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.9e] - 2026-05-16
+### UX & Performance
+- **Spinner → Skeleton loading**: Replaced the full-screen spinner overlay with pulsing skeleton blocks that mirror the app layout (header, metrics row, chart area, minimap). The overlay still blocks interaction during fetch but now shows progressive placeholder shapes instead of a spinning circle, reducing cognitive load and improving perceived performance.
+- **Fluid typography with clamp()**: Applied `clamp()` to `#location-name`, `#weather-summary`, `#current-time-display .time-main`, and `#current-time-display .date-sub` for smooth font-size scaling between mobile and desktop viewports, eliminating the need for separate media query overrides.
+- **Scroll indicators repositioned**: Moved `.scroll-indicator` from `top: 12px; height: 35px` to `top: 0; height: 18px` to prevent visual overlap with metric cards in the scrollable top-panel-metrics row.
+- **Flex container shrink**: Changed `.controls-left min-width` from `300px` to `0` so the search bar and buttons wrap properly on narrow desktop viewports without forcing overflow.
+
+### Cleanup
+- **Unused i18n keys removed**: Deleted `overlay.fetchingLocation` and `overlay.loadingData` keys from Spanish/English translation files — no longer referenced after skeleton replacement.
+
 ## [v1.8.9d] - 2026-05-16
 ### Performance & Refactoring
 - **Responsive TILE_WIDTH**: Changed from fixed 1440px to 1440px desktop / 720px mobile (<600px). Halves canvas tile size on mobile, reducing GPU memory per tile without affecting rendering logic.

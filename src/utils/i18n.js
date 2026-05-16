@@ -81,8 +81,6 @@ export const translations = {
         theme: {
         },
         overlay: {
-            fetchingLocation: "Obteniendo ubicación...",
-            loadingData: "Cargando datos...",
             skipWait: "Saltar espera"
         },
         search: {
@@ -292,8 +290,6 @@ export const translations = {
         theme: {
         },
         overlay: {
-            fetchingLocation: "Fetching location...",
-            loadingData: "Loading data...",
             skipWait: "Skip wait"
         },
         search: {

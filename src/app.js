@@ -277,11 +277,7 @@ let weatherCache = new Map();
                     const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
                     const doRefresh = async () => {
                         const overlay = document.getElementById('overlay');
-                        const statusText = document.getElementById('status-text');
                         overlay.classList.remove('hidden');
-                        statusText.innerText = t('config.loading') || 'Cargando...';
-                        statusText.style.display = 'block';
-                        document.querySelector('.loader').style.display = 'block';
                         document.getElementById('error-msg').style.display = 'none';
                         try {
                             if (originalLocation) {
@@ -882,12 +878,11 @@ let weatherCache = new Map();
                     const overlay = document.getElementById('overlay');
                     if (overlay && !overlay.classList.contains('hidden') && document.getElementById('error-msg').style.display !== 'block') {
                         console.warn("Loading taking too long, forcing overlay hide");
-                        // No lo ocultamos automáticamente por si realmente está cargando,
-                        // pero mostramos un botón de "Saltar" si pasan 10 segundos
-                        const statusText = document.getElementById('status-text');
-                        if (statusText && statusText.innerText === t('overlay.loadingData')) {
-                            statusText.innerHTML = `${t('overlay.loadingData')} <br><button onclick="document.getElementById('overlay').classList.add('hidden')" style="margin-top:10px; font-size:0.7rem; opacity:0.7;">${t('overlay.skipWait')}</button>`;
-                        }
+                        const skipBtn = document.createElement('button');
+                        skipBtn.innerText = t('overlay.skipWait') || 'Skip';
+                        skipBtn.onclick = () => overlay.classList.add('hidden');
+                        skipBtn.style.cssText = 'position:absolute;bottom:120px;left:50%;transform:translateX(-50%);font-size:0.7rem;opacity:0.7;padding:8px 16px;background:var(--input-bg);border:1px solid var(--grid-color);border-radius:6px;color:var(--text-primary);cursor:pointer;z-index:9999;';
+                        overlay.appendChild(skipBtn);
                     }
                 }, 10000);
 
@@ -1133,7 +1128,6 @@ let weatherCache = new Map();
             }
 
             document.getElementById('overlay').classList.remove('hidden');
-            document.getElementById('status-text').innerText = "Obteniendo ubicación...";
             try {
                 const pos = await getPosition();
                 state.lat = pos.coords.latitude;
@@ -1162,14 +1156,9 @@ let weatherCache = new Map();
 
         async function loadWeather() {
             const overlay = document.getElementById('overlay');
-            const statusText = document.getElementById('status-text');
             const errorMsg = document.getElementById('error-msg');
-            const loader = document.querySelector('.loader');
 
             overlay.classList.remove('hidden');
-            statusText.innerText = t('overlay.loadingData');
-            statusText.style.display = 'block';
-            loader.style.display = 'block';
             errorMsg.style.display = 'none';
 
             try {
@@ -1179,9 +1168,6 @@ let weatherCache = new Map();
                 // Forzamos ocultar si llegamos aquí sin errores fatales
                 if (errorMsg.style.display !== 'block') {
                     overlay.classList.add('hidden');
-                } else {
-                    // Si hay un error mostrado, nos aseguramos que el loader se quite
-                    if (loader) loader.style.display = 'none';
                 }
 
                 centerOnCurrentTime();
@@ -2574,10 +2560,6 @@ let weatherCache = new Map();
                 </button>
             `;
             errDiv.style.display = 'block';
-            const loader = document.querySelector('.loader');
-            if (loader) loader.style.display = 'none';
-            const statusText = document.getElementById('status-text');
-            if (statusText) statusText.style.display = 'none';
         }
 
         if ("serviceWorker" in navigator) {

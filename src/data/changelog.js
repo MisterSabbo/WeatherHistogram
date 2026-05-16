@@ -1,5 +1,14 @@
 export const changelogData = [
   {
+    "version": "1.8.9e",
+    "changes": [
+      "Spinner → Skeleton loading: Replaced full-screen spinner overlay with pulsing skeleton blocks that mirror the app layout (header, metrics row, chart, minimap), improving perceived performance and reducing cognitive load during data fetch.",
+      "Fluid typography with clamp(): Applied clamp() to location-name, weather-summary, time-main, and date-sub for smooth scaling between mobile and desktop without media query breakpoints.",
+      "Scroll indicators repositioned: Moved .scroll-indicator from top:12px/height:35px to top:0/height:18px to eliminate overlap with metric cards in the scrollable top-panel-metrics row.",
+      "Flex container shrink: Changed .controls-left min-width from 300px to 0 to allow proper wrapping on narrow desktop viewports."
+    ]
+  },
+  {
     "version": "1.8.9a",
     "changes": [
       "Changelog detail backdrop leak: Fixed a bug where closing the version detail sheet removed the shared backdrop, leaving the main changelog modal open and unprotected. Fix: split the shared backdrop into two independent backdrops, one per modal, and removed the pointerEvents hack."

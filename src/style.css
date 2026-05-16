@@ -141,7 +141,7 @@
             gap: 15px;
             align-items: center;
             flex: 1;
-            min-width: 300px;
+            min-width: 0;
             flex-wrap: wrap;
         }
 
@@ -320,7 +320,7 @@
         }
 
         #location-name {
-            font-size: 0.85rem;
+            font-size: clamp(0.85rem, 1.5vw, 1rem);
             font-weight: 800;
             color: var(--text-primary);
             white-space: nowrap;
@@ -333,7 +333,7 @@
         }
 
         #weather-summary {
-            font-size: 0.6rem;
+            font-size: clamp(0.6rem, 1.2vw, 0.75rem);
             color: var(--text-secondary);
             font-weight: 600;
             text-transform: uppercase;
@@ -368,13 +368,13 @@
         }
 
         #current-time-display .time-main {
-            font-size: 0.8rem;
+            font-size: clamp(0.8rem, 1.5vw, 1rem);
             color: var(--accent-temp);
             letter-spacing: -0.2px;
         }
 
         #current-time-display .date-sub {
-            font-size: 0.5rem;
+            font-size: clamp(0.5rem, 1vw, 0.7rem);
             color: var(--text-secondary);
             font-weight: 700;
         }
@@ -459,18 +459,6 @@
                 order: 1; /* Put on the left */
                 padding-left: 0; /* Align to the far left */
             }
-            #location-name {
-                font-size: 1rem;
-            }
-            #weather-summary {
-                font-size: 0.75rem;
-            }
-            #current-time-display .time-main {
-                font-size: 1rem;
-            }
-            #current-time-display .date-sub {
-                font-size: 0.7rem;
-            }
             .top-panel-metrics {
                 margin-left: 0;
                 gap: 5px; /* Significantly reduced gap since cards are auto width now */
@@ -533,27 +521,28 @@
             .scroll-indicator {
                 display: flex;
                 position: absolute;
-                top: 12px;
-                height: 35px;
-                align-items: center;
+                top: 0;
+                height: 18px;
+                align-items: flex-end;
                 justify-content: center;
                 color: var(--accent-temp);
                 pointer-events: none;
                 z-index: var(--z-floating);
                 transition: opacity 0.3s;
+                font-size: 0.6rem;
             }
             .scroll-indicator-right {
                 right: 0;
-                background: linear-gradient(to right, transparent, var(--bg-color) 20%, var(--bg-color) 80%);
-                padding-left: 15px;
-                padding-right: 5px;
+                background: linear-gradient(to right, transparent, var(--bg-color) 10%, var(--bg-color) 90%);
+                padding-left: 10px;
+                padding-right: 3px;
                 animation: pulse-horizontal-right 2s infinite;
             }
             .scroll-indicator-left {
                 left: 0;
-                background: linear-gradient(to left, transparent, var(--bg-color) 20%, var(--bg-color) 80%);
-                padding-right: 15px;
-                padding-left: 5px;
+                background: linear-gradient(to left, transparent, var(--bg-color) 10%, var(--bg-color) 90%);
+                padding-right: 10px;
+                padding-left: 3px;
                 animation: pulse-horizontal-left 2s infinite;
             }
         }
@@ -1006,15 +995,11 @@
             pointer-events: none;
         }
 
-        /* Mensajes y Carga */
+        /* Overlay de carga con skeletons */
         #overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: var(--overlay-bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             z-index: var(--z-overlay);
             transition: opacity 0.5s, visibility 0.5s;
         }
@@ -1025,14 +1010,79 @@
             pointer-events: none;
         }
 
-        .loader {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--grid-color);
-            border-top-color: var(--accent-temp);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+        #overlay #error-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .skeleton-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 15px 20px;
+            box-sizing: border-box;
+            gap: 12px;
+        }
+
+        .skeleton-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .skeleton-top-row {
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skeleton-block {
+            background: linear-gradient(90deg, var(--card-bg) 25%, var(--input-bg) 50%, var(--card-bg) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-pulse 1.5s ease-in-out infinite;
+            border-radius: 6px;
+        }
+
+        .skeleton-header-block {
+            width: 40%;
+            max-width: 200px;
+            height: 18px;
+            align-self: center;
+        }
+
+        .skeleton-metrics-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            background: none !important;
+            animation: none !important;
+            border-radius: 0;
+        }
+
+        .skeleton-card-item {
+            width: 80px;
+            height: 45px;
+            background: linear-gradient(90deg, var(--card-bg) 25%, var(--input-bg) 50%, var(--card-bg) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-pulse 1.5s ease-in-out infinite;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .skeleton-chart-block {
+            flex: 1;
+            min-height: 150px;
+        }
+
+        .skeleton-minimap-block {
+            height: 60px;
+        }
+
+        @keyframes skeleton-pulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         /* Botón Ahora */
