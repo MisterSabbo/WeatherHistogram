@@ -50,7 +50,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Bypass SW for JSON config files to avoid iOS 18 Cache API empty-body bug
-  if (url.pathname.endsWith('/changelog.json') || url.pathname.endsWith('/version.json')) {
+  if (url.pathname.endsWith('/version.json')) {
     return;
   }
 
