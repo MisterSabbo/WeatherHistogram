@@ -63,7 +63,7 @@
         justify-content: center;
         transform: translateY(-100%);
         transition: transform 0.2s;
-        z-index: 9999;
+        z-index: var(--z-ptr);
         background: var(--bg-color);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       "
@@ -106,7 +106,7 @@
         min-height: 0;
         width: 100%;
         position: relative;
-        z-index: 1;
+        z-index: var(--z-base);
       "
     >
       <div id="controls-bar" style="justify-content: space-between">
@@ -521,7 +521,7 @@
             bottom: 0;
             width: 2px;
             background: rgba(0, 0, 0, 0.4);
-            z-index: 10;
+            z-index: var(--z-indicator);
             pointer-events: none;
           "
         ></div>
@@ -675,7 +675,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 20;
+            z-index: var(--z-canvas-overlay);
           "
         ></canvas>
         <button
@@ -686,7 +686,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            z-index: 100;
+            z-index: var(--z-floating);
             display: none;
             background: var(--card-bg);
             border: 1px solid var(--grid-color);
@@ -727,7 +727,7 @@
                 width: 2px;
                 background: rgba(239, 68, 68, 0.5);
                 pointer-events: none;
-                z-index: 10;
+                z-index: var(--z-indicator);
                 display: none;
                 transform: translateX(-50%);
               "
@@ -1095,7 +1095,7 @@
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
-        z-index: 6000;
+        z-index: var(--z-modal);
         align-items: center;
         justify-content: center;
         padding: 16px;
@@ -1120,8 +1120,8 @@
           id="close-favorites-btn"
           style="
             position: absolute;
-            top: -12px;
-            right: -12px;
+            top: 8px;
+            right: 8px;
             background: var(--bg-color);
             border: 1px solid var(--grid-color);
             font-size: 20px;
@@ -1135,7 +1135,7 @@
             justify-content: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             padding: 0;
-            z-index: 10;
+            z-index: var(--z-indicator);
           "
         >
           <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
@@ -1166,7 +1166,7 @@
         right: 0;
         bottom: 0;
         background: var(--bg-color);
-        z-index: 5000;
+        z-index: var(--z-tooltip);
         flex-direction: column;
       "
     >
@@ -1344,7 +1344,7 @@
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.6);
-        z-index: 5000;
+        z-index: var(--z-tooltip);
         align-items: center;
         justify-content: center;
         padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
@@ -1369,8 +1369,8 @@
           id="close-info-btn"
           style="
             position: absolute;
-            top: -12px;
-            right: -12px;
+            top: 8px;
+            right: 8px;
             background: var(--bg-color);
             border: 1px solid var(--grid-color);
             font-size: 20px;
@@ -1384,7 +1384,7 @@
             justify-content: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             padding: 0;
-            z-index: 10;
+            z-index: var(--z-indicator);
           "
         >
           <span class="material-symbols-outlined" style="font-size: 18px"
@@ -1412,7 +1412,7 @@
           </h2>
           <p style="font-size: 0.9rem; margin-bottom: 8px">
             <strong data-i18n="config.version">Versión:</strong>
-            <span id="app-version-label">v1.8.9b</span>
+            <span id="app-version-label">v1.8.9c</span>
             <button id="open-changelog-link" style="color: #3b82f6; background: none; border: none; cursor: pointer; font-weight: 600; font-size: inherit; font-family: inherit; margin-left: 8px; padding: 0; display: inline;" data-i18n="config.changelogLink">Changelog</button>
           </p>
           <p style="font-size: 0.9rem; margin-bottom: 20px">
@@ -1976,7 +1976,7 @@
     </div>
 
     <!-- Prompt Modal -->
-    <div id="prompt-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6000; align-items: center; justify-content: center; padding: 20px;">
+    <div id="prompt-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: var(--z-modal); align-items: center; justify-content: center; padding: 20px;">
       <div style="background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 320px; padding: 24px; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <h3 id="prompt-title" style="margin-top: 0; margin-bottom: 16px; font-size: 1.2rem; text-align: center;">Editar</h3>
         <input type="text" id="prompt-input" style="width: 100%; padding: 10px; margin-bottom: 24px; border-radius: 8px; border: 1px solid var(--grid-color); background: var(--bg-color); color: var(--text-primary); font-family: inherit; font-size: 1rem; outline: none; box-sizing: border-box;" />
@@ -1988,21 +1988,21 @@
     </div>
 
     <!-- Update Toast -->
-    <div id="update-toast" style="display: none; position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--card-bg); color: var(--text-primary); padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 6000; align-items: center; gap: 12px; border: 1px solid var(--accent-precip);">
+    <div id="update-toast" style="display: none; position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--card-bg); color: var(--text-primary); padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: var(--z-modal); align-items: center; gap: 12px; border: 1px solid var(--accent-precip);">
       <span id="update-toast-text" style="font-size: 0.95rem; font-weight: 500;">Nueva versión disponible</span>
       <button id="update-toast-btn" style="background: var(--accent-precip); color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer;">Ver Novedades</button>
     </div>
 
     <!-- Changelog Modal -->
-    <div id="changelog-modal" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column; z-index: 7000;">
+    <div id="changelog-modal" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column; z-index: var(--z-sheet);">
       <div id="changelog-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 12px auto; cursor: grab;"></div>
-      <div style="padding: 0 24px 16px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center; justify-content: space-between; z-index: 10; flex-shrink: 0;">
+      <div style="padding: 0 24px 16px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center; justify-content: space-between; z-index: var(--z-indicator); flex-shrink: 0;">
         <h3 id="changelog-title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Novedades</h3>
         <button id="changelog-close-btn" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 8px;"><span class="material-symbols-outlined">close</span></button>
       </div>
       <div style="padding: 20px 24px calc(20px + env(safe-area-inset-bottom)) 24px; overflow-y: auto; flex: 1; position: relative;">
         <!-- The Timeline line -->
-        <div style="position: absolute; left: 35px; top: 20px; bottom: 20px; width: 2px; background: var(--grid-color); z-index: 1;"></div>
+        <div style="position: absolute; left: 35px; top: 20px; bottom: 20px; width: 2px; background: var(--grid-color); z-index: var(--z-base);"></div>
         <div id="changelog-list" style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 24px; list-style: none; margin: 0; padding: 0;"></div>
       </div>
       <div id="changelog-update-container" style="padding: 16px 24px calc(16px + env(safe-area-inset-bottom)) 24px; border-top: 1px solid var(--grid-color); display: none; justify-content: center; background: var(--card-bg); flex-shrink: 0;">
@@ -2012,7 +2012,7 @@
     
     <!-- Changelog Detail Bottom Sheet -->
     <div id="changelog-sheet-backdrop" class="yip-sheet-backdrop"></div>
-    <div id="changelog-detail-backdrop" class="yip-sheet-backdrop" style="z-index: 7000;"></div>
+    <div id="changelog-detail-backdrop" class="yip-sheet-backdrop" style="z-index: var(--z-sheet);"></div>
     <div id="changelog-detail-sheet" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column;">
         <div id="changelog-detail-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 12px auto; cursor: grab;"></div>
         <div style="padding: 0 24px 24px 24px; overflow-y: auto; flex: 1;">
@@ -2025,7 +2025,7 @@
     <!-- Year In Pixels Modal -->
     <div id="yip-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;">
       <div style="position: relative; background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: 100%; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-        <button id="close-yip-modal-btn" style="position: absolute; top: -12px; right: -12px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-symbols-outlined" style="font-size: 18px">close</span></button>
+        <button id="close-yip-modal-btn" style="position: absolute; top: 8px; right: 8px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-symbols-outlined" style="font-size: 18px">close</span></button>
         <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center;">
           <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
             <span class="material-symbols-outlined" style="color: var(--accent-temp)">grid_view</span>

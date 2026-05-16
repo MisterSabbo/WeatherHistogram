@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.8.9c",
+    "changes": [
+      "Z-index normalization: Created 12 CSS custom properties (--z-ptr, --z-sheet, --z-tooltip, --z-modal, --z-controls, --z-panel, --z-dropdown, --z-overlay, --z-floating, --z-canvas-overlay, --z-indicator, --z-base) and replaced all raw z-index values in CSS and HTML with var() references, making the layer stack auditable and maintainable.",
+      "Close button repositioning: Changed 3 modal close buttons from top: -12px to top: 8px and right: -12px to right: 8px to prevent clipping on devices with rounded screen corners or notches."
+    ]
+  },
+  {
     "version": "1.8.9b",
     "changes": [
       "Mobile-First & Accessibility: Removed user-scalable=no from viewport meta to allow user-controlled zoom while maintaining chart-level blocking via touch-action. Added -webkit-text-size-adjust: 100% to prevent iOS Safari landscape text scaling. Added touch-action: manipulation to all buttons, inputs, select, textarea, and anchor elements to eliminate 300ms tap delay on mobile."

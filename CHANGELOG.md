@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.9c] - 2026-05-16
+### Code Architecture
+- **Z-index normalization**: Created 12 CSS custom properties (`--z-ptr`, `--z-sheet`, `--z-tooltip`, `--z-modal`, `--z-controls`, `--z-panel`, `--z-dropdown`, `--z-overlay`, `--z-floating`, `--z-canvas-overlay`, `--z-indicator`, `--z-base`) and replaced all 17 raw z-index values in CSS and 28 in HTML with `var()` references, making the layer stack auditable and maintainable.
+- **Close button repositioning**: Changed 3 modal close buttons from `top: -12px; right: -12px` to `top: 8px; right: 8px` to prevent clipping on devices with rounded screen corners or notches.
+
 ## [v1.8.9b] - 2026-05-16
 ### Mobile-First & Accessibility
 - **Viewport zoom control relaxed**: Removed `user-scalable=no` and `maximum-scale=1.0` from the viewport meta tag to allow user-controlled zoom on modals and settings. Chart-level zoom blocking is preserved via `touch-action: pan-x` on `#scroll-container` and multi-touch prevention JS listeners — so the histogram remains locked while the rest of the UI becomes zoomable.
