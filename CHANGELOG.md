@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.9b] - 2026-05-16
+### Mobile-First & Accessibility
+- **Viewport zoom control relaxed**: Removed `user-scalable=no` and `maximum-scale=1.0` from the viewport meta tag to allow user-controlled zoom on modals and settings. Chart-level zoom blocking is preserved via `touch-action: pan-x` on `#scroll-container` and multi-touch prevention JS listeners — so the histogram remains locked while the rest of the UI becomes zoomable.
+- **iOS text scaling prevention**: Added `-webkit-text-size-adjust: 100%` to the `html` element to prevent Safari from auto-scaling text in landscape mode.
+- **Touch latency eliminated**: Added `touch-action: manipulation` to all `button`, `a`, `input`, `textarea`, and `select` elements to eliminate the 300ms tap delay on mobile browsers.
+
 ## [v1.8.9a] - 2026-05-16
 ### Bug Fixes
 - **Changelog detail backdrop leak**: Fixed a bug where closing the version detail sheet removed the shared backdrop (opacity layer), leaving the main changelog modal open and unprotected — allowing clicks to pass through to the top bar. Fix: split the shared backdrop into two independent backdrops, each exclusively tied to its own modal (`#changelog-sheet-backdrop` for the main list, `#changelog-detail-backdrop` for the version detail). Removed the `pointerEvents` hack that was masking the architectural issue.

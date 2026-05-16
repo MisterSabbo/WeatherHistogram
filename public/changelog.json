@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.9b",
+    "changes": [
+      "Mobile-First & Accessibility: Removed user-scalable=no from viewport meta to allow user-controlled zoom while maintaining chart-level blocking via touch-action. Added -webkit-text-size-adjust: 100% to prevent iOS Safari landscape text scaling. Added touch-action: manipulation to all buttons, inputs, select, textarea, and anchor elements to eliminate 300ms tap delay on mobile."
+    ]
+  },
+  {
     "version": "1.8.9a",
     "changes": [
       "Changelog detail backdrop leak: Fixed a bug where closing the version detail sheet removed the shared backdrop, leaving the main changelog modal open and unprotected. Fix: split the shared backdrop into two independent backdrops, one per modal, and removed the pointerEvents hack."
