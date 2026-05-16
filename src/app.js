@@ -2757,8 +2757,7 @@ let weatherCache = new Map();
 
         function openChangelogDetail(item) {
             const sheet = document.getElementById('changelog-detail-sheet');
-            const backdrop = document.getElementById('changelog-sheet-backdrop');
-            const changelogModal = document.getElementById('changelog-modal');
+            const backdrop = document.getElementById('changelog-detail-backdrop');
             
             document.getElementById('changelog-detail-title').textContent = `v${item.version}`;
             document.getElementById('changelog-detail-subtitle').textContent = "Detalles de esta versión";
@@ -2782,13 +2781,11 @@ let weatherCache = new Map();
             sheet.style.transform = '';
             sheet.classList.add('open');
             backdrop.classList.add('open');
-            changelogModal.style.pointerEvents = 'none';
 
             const closeSheet = () => {
                 sheet.classList.remove('open');
                 backdrop.classList.remove('open');
                 sheet.style.transform = '';
-                changelogModal.style.pointerEvents = '';
             };
 
             backdrop.onclick = closeSheet;

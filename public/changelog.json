@@ -1,8 +1,8 @@
 [
   {
-    "version": "1.8.9",
+    "version": "1.8.9a",
     "changes": [
-      "Changelog detail close behavior: Clicking outside the version detail sheet (including on the changelog modal) now closes the detail, instead of requiring a click outside both modals."
+      "Changelog detail backdrop leak: Fixed a bug where closing the version detail sheet removed the shared backdrop, leaving the main changelog modal open and unprotected. Fix: split the shared backdrop into two independent backdrops, one per modal, and removed the pointerEvents hack."
     ]
   },
   {

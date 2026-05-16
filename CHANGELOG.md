@@ -2,9 +2,9 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.8.9] - 2026-05-16
+## [v1.8.9a] - 2026-05-16
 ### Bug Fixes
-- **Changelog detail sheet close behavior**: The version detail bottom sheet now closes when clicking anywhere outside it (including on the changelog modal itself), instead of only closing when clicking outside both modals.
+- **Changelog detail backdrop leak**: Fixed a bug where closing the version detail sheet removed the shared backdrop (opacity layer), leaving the main changelog modal open and unprotected — allowing clicks to pass through to the top bar. Fix: split the shared backdrop into two independent backdrops, each exclusively tied to its own modal (`#changelog-sheet-backdrop` for the main list, `#changelog-detail-backdrop` for the version detail). Removed the `pointerEvents` hack that was masking the architectural issue.
 
 ## [v1.8.8] - 2026-05-16
 ### Bug Fixes
