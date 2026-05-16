@@ -37,7 +37,7 @@ let weatherCache = new Map();
         let fixedOverlayCanvas, fixedOverlayCtx;
         let minimapCacheCanvas = null;
         let tiles = [];
-        const TILE_WIDTH = 1440; // 24 hours * 60px/hour to prevent overlapping artifacts
+        let TILE_WIDTH = window.innerWidth < 600 ? 720 : 1440;
         let scrollContainer, minimapViewport, themeToggle;
         let isMinimapDragging = false;
         let minimapMode = 'future'; // 'past' or 'future'
@@ -2478,6 +2478,7 @@ let weatherCache = new Map();
         function handleResize() {
             if (!scrollContainer) return;
             PIXELS_PER_HOUR = window.innerWidth < 600 ? 50 : 60;
+            TILE_WIDTH = window.innerWidth < 600 ? 720 : 1440;
             state.dpr = getDPR();
 
             const containerH = scrollContainer.clientHeight;

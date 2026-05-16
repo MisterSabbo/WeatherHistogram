@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.9d] - 2026-05-16
+### Performance & Refactoring
+- **Responsive TILE_WIDTH**: Changed from fixed 1440px to 1440px desktop / 720px mobile (<600px). Halves canvas tile size on mobile, reducing GPU memory per tile without affecting rendering logic.
+- **Inline text font-size → rem**: Converted 4 text-only inline `font-size: Xpx` to `rem` equivalents (14px→0.875rem, 10px→0.625rem, 11px→0.6875rem, 16px→1rem) so text scales with user font-size preferences. Icon/emoji sizes remain in `px` as they require fixed dimensions.
+
 ## [v1.8.9c] - 2026-05-16
 ### Code Architecture
 - **Z-index normalization**: Created 12 CSS custom properties (`--z-ptr`, `--z-sheet`, `--z-tooltip`, `--z-modal`, `--z-controls`, `--z-panel`, `--z-dropdown`, `--z-overlay`, `--z-floating`, `--z-canvas-overlay`, `--z-indicator`, `--z-base`) and replaced all 17 raw z-index values in CSS and 28 in HTML with `var()` references, making the layer stack auditable and maintainable.
