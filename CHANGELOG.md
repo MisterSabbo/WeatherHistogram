@@ -2,17 +2,6 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.9.0] - 2026-05-16
-### Features & Refactoring
-- **Unified Modal Manager**: Created `src/services/ModalManager.js` as a central module that manages all modal/bottom sheet operations via a stack-based system. Every modal now gets its own dynamically created overlay, eliminating shared backdrops and self-background modals. Z-indexes are assigned dynamically based on stack depth, ensuring proper stacking when multiple modals are open.
-- **Stacked modal support**: Opening a modal on top of another correctly assigns incrementing z-indexes, with each overlay positioned just behind its modal. Clicking an overlay closes only its own modal.
-- **Removed shared backdrops**: Eliminated `#pill-sheet-backdrop`, `#changelog-sheet-backdrop`, `#confirm-sheet-backdrop`, and `#yip-sheet-backdrop`. Overlays are now created dynamically per-modal.
-- **Removed duplicated `showConfirm`**: Consolidated the confirm modal logic from both `app.js` and `YearInPixels.js` into `ModalManager.showConfirm()`.
-- **Escape key close**: Added global `keydown` listener for `Escape` to close the topmost modal.
-- **Tooltip suppression**: Added `body[data-modal-open]` CSS rule that hides all tooltips when any modal is open, preventing z-index conflicts between tooltips (z-index 5000/9999) and modals.
-- **PTR guard**: Updated the pull-to-refresh overlay check to use `ModalManager.isModalOpen()` instead of a manual selector query.
-- **Refactored all modals**: `openBottomSheet()`, `openChangelogDetail()`, `openYIPDetail()`, info-modal, favorites-modal, map-location-modal, prompt-modal, and yip-modal now all use `ModalManager.openModal()`.
-
 ## [v1.8.9] - 2026-05-16
 ### Bug Fixes
 - **Changelog detail sheet close behavior**: The version detail bottom sheet now closes when clicking anywhere outside it (including on the changelog modal itself), instead of only closing when clicking outside both modals.

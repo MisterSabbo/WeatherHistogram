@@ -13,21 +13,18 @@ export function initFavoritesModal(onSelect) {
         mapFavBtn.addEventListener('click', async () => {
             isEditMode = false;
             await renderFavorites();
-            ModalManager.openModal(modal, {
-                show: (el) => el.style.display = 'flex',
-                hide: (el) => el.style.display = 'none'
-            });
+            modal.style.display = 'flex';
         });
     }
 
     closeBtn.addEventListener('click', () => {
-        ModalManager.closeModal(modal);
+        modal.style.display = 'none';
         isEditMode = false;
     });
 
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
-            ModalManager.closeModal(modal);
+            modal.style.display = 'none';
             isEditMode = false;
         }
     });
@@ -57,7 +54,9 @@ export function initFavoritesModal(onSelect) {
             
             if (!isEditMode) {
                 card.onclick = () => {
-                    ModalManager.closeAll();
+                    modal.style.display = 'none';
+                    const mapModal = document.getElementById('map-location-modal');
+                    if(mapModal) mapModal.style.display = 'none';
                     onSelect(fav.lat, fav.lon, fav.originName);
                 };
             }
@@ -123,10 +122,8 @@ export function initFavoritesModal(onSelect) {
                     promptCancel.textContent = t('config.cancel') || 'Cancelar';
                     promptOk.textContent = t('config.accept') || 'Aceptar';
                     
-                    ModalManager.openModal(promptModal, {
-                        show: (el) => { el.style.display = 'flex'; promptInput.focus(); },
-                        hide: (el) => el.style.display = 'none'
-                    });
+                    promptModal.style.display = 'flex';
+                    promptInput.focus();
                     
                     // cleanup old listeners
                     const newOk = promptOk.cloneNode(true);
@@ -134,12 +131,12 @@ export function initFavoritesModal(onSelect) {
                     const newCancel = promptCancel.cloneNode(true);
                     promptCancel.parentNode.replaceChild(newCancel, promptCancel);
                     
-                    newCancel.onclick = () => { ModalManager.closeModal(promptModal); };
+                    newCancel.onclick = () => { promptModal.style.display = 'none'; };
                     newOk.onclick = () => {
                         const newAlias = promptInput.value;
                         if (newAlias !== null && newAlias.trim() !== '') {
                             favoritesService.updateAlias(index, newAlias.trim()).then(() => {
-                                ModalManager.closeModal(promptModal);
+                                promptModal.style.display = 'none';
                                 renderFavorites().then(() => {
                                     // Make sure we keep the edit mode active
                                     if(!isEditMode) {
@@ -149,12 +146,56 @@ export function initFavoritesModal(onSelect) {
                                 });
                             });
                         } else {
-                            ModalManager.closeModal(promptModal);
+                            promptModal.style.display = 'none';
                         }
                     };
                 };
-            }
 
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">delete</span>';
+                delBtn.title = t('map.remove') || "Eliminar";
+                delBtn.style.cssText = 'background: #ef4444; color: white; border: none; padding: 6px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+                delBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    await favoritesService.remove(index);
+                    renderFavorites();
+                };
+
+                // Reorder buttons
+                const reorderDiv = document.createElement('div');
+                reorderDiv.style.display = 'flex';
+                reorderDiv.style.flexDirection = 'column';
+                reorderDiv.style.gap = '2px';
+                
+                const upBtn = document.createElement('button');
+                upBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">expand_less</span>';
+                upBtn.style.cssText = 'background: transparent; color: var(--text-primary); border: 1px solid var(--grid-color); padding: 0px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+                upBtn.disabled = index === 0;
+                if(index === 0) upBtn.style.opacity = '0.3';
+                upBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    await favoritesService.reorder(index, index - 1);
+                    renderFavorites();
+                };
+                
+                const downBtn = document.createElement('button');
+                downBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">expand_more</span>';
+                downBtn.style.cssText = 'background: transparent; color: var(--text-primary); border: 1px solid var(--grid-color); padding: 0px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+                downBtn.disabled = index === favs.length - 1;
+                if(index === favs.length - 1) downBtn.style.opacity = '0.3';
+                downBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    await favoritesService.reorder(index, index + 1);
+                    renderFavorites();
+                };
+                reorderDiv.appendChild(upBtn);
+                reorderDiv.appendChild(downBtn);
+
+                actionsDiv.appendChild(reorderDiv);
+                actionsDiv.appendChild(editNameBtn);
+                actionsDiv.appendChild(delBtn);
+            }
+            
             topRow.appendChild(nameDiv);
             if (isEditMode) topRow.appendChild(actionsDiv);
 

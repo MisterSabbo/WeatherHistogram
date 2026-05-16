@@ -21,10 +21,7 @@ export function initMapModal(onLocationSelected) {
   let searchTimeout = null;
 
   openBtn.addEventListener("click", async () => {
-    ModalManager.openModal(modal, {
-        show: (el) => el.style.display = 'flex',
-        hide: (el) => el.style.display = 'none'
-    });
+    modal.style.display = "flex";
     
     // Check if user has favorites, if so automatically open the favorites modal on top of map
     const { favoritesService } = await import('../services/FavoritesService.js');
@@ -72,13 +69,13 @@ export function initMapModal(onLocationSelected) {
   });
 
   closeBtn.addEventListener("click", () => {
-    ModalManager.closeModal(modal);
+    modal.style.display = "none";
     searchOverlay.style.display = "none";
   });
 
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
-      ModalManager.closeModal(modal);
+      modal.style.display = "none";
       searchOverlay.style.display = "none";
     }
   });
@@ -121,7 +118,8 @@ export function initMapModal(onLocationSelected) {
     goBtn.onclick = () => {
       const nameEl = div.querySelector(".popup-loc-name");
       const finalName = nameEl ? nameEl.innerText : nameLabel;
-      ModalManager.closeAll();
+      document.getElementById("map-location-modal").style.display = "none";
+      document.getElementById("map-search-overlay").style.display = "none";
       onLocationSelected(lat, lon, finalName);
     };
 
