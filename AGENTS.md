@@ -1,48 +1,35 @@
 Always perform a list_directory of the root folder at the start of a project to index the environment.
 
-## Skill Loading Policy
-
-Load skills contextually based on the task:
-- **/mobile-first** — for any CSS, responsive layout, or mobile interaction changes
-- **/frontend-design** — when creating new UI components, pages, or visual/design work
-- **/pwa-cross-platform** — when dealing with iOS/Android differences or cross-platform PWA behavior
-- **/pwa-github-pages** — when configuring deployment or SPA routing for GitHub Pages
-- **/web-design-guidelines** — when auditing UX, accessibility, or reviewing UI against best practices
-
 ## Core Workflow
 
-- **Install & run:** `npm install` then `npm run dev` (Vite on port 3000). Production build: `npm run build`.
-- **Entry point:** `src/app.js` — all initialization, event wiring, rendering loop, and state live here. It is the only file that should be touched for wiring changes.
-- **State store:** `src/store.js` exports a single mutable `state` object and a `CONFIG` constant. Every module reads from / writes to `state` directly — no events, no pub/sub.
+- **Install & run:** `npm install` then `npm run dev` (Vite on port 3000). Production: `npm run build`.
+- **`npm run clean`** runs `rm -rf dist` — **fails on Windows**. Use `Remove-Item -Recurse -Force dist` instead.
+- **Entry point:** `src/app.js` — all initialization, event wiring, rendering loop, and state. Only touch this file for wiring changes.
+- **State store:** `src/store.js` exports a single mutable `state` object and a `CONFIG` constant. No events, no pub/sub — every module reads/writes `state` directly.
 
 ## Rendering & Canvas Architecture
 
-- **Tiled canvas rendering:** The main chart is split into 1440px-wide tiles (`TILE_WIDTH` in `app.js:39`). Each tile is an independent `<canvas>`. Only tiles visible in the scroll viewport are drawn; off-screen tiles are skipped via the `drawn` flag.
-- **Three canvas layers** exist in `index.html` inside `#chart-area`:
+- **Tiled canvas rendering:** The main chart is split into 1440px-wide tiles (`const TILE_WIDTH = 1440` in app.js). Each tile is an independent `<canvas>`. Only visible tiles in the viewport are drawn; off-screen tiles are skipped via the `drawn` flag.
+- **Three canvas layers** in `#chart-area`:
   1. `main-canvas` — tile canvases (background, grid, weather phenomena, metrics)
-  2. `fixed-overlay-canvas` — scrubber labels, NOW indicator, stickman (drawn every scroll frame)
+  2. `fixed-overlay-canvas` — scrubber labels, NOW indicator, stickman overlay (redrawn every scroll frame)
   3. `stickman-canvas` — animated stickman figure
-- **Minimap** (`minimap-canvas`) has its own cached render (`minimapCacheCanvas`) and auto-switches between "past" and "future" mode based on scroll position.
-- **All rendering must go through `render()`** (app.js:1347) which iterates tiles and calls `drawTile()`. Never draw to tile canvases outside this function.
+- **Minimap** (`minimap-canvas`) has its own cached render (`minimapCacheCanvas`) and auto-switches between "past" and "future" mode based on viewport position relative to current time.
+- **All rendering goes through `render()`** which iterates tiles and calls `drawTile()`. Never draw to tile canvases outside this function.
+- **Render modules** live in `src/render/`: `GridRenderer`, `MetricsRenderer`, `AtmosphereRenderer`, `BackgroundRenderer`, `StickmanRenderer`.
 
 ## Services & Data Flow
 
-- **Weather API** (`src/services/api.js`): `WeatherAPI` class wraps Open-Meteo endpoints. Returns raw JSON. The singleton `weatherApiLayer` is used by `WeatherService`.
-- **WeatherService** (`src/services/WeatherService.js`): Calls `WeatherAPI`, returns structured data.
-- **DataProcessor** (`src/services/DataProcessor.js`): Transforms raw API data into `state.hourlyData` / `state.dailyData`. Called from `app.js:processData()`.
-- **StorageService** (`src/services/StorageService.js`): IndexedDB (db: `WeatherHistDB`, stores: `userPreferences`, `historyData`) with localStorage fallback. All persistent state goes through `storageService.get()` / `.set()`.
-- **AqiManager, FavoritesService, GeoService, MockData** — supporting services; imported where needed.
+- **WeatherService** (`src/services/WeatherService.js`): Calls Open-Meteo API directly via `fetch()`. Returns `{ forecastData, aqiData }`.
+- **DataProcessor** (`src/services/DataProcessor.js`): Transforms raw API data into `state.hourlyData` / `state.dailyData`. Also persists past data to IndexedDB (Year in Pixels feature).
+- **StorageService** (`src/services/StorageService.js`): IndexedDB (db: `WeatherHistDB`, stores: `userPreferences`, `historyData`) with localStorage fallback. Access via `storageService.get()` / `.set()`.
+- **GeoService**: Geocoding via Open-Meteo and reverse-geocoding via Nominatim.
+- **AqiManager, FavoritesService, MockData** — supporting services; imported where needed.
+- **`src/services/api.js`** (`WeatherAPI` class) exists but is **not imported anywhere** — the active API code is in `WeatherService.js`.
 
-## UI Components (all in `src/ui/`)
+## UI Components
 
-| File | Purpose |
-|---|---|
-| `DailyCards.js` | Daily forecast cards view + `generateDailyCards()` |
-| `AqiRadar.js` | Canvas radar chart for AQI |
-| `PollenRadar.js` | Canvas radar chart for pollen |
-| `MapSelector.js` | Leaflet map modal for location search |
-| `FavoritesModal.js` | Favorites list modal |
-| `YearInPixels.js` | Year-in-pixels overview widget |
+All in `src/ui/`: `DailyCards.js` (forecast cards), `AqiRadar.js` / `PollenRadar.js` (canvas radar charts), `MapSelector.js` (Leaflet map modal), `FavoritesModal.js`, `YearInPixels.js`.
 
 ## Theme & i18n
 
@@ -51,69 +38,50 @@ Load skills contextually based on the task:
 
 ## Key Interactions an Agent Might Miss
 
-- **Pull-to-refresh:** Touch event handlers in `app.js` lines 138-288 implement mobile pull-to-refresh. The gesture resets `weatherCache`, clears tile canvases, then reloads data.
-- **Scroll-driven rendering:** The `scroll` event on `#scroll-container` (line 1025) calls `render()` throttled via `requestAnimationFrame`. This is the only way the main chart updates during scroll.
-- **Label collision avoidance:** `drawFixedOverlay()` (line 1661) has a custom collision-detection system (`state.labelRects`) for scrubber labels. Reset each frame at line 2021.
+- **Pull-to-refresh:** Touch event handlers in `app.js` implement mobile pull-to-refresh. The gesture resets `weatherCache`, clears tile canvases, then reloads data.
+- **Scroll-driven rendering:** The `scroll` event on `#scroll-container` calls `render()` throttled via `requestAnimationFrame`. This is the only way the main chart updates during scroll.
+- **Label collision avoidance:** `drawFixedOverlay()` has a custom collision-detection system (`state.labelRects`) for scrubber labels. Reset each frame.
 - **Minimap auto-switch:** `updateMinimapViewport()` auto-toggles `minimapMode` between `'past'` and `'future'` based on viewport center crossing the current-time split index.
 - **Service Worker** (`sw.js`): Cache-first for static assets, stale-while-revalidate for others. API calls (open-meteo, openstreetmap) are deliberately not intercepted.
-- **IndexedDB migration** (app.js:99-123): Legacy localStorage keys are migrated to IndexedDB on first load, then old keys are deleted.
+- **IndexedDB migration** (app.js init): Legacy localStorage keys are migrated to IndexedDB on first load, then old keys are deleted.
+- **PWA standalone detection:** At init, checks `display-mode: standalone` / `navigator.standalone` and adds `pwa-standalone` class to `<html>`.
+- **View mode toggle:** `toggle-nav-btn` switches between minimap and daily cards view. Persisted as `viewMode` in StorageService.
 
-## Important Defaults & Constants
+## Defaults & Constants
 
-- `TILE_WIDTH = 1440` (px) — hardcoded in app.js:39
-- `PIXELS_PER_HOUR = 60` (desktop) / `50` (mobile <600px) — overridden in `handleResize()` at line 2467
+- `TILE_WIDTH = 1440` (px) — hardcoded in app.js
+- `PIXELS_PER_HOUR = 60` (desktop) / `50` (mobile <600px) — overridden in `handleResize()`
 - `CHART_HEIGHT = 250`, `MINIMAP_HEIGHT = 80` — from `CONFIG` in store.js
 - `CACHE_DURATION = 5 * 60 * 1000` (5 min) — from `CONFIG` in store.js
 - Default location: Madrid (`lat: 40.4167, lon: -3.70325`) — from `CONFIG.DEFAULT_COORDS`
 
 ## Build & Config
 
-- **Vite** (`vite.config.ts`): no special config visible; standard ESM.
+- **Vite** (`vite.config.ts`): standard ESM, base `'./'`, `@` alias to root.
 - **No test framework, no linter, no type checker** in this repo. Tests would need to be added.
 - **package.json scripts:** `dev`, `build`, `preview`, `clean`.
 
 ## Agent Git Rules
-- **NEVER** run `git commit`. Do not create commits under any circumstances.
-- **ALWAYS** stage all modified and new files with `git add` so that changes remain staged.
-- Use `git status` to verify what is staged, but never proceed to `git commit`.
-- If asked to commit, stage the changes instead and inform the user that commits are disabled.
-- **Commit message proposal:** After making changes to any project file, run `git diff --cached` and `git diff` to inspect both staged and unstaged changes, then propose a commit message to the user summarizing all changes for a potential commit. Do not commit automatically — only propose the message.
 
-## Memory Persistence Rules
-To ensure project continuity across sessions, you must strictly adhere to the following rules using the `memory` MCP server:
+- **NEVER** commit. Always stage with `git add`. If asked to commit, stage and inform commits are disabled.
+- After changes, run `git diff --cached` and `git diff`, then propose a commit message — do not commit automatically.
 
-1. **Initial Synchronization**: At the start of every session or whenever the task context shifts, execute `search_nodes` or `read_graph` to retrieve previously recorded architectural decisions, current progress, and active blockers.
-2. **Entity Recording**: Every time a new logic is defined, a key library is installed, or a major component is created, register it using `create_entities`.
-3. **Relationship Mapping**: Connect new features with existing ones using `create_relations` to maintain an up-to-date dependency graph of the project.
-4. **Closing Summary**: Upon completing a task or before ending the interaction, use `add_observations` to summarize:
-    - What has been implemented.
-    - Any issues encountered and their resolutions.
-    - The exact "Next Step" for the following session.
-5. **Memory Overrides**: If local files (filesystem) conflict with the recorded "design intent" in memory, prioritize the memory data and consult the user before making destructive changes.
-6. **Self-Correction**: Do not mark a task as "Complete" until the memory server has been updated with the latest session insights.
+## Memory Persistence (MCP server)
 
-## Code Quality & Maintenance Rules
+1. On session start: `search_nodes` / `read_graph` to load context.
+2. On creating components: `create_entities` + `create_relations`.
+3. On task done: `add_observations` summarizing what was implemented, issues, and next step.
+4. File/memory conflicts: prioritize memory data, consult user before destructive changes.
+5. Don't mark "Complete" until memory server is updated.
 
-- **SOLID Principles**: All code changes must respect SOLID principles:
-  - **Single Responsibility**: Each module/class/file must have one well-defined responsibility.
-  - **Open/Closed**: Extend behavior via new modules, not by modifying existing stable code.
-  - **Liskov Substitution**: Subtypes must be substitutable for their base types without altering correctness.
-  - **Interface Segregation**: Keep interfaces focused and minimal; avoid forcing consumers to depend on methods they don't use.
-  - **Dependency Inversion**: Depend on abstractions, not concrete implementations. Use the `WeatherAPI` → `WeatherService` → `app.js` pattern as reference.
+## Code Quality
 
-- **i18n Updates**: Whenever new UI strings are introduced, add corresponding entries to both `es` and `en` sections in `src/utils/i18n.js` under the appropriate namespace (e.g., `config`, `map`, `nav`).
+- **SOLID Principles**: SRP, OCP, LSP, ISP, DIP — must be respected.
+- **i18n**: Add new UI strings to both `es`/`en` in `src/utils/i18n.js`.
+- **Changelog**: Update `CHANGELOG.md` and `public/changelog.json` with every significant change (English).
+- **Version**: Update `index.html` (`#app-version-label`) and `public/version.json`. Semver: X.Y.Z for breaking/feature/patch; letter suffix for trivial (v1.2.3 → v1.2.3a). Suffix resets when X/Y/Z changes.
+- **README**: Update if documented features or setup change.
 
-- **Changelog**: Both `CHANGELOG.md` and `public/changelog.json` must be updated with every significant change. Entries must be in English. Follow existing format:
-  - `CHANGELOG.md`: `## [vX.Y.Z] - YYYY-MM-DD` with entries categorized under `### Features`, `### Bug Fixes`, etc.
-  - `public/changelog.json`: Append a new object with `"version"` and `"changes"` array.
+## Subagent Consideration
 
-- **README**: Update `README.md` if the change affects documented features, architecture, or setup instructions. Always in English.
-
-- **Version Bump**: Update the version following semver:
-  - Major (X) for breaking changes, minor (Y) for new features, patch (Z) for bug fixes.
-  - For trivial changes (typos, minor refactors, docs, etc.), append a letter suffix instead:
-    - `v1.2.3` → `v1.2.3a` → `v1.2.3b` → ... → `v1.2.3z` → `v1.2.3aa` → `v1.2.3ab` ...
-    - The suffix **resets** when X, Y, or Z changes (e.g., `v1.2.3c` → `v1.2.4` has no suffix).
-  Update the version in:
-    - `index.html` (line 1410: `<span id="app-version-label">vX.Y.Z</span>`)
-    - `public/version.json` (`"version": "X.Y.Z"`)
+Before responding, evaluate if a subagent (`explore`, `general`, `android-web-adaptor`, `ios-pwa-reviewer`, `mobile-first-reviewer`, `pwa-auditor`, `pwa-dual-mode-verifier`, `docs-writer`, `skill-creator`) is better suited. If uncertain, ask the user.
