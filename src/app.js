@@ -582,8 +582,8 @@ let weatherCache = new Map();
                 const btnInfo = document.getElementById('btn-info');
                 const infoModal = document.getElementById('info-modal');
                 const closeInfoBtn = document.getElementById('close-info-btn');
+                let closeInfoSheet = () => {};
                 if (btnInfo && infoModal) {
-                    let closeInfoSheet = () => {};
                     btnInfo.addEventListener('click', () => {
                         closeInfoSheet = openBottomSheet('info-modal', 'info-sheet-backdrop');
                     });
@@ -626,8 +626,14 @@ let weatherCache = new Map();
                 if (langCards.length > 0) {
                     updateLangCardsUI(getLanguage());
                     langCards.forEach(card => {
-                        card.addEventListener('click', () => {
+                        card.addEventListener('click', async () => {
                             const newLang = card.dataset.value;
+                            if (newLang === getLanguage()) return;
+                            const confirmed = await showConfirm(
+                                t('config.confirmAction', 'Confirmar'),
+                                t('config.langChangeConfirm', '¿Cambiar idioma? La aplicación se actualizará.')
+                            );
+                            if (!confirmed) return;
                             setLanguage(newLang);
                             updateLangCardsUI(newLang);
                             applyTranslations();

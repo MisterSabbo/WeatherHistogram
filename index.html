@@ -1375,7 +1375,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.8.10</span>
+              <span id="app-version-label">v1.8.10a</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1420,15 +1420,13 @@
           </div>
         </div>
 
-        <!-- Comfort -->
-        <div class="info-section collapsible">
-          <div class="info-section-title collapsible-trigger" data-target="comfort-body">
-            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:18px;">directions_walk</span>
-            <span style="flex:1;" data-i18n="config.sectionComfort">Confort</span>
-            <span class="material-symbols-outlined collapse-arrow">expand_more</span>
+        <!-- Skin Type -->
+        <div class="info-section">
+          <div class="info-section-title" style="border-bottom:1px solid var(--grid-color);padding-bottom:4px;margin-bottom:8px;">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:18px;">sunny</span>
+            <span style="flex:1;" data-i18n="config.skinType">Fototipo de piel</span>
           </div>
-          <div id="comfort-body" class="info-section-body">
-            <div class="subsection-label" data-i18n="config.skinType">Fototipo de piel</div>
+          <div class="info-section-body">
             <div id="skin-type-cards" style="display:flex;flex-direction:column;gap:6px;">
               <div class="skin-card" data-value="1" style="display:flex;align-items:center;border:1px solid var(--grid-color);border-radius:6px;padding:6px 8px;cursor:pointer;background:var(--card-bg);transition:all 0.2s;">
                 <div style="font-size:24px;margin-right:8px;">👩🏻</div>
@@ -1455,7 +1453,16 @@
                 <div style="font-size:0.65rem;color:var(--text-secondary);line-height:1.2;text-align:left;" data-i18n="config.skinType6">VI - Piel oscura.</div>
               </div>
             </div>
-            <div class="subsection-label" style="margin-top:12px;" data-i18n="config.thresholds">Umbrales</div>
+          </div>
+        </div>
+
+        <!-- Stickman Thresholds -->
+        <div class="info-section">
+          <div class="info-section-title" style="border-bottom:1px solid var(--grid-color);padding-bottom:4px;margin-bottom:8px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">directions_walk</span>
+            <span style="flex:1;" data-i18n="config.thresholds">Umbrales</span>
+          </div>
+          <div class="info-section-body">
             <div class="slider-group">
               <div class="slider-header">
                 <span data-i18n="config.coldThreshold">Frío (°C):</span>
@@ -1488,13 +1495,12 @@
         </div>
 
         <!-- Maintenance -->
-        <div class="info-section collapsible">
-          <div class="info-section-title collapsible-trigger" data-target="maintenance-body">
+        <div class="info-section">
+          <div class="info-section-title" style="border-bottom:1px solid var(--grid-color);padding-bottom:4px;margin-bottom:8px;">
             <span class="material-symbols-outlined" style="font-size:18px;">build</span>
             <span style="flex:1;" data-i18n="config.sectionMaintenance">Mantenimiento</span>
-            <span class="material-symbols-outlined collapse-arrow">expand_more</span>
           </div>
-          <div id="maintenance-body" class="info-section-body">
+          <div class="info-section-body">
             <div class="settings-row" style="gap:8px;">
               <button id="force-refresh-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--grid-color);background:transparent;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background 0.2s;">
                 <span class="material-symbols-outlined" style="font-size:18px;">refresh</span>
@@ -1515,7 +1521,7 @@
     <div id="confirm-sheet-backdrop" class="yip-sheet-backdrop" style="z-index: 6002;"></div>
 
     <!-- Confirm Modal -->
-    <div id="confirm-modal" class="yip-bottom-sheet" style="display: flex; flex-direction: column; z-index: 6005;">
+    <div id="confirm-modal" class="yip-bottom-sheet" style="display: flex; flex-direction: column; z-index: 7500;">
       <div id="confirm-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
       <div style="background: transparent; border-radius: 0; width: 100%; text-align: center;">
         <h3 id="confirm-title" style="margin-top: 0; margin-bottom: 12px; font-size: 1.2rem;">Confirmar</h3>
@@ -1528,10 +1534,10 @@
     </div>
 
     <!-- Theme Select Sheet Backdrop -->
-    <div id="theme-sheet-backdrop" class="yip-sheet-backdrop"></div>
+    <div id="theme-sheet-backdrop" class="yip-sheet-backdrop" style="z-index:7500;"></div>
 
     <!-- Theme Select Sheet -->
-    <div id="theme-select-sheet" class="yip-bottom-sheet" style="display:flex;flex-direction:column;">
+    <div id="theme-select-sheet" class="yip-bottom-sheet" style="display:flex;flex-direction:column;z-index:7600;">
       <div id="theme-sheet-drag-handle" style="width:40px;height:5px;background:var(--grid-color);border-radius:3px;margin:0 auto 16px auto;cursor:grab;flex-shrink:0;"></div>
       <div style="padding:0 24px 16px;border-bottom:1px solid var(--grid-color);">
         <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);" data-i18n="config.themeSelectTitle">Seleccionar tema</h3>
@@ -1542,10 +1548,10 @@
     </div>
 
     <!-- YIP Param Sheet Backdrop -->
-    <div id="yip-param-sheet-backdrop" class="yip-sheet-backdrop"></div>
+    <div id="yip-param-sheet-backdrop" class="yip-sheet-backdrop" style="z-index:7500;"></div>
 
     <!-- YIP Param Sheet -->
-    <div id="yip-param-sheet" class="yip-bottom-sheet" style="display:flex;flex-direction:column;">
+    <div id="yip-param-sheet" class="yip-bottom-sheet" style="display:flex;flex-direction:column;z-index:7600;">
       <div id="yip-param-sheet-drag-handle" style="width:40px;height:5px;background:var(--grid-color);border-radius:3px;margin:0 auto 16px auto;cursor:grab;flex-shrink:0;"></div>
       <div style="padding:0 24px 16px;border-bottom:1px solid var(--grid-color);">
         <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);" data-i18n="config.parameter">Parámetro</h3>

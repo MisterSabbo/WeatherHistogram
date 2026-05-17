@@ -89,7 +89,8 @@ export const translations = {
             yipCategoryPrecip: "Precipitación",
             yipCategoryWind: "Viento",
             yipCategoryAQI: "Calidad del Aire",
-            yipCategoryPollen: "Polen"
+            yipCategoryPollen: "Polen",
+            langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
         theme: {
         },
@@ -311,7 +312,8 @@ export const translations = {
             yipCategoryPrecip: "Precipitation",
             yipCategoryWind: "Wind",
             yipCategoryAQI: "Air Quality",
-            yipCategoryPollen: "Pollen"
+            yipCategoryPollen: "Pollen",
+            langChangeConfirm: "Change language? The application will update."
         },
         theme: {
         },

@@ -1,5 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.8.10a",
+    "changes": [
+      "Fix: closeInfoSheet block-scoping caused ReferenceError when opening changelog from settings.",
+      "Fix: theme-sheet and YIP-param-sheet backdrops now block clicks on settings panel behind them (z-index fix).",
+      "Feature: added language-switch confirmation dialog before applying translation reload.",
+      "Fix: skin type and stickman thresholds moved to separate sections in settings panel.",
+      "Fix: confirm dialog now renders above the settings panel (z-index 7500).",
+      "Fix: restored missing individual pollen type options in YIP parameter sheet (7 total: general + 6 species).",
+      "Fix: maintenance section is now always visible (no longer collapsible)."
+    ]
+  },
+  {
     "version": "1.8.10",
     "changes": [
       "Settings modal → adaptive side panel + bottom sheet: Replaced the fixed pop-up modal with a responsive panel — bottom sheet on mobile (<768px), right-side sliding panel on desktop (≥768px), using CSS media queries to switch between translateY and translateX transforms.",

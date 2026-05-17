@@ -2,6 +2,18 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.10a] - 2026-05-17
+### Bug Fixes
+- **closeInfoSheet ReferenceError**: Moved `let closeInfoSheet` outside the `if (btnInfo)` block so the changelog link can access it.
+- **Theme/YIP selector backdrops not blocking settings clicks**: Set explicit z-index 7500/7600 on theme-sheet and YIP-param-sheet backdrops/sheets, above the info-sheet (7000).
+- **Confirm dialog renders behind settings panel**: Changed confirm-modal z-index from 6005 → 7500.
+- **Restored missing individual pollen types in YIP params**: Added back the 6 per-species pollen options (alder, birch, grass, mugwort, olive, ragweed) to the YIP parameter bottom sheet.
+
+### UX Improvements
+- **Language switch now asks for confirmation**: Changed lang-card click handler to call `showConfirm()` before changing language.
+- **Skin type and thresholds split into separate sections**: Fototipo and Umbrales are now independent, non-collapsible sections in the settings panel.
+- **Maintenance section always visible**: Removed collapsible behavior from the maintenance section; buttons are always visible.
+
 ## [v1.8.10] - 2026-05-17
 ### UX Improvements
 - **Settings modal → adaptive side panel + bottom sheet**: Replaced the fixed pop-up modal with a responsive panel: bottom sheet on mobile (<768px), right-side sliding panel on desktop (≥768px). Uses a single HTML element with CSS media queries switching between `translateY` (mobile) and `translateX` (desktop).

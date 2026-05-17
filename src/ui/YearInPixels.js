@@ -132,7 +132,13 @@ function populateParamSheet() {
       { value: 'aqi', label: 'AQI' }
     ]},
     { key: 'pollen', label: t('config.yipCategoryPollen', 'Polen'), params: [
-      { value: 'pollen', label: t('config.pollen', 'Polen') }
+      { value: 'pollen', label: t('config.pollen', 'Polen') },
+      { value: 'pollen_alder', label: t('config.yipPollenAlder', 'Polen (Aliso)') },
+      { value: 'pollen_birch', label: t('config.yipPollenBirch', 'Polen (Abedul)') },
+      { value: 'pollen_grass', label: t('config.yipPollenGrass', 'Polen (Gramíneas)') },
+      { value: 'pollen_mugwort', label: t('config.yipPollenMugwort', 'Polen (Artemisa)') },
+      { value: 'pollen_olive', label: t('config.yipPollenOlive', 'Polen (Olivo)') },
+      { value: 'pollen_ragweed', label: t('config.yipPollenRagweed', 'Polen (Ambrosía)') }
     ]}
   ];
 
