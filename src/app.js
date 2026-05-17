@@ -789,13 +789,19 @@ let weatherCache = new Map();
                                 state.isFetching = true;
                                 const { favoritesService } = await import('./services/FavoritesService.js');
                                 await favoritesService.clear();
-                                try {
-                                    indexedDB.deleteDatabase("WeatherHistDB");
-                                } catch(e) {}
+                                try { storageService.db?.close(); } catch(e) {}
+                                await new Promise((resolve) => {
+                                    const req = indexedDB.deleteDatabase("WeatherHistDB");
+                                    req.onsuccess = () => resolve();
+                                    req.onerror = () => resolve();
+                                    req.onblocked = () => resolve();
+                                });
                                 try {
                                     localStorage.clear();
                                 } catch(e) {}
-                                window.location.reload(true);
+                                const url = new URL(location.href);
+                                url.searchParams.set('_t', Date.now());
+                                location.href = url.toString();
                             }
                         );
                     });
@@ -2930,6 +2936,7 @@ let weatherCache = new Map();
         
         async function performClearCacheAndReload() {
             weatherCache.clear();
+            try { storageService.db?.close(); } catch(e) {}
             if ('caches' in window) {
                 try {
                     const cacheNames = await caches.keys();
@@ -2940,9 +2947,12 @@ let weatherCache = new Map();
                 try {
                     const registrations = await navigator.serviceWorker.getRegistrations();
                     for (let reg of registrations) {
+                        if (reg.active) reg.active.postMessage({ action: 'skipWaiting' });
                         await reg.unregister();
                     }
                 } catch(e) { console.warn(e); }
             }
-            window.location.reload(true);
+            const url = new URL(location.href);
+            url.searchParams.set('_t', Date.now());
+            location.href = url.toString();
         }
