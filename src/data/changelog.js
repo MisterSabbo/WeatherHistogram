@@ -1,5 +1,18 @@
 export const changelogData = [
   {
+    "version": "1.8.10b",
+    "changes": [
+      "Fix: bottom-sheet z-index now dynamically managed via monotonically increasing counter in openBottomSheet() — enables proper stacking with dimming.",
+      "Fix: confirm dialogs no longer trapped behind settings panel due to unified z-index management.",
+      "Fix: range sliders no longer trigger vertical page scroll (touch-action: none on input[type=range]).",
+      "Fix: info-sheet and YIP-param-sheet close on swipe-down (openBottomSheet now accepts scrollElementId parameter).",
+      "Fix: per-species pollen thresholds with correct YIP coloring — Alder:15/75/250, Birch:15/80/300, Grass:10/50/250, Mugwort:10/50/150, Olive:50/200/500, Ragweed:10/50/150.",
+      "Fix: Fototipo and Umbrales are now independently collapsible sections.",
+      "Feature: YIP param sheet categories have visually distinct labels.",
+      "Feature: YIP pollen legend shows 5 steps (Ninguno, Bajo, Moderado, Alto, Muy Alto)."
+    ]
+  },
+  {
     "version": "1.8.10a",
     "changes": [
       "Fix: closeInfoSheet block-scoping caused ReferenceError when opening changelog from settings.",

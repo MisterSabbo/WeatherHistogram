@@ -10,7 +10,7 @@ import { geoService } from './services/GeoService.js';
 import { generateDailyCards, updateActiveDailyCard, getWeatherIconSVG } from './ui/DailyCards.js';
 import { processData } from './services/DataProcessor.js';
 import { generateMockData } from './services/MockData.js';
-import { getAQIInfo, getPollenText } from './services/AqiManager.js';
+import { getAQIInfo, getPollenText, getAggregatedPollenLevel, getPollenLevelByType } from './services/AqiManager.js';
 import { drawAQIRadar } from './ui/AqiRadar.js';
 import { drawPollenRadar } from './ui/PollenRadar.js';
 import { changelogData } from './data/changelog.js';
@@ -371,7 +371,7 @@ let weatherCache = new Map();
 
                 spfSettingsBtn.addEventListener('click', () => {
                     if (window._closeSpfSheet) window._closeSpfSheet();
-                    openBottomSheet('info-modal', 'info-sheet-backdrop');
+                    openBottomSheet('info-modal', 'info-sheet-backdrop', 'info-sheet-content');
                 });
             }
 
@@ -585,7 +585,7 @@ let weatherCache = new Map();
                 let closeInfoSheet = () => {};
                 if (btnInfo && infoModal) {
                     btnInfo.addEventListener('click', () => {
-                        closeInfoSheet = openBottomSheet('info-modal', 'info-sheet-backdrop');
+                        closeInfoSheet = openBottomSheet('info-modal', 'info-sheet-backdrop', 'info-sheet-content');
                     });
                     closeInfoBtn.addEventListener('click', () => {
                         closeInfoSheet();
@@ -717,7 +717,7 @@ let weatherCache = new Map();
                 if (themeSelectTrigger) {
                     themeSelectTrigger.addEventListener('click', () => {
                         loadThemeOptions();
-                        openBottomSheet('theme-select-sheet', 'theme-sheet-backdrop');
+                        openBottomSheet('theme-select-sheet', 'theme-sheet-backdrop', 'theme-options-container');
                     });
                 }
                 loadThemeOptions();
@@ -2387,14 +2387,15 @@ let weatherCache = new Map();
             if (aqiModalRadar) aqiModalRadar.style.display = 'block';
 
             // Pollen
-            const pollenText = getPollenText(currentData.pollen);
+            const pollenText = getPollenText(currentData.pollen, currentData.pollenDetails);
             document.querySelector('#val-pollen .pollen-text').innerText = pollenText;
             const headerPollenIcon = document.getElementById('header-pollen-icon');
             if (headerPollenIcon) {
-                if (currentData.pollen <= 10) headerPollenIcon.style.color = 'var(--text-secondary)';
-                else if (currentData.pollen <= 50) headerPollenIcon.style.color = '#fbbf24';
-                else if (currentData.pollen <= 100) headerPollenIcon.style.color = '#ef4444';
-                else headerPollenIcon.style.color = '#9333ea';
+                const pLevel = getAggregatedPollenLevel(currentData.pollenDetails || {});
+                if (pLevel === 0) headerPollenIcon.style.color = 'var(--text-secondary)';
+                else if (pLevel <= 1) headerPollenIcon.style.color = '#a3e635';
+                else if (pLevel <= 2) headerPollenIcon.style.color = '#fbbf24';
+                else headerPollenIcon.style.color = '#ef4444';
             }
 
             // Dibujamos el radar
@@ -2733,8 +2734,14 @@ let weatherCache = new Map();
         }
         
         let _activeSheets = {};
+        let _sheetIdCounter = 0;
 
-        function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop') {
+        function getScrollElement(sheet, scrollElementId) {
+            if (!scrollElementId) return sheet;
+            return document.getElementById(scrollElementId) || sheet;
+        }
+
+        function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop', scrollElementId) {
             const sheet = document.getElementById(sheetId);
             const backdrop = document.getElementById(backdropId);
 
@@ -2743,6 +2750,13 @@ let weatherCache = new Map();
             if (_activeSheets[backdropId]) {
                 _activeSheets[backdropId]();
             }
+
+            _sheetIdCounter++;
+            const depth = _sheetIdCounter;
+            const sheetZ = 7000 + depth * 100;
+            const backdropZ = 6999 + depth * 100;
+            sheet.style.zIndex = sheetZ;
+            backdrop.style.zIndex = backdropZ;
 
             sheet.style.transform = '';
             sheet.classList.add('open');
@@ -2758,6 +2772,8 @@ let weatherCache = new Map();
                 backdrop.classList.remove('open');
                 sheet.style.transform = '';
                 sheet.style.transition = '';
+                sheet.style.zIndex = '';
+                backdrop.style.zIndex = '';
                 cleanup();
                 if (_activeSheets[backdropId] === closeSheet) {
                     delete _activeSheets[backdropId];
@@ -2775,7 +2791,8 @@ let weatherCache = new Map();
 
             const onDragMove = (clientY) => {
                 if (!isDragging) return;
-                if (sheet.scrollTop > 0) return;
+                const scrollEl = getScrollElement(sheet, scrollElementId);
+                if (scrollEl.scrollTop > 0) return;
                 currentY = clientY;
                 const diff = currentY - startY;
                 if (diff > 0) {

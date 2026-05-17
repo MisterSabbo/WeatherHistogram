@@ -2,6 +2,18 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.10b] - 2026-05-17
+### Bug Fixes
+- **Bottom sheet stacking z-index now managed dynamically**: Removed all hardcoded z-index from bottom sheets/backdrops. `openBottomSheet()` now assigns z-index via a monotonically increasing counter, enabling proper stacking with dimming when multiple sheets are open.
+- **Confirm modals no longer trapped behind settings**: Fixed by unifying z-index management — every bottom sheet and backdrop gets an incrementing z-index from `openBottomSheet()` instead of hardcoded values.
+- **Slider dragging no longer scrolls the page vertically**: Added `touch-action: none` to `input[type="range"]` inputs so swiping on sliders doesn't trigger vertical scroll.
+- **Info-sheet and YIP-param-sheet now close on swipe-down**: Added `scrollElementId` parameter to `openBottomSheet()` so swipe-to-dismiss reads `scrollTop` from the correct child element instead of the sheet itself (which never scrolls).
+- **Per-species pollen thresholds with correct YIP coloring**: Added `getPollenLevelByType(type, raw)` and `getAggregatedPollenLevel(pollenDetails)` to AqiManager.js with species-specific thresholds (Alder:15/75/250, Birch:15/80/300, Grass:10/50/250, Mugwort:10/50/150, Olive:50/200/500, Ragweed:10/50/150). `renderYIPGrid` now stores pre-computed levels (0–4); `getColorForParam` maps them to correct 5-step colors including "Ninguno".
+
+### UX Improvements
+- **Fototipo and Umbrales are collapsible sections**: Re-wrapped both sections as independent collapsible blocks with arrow toggles, matching the pattern used elsewhere in the settings panel.
+- **YIP param sheet categories visually distinct**: Each category (Temperatura, Precipitación, Viento, etc.) now has a styled uppercase label above its options. Pollen legend shows 5 steps (Ninguno, Bajo, Moderado, Alto, Muy Alto).
+
 ## [v1.8.10a] - 2026-05-17
 ### Bug Fixes
 - **closeInfoSheet ReferenceError**: Moved `let closeInfoSheet` outside the `if (btnInfo)` block so the changelog link can access it.

@@ -1636,6 +1636,7 @@
             flex: none;
             height: auto;
             font-size: inherit;
+            touch-action: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {

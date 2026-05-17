@@ -1,6 +1,7 @@
 import { storageService } from '../services/StorageService.js';
 import { getThemeColor } from '../theme.js';
 import { t } from '../utils/i18n.js';
+import { getPollenLevelByType, getAggregatedPollenLevel } from '../services/AqiManager.js';
 
 let selectedLocation = null;
 let selectedParam = 'maxTemp';
@@ -19,7 +20,7 @@ export function initYearInPixels() {
   if (paramDisplay) {
     paramDisplay.addEventListener('click', () => {
       populateParamSheet();
-      _closeSheet = window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop');
+      _closeSheet = window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop', 'yip-param-options-container');
     });
   }
 
@@ -212,10 +213,12 @@ function renderYIPGrid(history, param) {
             else if (param === 'windMax') val = d.windMax || 0;
             else if (param === 'gustMax') val = d.gustMax || 0;
             else if (param === 'aqi') val = d.aqi || 0;
-            else if (param === 'pollen') val = d.pollen || 0;
-            else if (param.startsWith('pollen_')) {
+            else if (param === 'pollen') {
+                val = getAggregatedPollenLevel(d.pollenDetails || {});
+            } else if (param.startsWith('pollen_')) {
                 const type = param.replace('pollen_', '');
-                val = (d.pollenDetails && d.pollenDetails[type]) ? d.pollenDetails[type] : 0;
+                const raw = (d.pollenDetails && d.pollenDetails[type]) ? d.pollenDetails[type] : 0;
+                val = getPollenLevelByType(type, raw);
             }
 
             yearGrid[m][day] = val;
@@ -338,8 +341,16 @@ function openYIPDetail(data, dateStr) {
     desc.textContent = `T. Máx: ${data.tempMax !== undefined ? Math.round(data.tempMax) : '-'}°C | T. Mín: ${data.tempMin !== undefined ? Math.round(data.tempMin) : '-'}°C`;
 
     const details = data.pollenDetails || {};
-    const pollenHtml = Object.keys(details).length > 0 ?
-        `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Gramíneas: ${details.grass||0} | Olivo: ${details.olive||0} | Abedul: ${details.birch||0}</div>` : '';
+    const pollenLevel = getAggregatedPollenLevel(details);
+    const pollenTypeNames = { alder: 'Aliso', birch: 'Abedul', grass: 'Gramíneas', mugwort: 'Artemisa', olive: 'Olivo', ragweed: 'Ambrosía' };
+    const pollenSpeciesHtml = Object.keys(pollenTypeNames).map(type => {
+        const raw = details[type] || 0;
+        const level = getPollenLevelByType(type, raw);
+        return `<div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid var(--grid-color);">
+            <span>${pollenTypeNames[type]}</span>
+            <span>${raw} — Nv.${level}</span>
+        </div>`;
+    }).join('');
 
     const metricsHtml = `
         <div class="yip-detail-item">
@@ -356,8 +367,11 @@ function openYIPDetail(data, dateStr) {
         </div>
         <div class="yip-detail-item">
             <span class="yip-detail-label">Polen (Máx)</span>
-            <span class="yip-detail-value">${data.pollen || 0}</span>
-            ${pollenHtml}
+            <span class="yip-detail-value">Nv.${pollenLevel}</span>
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--grid-color);">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">Especies</div>
+            ${pollenSpeciesHtml}
         </div>
     `;
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
@@ -438,10 +452,11 @@ function renderLegend(param, legendContainer) {
         ];
     } else if (param.startsWith('pollen')) {
         steps = [
-            { c: '#a3e635', l: t('config.legendLow') },
-            { c: '#facc15', l: t('config.legendMod') },
-            { c: '#f97316', l: t('config.legendHigh') },
-            { c: '#dc2626', l: t('config.legendVeryHigh') }
+            { c: 'var(--grid-color)', l: t('pollenLevels.none', 'Ninguno') },
+            { c: '#a3e635', l: t('pollenLevels.low', 'Bajo') },
+            { c: '#facc15', l: t('pollenLevels.moderate', 'Moderado') },
+            { c: '#f97316', l: t('pollenLevels.high', 'Alto') },
+            { c: '#dc2626', l: t('pollenLevels.veryHigh', 'Muy Alto') }
         ];
     }
 
