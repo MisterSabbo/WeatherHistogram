@@ -2,7 +2,7 @@ export const changelogData = [
   {
     "version": "1.8.9g",
     "changes": [
-      "Skeleton loading se muestra in-place dentro del layout (sin overlay fijo): Eliminado el #overlay de pantalla completa con fondo semitransparente. Los skeletons ahora son elementos nativos dentro de #controls-bar, #top-panel, #chart-area y #bottom-nav-container, togglados con la clase .loading en #app-wrapper. drawFixedOverlay() se salta durante la carga. Se añadieron las 7 métricas (viento, AQI, polen, temp, precip, prob, nubes), más la ubicación, resumen del tiempo y hora/fecha al skeleton."
+      "Skeleton loading rendered in-place within the layout (no fixed overlay): Removed the full-screen #overlay with semi-transparent background. Skeletons are now native elements inside #controls-bar, #top-panel, #chart-area and #bottom-nav-container, toggled via the .loading class on #app-wrapper. drawFixedOverlay() now skips during loading. Added all 7 metric cards (wind, AQI, pollen, temp, precip, precip prob, clouds), plus location, weather summary and time/date to the skeleton."
     ]
   },
   {

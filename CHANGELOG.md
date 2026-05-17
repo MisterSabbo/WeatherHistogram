@@ -4,7 +4,7 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 
 ## [v1.8.9g] - 2026-05-17
 ### UX Improvements
-- **Skeleton loading in-place sin overlay**: Reemplazado el `#overlay` fijo de pantalla completa con fondo semitransparente por skeletons nativos dentro del flujo del layout. Cada sección (`#controls-bar`, `#top-panel`, `#chart-area`, `#bottom-nav-container`) contiene su propio skeleton que se muestra con la clase `.loading` en `#app-wrapper`. El skeleton ahora incluye las 7 métricas (viento, AQI, polen, temp, precip, prob. precip, nubes), la ubicación, resumen del tiempo y hora/fecha. `drawFixedOverlay()` se salta durante la carga. Sin capa superpuesta, sin bleed-through del canvas.
+- **Skeleton loading in-place without overlay**: Replaced the full-screen fixed `#overlay` with semi-transparent background by native skeleton elements flowing inside each layout section (`#controls-bar`, `#top-panel`, `#chart-area`, `#bottom-nav-container`), toggled via `.loading` class on `#app-wrapper`. The skeleton now includes all 7 metric cards (wind, AQI, pollen, temp, precip, precip prob, clouds), location name, weather summary and time/date. `drawFixedOverlay()` skips during loading. No overlay layer, no canvas bleed-through.
 
 ## [v1.8.9f] - 2026-05-17
 ### Bug Fixes
