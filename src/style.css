@@ -1017,13 +1017,7 @@
         .loading #top-panel > .top-panel-metrics { display: none; }
         .loading .skeleton-top-panel { display: flex; }
 
-        .loading #chart-area > #reference-line,
-        .loading #chart-area > #animated-weather-zone,
-        .loading #chart-area > #stickman-canvas,
-        .loading #chart-area > #fixed-overlay-canvas,
-        .loading #chart-area > #floating-now-btn,
-        .loading #chart-area > #scroll-container { display: none; }
-        .loading .skeleton-chart { display: flex; }
+        .loading .skeleton-chart { display: block; }
 
         .loading #bottom-nav-container > #toggle-nav-btn,
         .loading #bottom-nav-container > #minimap-container,
@@ -1082,10 +1076,12 @@
             flex-shrink: 0;
         }
 
-        /* Chart skeleton */
+        /* Chart skeleton - overlay absoluto sobre #chart-area */
         .skeleton-chart {
-            flex: 1;
-            display: flex;
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            background: var(--bg-color);
         }
         .skeleton-chart-block {
             flex: 1;
