@@ -2,6 +2,14 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.9f] - 2026-05-17
+### Bug Fixes
+- **SPF modal not closing on "Cambiar fototipo"**: Fixed a bug where clicking the "Cambiar fototipo" button inside the SPF bottom-sheet left the sheet visible. Root cause: the click handler removed the `.open` class but did not reset the inline `transform` style, so if the user had previously touched the drag handle, the inline transform kept the sheet on-screen. Fix: added `sheet.style.transform = ''` before removing the class.
+
+### UX Improvements
+- **Universal swipe-to-dismiss on all bottom-sheets**: Rewrote `openBottomSheet()` to bind the swipe gesture on the entire sheet body (not just the 40×5px drag handle). Uses pointer events (touch + mouse) with a `scrollTop === 0` guard so internal scrolling works normally while swipe-to-dismiss activates only when content is at the top. Also refactored `openChangelogDetail()` and `openYIPDetail()` to delegate to the shared `openBottomSheet()`, giving them swipe support for free.
+- **YIP detail sheet drag handle**: Added a visual drag-handle to `#yip-detail-sheet` for consistency with other bottom-sheets.
+
 ## [v1.8.9e] - 2026-05-16
 ### UX & Performance
 - **Spinner → Skeleton loading**: Replaced the full-screen spinner overlay with pulsing skeleton blocks that mirror the app layout (header, metrics row, chart area, minimap). The overlay still blocks interaction during fetch but now shows progressive placeholder shapes instead of a spinning circle, reducing cognitive load and improving perceived performance.

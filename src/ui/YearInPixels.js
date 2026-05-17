@@ -266,8 +266,6 @@ function renderYIPGrid(history, param) {
 
 function openYIPDetail(data, dateStr) {
     if (!data) return;
-    const sheet = document.getElementById('yip-detail-sheet');
-    const backdrop = document.getElementById('yip-sheet-backdrop');
     
     document.getElementById('yip-detail-date').textContent = dateStr;
     const desc = document.getElementById('yip-detail-desc');
@@ -298,13 +296,7 @@ function openYIPDetail(data, dateStr) {
     `;
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
     
-    sheet.classList.add('open');
-    backdrop.classList.add('open');
-    
-    backdrop.onclick = () => {
-        sheet.classList.remove('open');
-        backdrop.classList.remove('open');
-    };
+    window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
 }
 
 function getColorForParam(param, value) {

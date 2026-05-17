@@ -1,5 +1,13 @@
 export const changelogData = [
   {
+    "version": "1.8.9f",
+    "changes": [
+      "SPF modal not closing on \"Cambiar fototipo\": Fixed inline transform leak that kept the sheet visible after removing the .open class.",
+      "Universal swipe-to-dismiss on all bottom-sheets: Swipe gesture now works on the entire sheet body (not just the drag handle), with scrollTop guard to avoid conflicting with internal scroll. Supports both touch and mouse via pointer events.",
+      "YIP detail sheet: Added drag handle and swipe-to-dismiss support via shared openBottomSheet()."
+    ]
+  },
+  {
     "version": "1.8.9e",
     "changes": [
       "Spinner → Skeleton loading: Replaced full-screen spinner overlay with pulsing skeleton blocks that mirror the app layout (header, metrics row, chart, minimap), improving perceived performance and reducing cognitive load during data fetch.",

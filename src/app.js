@@ -366,13 +366,12 @@ let weatherCache = new Map();
                     document.getElementById('spf-modal-rec-val').innerText = spfText;
                     document.getElementById('spf-modal-rec-desc').innerText = t('config.spfModalReapply');
                     
-                    openBottomSheet('spf-modal');
+                    const closeSpfSheet = openBottomSheet('spf-modal');
+                    window._closeSpfSheet = closeSpfSheet;
                 });
 
                 spfSettingsBtn.addEventListener('click', () => {
-                    spfModal.classList.remove('open');
-                    const backdrop = document.getElementById('pill-sheet-backdrop');
-                    if (backdrop) backdrop.classList.remove('open');
+                    if (window._closeSpfSheet) window._closeSpfSheet();
                     if (infoModal) infoModal.style.display = 'flex';
                 });
             }
@@ -2672,76 +2671,122 @@ let weatherCache = new Map();
             }
         }
         
+        let _activeSheets = {};
+
         function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop') {
             const sheet = document.getElementById(sheetId);
             const backdrop = document.getElementById(backdropId);
-            
+
             if (!sheet || !backdrop) return () => {};
+
+            if (_activeSheets[backdropId]) {
+                _activeSheets[backdropId]();
+            }
 
             sheet.style.transform = '';
             sheet.classList.add('open');
             backdrop.classList.add('open');
-            
+
+            let startY = 0;
+            let currentY = 0;
+            let isDragging = false;
+            let usingTouch = false;
+
             const closeSheet = () => {
                 sheet.classList.remove('open');
                 backdrop.classList.remove('open');
                 sheet.style.transform = '';
+                sheet.style.transition = '';
+                cleanup();
+                if (_activeSheets[backdropId] === closeSheet) {
+                    delete _activeSheets[backdropId];
+                }
             };
-            
+
             backdrop.onclick = closeSheet;
-            
-            // Swipe down to close logic
-            let startY = 0;
-            let currentY = 0;
-            
-            let handleId = sheetId.replace('-modal', '-sheet-drag-handle');
-            const handle = document.getElementById(handleId);
-            
-            if (handle) {
-                const onTouchStart = (e) => {
-                    startY = e.touches[0].clientY;
-                    sheet.style.transition = 'none';
-                };
-                
-                const onTouchMove = (e) => {
-                    currentY = e.touches[0].clientY;
-                    const diff = currentY - startY;
-                    if (diff > 0) { // only swipe down
-                        sheet.style.transform = `translateY(${diff}px)`;
-                    }
-                };
-                
-                const onTouchEnd = () => {
-                    sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                    if (currentY - startY > 100) {
-                        closeSheet();
-                    } else {
-                        sheet.style.transform = 'translateY(0)';
-                    }
-                    
-                    const el = document.getElementById(handleId);
-                    if (el) {
-                        el.removeEventListener('touchstart', onTouchStart);
-                        el.removeEventListener('touchmove', onTouchMove);
-                    }
-                    window.removeEventListener('touchend', onTouchEnd);
-                };
-                
-                const clone = handle.cloneNode(true);
-                handle.parentNode.replaceChild(clone, handle);
-                clone.addEventListener('touchstart', onTouchStart, { passive: true });
-                clone.addEventListener('touchmove', onTouchMove, { passive: true });
-                window.addEventListener('touchend', onTouchEnd);
-            }
-            
+
+            const onDragStart = (clientY) => {
+                startY = clientY;
+                currentY = clientY;
+                isDragging = true;
+                sheet.style.transition = 'none';
+            };
+
+            const onDragMove = (clientY) => {
+                if (!isDragging) return;
+                if (sheet.scrollTop > 0) return;
+                currentY = clientY;
+                const diff = currentY - startY;
+                if (diff > 0) {
+                    sheet.style.transform = `translateY(${diff}px)`;
+                }
+            };
+
+            const onDragEnd = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                if (currentY - startY > 100) {
+                    closeSheet();
+                } else {
+                    sheet.style.transform = 'translateY(0)';
+                }
+            };
+
+            const onPointerDown = (e) => {
+                usingTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
+                onDragStart(e.clientY);
+                sheet.setPointerCapture(e.pointerId);
+            };
+
+            const onPointerMove = (e) => {
+                onDragMove(e.clientY);
+            };
+
+            const onPointerUp = () => {
+                onDragEnd();
+            };
+
+            const onTouchStart = (e) => {
+                if (usingTouch) return;
+                onDragStart(e.touches[0].clientY);
+            };
+
+            const onTouchMove = (e) => {
+                if (usingTouch) return;
+                if (sheet.scrollTop > 0) return;
+                onDragMove(e.touches[0].clientY);
+            };
+
+            const onTouchEnd = () => {
+                if (usingTouch) return;
+                onDragEnd();
+            };
+
+            const cleanup = () => {
+                sheet.removeEventListener('pointerdown', onPointerDown);
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
+                sheet.removeEventListener('touchstart', onTouchStart);
+                sheet.removeEventListener('touchmove', onTouchMove);
+                sheet.removeEventListener('touchend', onTouchEnd);
+                window.removeEventListener('touchend', onTouchEnd);
+            };
+
+            sheet.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+            sheet.addEventListener('touchstart', onTouchStart, { passive: true });
+            sheet.addEventListener('touchmove', onTouchMove, { passive: true });
+            sheet.addEventListener('touchend', onTouchEnd);
+            window.addEventListener('touchend', onTouchEnd);
+
+            _activeSheets[backdropId] = closeSheet;
             return closeSheet;
         }
         window.openBottomSheet = openBottomSheet;
 
         function openChangelogDetail(item) {
-            const sheet = document.getElementById('changelog-detail-sheet');
-            const backdrop = document.getElementById('changelog-detail-backdrop');
-            
             document.getElementById('changelog-detail-title').textContent = `v${item.version}`;
             document.getElementById('changelog-detail-subtitle').textContent = "Detalles de esta versión";
             
@@ -2761,55 +2806,7 @@ let weatherCache = new Map();
                 listEl.appendChild(li);
             }
             
-            sheet.style.transform = '';
-            sheet.classList.add('open');
-            backdrop.classList.add('open');
-
-            const closeSheet = () => {
-                sheet.classList.remove('open');
-                backdrop.classList.remove('open');
-                sheet.style.transform = '';
-            };
-
-            backdrop.onclick = closeSheet;
-            
-            // Swipe down to close logic
-            let startY = 0;
-            let currentY = 0;
-            const handle = document.getElementById('changelog-detail-sheet-drag-handle');
-            
-            const onTouchStart = (e) => {
-                startY = e.touches[0].clientY;
-                sheet.style.transition = 'none';
-            };
-            
-            const onTouchMove = (e) => {
-                currentY = e.touches[0].clientY;
-                const diff = currentY - startY;
-                if (diff > 0) { // only swipe down
-                    sheet.style.transform = `translateY(${diff}px)`;
-                }
-            };
-            
-            const onTouchEnd = () => {
-                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                if (currentY - startY > 100) {
-                    closeSheet();
-                } else {
-                    sheet.style.transform = 'translateY(0)';
-                }
-                
-                handle.removeEventListener('touchstart', onTouchStart);
-                handle.removeEventListener('touchmove', onTouchMove);
-                window.removeEventListener('touchend', onTouchEnd);
-            };
-            
-            // cleanup if already added
-            const clone = handle.cloneNode(true);
-            handle.parentNode.replaceChild(clone, handle);
-            clone.addEventListener('touchstart', onTouchStart, { passive: true });
-            clone.addEventListener('touchmove', onTouchMove, { passive: true });
-            window.addEventListener('touchend', onTouchEnd);
+            openBottomSheet('changelog-detail-sheet', 'changelog-detail-backdrop');
         }
 
         function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn) {
