@@ -2766,6 +2766,7 @@ let weatherCache = new Map();
             let currentY = 0;
             let isDragging = false;
             let usingTouch = false;
+            let touchFallback = false;
 
             const closeSheet = () => {
                 sheet.classList.remove('open');
@@ -2774,6 +2775,7 @@ let weatherCache = new Map();
                 sheet.style.transition = '';
                 sheet.style.zIndex = '';
                 backdrop.style.zIndex = '';
+                backdrop.onclick = null;
                 cleanup();
                 if (_activeSheets[backdropId] === closeSheet) {
                     delete _activeSheets[backdropId];
@@ -2825,26 +2827,56 @@ let weatherCache = new Map();
                 onDragEnd();
             };
 
+            const onPointerCancel = () => {
+                if (!isDragging) return;
+                touchFallback = true;
+                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+            };
+
             const onTouchStart = (e) => {
                 if (usingTouch) return;
+                usingTouch = true;
                 onDragStart(e.touches[0].clientY);
             };
 
             const onTouchMove = (e) => {
+                if (touchFallback) {
+                    if (!isDragging) return;
+                    const scrollEl = getScrollElement(sheet, scrollElementId);
+                    if (scrollEl.scrollTop > 0) return;
+                    currentY = e.touches[0].clientY;
+                    const diff = currentY - startY;
+                    if (diff > 0) {
+                        sheet.style.transform = `translateY(${diff}px)`;
+                    }
+                    return;
+                }
                 if (usingTouch) return;
                 if (sheet.scrollTop > 0) return;
                 onDragMove(e.touches[0].clientY);
             };
 
             const onTouchEnd = () => {
+                if (touchFallback) {
+                    touchFallback = false;
+                    isDragging = false;
+                    if (currentY - startY > 100) {
+                        closeSheet();
+                    } else {
+                        sheet.style.transform = 'translateY(0)';
+                    }
+                    return;
+                }
                 if (usingTouch) return;
                 onDragEnd();
             };
 
             const cleanup = () => {
+                touchFallback = false;
                 sheet.removeEventListener('pointerdown', onPointerDown);
                 window.removeEventListener('pointermove', onPointerMove);
                 window.removeEventListener('pointerup', onPointerUp);
+                window.removeEventListener('pointercancel', onPointerCancel);
                 sheet.removeEventListener('touchstart', onTouchStart);
                 sheet.removeEventListener('touchmove', onTouchMove);
                 sheet.removeEventListener('touchend', onTouchEnd);
@@ -2854,6 +2886,7 @@ let weatherCache = new Map();
             sheet.addEventListener('pointerdown', onPointerDown);
             window.addEventListener('pointermove', onPointerMove);
             window.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('pointercancel', onPointerCancel);
             sheet.addEventListener('touchstart', onTouchStart, { passive: true });
             sheet.addEventListener('touchmove', onTouchMove, { passive: true });
             sheet.addEventListener('touchend', onTouchEnd);
@@ -3006,7 +3039,11 @@ let weatherCache = new Map();
             renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn);
         }
         
+        let _isClearingCache = false;
+
         async function performClearCacheAndReload() {
+            if (_isClearingCache) return;
+            _isClearingCache = true;
             weatherCache.clear();
             try { storageService.db?.close(); } catch(e) {}
             if ('caches' in window) {

@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.11] - 2026-05-17
+### Bug Fixes
+- **Bottom-sheet drag-to-dismiss broken on Android**: Added `pointercancel` handler and touch-event fallback in `openBottomSheet()` — Chrome Android now fires `pointercancel` (due to `touch-action: pan-y`), leaving the drag state stuck. Fallback continues tracking via touch events so swipe-down closes the sheet reliably.
+- **Clear-cache action could execute twice**: Added `_isClearingCache` guard in `performClearCacheAndReload()` to prevent re-entry if the button handler fires twice. Also cleaned up `backdrop.onclick` reference in `closeSheet()`.
+- **Touch event race condition in bottom-sheets**: `onTouchStart` now sets `usingTouch = true` immediately to prevent double-processing when `touchstart` fires before `pointerdown`.
+
 ## [v1.8.10b] - 2026-05-17
 ### Bug Fixes
 - **Bottom sheet stacking z-index now managed dynamically**: Removed all hardcoded z-index from bottom sheets/backdrops. `openBottomSheet()` now assigns z-index via a monotonically increasing counter, enabling proper stacking with dimming when multiple sheets are open.

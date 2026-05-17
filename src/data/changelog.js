@@ -1,5 +1,14 @@
 export const changelogData = [
   {
+    "version": "1.8.11",
+    "changes": [
+      "Fix: bottom-sheet drag-to-dismiss on Android — added pointercancel handler with touch-event fallback to continue tracking swipe after Chrome takes over the gesture.",
+      "Fix: clear-cache action guarded against double execution via _isClearingCache flag in performClearCacheAndReload().",
+      "Fix: touch event race condition — onTouchStart now sets usingTouch immediately to prevent double-processing when touchstart fires before pointerdown.",
+      "Fix: stale backdrop.onclick reference cleaned up in closeSheet()."
+    ]
+  },
+  {
     "version": "1.8.10b",
     "changes": [
       "Fix: bottom-sheet z-index now dynamically managed via monotonically increasing counter in openBottomSheet() — enables proper stacking with dimming.",
