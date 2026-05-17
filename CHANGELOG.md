@@ -2,6 +2,13 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.12] - 2026-05-17
+### Bug Fixes
+- **White line at bottom of histogram**: Cached tile height (`cachedTileHeight`) to prevent drift between `handleResize()` canvas sizing and `drawTile()` drawing area. Changed `#chart-area` hardcoded `background: #f5f5f5` to `var(--bg-color)` so any gap matches the active theme.
+
+### UX Improvements
+- **YIP location selector now shows scroll affordances**: Added `◀▶` navigation buttons that appear when the location chips overflow horizontally, plus pagination dots below indicating position. Uses MutationObserver to react when chips are added/removed.
+
 ## [v1.8.11] - 2026-05-17
 ### Bug Fixes
 - **Bottom-sheet drag-to-dismiss broken on Android**: Added `pointercancel` handler and touch-event fallback in `openBottomSheet()` — Chrome Android now fires `pointercancel` (due to `touch-action: pan-y`), leaving the drag state stuck. Fallback continues tracking via touch events so swipe-down closes the sheet reliably.

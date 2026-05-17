@@ -7,6 +7,8 @@ let selectedLocation = null;
 let selectedParam = 'maxTemp';
 let _closeSheet = null;
 
+let _yipScrollInit = false;
+
 export function initYearInPixels() {
   const openBtn = document.getElementById('year-in-pixels-btn');
   const modal = document.getElementById('yip-modal');
@@ -85,9 +87,11 @@ export function initYearInPixels() {
                  await loadLocationData(target);
              }
          }
-         modal.style.display = 'flex';
-     };
-  });
+          modal.style.display = 'flex';
+          if (!_yipScrollInit) { _yipScrollInit = true; initYipLocationScroll(); }
+          requestAnimationFrame(updateYipScrollUI);
+      };
+   });
 
   closeBtn.addEventListener('click', () => {
       modal.style.display = 'none';
@@ -468,6 +472,66 @@ function renderLegend(param, legendContainer) {
             </div>
         `);
     });
+}
+
+let _yipScrollListenersAttached = false;
+
+function initYipLocationScroll() {
+    if (_yipScrollListenersAttached) return;
+    _yipScrollListenersAttached = true;
+
+    const container = document.getElementById('yip-location-chips');
+    const btnLeft = document.querySelector('.yip-scroll-left');
+    const btnRight = document.querySelector('.yip-scroll-right');
+
+    if (!container || !btnLeft || !btnRight) return;
+
+    const stepScroll = () => {
+        const page = container.clientWidth * 0.6;
+        return page;
+    };
+
+    btnLeft.addEventListener('click', () => {
+        container.scrollBy({ left: -stepScroll(), behavior: 'smooth' });
+    });
+
+    btnRight.addEventListener('click', () => {
+        container.scrollBy({ left: stepScroll(), behavior: 'smooth' });
+    });
+
+    container.addEventListener('scroll', updateYipScrollUI, { passive: true });
+
+    const observer = new MutationObserver(() => {
+        requestAnimationFrame(updateYipScrollUI);
+    });
+    observer.observe(container, { childList: true, subtree: true });
+}
+
+function updateYipScrollUI() {
+    const container = document.getElementById('yip-location-chips');
+    const btnLeft = document.querySelector('.yip-scroll-left');
+    const btnRight = document.querySelector('.yip-scroll-right');
+    const dotsContainer = document.getElementById('yip-location-dots');
+    if (!container || !btnLeft || !btnRight || !dotsContainer) return;
+
+    const hasOverflow = container.scrollWidth > container.clientWidth;
+    btnLeft.classList.toggle('visible', hasOverflow);
+    btnRight.classList.toggle('visible', hasOverflow);
+
+    if (!hasOverflow) {
+        dotsContainer.innerHTML = '';
+        return;
+    }
+
+    const pageWidth = container.clientWidth;
+    const totalPages = Math.max(1, Math.ceil(container.scrollWidth / pageWidth));
+    const currentPage = Math.round(container.scrollLeft / pageWidth);
+
+    let html = '';
+    for (let i = 0; i < totalPages; i++) {
+        html += `<span class="yip-dot${i === currentPage ? ' active' : ''}"></span>`;
+    }
+    dotsContainer.innerHTML = html;
 }
 
 async function showConfirm(title, message) {

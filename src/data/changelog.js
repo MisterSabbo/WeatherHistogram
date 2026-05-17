@@ -1,5 +1,12 @@
 export const changelogData = [
   {
+    "version": "1.8.12",
+    "changes": [
+      "Fix: white line at histogram bottom — cached tile height between handleResize and drawTile to prevent height drift; changed #chart-area background from hardcoded #f5f5f5 to var(--bg-color).",
+      "UX: YIP location selector now shows scroll buttons (◀▶) and pagination dots when chips overflow — makes horizontal scrollability obvious on mobile."
+    ]
+  },
+  {
     "version": "1.8.11",
     "changes": [
       "Fix: bottom-sheet drag-to-dismiss on Android — added pointercancel handler with touch-event fallback to continue tracking swipe after Chrome takes over the gesture.",

@@ -37,6 +37,7 @@ let weatherCache = new Map();
         let fixedOverlayCanvas, fixedOverlayCtx;
         let minimapCacheCanvas = null;
         let tiles = [];
+        let cachedTileHeight = 0;
         let TILE_WIDTH = window.innerWidth < 600 ? 720 : 1440;
         let scrollContainer, minimapViewport, themeToggle;
         let isMinimapDragging = false;
@@ -1369,7 +1370,7 @@ let weatherCache = new Map();
             const ctx = tile.ctx;
             const xOffset = tile.index * TILE_WIDTH;
             const w = TILE_WIDTH;
-            const h = scrollContainer.clientHeight;
+            const h = cachedTileHeight || scrollContainer.clientHeight;
             const styles = getComputedStyle(document.documentElement);
 
             ctx.imageSmoothingEnabled = true;
@@ -1721,7 +1722,7 @@ let weatherCache = new Map();
             if (!state.hourlyData.length) return;
 
             const w = fixedOverlayCanvas.clientWidth;
-            const h = scrollContainer.clientHeight; 
+            const h = cachedTileHeight || scrollContainer.clientHeight;
 
             fixedOverlayCtx.clearRect(0, 0, fixedOverlayCanvas.clientWidth, fixedOverlayCanvas.clientHeight);
 
@@ -2529,6 +2530,7 @@ let weatherCache = new Map();
             state.dpr = getDPR();
 
             const containerH = scrollContainer.clientHeight;
+            cachedTileHeight = containerH;
             const totalWidth = state.hourlyData.length * PIXELS_PER_HOUR;
 
             const canvasWrapper = document.getElementById('canvas-wrapper');
