@@ -149,21 +149,19 @@ function populateParamSheet() {
 
   categories.forEach(cat => {
     const catDiv = document.createElement('div');
-    catDiv.style.marginBottom = '12px';
+    catDiv.className = 'yip-param-category';
     const catTitle = document.createElement('div');
-    catTitle.style.cssText = 'font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;padding:0 12px;';
+    catTitle.className = 'yip-param-category-title';
     catTitle.textContent = cat.label;
     catDiv.appendChild(catTitle);
 
     cat.params.forEach(p => {
       const opt = document.createElement('div');
-      opt.className = 'param-option' + (p.value === selectedParam ? ' active' : '');
+      opt.className = 'yip-param-item' + (p.value === selectedParam ? ' active' : '');
       opt.dataset.value = p.value;
-      opt.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;border-radius:8px;' +
-        (p.value === selectedParam ? 'background:var(--input-bg);' : '');
-      opt.innerHTML = `<span style="flex:1;font-size:0.9rem;color:var(--text-primary)">${p.label}</span>` +
-        `<span class="material-symbols-outlined" style="color:var(--accent-precip);font-size:20px;${p.value === selectedParam ? '' : 'display:none'}">check</span>`;
-      const checkIcon = opt.querySelector('.material-symbols-outlined');
+      opt.innerHTML =
+        `<span class="yip-param-item-label">${p.label}</span>` +
+        `<span class="material-symbols-outlined yip-param-item-check">check</span>`;
       opt.addEventListener('click', () => {
         selectedParam = p.value;
         const paramDisplay = document.getElementById('yip-param-display');

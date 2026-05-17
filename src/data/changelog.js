@@ -1,5 +1,12 @@
 export const changelogData = [
   {
+    "version": "1.8.12a",
+    "changes": [
+      "Metrics row pagination dots: Added dot indicators below the horizontally scrollable metrics cards on mobile, making it obvious that additional metrics are available by swiping.",
+      "YIP parameter sheet visual hierarchy: Refactored populateParamSheet() to use pre-defined CSS classes instead of inline styles — category titles now have a border-bottom separator and selectable items have proper hover/active states."
+    ]
+  },
+  {
     "version": "1.8.12",
     "changes": [
       "Fix: white line at histogram bottom — cached tile height between handleResize and drawTile to prevent height drift; changed #chart-area background from hardcoded #f5f5f5 to var(--bg-color).",

@@ -543,6 +543,12 @@
                 padding-left: 3px;
                 animation: pulse-horizontal-left 2s infinite;
             }
+
+            #metrics-dots {
+                display: flex;
+                order: 1;
+                padding: 0 0 2px;
+            }
         }
 
         @keyframes pulse-horizontal-right {
@@ -555,6 +561,10 @@
         }
 
         .scroll-indicator {
+            display: none;
+        }
+
+        #metrics-dots {
             display: none;
         }
 

@@ -1120,6 +1120,7 @@ let weatherCache = new Map();
                 const metricsContainer = document.querySelector('.top-panel-metrics');
                 const scrollIndLeft = document.querySelector('.scroll-indicator-left');
                 const scrollIndRight = document.querySelector('.scroll-indicator-right');
+                const metricsDots = document.getElementById('metrics-dots');
                 
                 if (metricsContainer && scrollIndLeft && scrollIndRight) {
                     const updateScrollIndicator = () => {
@@ -1147,6 +1148,22 @@ let weatherCache = new Map();
                             setTimeout(() => {
                                 if (scrollIndLeft.style.opacity === '0') scrollIndLeft.style.display = 'none';
                             }, 300);
+                        }
+
+                        // Pagination dots
+                        if (metricsDots) {
+                            if (!hasOverflow) {
+                                metricsDots.innerHTML = '';
+                                return;
+                            }
+                            const pageWidth = metricsContainer.clientWidth;
+                            const totalPages = Math.max(1, Math.ceil(metricsContainer.scrollWidth / pageWidth));
+                            const currentPage = Math.round(metricsContainer.scrollLeft / pageWidth);
+                            let html = '';
+                            for (let i = 0; i < totalPages; i++) {
+                                html += '<span class="yip-dot' + (i === currentPage ? ' active' : '') + '"></span>';
+                            }
+                            metricsDots.innerHTML = html;
                         }
                     };
 

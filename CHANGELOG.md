@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.12a] - 2026-05-17
+### UX Improvements
+- **Metrics row pagination dots**: Added dot indicators below the horizontally scrollable metrics cards on mobile, making it obvious that additional metrics are available by swiping. Reuses the same dot pattern as the YIP location chips.
+- **YIP parameter sheet visual hierarchy**: Refactored `populateParamSheet()` to use pre-defined CSS classes (`.yip-param-category`, `.yip-param-item`) instead of inline styles — category titles now have a `border-bottom` separator and selectable items have proper hover/active states, making the distinction between headers and options clear.
+
 ## [v1.8.12] - 2026-05-17
 ### Bug Fixes
 - **White line at bottom of histogram**: Cached tile height (`cachedTileHeight`) to prevent drift between `handleResize()` canvas sizing and `drawTile()` drawing area. Changed `#chart-area` hardcoded `background: #f5f5f5` to `var(--bg-color)` so any gap matches the active theme.
