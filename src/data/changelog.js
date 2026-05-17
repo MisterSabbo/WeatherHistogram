@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.9g",
+    "changes": [
+      "Skeleton loading se muestra in-place dentro del layout (sin overlay fijo): Eliminado el #overlay de pantalla completa con fondo semitransparente. Los skeletons ahora son elementos nativos dentro de #controls-bar, #top-panel, #chart-area y #bottom-nav-container, togglados con la clase .loading en #app-wrapper. drawFixedOverlay() se salta durante la carga. Se añadieron las 7 métricas (viento, AQI, polen, temp, precip, prob, nubes), más la ubicación, resumen del tiempo y hora/fecha al skeleton."
+    ]
+  },
+  {
     "version": "1.8.9f",
     "changes": [
       "SPF modal not closing on \"Cambiar fototipo\": Fixed inline transform leak that kept the sheet visible after removing the .open class.",

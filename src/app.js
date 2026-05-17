@@ -276,8 +276,7 @@ let weatherCache = new Map();
                     
                     const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
                     const doRefresh = async () => {
-                        const overlay = document.getElementById('overlay');
-                        overlay.classList.remove('hidden');
+                        document.getElementById('app-wrapper').classList.add('loading');
                         document.getElementById('error-msg').style.display = 'none';
                         try {
                             if (originalLocation) {
@@ -878,16 +877,20 @@ let weatherCache = new Map();
                     });
                 });
 
-                // Iniciamos con un timeout de seguridad para el overlay
+                // Iniciamos con un timeout de seguridad para la carga
                 setTimeout(() => {
-                    const overlay = document.getElementById('overlay');
-                    if (overlay && !overlay.classList.contains('hidden') && document.getElementById('error-msg').style.display !== 'block') {
-                        console.warn("Loading taking too long, forcing overlay hide");
+                    const appWrapper = document.getElementById('app-wrapper');
+                    if (appWrapper && appWrapper.classList.contains('loading') && document.getElementById('error-msg').style.display !== 'block') {
+                        console.warn("Loading taking too long, forcing loading hide");
                         const skipBtn = document.createElement('button');
+                        skipBtn.className = 'skip-loading-btn';
                         skipBtn.innerText = t('overlay.skipWait') || 'Skip';
-                        skipBtn.onclick = () => overlay.classList.add('hidden');
-                        skipBtn.style.cssText = 'position:absolute;bottom:120px;left:50%;transform:translateX(-50%);font-size:0.7rem;opacity:0.7;padding:8px 16px;background:var(--input-bg);border:1px solid var(--grid-color);border-radius:6px;color:var(--text-primary);cursor:pointer;z-index:9999;';
-                        overlay.appendChild(skipBtn);
+                        skipBtn.onclick = () => {
+                            appWrapper.classList.remove('loading');
+                            skipBtn.remove();
+                        };
+                        skipBtn.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);font-size:0.7rem;opacity:0.7;padding:8px 16px;background:var(--input-bg);border:1px solid var(--grid-color);border-radius:6px;color:var(--text-primary);cursor:pointer;z-index:9999;';
+                        document.body.appendChild(skipBtn);
                     }
                 }, 10000);
 
@@ -1132,7 +1135,7 @@ let weatherCache = new Map();
                 }
             }
 
-            document.getElementById('overlay').classList.remove('hidden');
+            document.getElementById('app-wrapper').classList.add('loading');
             try {
                 const pos = await getPosition();
                 state.lat = pos.coords.latitude;
@@ -1160,10 +1163,10 @@ let weatherCache = new Map();
         }
 
         async function loadWeather() {
-            const overlay = document.getElementById('overlay');
+            const appWrapper = document.getElementById('app-wrapper');
             const errorMsg = document.getElementById('error-msg');
 
-            overlay.classList.remove('hidden');
+            appWrapper.classList.add('loading');
             errorMsg.style.display = 'none';
 
             try {
@@ -1172,7 +1175,8 @@ let weatherCache = new Map();
 
                 // Forzamos ocultar si llegamos aquí sin errores fatales
                 if (errorMsg.style.display !== 'block') {
-                    overlay.classList.add('hidden');
+                    appWrapper.classList.remove('loading');
+                    document.querySelectorAll('.skip-loading-btn').forEach(btn => btn.remove());
                 }
 
                 centerOnCurrentTime();
@@ -1663,6 +1667,7 @@ let weatherCache = new Map();
         let lastNowBtnMini = null;
 
         function drawFixedOverlay() {
+            if (document.getElementById('app-wrapper').classList.contains('loading')) return;
             if (!state.hourlyData.length) return;
 
             const w = fixedOverlayCanvas.clientWidth;
@@ -2559,7 +2564,7 @@ let weatherCache = new Map();
             const errDiv = document.getElementById('error-msg');
             errDiv.innerHTML = `
                 <div style="margin-bottom: 15px;">${msg}</div>
-                <button onclick="document.getElementById('overlay').classList.add('hidden')"
+                <button onclick="document.getElementById('app-wrapper').classList.remove('loading');document.querySelectorAll('.skip-loading-btn').forEach(b=>b.remove());this.closest('#error-msg').style.display='none'"
                         style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
                     Cerrar y ver app
                 </button>

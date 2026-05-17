@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.9g] - 2026-05-17
+### UX Improvements
+- **Skeleton loading in-place sin overlay**: Reemplazado el `#overlay` fijo de pantalla completa con fondo semitransparente por skeletons nativos dentro del flujo del layout. Cada sección (`#controls-bar`, `#top-panel`, `#chart-area`, `#bottom-nav-container`) contiene su propio skeleton que se muestra con la clase `.loading` en `#app-wrapper`. El skeleton ahora incluye las 7 métricas (viento, AQI, polen, temp, precip, prob. precip, nubes), la ubicación, resumen del tiempo y hora/fecha. `drawFixedOverlay()` se salta durante la carga. Sin capa superpuesta, sin bleed-through del canvas.
+
 ## [v1.8.9f] - 2026-05-17
 ### Bug Fixes
 - **SPF modal not closing on "Cambiar fototipo"**: Fixed a bug where clicking the "Cambiar fototipo" button inside the SPF bottom-sheet left the sheet visible. Root cause: the click handler removed the `.open` class but did not reset the inline `transform` style, so if the user had previously touched the drag handle, the inline transform kept the sheet on-screen. Fix: added `sheet.style.transform = ''` before removing the class.
