@@ -1,4 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["agent-rules/subagents.md", "agent-rules/memory.md"]
+  "instructions": [
+    "agent-rules/subagents.md",
+    "agent-rules/memory.md",
+    "agent-rules/pre-action-checklist.md"
+  ]
 }

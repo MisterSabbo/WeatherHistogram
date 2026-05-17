@@ -8,6 +8,7 @@ coverage/
 package-lock.json
 !.env.example
 .agents/
-.opencode
+.opencode/node_modules/
+.opencode/package-lock.json
 skills-lock.json
 plans/

@@ -17,17 +17,9 @@ Instructions:
 
 ## ⚠️ CRITICAL: Pre-Action Checklist
 
-Before every task, verify these rules **in order**:
+The full pre-action checklist is in @agent-rules/pre-action-checklist.md — loaded automatically at session start via `opencode.json` instructions. Refer to it before every task.
 
-- [ ] **Read AGENTS.md** — Read all sections before making any edit or taking any action
-- [ ] **Never commit** — Only `git add`. If asked to commit, stage and inform commits are disabled
-- [ ] **Significant change?** → Update `CHANGELOG.md` + `src/data/changelog.json` + version in `index.html` + `public/version.json`
-- [ ] **Adding UI strings?** → Add to both `es`/`en` in `src/utils/i18n.js`
-- [ ] **Changing documented behavior?** → Update `README.md`
-- [ ] **Complex task?** → Evaluate if a subagent is better suited (see @agent-rules/subagents.md)
-- [ ] **Respect SOLID principles** — SRP, OCP, LSP, ISP, DIP
-- [ ] **All rendering goes through `render()`** — never draw to tile canvases outside this function
-- [ ] **After changes** → Run `git diff --cached` and `git diff`, then propose commit message
+**After completing changes: invoke `@project-auditor` to verify compliance.**
 
 ---
 
