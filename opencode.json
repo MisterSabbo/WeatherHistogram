@@ -1,12 +1,4 @@
 {
-  "rules": [
-    "CRITICAL: Read ALL sections of AGENTS.md before making any edit or taking any action",
-    "Run git diff --cached and git diff after changes, then propose a commit message — never commit automatically",
-    "Update CHANGELOG.md + src/data/changelog.js + version in index.html + public/version.json with every significant change",
-    "Add new UI strings to both es/en in src/utils/i18n.js",
-    "All rendering goes through render() — never draw to tile canvases outside this function",
-    "Respect SOLID principles: SRP, OCP, LSP, ISP, DIP",
-    "Evaluate subagent usage before responding — see Subagent Consideration in AGENTS.md",
-    "Update README if documented features or setup change"
-  ]
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["agent-rules/subagents.md", "agent-rules/memory.md"]
 }
