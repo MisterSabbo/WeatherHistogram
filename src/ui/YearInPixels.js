@@ -2,35 +2,43 @@ import { storageService } from '../services/StorageService.js';
 import { getThemeColor } from '../theme.js';
 import { t } from '../utils/i18n.js';
 
+let selectedLocation = null;
+let selectedParam = 'maxTemp';
+let _closeSheet = null;
+
 export function initYearInPixels() {
   const openBtn = document.getElementById('year-in-pixels-btn');
   const modal = document.getElementById('yip-modal');
   const closeBtn = document.getElementById('close-yip-modal-btn');
-  const locSelect = document.getElementById('yip-location-select');
-  const paramSelect = document.getElementById('yip-param-select');
+  const chipsContainer = document.getElementById('yip-location-chips');
+  const paramDisplay = document.getElementById('yip-param-display');
   const delLocBtn = document.getElementById('yip-delete-loc-btn');
 
   if (!openBtn || !modal) return;
-  
+
+  if (paramDisplay) {
+    paramDisplay.addEventListener('click', () => {
+      populateParamSheet();
+      _closeSheet = window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop');
+    });
+  }
+
   if (delLocBtn) {
       delLocBtn.addEventListener('click', async () => {
-          const locSelectValue = document.getElementById('yip-location-select')?.value;
-          if (!locSelectValue) return;
-          
-          const confirmText = (t('config.deleteLocConfirm') || `¿Borrar todos los datos históricos de {loc}?`).replace('{loc}', locSelectValue);
+          if (!selectedLocation) return;
+          const confirmText = (t('config.deleteLocConfirm') || '¿Borrar todos los datos históricos de {loc}?').replace('{loc}', selectedLocation);
           const confirmed = await showConfirm(
               t('config.confirmAction', 'Confirmar'),
               confirmText
           );
-
           if (confirmed) {
               await storageService.init();
               const db = storageService.db;
               const tx = db.transaction([storageService.historyStoreName], 'readwrite');
               const store = tx.objectStore(storageService.historyStoreName);
-              const req = store.delete(locSelectValue);
+              const req = store.delete(selectedLocation);
               req.onsuccess = () => {
-                  modal.style.display = 'none'; // close it entirely on wipe
+                  modal.style.display = 'none';
               };
               req.onerror = (e) => {
                   console.error('Error deleting location historical data:', e);
@@ -40,35 +48,40 @@ export function initYearInPixels() {
   }
 
   openBtn.addEventListener('click', async () => {
-     // Fetch all available keys in historyStoreName
      await storageService.init();
      const db = storageService.db;
-     
      const transaction = db.transaction([storageService.historyStoreName], 'readonly');
      const store = transaction.objectStore(storageService.historyStoreName);
      const request = store.getAllKeys();
-     
+
      request.onsuccess = async () => {
          const keys = request.result;
-         locSelect.innerHTML = '';
+         if (chipsContainer) chipsContainer.innerHTML = '';
          if (keys.length === 0) {
-             const opt = document.createElement('option');
-             opt.value = "";
-             opt.textContent = "No hay datos históricos guardados";
-             locSelect.appendChild(opt);
+             selectedLocation = null;
              renderYIPGrid(null);
          } else {
-             // Fill dropdown
              keys.forEach(k => {
-                 const opt = document.createElement('option');
-                 opt.value = k;
-                 opt.textContent = k;
-                 locSelect.appendChild(opt);
+                 const chip = document.createElement('div');
+                 chip.className = 'yip-chip';
+                 chip.dataset.value = k;
+                 chip.textContent = k;
+                 if (k === selectedLocation || (!selectedLocation && keys.indexOf(k) === 0)) {
+                     chip.classList.add('active');
+                     if (!selectedLocation) selectedLocation = k;
+                 }
+                 chip.addEventListener('click', async () => {
+                     chipsContainer.querySelectorAll('.yip-chip').forEach(c => c.classList.remove('active'));
+                     chip.classList.add('active');
+                     selectedLocation = k;
+                     await loadLocationData(k);
+                 });
+                 chipsContainer.appendChild(chip);
              });
-             // Select the first one or the currently viewed one
              if (keys.length > 0) {
-                locSelect.value = keys[0];
-                await loadLocationData(keys[0]);
+                 const target = selectedLocation || keys[0];
+                 selectedLocation = target;
+                 await loadLocationData(target);
              }
          }
          modal.style.display = 'flex';
@@ -84,18 +97,6 @@ export function initYearInPixels() {
           modal.style.display = 'none';
       }
   });
-
-  locSelect.addEventListener('change', async (e) => {
-      if (e.target.value) {
-         await loadLocationData(e.target.value);
-      }
-  });
-
-  paramSelect.addEventListener('change', () => {
-     if (locSelect.value) {
-         renderYIPGrid(cachedHistory, paramSelect.value);
-     }
-  });
 }
 
 let cachedHistory = null;
@@ -103,16 +104,78 @@ let cachedHistory = null;
 async function loadLocationData(locationName) {
     const history = await storageService.getHistory(locationName);
     cachedHistory = history;
-    const param = document.getElementById('yip-param-select').value;
-    renderYIPGrid(history, param);
+    renderYIPGrid(history, selectedParam);
+}
+
+function populateParamSheet() {
+  const container = document.getElementById('yip-param-sheet');
+  if (!container) return;
+  const existingBody = container.querySelector('.yip-bottom-sheet-body');
+  const body = existingBody || document.createElement('div');
+  body.className = 'yip-bottom-sheet-body';
+  body.innerHTML = '';
+
+  const categories = [
+    { key: 'temp', label: t('config.yipCategoryTemp', 'Temperatura'), params: [
+      { value: 'maxTemp', label: 'T. Máx' },
+      { value: 'minTemp', label: 'T. Mín' },
+      { value: 'apparentMax', label: 'Sensación Térmica' }
+    ]},
+    { key: 'precip', label: t('config.yipCategoryPrecip', 'Precipitación'), params: [
+      { value: 'precip', label: t('config.precip', 'Precipitación') }
+    ]},
+    { key: 'wind', label: t('config.yipCategoryWind', 'Viento'), params: [
+      { value: 'windMax', label: t('config.windMax', 'Viento Máx') },
+      { value: 'gustMax', label: t('config.gustMax', 'Ráfagas') }
+    ]},
+    { key: 'aqi', label: t('config.yipCategoryAQI', 'Calidad del Aire'), params: [
+      { value: 'aqi', label: 'AQI' }
+    ]},
+    { key: 'pollen', label: t('config.yipCategoryPollen', 'Polen'), params: [
+      { value: 'pollen', label: t('config.pollen', 'Polen') }
+    ]}
+  ];
+
+  categories.forEach(cat => {
+    const catDiv = document.createElement('div');
+    catDiv.style.marginBottom = '12px';
+    const catTitle = document.createElement('div');
+    catTitle.style.cssText = 'font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;padding:0 12px;';
+    catTitle.textContent = cat.label;
+    catDiv.appendChild(catTitle);
+
+    cat.params.forEach(p => {
+      const opt = document.createElement('div');
+      opt.className = 'param-option' + (p.value === selectedParam ? ' active' : '');
+      opt.dataset.value = p.value;
+      opt.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;border-radius:8px;' +
+        (p.value === selectedParam ? 'background:var(--input-bg);' : '');
+      opt.innerHTML = `<span style="flex:1;font-size:0.9rem;color:var(--text-primary)">${p.label}</span>` +
+        `<span class="material-symbols-outlined" style="color:var(--accent-precip);font-size:20px;${p.value === selectedParam ? '' : 'display:none'}">check</span>`;
+      const checkIcon = opt.querySelector('.material-symbols-outlined');
+      opt.addEventListener('click', () => {
+        selectedParam = p.value;
+        const paramDisplay = document.getElementById('yip-param-display');
+        if (paramDisplay) {
+          const labelSpan = paramDisplay.querySelector('span:first-child');
+          if (labelSpan) labelSpan.textContent = p.label;
+        }
+        if (cachedHistory) renderYIPGrid(cachedHistory, selectedParam);
+        if (_closeSheet) _closeSheet();
+      });
+      catDiv.appendChild(opt);
+    });
+
+    body.appendChild(catDiv);
+  });
+
+  if (!existingBody) container.appendChild(body);
 }
 
 function renderYIPGrid(history, param) {
     const container = document.getElementById('yip-grid-container');
     const legend = document.getElementById('yip-legend');
-    const locSelect = document.getElementById('yip-location-select');
-    const paramSelect = document.getElementById('yip-param-select');
-    
+
     container.innerHTML = '';
     legend.innerHTML = '';
 
@@ -125,17 +188,16 @@ function renderYIPGrid(history, param) {
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
     const currentDay = today.getDate();
-    
-    // Group days by month (0-11) and day (0-30)
+
     const yearGrid = Array.from({length: 12}, () => new Array(31).fill(null));
     const yearFullData = Array.from({length: 12}, () => new Array(31).fill(null));
-    
+
     history.daily.forEach(d => {
         const date = new Date(d.time);
         if (date.getFullYear() === currentYear) {
             const m = date.getMonth();
-            const day = date.getDate() - 1; // 0-based
-            
+            const day = date.getDate() - 1;
+
             let val = null;
             if (param === 'maxTemp') val = d.tempMax;
             else if (param === 'minTemp') val = d.tempMin;
@@ -149,34 +211,34 @@ function renderYIPGrid(history, param) {
                 const type = param.replace('pollen_', '');
                 val = (d.pollenDetails && d.pollenDetails[type]) ? d.pollenDetails[type] : 0;
             }
-            
+
             yearGrid[m][day] = val;
             yearFullData[m][day] = d;
         }
     });
 
     const monthNames = [
-        t('months.long.0', 'Enero'), t('months.long.1', 'Febrero'), t('months.long.2', 'Marzo'), 
-        t('months.long.3', 'Abril'), t('months.long.4', 'Mayo'), t('months.long.5', 'Junio'), 
-        t('months.long.6', 'Julio'), t('months.long.7', 'Agosto'), t('months.long.8', 'Septiembre'), 
+        t('months.long.0', 'Enero'), t('months.long.1', 'Febrero'), t('months.long.2', 'Marzo'),
+        t('months.long.3', 'Abril'), t('months.long.4', 'Mayo'), t('months.long.5', 'Junio'),
+        t('months.long.6', 'Julio'), t('months.long.7', 'Agosto'), t('months.long.8', 'Septiembre'),
         t('months.long.9', 'Octubre'), t('months.long.10', 'Noviembre'), t('months.long.11', 'Diciembre')
     ];
 
     for (let m=0; m<12; m++) {
         const monthBlock = document.createElement('div');
         monthBlock.className = 'yip-month-block';
-        
+
         const titleRow = document.createElement('div');
         titleRow.style.display = 'flex';
         titleRow.style.justifyContent = 'space-between';
         titleRow.style.alignItems = 'center';
         titleRow.style.marginBottom = '8px';
-        
+
         const title = document.createElement('div');
         title.className = 'yip-month-title';
         title.style.marginBottom = '0';
         title.textContent = monthNames[m];
-        
+
         const delBtn = document.createElement('button');
         delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span>';
         delBtn.style.background = 'transparent';
@@ -185,19 +247,18 @@ function renderYIPGrid(history, param) {
         delBtn.style.cursor = 'pointer';
         delBtn.title = t('config.deleteMonthData', 'Borrar datos del mes');
         delBtn.onclick = async () => {
-            const dloc = document.getElementById('yip-location-select')?.value;
-            const confirmText = (t('config.deleteMonthDataConfirm') || `¿Borrar todos los datos de {month} en {loc}?`).replace('{loc}', dloc).replace('{month}', monthNames[m]);
+            const confirmText = (t('config.deleteMonthDataConfirm') || '¿Borrar todos los datos de {month} en {loc}?').replace('{loc}', selectedLocation).replace('{month}', monthNames[m]);
             const confirmed = await showConfirm(
                 t('config.confirmAction', 'Confirmar'),
                 confirmText
             );
-            
-            if (confirmed && dloc) {
+
+            if (confirmed && selectedLocation) {
                 await storageService.init();
                 const db = storageService.db;
                 const tx = db.transaction([storageService.historyStoreName], 'readwrite');
                 const store = tx.objectStore(storageService.historyStoreName);
-                const getReq = store.get(dloc);
+                const getReq = store.get(selectedLocation);
                 getReq.onsuccess = () => {
                     if (getReq.result) {
                         if (getReq.result.daily) {
@@ -212,37 +273,36 @@ function renderYIPGrid(history, param) {
                                 return !(hDate.getMonth() === m && hDate.getFullYear() === currentYear);
                             });
                         }
-                        const putReq = store.put(getReq.result, dloc);
+                        const putReq = store.put(getReq.result, selectedLocation);
                         putReq.onsuccess = () => {
-                            renderYIPGrid(getReq.result, paramSelect.value);
-                            // Cierra el modal de confirmación si procede, aunque como es de fondo ya debería
+                            renderYIPGrid(getReq.result, selectedParam);
                         };
                     }
                 };
             }
         };
-        
+
         titleRow.appendChild(title);
         titleRow.appendChild(delBtn);
         monthBlock.appendChild(titleRow);
-        
+
         const monthGrid = document.createElement('div');
         monthGrid.className = 'yip-month-grid';
-        
+
         const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
-        const firstDay = new Date(currentYear, m, 1).getDay(); // 0 is Sunday, 1 is Monday
-        const emptyDays = firstDay === 0 ? 6 : firstDay - 1; // Assuming Monday is first
-        
+        const firstDay = new Date(currentYear, m, 1).getDay();
+        const emptyDays = firstDay === 0 ? 6 : firstDay - 1;
+
         for (let e=0; e<emptyDays; e++) {
             const emptyCell = document.createElement('div');
             emptyCell.style.pointerEvents = 'none';
             monthGrid.appendChild(emptyCell);
         }
-        
+
         for (let day=0; day<daysInMonth; day++) {
             const cell = document.createElement('div');
             cell.className = 'yip-day-cell';
-            
+
             const isFuture = (m > currentMonth) || (m === currentMonth && day > currentDay - 1);
             if (isFuture) {
                 cell.classList.add('future');
@@ -256,7 +316,7 @@ function renderYIPGrid(history, param) {
             }
             monthGrid.appendChild(cell);
         }
-        
+
         monthBlock.appendChild(monthGrid);
         container.appendChild(monthBlock);
     }
@@ -266,13 +326,13 @@ function renderYIPGrid(history, param) {
 
 function openYIPDetail(data, dateStr) {
     if (!data) return;
-    
+
     document.getElementById('yip-detail-date').textContent = dateStr;
     const desc = document.getElementById('yip-detail-desc');
     desc.textContent = `T. Máx: ${data.tempMax !== undefined ? Math.round(data.tempMax) : '-'}°C | T. Mín: ${data.tempMin !== undefined ? Math.round(data.tempMin) : '-'}°C`;
-    
+
     const details = data.pollenDetails || {};
-    const pollenHtml = Object.keys(details).length > 0 ? 
+    const pollenHtml = Object.keys(details).length > 0 ?
         `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Gramíneas: ${details.grass||0} | Olivo: ${details.olive||0} | Abedul: ${details.birch||0}</div>` : '';
 
     const metricsHtml = `
@@ -295,7 +355,7 @@ function openYIPDetail(data, dateStr) {
         </div>
     `;
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
-    
+
     window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
 }
 
@@ -316,24 +376,24 @@ function getColorForParam(param, value) {
         if (value < 15) return '#3b82f6';
         return '#1d4ed8';
     } else if (param === 'windMax' || param === 'gustMax') {
-        if (value < 10) return '#ccfbf1'; // teal-50
-        if (value < 20) return '#5eead4'; // teal-300
-        if (value < 40) return '#06b6d4'; // cyan-500
-        if (value < 60) return '#6366f1'; // indigo-500
-        return '#d946ef'; // fuchsia-500
+        if (value < 10) return '#ccfbf1';
+        if (value < 20) return '#5eead4';
+        if (value < 40) return '#06b6d4';
+        if (value < 60) return '#6366f1';
+        return '#d946ef';
     } else if (param === 'aqi') {
-        if (value <= 50) return '#22c55e'; // green
-        if (value <= 100) return '#eab308'; // yellow
-        if (value <= 150) return '#f97316'; // orange
-        if (value <= 200) return '#ef4444'; // red
-        if (value <= 300) return '#a855f7'; // purple
-        return '#9f1239'; // rose-800
+        if (value <= 50) return '#22c55e';
+        if (value <= 100) return '#eab308';
+        if (value <= 150) return '#f97316';
+        if (value <= 200) return '#ef4444';
+        if (value <= 300) return '#a855f7';
+        return '#9f1239';
     } else if (param.startsWith('pollen')) {
         if (value === 0) return 'var(--grid-color)';
-        if (value === 1) return '#a3e635'; // lime
-        if (value === 2) return '#facc15'; // yellow
-        if (value === 3) return '#f97316'; // orange
-        return '#dc2626'; // red
+        if (value === 1) return '#a3e635';
+        if (value === 2) return '#facc15';
+        if (value === 3) return '#f97316';
+        return '#dc2626';
     }
     return 'var(--grid-color)';
 }
@@ -389,23 +449,19 @@ function renderLegend(param, legendContainer) {
     });
 }
 
-/**
- * Shared confirm modal logic for YIP
- */
 async function showConfirm(title, message) {
     return new Promise((resolve) => {
         const titleEl = document.getElementById('confirm-title');
         const msgEl = document.getElementById('confirm-message');
         const cancelBtn = document.getElementById('confirm-cancel-btn');
         const okBtn = document.getElementById('confirm-ok-btn');
-        
+
         if (titleEl) titleEl.textContent = title;
         if (msgEl) msgEl.textContent = message;
-        
+
         if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
         if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
-        
-        // Clone to remove old listeners
+
         if (okBtn) {
             const newOk = okBtn.cloneNode(true);
             okBtn.parentNode.replaceChild(newOk, okBtn);
@@ -422,7 +478,7 @@ async function showConfirm(title, message) {
                 resolve(false);
             };
         }
-        
+
         const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => { resolve(confirm(message)); };
     });
 }

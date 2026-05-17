@@ -76,7 +76,20 @@ export const translations = {
             legendBad: "Malo",
             legendLow: "Bajo",
             legendHigh: "Alto",
-            legendVeryHigh: "Muy A."
+            legendVeryHigh: "Muy A.",
+            sectionAbout: "Acerca de",
+            sectionAppearance: "Apariencia",
+            sectionComfort: "Confort",
+            sectionMaintenance: "Mantenimiento",
+            themeSelect: "Tema de gráficas",
+            themeSelectTitle: "Seleccionar tema",
+            skinType: "Fototipo de piel",
+            thresholds: "Umbrales",
+            yipCategoryTemp: "Temperatura",
+            yipCategoryPrecip: "Precipitación",
+            yipCategoryWind: "Viento",
+            yipCategoryAQI: "Calidad del Aire",
+            yipCategoryPollen: "Polen"
         },
         theme: {
         },
@@ -285,7 +298,20 @@ export const translations = {
             legendBad: "Unhealthy",
             legendLow: "Low",
             legendHigh: "High",
-            legendVeryHigh: "Very H."
+            legendVeryHigh: "Very H.",
+            sectionAbout: "About",
+            sectionAppearance: "Appearance",
+            sectionComfort: "Comfort",
+            sectionMaintenance: "Maintenance",
+            themeSelect: "Chart Theme",
+            themeSelectTitle: "Select theme",
+            skinType: "Skin type",
+            thresholds: "Thresholds",
+            yipCategoryTemp: "Temperature",
+            yipCategoryPrecip: "Precipitation",
+            yipCategoryWind: "Wind",
+            yipCategoryAQI: "Air Quality",
+            yipCategoryPollen: "Pollen"
         },
         theme: {
         },

@@ -2,6 +2,16 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.10] - 2026-05-17
+### UX Improvements
+- **Settings modal → adaptive side panel + bottom sheet**: Replaced the fixed pop-up modal with a responsive panel: bottom sheet on mobile (<768px), right-side sliding panel on desktop (≥768px). Uses a single HTML element with CSS media queries switching between `translateY` (mobile) and `translateX` (desktop).
+- **Native selects → touch-friendly bottom sheets**: Replaced `<select>` dropdowns for chart theme and YIP parameter with bottom sheet pickers, including swatch preview (theme) and category grouping (YIP param).
+- **YIP location dropdown → horizontal chips**: Replaced the `<select>` for location selection in Year in Pixels with horizontally scrollable touch-friendly chips.
+- **Stickman thresholds → range sliders**: Replaced `<input type="number">` with `<input type="range">` sliders for cold, hot, wind, and cloud thresholds. Live value preview on drag.
+- **Settings theme toggle**: Added a dark/light toggle switch inside the settings panel that syncs with the top-bar theme button.
+- **Collapsible maintenance section**: Organized danger buttons (Clear Cache, Clear Data) under a collapsible "Mantenimiento" section.
+- **Settings restructured into sections**: About, Apariencia (theme toggle + chart theme selector), Confort (skin type + stickman thresholds), Mantenimiento.
+
 ## [v1.8.9g] - 2026-05-17
 ### UX Improvements
 - **Skeleton loading in-place without overlay**: Replaced the full-screen fixed `#overlay` with semi-transparent background by native skeleton elements flowing inside each layout section (`#controls-bar`, `#top-panel`, `#chart-area`, `#bottom-nav-container`), toggled via `.loading` class on `#app-wrapper`. The skeleton now includes all 7 metric cards (wind, AQI, pollen, temp, precip, precip prob, clouds), location name, weather summary and time/date. `drawFixedOverlay()` skips during loading. No overlay layer, no canvas bleed-through.

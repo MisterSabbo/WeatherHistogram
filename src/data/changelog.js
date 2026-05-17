@@ -1,5 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.8.10",
+    "changes": [
+      "Settings modal → adaptive side panel + bottom sheet: Replaced the fixed pop-up modal with a responsive panel — bottom sheet on mobile (<768px), right-side sliding panel on desktop (≥768px), using CSS media queries to switch between translateY and translateX transforms.",
+      "Native selects → touch-friendly bottom sheets: Chart theme selector and YIP parameter selector replaced with bottom sheet pickers with swatch preview and category grouping.",
+      "YIP location dropdown → horizontal chips: Replaced <select> for location in Year in Pixels with horizontally scrollable touch-friendly chips.",
+      "Stickman thresholds → range sliders: Replaced <input type='number'> with <input type='range'> for cold, hot, wind, and cloud thresholds with live value preview on drag.",
+      "Settings theme toggle: Added a dark/light toggle switch in the settings panel that syncs with the top-bar theme button.",
+      "Collapsible maintenance section: Danger buttons (Clear Cache, Clear Data) grouped under a collapsible 'Mantenimiento' section.",
+      "Settings restructured into sections: About, Apariencia (theme toggle + chart theme selector), Confort (skin type + stickman thresholds), Mantenimiento."
+    ]
+  },
+  {
     "version": "1.8.9g",
     "changes": [
       "Skeleton loading rendered in-place within the layout (no fixed overlay): Removed the full-screen #overlay with semi-transparent background. Skeletons are now native elements inside #controls-bar, #top-panel, #chart-area and #bottom-nav-container, toggled via the .loading class on #app-wrapper. drawFixedOverlay() now skips during loading. Added all 7 metric cards (wind, AQI, pollen, temp, precip, precip prob, clouds), plus location, weather summary and time/date to the skeleton."

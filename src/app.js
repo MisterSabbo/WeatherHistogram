@@ -371,7 +371,7 @@ let weatherCache = new Map();
 
                 spfSettingsBtn.addEventListener('click', () => {
                     if (window._closeSpfSheet) window._closeSpfSheet();
-                    if (infoModal) infoModal.style.display = 'flex';
+                    openBottomSheet('info-modal', 'info-sheet-backdrop');
                 });
             }
 
@@ -545,20 +545,52 @@ let weatherCache = new Map();
                 // Theme setup
                 themeToggle.addEventListener('click', toggleTheme);
 
+                // Settings theme toggle sync
+                const settingsThemeToggle = document.getElementById('settings-theme-toggle');
+                if (settingsThemeToggle) {
+                    settingsThemeToggle.checked = state.theme === 'dark';
+                    settingsThemeToggle.addEventListener('change', () => {
+                        const targetTheme = settingsThemeToggle.checked ? 'dark' : 'light';
+                        if (state.theme !== targetTheme) toggleTheme();
+                    });
+                }
+                // Keep settings toggle in sync when theme changes externally
+                const origToggleTheme = toggleTheme;
+                toggleTheme = function() {
+                    origToggleTheme();
+                    if (settingsThemeToggle) {
+                        settingsThemeToggle.checked = state.theme === 'dark';
+                    }
+                };
+
+                // Collapsible sections
+                document.querySelectorAll('.collapsible-trigger').forEach(trigger => {
+                    trigger.addEventListener('click', () => {
+                        const parent = trigger.closest('.collapsible');
+                        if (parent) {
+                            parent.classList.toggle('open');
+                            const body = parent.querySelector('.info-section-body');
+                            if (body) body.classList.toggle('open');
+                        }
+                    });
+                });
+
                 const floatingNowBtn = document.getElementById('floating-now-btn');
                 if (floatingNowBtn) floatingNowBtn.addEventListener('click', centerOnCurrentTime);
 
-                // Modal logic
+                // Modal logic - Info Sheet (uses openBottomSheet for mobile and desktop)
                 const btnInfo = document.getElementById('btn-info');
                 const infoModal = document.getElementById('info-modal');
                 const closeInfoBtn = document.getElementById('close-info-btn');
                 if (btnInfo && infoModal) {
-                    btnInfo.addEventListener('click', () => infoModal.style.display = 'flex');
-                    closeInfoBtn.addEventListener('click', () => infoModal.style.display = 'none');
-                    infoModal.addEventListener('click', (e) => {
-                        if (e.target === infoModal) infoModal.style.display = 'none';
+                    let closeInfoSheet = () => {};
+                    btnInfo.addEventListener('click', () => {
+                        closeInfoSheet = openBottomSheet('info-modal', 'info-sheet-backdrop');
                     });
-}
+                    closeInfoBtn.addEventListener('click', () => {
+                        closeInfoSheet();
+                    });
+                }
 
                 let isChangelogLoading = false;
 
@@ -568,7 +600,7 @@ let weatherCache = new Map();
                         e.preventDefault();
                         if (isChangelogLoading) return;
                         isChangelogLoading = true;
-                        if (infoModal) infoModal.style.display = 'none';
+                        if (closeInfoSheet) closeInfoSheet();
                         requestAnimationFrame(() => {
                             try { showChangelogModal(); } catch (e) { console.error("Changelog err:", e); }
                             isChangelogLoading = false;
@@ -616,56 +648,117 @@ let weatherCache = new Map();
                 }
                 applyTranslations();
 
-                // Theme Logic
-                const chartThemeSelect = document.getElementById('chart-theme-select');
-                if (chartThemeSelect) {
+                // Theme Logic — Bottom Sheet Selector
+                const themeSelectTrigger = document.getElementById('theme-select-trigger');
+                const themeCurrentLabel = document.getElementById('theme-current-label');
+                const themeCurrentSwatch = document.getElementById('theme-current-swatch');
+                const themeOptionsContainer = document.getElementById('theme-options-container');
+
+                const updateThemeUI = (themeId, themeName, themeColor) => {
+                    if (themeCurrentLabel) themeCurrentLabel.textContent = themeName;
+                    if (themeCurrentSwatch) themeCurrentSwatch.style.background = themeColor || 'var(--accent-temp)';
+                    const opts = document.querySelectorAll('.theme-option');
+                    opts.forEach(o => o.classList.toggle('active', o.dataset.value === themeId));
+                };
+
+                const loadThemeOptions = async () => {
                     const themeIds = ['default', 'neon', 'pastel'];
-                    Promise.all(themeIds.map(id => fetch(`public/themes/${id}.json`).catch(() => fetch(`themes/${id}.json`)).then(r => r.json()))).then(themes => {
-                        chartThemeSelect.innerHTML = '';
-                        themes.forEach(t => {
-                            const opt = document.createElement('option');
-                            opt.value = t.id;
-                            opt.innerText = t.name;
-                            chartThemeSelect.appendChild(opt);
-                        });
-                        chartThemeSelect.value = state.activeChartTheme;
-                    });
-                    
-                    chartThemeSelect.value = state.activeChartTheme;
-                    chartThemeSelect.addEventListener('change', async (e) => {
-                        state.activeChartTheme = e.target.value;
-                        storageService.set('chartTheme', state.activeChartTheme);
-                        await loadChartTheme(state.activeChartTheme);
-                        // Redraw everything
-                        tiles.forEach(t => t.drawn = false);
-                        minimapCacheCanvas = null;
-                        render();
+                    try {
+                        const themes = await Promise.all(themeIds.map(id =>
+                            fetch(`public/themes/${id}.json`).catch(() => fetch(`themes/${id}.json`)).then(r => r.json())
+                        ));
+                        if (themeOptionsContainer) {
+                            themeOptionsContainer.innerHTML = '';
+                            themes.forEach(t => {
+                                const div = document.createElement('div');
+                                div.className = 'theme-option';
+                                div.dataset.value = t.id;
+                                const swatch = document.createElement('div');
+                                swatch.className = 'theme-option-swatch';
+                                swatch.style.background = t.colors.tempLine || 'var(--accent-temp)';
+                                const name = document.createElement('span');
+                                name.className = 'theme-option-name';
+                                name.textContent = t.name;
+                                const check = document.createElement('span');
+                                check.className = 'material-symbols-outlined theme-option-check';
+                                check.textContent = 'check';
+                                div.appendChild(swatch);
+                                div.appendChild(name);
+                                div.appendChild(check);
+                                if (t.id === state.activeChartTheme) {
+                                    div.classList.add('active');
+                                    updateThemeUI(t.id, t.name, t.colors.tempLine);
+                                }
+                                div.addEventListener('click', async () => {
+                                    state.activeChartTheme = t.id;
+                                    storageService.set('chartTheme', state.activeChartTheme);
+                                    await loadChartTheme(state.activeChartTheme);
+                                    updateThemeUI(t.id, t.name, t.colors.tempLine);
+                                    tiles.forEach(t => t.drawn = false);
+                                    minimapCacheCanvas = null;
+                                    render();
+                                    const sheetClose = _activeSheets['theme-sheet-backdrop'];
+                                    if (sheetClose) sheetClose();
+                                });
+                                themeOptionsContainer.appendChild(div);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Failed to load themes:', e);
+                    }
+                };
+
+                if (themeSelectTrigger) {
+                    themeSelectTrigger.addEventListener('click', () => {
+                        loadThemeOptions();
+                        openBottomSheet('theme-select-sheet', 'theme-sheet-backdrop');
                     });
                 }
+                loadThemeOptions();
                 
-                // Stickman Thresholds Logic
-                const stickmanColdInput = document.getElementById('stickman-cold-input');
-                const stickmanHotInput = document.getElementById('stickman-hot-input');
-                const stickmanWindInput = document.getElementById('stickman-wind-input');
-                const stickmanCloudsInput = document.getElementById('stickman-clouds-input');
-                
+                // Stickman Thresholds Logic — Range Sliders
+                const initSlider = (id, stateKey, displayId, onchange) => {
+                    const slider = document.getElementById(id);
+                    const display = document.getElementById(displayId);
+                    if (!slider) return;
+                    const val = state.stickmanThresholds[stateKey];
+                    slider.value = val;
+                    if (display) display.textContent = val;
+                    slider.addEventListener('input', (e) => {
+                        const v = e.target.value;
+                        if (display) display.textContent = v;
+                    });
+                    slider.addEventListener('change', (e) => {
+                        const v = parseFloat(e.target.value);
+                        if (!isNaN(v)) {
+                            state.stickmanThresholds[stateKey] = v;
+                            storageService.set('stickmanThresholds', state.stickmanThresholds);
+                            document.getElementById('slider-' + stateKey + '-val').textContent = v;
+                            if (onchange) onchange();
+                            if (stateKey === 'wind') render();
+                            drawFixedOverlay();
+                        }
+                    });
+                };
+                initSlider('stickman-cold-slider', 'cold', 'slider-cold-val');
+                initSlider('stickman-hot-slider', 'hot', 'slider-hot-val');
+                initSlider('stickman-wind-slider', 'wind', 'slider-wind-val');
+                initSlider('stickman-clouds-slider', 'clouds', 'slider-clouds-val');
+
+                // Skin Type Cards
                 const skinCards = document.querySelectorAll('.skin-card');
                 if (skinCards.length > 0) {
                     const updateActiveCard = () => {
                         const activeVal = state.skinType || 2;
                         skinCards.forEach(card => {
                             if (parseInt(card.dataset.value) === activeVal) {
-                                card.style.borderColor = '#3b82f6';
-                                card.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                                card.classList.add('active');
                             } else {
-                                card.style.borderColor = 'var(--grid-color)';
-                                card.style.backgroundColor = 'var(--card-bg)';
+                                card.classList.remove('active');
                             }
                         });
                     };
-                    
                     updateActiveCard();
-                    
                     skinCards.forEach(card => {
                         card.addEventListener('click', () => {
                             const val = parseInt(card.dataset.value);
@@ -676,55 +769,6 @@ let weatherCache = new Map();
                                 render();
                             }
                         });
-                    });
-                }
-
-                if (stickmanColdInput) {
-                    stickmanColdInput.value = state.stickmanThresholds.cold;
-                    stickmanColdInput.addEventListener('change', (e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) {
-                            state.stickmanThresholds.cold = val;
-                            storageService.set('stickmanThresholds', state.stickmanThresholds);
-                            drawFixedOverlay();
-                        }
-                    });
-                }
-                
-                if (stickmanHotInput) {
-                    stickmanHotInput.value = state.stickmanThresholds.hot;
-                    stickmanHotInput.addEventListener('change', (e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) {
-                            state.stickmanThresholds.hot = val;
-                            storageService.set('stickmanThresholds', state.stickmanThresholds);
-                            drawFixedOverlay();
-                        }
-                    });
-                }
-                
-                if (stickmanWindInput) {
-                    stickmanWindInput.value = state.stickmanThresholds.wind;
-                    stickmanWindInput.addEventListener('change', (e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) {
-                            state.stickmanThresholds.wind = val;
-                            storageService.set('stickmanThresholds', state.stickmanThresholds);
-                            drawFixedOverlay();
-                            render(); // redraw to update wind gusts icons too!
-                        }
-                    });
-                }
-
-                if (stickmanCloudsInput) {
-                    stickmanCloudsInput.value = state.stickmanThresholds.clouds;
-                    stickmanCloudsInput.addEventListener('change', (e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) {
-                            state.stickmanThresholds.clouds = val;
-                            storageService.set('stickmanThresholds', state.stickmanThresholds);
-                            drawFixedOverlay();
-                        }
                     });
                 }
 
