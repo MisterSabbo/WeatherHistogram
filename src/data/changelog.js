@@ -1,5 +1,16 @@
 export const changelogData = [
   {
+    "version": "1.8.12e",
+    "changes": [
+      "Enhanced scroll indicators: Redesigned left/right scroll arrows — pill-shaped with background + shadow, vertically centered at 32x32px, using .visible class for smooth transitions.",
+      "Scroll-snap pagination: Added scroll-snap-type: x mandatory to the metrics container and scroll-snap-align: start to each data card for intentional page-by-page swiping.",
+      "Discovery swipe animation: On first overflow, the right indicator performs a 3-bounce swipe animation to teach users about scrollable content.",
+      "Better pagination dots: Increased from 5px to 8px with active glow effect. Added fraction page counter (e.g. '1/3') for exact position feedback.",
+      "Right-padding peek: Added 35px right padding inside the scroll container so the next card is always partially visible.",
+      "Swipe hint i18n: Added topPanel.swipeHint string in both Spanish and English."
+    ]
+  },
+  {
     "version": "1.8.12d",
     "changes": [
       "Android gesture navigation compatibility: Added overscroll-behavior-x: contain to the horizontal scroll container and mobile metrics row to prevent system back gestures from capturing horizontal swipes.",

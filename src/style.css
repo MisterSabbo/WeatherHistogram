@@ -424,7 +424,7 @@
                 min-height: auto;
                 padding: 10px 5px;
                 gap: 10px;
-                padding-bottom: 15px;
+                padding-bottom: 18px;
                 display: flex;
                 flex-direction: column;
                 position: relative;
@@ -468,27 +468,31 @@
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 width: 100%;
-                padding: 5px 2px;
+                padding: 5px 35px 5px 0;
                 scrollbar-width: none;
                 overscroll-behavior-x: contain;
                 position: relative;
                 height: 50px;
                 align-items: center;
                 order: 1;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
             }
             .top-panel-metrics::-webkit-scrollbar {
                 display: none;
             }
             .data-card {
-                min-width: 85px; /* Use a fixed min-width to avoid jittering when values change */
-                width: auto;     /* Adapt to content */
+                min-width: 85px;
+                width: auto;
                 flex: 0 0 auto;
                 display: flex;
                 flex-direction: column;
-                justify-content: center; /* Center content vertically */
-                align-items: center;    /* Center content horizontally */
-                padding: 0 5px;        /* Add horizontal padding to replace gap */
+                justify-content: center;
+                align-items: center;
+                padding: 0 5px;
                 min-height: 45px;
+                scroll-snap-align: start;
+                scroll-snap-stop: normal;
             }
             .data-label {
                 font-size: 0.7rem;
@@ -524,45 +528,67 @@
             .scroll-indicator {
                 display: flex;
                 position: absolute;
-                top: 0;
-                height: 18px;
-                align-items: flex-end;
+                top: 50%;
+                transform: translateY(-50%);
+                height: 32px;
+                width: 32px;
+                align-items: center;
                 justify-content: center;
                 color: var(--accent-temp);
                 pointer-events: none;
                 z-index: var(--z-floating);
-                transition: opacity 0.3s;
+                transition: opacity 0.3s, transform 0.3s;
                 font-size: 0.6rem;
+                border-radius: 50%;
+                background: var(--card-bg);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                border: 1px solid var(--grid-color);
+                opacity: 0;
+            }
+            .scroll-indicator.visible {
+                opacity: 1;
             }
             .scroll-indicator-right {
-                right: 0;
-                background: linear-gradient(to right, transparent, var(--bg-color) 10%, var(--bg-color) 90%);
-                padding-left: 10px;
-                padding-right: 3px;
+                right: 10px;
                 animation: pulse-horizontal-right 2s infinite;
             }
             .scroll-indicator-left {
-                left: 0;
-                background: linear-gradient(to left, transparent, var(--bg-color) 10%, var(--bg-color) 90%);
-                padding-right: 10px;
-                padding-left: 3px;
+                left: 10px;
                 animation: pulse-horizontal-left 2s infinite;
             }
 
             #metrics-dots {
                 display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
                 order: 1;
-                padding: 0 0 2px;
+                padding: 6px 0 2px;
+                min-height: 16px;
+            }
+            #metrics-dots .metric-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--grid-color);
+                transition: background 0.3s, transform 0.3s;
+                flex-shrink: 0;
+                cursor: default;
+            }
+            #metrics-dots .metric-dot.active {
+                background: var(--accent-precip);
+                transform: scale(1.3);
+                box-shadow: 0 0 6px var(--accent-precip);
             }
         }
 
         @keyframes pulse-horizontal-right {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(3px); }
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(4px); }
         }
         @keyframes pulse-horizontal-left {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(-3px); }
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(-4px); }
         }
 
         .scroll-indicator {

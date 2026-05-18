@@ -1138,34 +1138,28 @@ let weatherCache = new Map();
                 const metricsDots = document.getElementById('metrics-dots');
                 
                 if (metricsContainer && scrollIndLeft && scrollIndRight) {
+                    let _discoveryPlayed = false;
+
                     const updateScrollIndicator = () => {
                         const hasOverflow = metricsContainer.scrollWidth > metricsContainer.clientWidth;
                         const isAtStart = metricsContainer.scrollLeft <= 5;
                         const isAtEnd = metricsContainer.scrollLeft + metricsContainer.clientWidth >= metricsContainer.scrollWidth - 5;
                         
-                        // Right indicator
+                        // Right indicator - use .visible class
                         if (hasOverflow && !isAtEnd) {
-                            scrollIndRight.style.display = 'flex';
-                            scrollIndRight.style.opacity = '1';
+                            scrollIndRight.classList.add('visible');
                         } else {
-                            scrollIndRight.style.opacity = '0';
-                            setTimeout(() => {
-                                if (scrollIndRight.style.opacity === '0') scrollIndRight.style.display = 'none';
-                            }, 300);
+                            scrollIndRight.classList.remove('visible');
                         }
 
                         // Left indicator
                         if (hasOverflow && !isAtStart) {
-                            scrollIndLeft.style.display = 'flex';
-                            scrollIndLeft.style.opacity = '1';
+                            scrollIndLeft.classList.add('visible');
                         } else {
-                            scrollIndLeft.style.opacity = '0';
-                            setTimeout(() => {
-                                if (scrollIndLeft.style.opacity === '0') scrollIndLeft.style.display = 'none';
-                            }, 300);
+                            scrollIndLeft.classList.remove('visible');
                         }
 
-                        // Pagination dots
+                        // Pagination dots with page counter
                         if (metricsDots) {
                             if (!hasOverflow) {
                                 metricsDots.innerHTML = '';
@@ -1176,9 +1170,40 @@ let weatherCache = new Map();
                             const currentPage = Math.round(metricsContainer.scrollLeft / pageWidth);
                             let html = '';
                             for (let i = 0; i < totalPages; i++) {
-                                html += '<span class="yip-dot' + (i === currentPage ? ' active' : '') + '"></span>';
+                                html += '<span class="metric-dot' + (i === currentPage ? ' active' : '') + '"></span>';
+                            }
+                            if (totalPages > 1) {
+                                html += '<span style="font-size:0.55rem;color:var(--text-secondary);margin-left:4px;font-weight:600;font-variant-numeric:tabular-nums;">' + (currentPage + 1) + '/' + totalPages + '</span>';
                             }
                             metricsDots.innerHTML = html;
+                        }
+
+                        // Discovery animation on first overflow
+                        if (!_discoveryPlayed && hasOverflow) {
+                            _discoveryPlayed = true;
+                            const el = scrollIndRight;
+                            el.classList.add('visible');
+                            el.style.transition = 'none';
+                            el.style.transform = 'translateY(-50%) translateX(0)';
+                            // Force reflow
+                            void el.offsetHeight;
+                            // Animate: swipe right 3 times
+                            let step = 0;
+                            const swipe = () => {
+                                if (step > 5) {
+                                    el.style.transition = '';
+                                    el.style.transform = '';
+                                    return;
+                                }
+                                const isEven = step % 2 === 0;
+                                el.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                                el.style.transform = isEven
+                                    ? 'translateY(-50%) translateX(14px)'
+                                    : 'translateY(-50%) translateX(0)';
+                                step++;
+                                setTimeout(swipe, 280);
+                            };
+                            setTimeout(swipe, 400);
                         }
                     };
 

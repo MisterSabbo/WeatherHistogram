@@ -2,6 +2,15 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.12e] - 2026-05-18
+### Metrics Scroll UX Improvements
+- **Enhanced scroll indicators**: Redesigned the left/right scroll arrows — now pill-shaped with background, shadow, and border, vertically centered within the metrics row at 32×32px. Transition uses `.visible` class instead of inline opacity/display for smoother show/hide.
+- **Scroll-snap pagination**: Added `scroll-snap-type: x mandatory` to the metrics container and `scroll-snap-align: start` to each data card, making horizontal scroll feel like intentional page-by-page swiping instead of free scroll.
+- **Discovery swipe animation**: On first overflow, the right indicator performs a 3-bounce swipe animation to teach the user that more metrics are available by swiping.
+- **Better pagination dots**: Increased dot size from 5px to 8px with active glow effect. Added fraction page counter (e.g. "1/3") next to the dots for exact position feedback.
+- **Right-padding peek**: Added 35px right padding inside the scroll container so the next card is always partially visible, hinting at more content.
+- **Swipe hint i18n**: Added `topPanel.swipeHint` string ("Desliza para ver más métricas" / "Swipe to see more metrics") in both Spanish and English.
+
 ## [v1.8.12d] - 2026-05-18
 ### Android Gesture Navigation Compatibility
 - **Overscroll containment**: Added `overscroll-behavior-x: contain` to the main horizontal scroll container and mobile metrics row to prevent the Android system back gesture from capturing horizontal swipes.
