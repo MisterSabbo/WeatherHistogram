@@ -463,17 +463,18 @@
             }
             .top-panel-metrics {
                 margin-left: 0;
-                gap: 5px; /* Significantly reduced gap since cards are auto width now */
+                gap: 5px;
                 display: flex;
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 width: 100%;
-                padding: 5px 2px; /* Less horizontal padding */
+                padding: 5px 2px;
                 scrollbar-width: none;
+                overscroll-behavior-x: contain;
                 position: relative;
-                height: 50px; /* Fixed height for vertical centering */
-                align-items: center; /* Center vertically */
-                order: 1; /* Put above info */
+                height: 50px;
+                align-items: center;
+                order: 1;
             }
             .top-panel-metrics::-webkit-scrollbar {
                 display: none;
@@ -696,6 +697,7 @@
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-x;
+            overscroll-behavior-x: contain;
         }
 
         #scroll-container::-webkit-scrollbar { display: none; }

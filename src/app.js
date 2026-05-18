@@ -67,6 +67,7 @@ let weatherCache = new Map();
 
         let searchTimeout = null;
         let ticking = false;
+        let preventBackNavTimer = null;
         const PIXELS_PER_MM = 10;
 
         window.hexToRgb = hex => {
@@ -1093,6 +1094,11 @@ let weatherCache = new Map();
                     // Update DOM elements synchronously for zero-lag on iOS
                     updateNowButtonPosition();
 
+                    // Flag active horizontal scroll to prevent Android back gesture
+                    window._preventBackNav = true;
+                    clearTimeout(preventBackNavTimer);
+                    preventBackNavTimer = setTimeout(() => { window._preventBackNav = false; }, 400);
+
                     if (!ticking) {
                         window.requestAnimationFrame(() => {
                             drawFixedOverlay();
@@ -1103,6 +1109,15 @@ let weatherCache = new Map();
                         ticking = true;
                     }
                 }, { passive: true });
+
+                // Navigation API: prevent system back gesture during horizontal scroll
+                if (window.navigation) {
+                    navigation.addEventListener('navigate', (e) => {
+                        if (e.navigationType === 'traverse' && window._preventBackNav) {
+                            e.preventDefault();
+                        }
+                    });
+                }
 
                 document.addEventListener('click', () => {
                     if (window.innerWidth < 600) {

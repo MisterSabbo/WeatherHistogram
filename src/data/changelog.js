@@ -1,5 +1,13 @@
 export const changelogData = [
   {
+    "version": "1.8.12d",
+    "changes": [
+      "Android gesture navigation compatibility: Added overscroll-behavior-x: contain to the horizontal scroll container and mobile metrics row to prevent system back gestures from capturing horizontal swipes.",
+      "PWA display_override: Added display_override: ['standalone'] to the web app manifest for more robust standalone mode behavior on Android Chrome.",
+      "Navigation API interception: Prevents back navigation during active horizontal scroll of the timeline, reducing unintended browser history back events while scrolling."
+    ]
+  },
+  {
     "version": "1.8.12c",
     "changes": [
       "Remove: YIP location selector scroll buttons (◀▶) removed — the pagination dots alone are sufficient for indicating overflow and current position."

@@ -2,6 +2,12 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.12d] - 2026-05-18
+### Android Gesture Navigation Compatibility
+- **Overscroll containment**: Added `overscroll-behavior-x: contain` to the main horizontal scroll container and mobile metrics row to prevent the Android system back gesture from capturing horizontal swipes.
+- **PWA display_override**: Added `display_override: ["standalone"]` to the web app manifest for more robust standalone mode behavior on Android Chrome.
+- **Navigation API interception**: Added a lightweight Navigation API listener that prevents back navigation during active horizontal scroll of the timeline, reducing unintended browser history back events while scrolling.
+
 ## [v1.8.12c] - 2026-05-18
 ### Cleanup
 - **YIP location selector scroll buttons removed**: The ◀▶ scroll buttons that appeared when location chips overflowed have been removed — the pagination dots below are sufficient for conveying overflow and current position.
