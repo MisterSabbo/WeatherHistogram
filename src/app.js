@@ -2877,7 +2877,6 @@ let weatherCache = new Map();
             const onPointerDown = (e) => {
                 usingTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
                 onDragStart(e.clientY);
-                sheet.setPointerCapture(e.pointerId);
             };
 
             const onPointerMove = (e) => {

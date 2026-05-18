@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.12f",
+    "changes": [
+      "Fix: bottom-sheet clickable elements not working on desktop — removed setPointerCapture that prevented click events from firing on interactive elements inside bottom sheets."
+    ]
+  },
+  {
     "version": "1.8.12e",
     "changes": [
       "Enhanced scroll indicators: Redesigned left/right scroll arrows — pill-shaped with background + shadow, vertically centered at 32x32px, using .visible class for smooth transitions.",
