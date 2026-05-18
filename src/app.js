@@ -15,6 +15,8 @@ import { drawAQIRadar } from './ui/AqiRadar.js';
 import { drawPollenRadar } from './ui/PollenRadar.js';
 import { changelogData } from './data/changelog.js';
 import { getWeatherDescription } from './utils/weather.js';
+import { hexToRgb } from './utils/color.js';
+import { dateToX, getSplitIndex, formatTooltipTime } from './utils/time.js';
 import { normalizeY } from './utils/math.js';
 import { drawHumidity, drawWind, drawTemperature } from './render/MetricsRenderer.js';
 import { drawClouds, drawPrecipitation, drawPrecipitationProbability } from './render/AtmosphereRenderer.js';
@@ -24,6 +26,8 @@ import { drawStickman } from './render/StickmanRenderer.js';
 import { initMapModal } from './ui/MapSelector.js';
 import { initFavoritesModal } from './ui/FavoritesModal.js';
 import { initYearInPixels } from './ui/YearInPixels.js';
+import { openBottomSheet, closeBottomSheet, onSheetClose } from './ui/BottomSheet.js';
+import { initScrollIndicator } from './ui/ScrollIndicator.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -69,25 +73,6 @@ let weatherCache = new Map();
         let ticking = false;
         let preventBackNavTimer = null;
         const PIXELS_PER_MM = 10;
-
-        window.hexToRgb = hex => {
-            let r = 0, g = 0, b = 0;
-            if (typeof hex !== 'string') return {r, g, b};
-            if (hex.startsWith('rgba')) {
-                const parts = hex.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-                if (parts) { r = parseInt(parts[1]); g = parseInt(parts[2]); b = parseInt(parts[3]); }
-            } else {
-                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex) || /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex);
-                if (result) {
-                    if (result[1].length === 1) {
-                        r = parseInt(result[1]+result[1], 16); g = parseInt(result[2]+result[2], 16); b = parseInt(result[3]+result[3], 16);
-                    } else {
-                        r = parseInt(result[1], 16); g = parseInt(result[2], 16); b = parseInt(result[3], 16);
-                    }
-                }
-            }
-            return {r, g, b};
-        };
 
         /**
          * INICIALIZACIÓN
@@ -365,12 +350,11 @@ let weatherCache = new Map();
                     document.getElementById('spf-modal-rec-val').innerText = spfText;
                     document.getElementById('spf-modal-rec-desc').innerText = t('config.spfModalReapply');
                     
-                    const closeSpfSheet = openBottomSheet('spf-modal');
-                    window._closeSpfSheet = closeSpfSheet;
+                    openBottomSheet('spf-modal');
                 });
 
                 spfSettingsBtn.addEventListener('click', () => {
-                    if (window._closeSpfSheet) window._closeSpfSheet();
+                    closeBottomSheet('spf-modal');
                     openBottomSheet('info-modal', 'info-sheet-backdrop', 'info-sheet-content');
                 });
             }
@@ -705,8 +689,7 @@ let weatherCache = new Map();
                                     tiles.forEach(t => t.drawn = false);
                                     minimapCacheCanvas = null;
                                     render();
-                                    const sheetClose = _activeSheets['theme-sheet-backdrop'];
-                                    if (sheetClose) sheetClose();
+                                    closeBottomSheet('theme-select-sheet', 'theme-sheet-backdrop');
                                 });
                                 themeOptionsContainer.appendChild(div);
                             });
@@ -798,7 +781,7 @@ let weatherCache = new Map();
                     const newCancel = cancelBtn.cloneNode(true);
                     cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
                     
-                    const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => {};
+                    const closeFn = openBottomSheet('confirm-modal', 'confirm-sheet-backdrop');
                     
                     let confirmed = false;
                     
@@ -1138,81 +1121,7 @@ let weatherCache = new Map();
                 const metricsDots = document.getElementById('metrics-dots');
                 
                 if (metricsContainer && scrollIndLeft && scrollIndRight) {
-                    let _discoveryPlayed = false;
-
-                    const updateScrollIndicator = () => {
-                        const hasOverflow = metricsContainer.scrollWidth > metricsContainer.clientWidth;
-                        const isAtStart = metricsContainer.scrollLeft <= 5;
-                        const isAtEnd = metricsContainer.scrollLeft + metricsContainer.clientWidth >= metricsContainer.scrollWidth - 5;
-                        
-                        // Right indicator - use .visible class
-                        if (hasOverflow && !isAtEnd) {
-                            scrollIndRight.classList.add('visible');
-                        } else {
-                            scrollIndRight.classList.remove('visible');
-                        }
-
-                        // Left indicator
-                        if (hasOverflow && !isAtStart) {
-                            scrollIndLeft.classList.add('visible');
-                        } else {
-                            scrollIndLeft.classList.remove('visible');
-                        }
-
-                        // Pagination dots with page counter
-                        if (metricsDots) {
-                            if (!hasOverflow) {
-                                metricsDots.innerHTML = '';
-                                metricsDots.style.display = 'none';
-                                return;
-                            }
-                            metricsDots.style.display = '';
-                            const pageWidth = metricsContainer.clientWidth;
-                            const totalPages = Math.max(1, Math.ceil(metricsContainer.scrollWidth / pageWidth));
-                            const currentPage = Math.round(metricsContainer.scrollLeft / pageWidth);
-                            let html = '';
-                            for (let i = 0; i < totalPages; i++) {
-                                html += '<span class="metric-dot' + (i === currentPage ? ' active' : '') + '"></span>';
-                            }
-                            if (totalPages > 1) {
-                                html += '<span class="metric-page-counter">' + (currentPage + 1) + '/' + totalPages + '</span>';
-                            }
-                            metricsDots.innerHTML = html;
-                        }
-
-                        // Discovery animation on first overflow
-                        if (!_discoveryPlayed && hasOverflow) {
-                            _discoveryPlayed = true;
-                            const el = scrollIndRight;
-                            el.classList.add('visible');
-                            el.style.transition = 'none';
-                            el.style.transform = 'translateY(-50%) translateX(0)';
-                            // Force reflow
-                            void el.offsetHeight;
-                            // Animate: swipe right 3 times
-                            let step = 0;
-                            const swipe = () => {
-                                if (step > 5) {
-                                    el.style.transition = '';
-                                    el.style.transform = '';
-                                    return;
-                                }
-                                const isEven = step % 2 === 0;
-                                el.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                                el.style.transform = isEven
-                                    ? 'translateY(-50%) translateX(14px)'
-                                    : 'translateY(-50%) translateX(0)';
-                                step++;
-                                setTimeout(swipe, 280);
-                            };
-                            setTimeout(swipe, 400);
-                        }
-                    };
-
-                    window.updateScrollIndicator = updateScrollIndicator;
-                    metricsContainer.addEventListener('scroll', updateScrollIndicator, { passive: true });
-                    window.addEventListener('resize', updateScrollIndicator);
-                    setTimeout(updateScrollIndicator, 1000);
+                    window.updateScrollIndicator = initScrollIndicator(metricsContainer, scrollIndLeft, scrollIndRight, metricsDots);
                 }
 
                 handleResize();
@@ -1478,18 +1387,12 @@ let weatherCache = new Map();
 
         // Functions logic removed because it is handled by DailyCards.js
 
-        function getSplitIndex() {
-            if (!state.hourlyData.length) return 0;
-            const now = Date.now();
-            const startTime = state.hourlyData[0].time;
-            const index = Math.floor((now - startTime) / 3600000);
-            return Math.max(0, Math.min(state.hourlyData.length, index));
-        }
+
 
         function updateMinimapViewport() {
             if (!state.hourlyData.length) return;
 
-            const splitIndex = getSplitIndex();
+            const splitIndex = getSplitIndex(state.hourlyData[0].time, state.hourlyData.length);
             let startIndex = minimapMode === 'past' ? 0 : splitIndex;
             let dataLength = minimapMode === 'past' ? splitIndex : state.hourlyData.length - splitIndex;
             if (dataLength <= 0) return;
@@ -1498,7 +1401,6 @@ let weatherCache = new Map();
             const scrollRatio = scrollContainer.scrollLeft / totalMainWidth;
             const visibleRatio = scrollContainer.clientWidth / totalMainWidth;
 
-            // Current visible range in indexes
             const currentLeftIndex = scrollContainer.scrollLeft / PIXELS_PER_HOUR;
             const currentRightIndex = (scrollContainer.scrollLeft + scrollContainer.clientWidth) / PIXELS_PER_HOUR;
             const centerIndex = currentLeftIndex + (currentRightIndex - currentLeftIndex) / 2;
@@ -1539,7 +1441,7 @@ let weatherCache = new Map();
         function drawMinimap() {
             if (!state.hourlyData.length) return;
 
-            const splitIndex = getSplitIndex();
+            const splitIndex = getSplitIndex(state.hourlyData[0].time, state.hourlyData.length);
             let minimapData, startIndex;
 
             if (minimapMode === 'past') {
@@ -2082,7 +1984,7 @@ let weatherCache = new Map();
 
                         state.labelRects.push(rect);
 
-                        const c = window.hexToRgb ? window.hexToRgb(color) : {r: 0, g: 0, b: 0};
+                        const c = hexToRgb(color);
                         
                         const lightMix = getThemeColor('scrubber.bgLightMix', 0.85);
                         const bgR = Math.round(255 * lightMix + c.r * (1 - lightMix));
@@ -2240,7 +2142,7 @@ let weatherCache = new Map();
 
                     const uvText = `UV ${parseFloat(d1.uv).toFixed(1)}`;
                     
-                    const c = window.hexToRgb ? window.hexToRgb(uvColor) : {r: 0, g: 0, b: 0};
+                    const c = hexToRgb(uvColor);
                     const bgR = Math.round(255 * 0.8 + c.r * 0.2);
                     const bgG = Math.round(255 * 0.8 + c.g * 0.2);
                     const bgB = Math.round(255 * 0.8 + c.b * 0.2);
@@ -2279,8 +2181,7 @@ let weatherCache = new Map();
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
 
-            // Posición X real en el canvas
-            const nowX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR;
+            const nowX = dateToX(now, startTime, PIXELS_PER_HOUR);
             
             // DOM Playhead and Shadow directly mapped to wrapper coords
             const nowIndicator = document.getElementById('now-indicator');
@@ -2466,15 +2367,7 @@ let weatherCache = new Map();
             const startTime = state.hourlyData[0].time;
             const exactTime = startTime + (activeX / PIXELS_PER_HOUR) * 3600000;
             const date = new Date(exactTime);
-            const today = new Date();
-            const isToday = date.getDate() === today.getDate() &&
-                            date.getMonth() === today.getMonth() &&
-                            date.getFullYear() === today.getFullYear();
-
-            const timeStr = date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-            const dateStr = date.toLocaleString(getLocale(), {
-                weekday: 'short', day: 'numeric', month: 'short', timeZone: state.timezone
-            }).toUpperCase();
+            const { timeStr, dateStr, isToday } = formatTooltipTime(date, getLocale(), state.timezone);
 
             const timeDisplay = document.getElementById('current-time-display');
             timeDisplay.querySelector('.time-main').innerText = timeStr;
@@ -2633,9 +2526,7 @@ let weatherCache = new Map();
             const now = Date.now();
             const startTime = state.hourlyData[0].time;
 
-            // Calculamos la posición X exacta para el momento actual
-            // (ms transcurridos / ms por hora) * pixeles por hora
-            const exactX = ((now - startTime) / 3600000) * PIXELS_PER_HOUR;
+            const exactX = dateToX(now, startTime, PIXELS_PER_HOUR);
 
             // Centramos exactX en la línea de referencia fija (scrollLeft + 60)
             const targetLeft = Math.max(0, exactX - 60);
@@ -2653,7 +2544,7 @@ let weatherCache = new Map();
             const x = e.clientX - rect.left;
             const ratio = Math.max(0, Math.min(1, x / rect.width));
             
-            const splitIndex = getSplitIndex();
+            const splitIndex = getSplitIndex(state.hourlyData[0].time, state.hourlyData.length);
             const startIndex = minimapMode === 'past' ? 0 : splitIndex;
             const dataLength = minimapMode === 'past' ? splitIndex : state.hourlyData.length - splitIndex;
 
@@ -2786,167 +2677,6 @@ let weatherCache = new Map();
             }
         }
         
-        let _activeSheets = {};
-        let _sheetIdCounter = 0;
-
-        function getScrollElement(sheet, scrollElementId) {
-            if (!scrollElementId) return sheet;
-            return document.getElementById(scrollElementId) || sheet;
-        }
-
-        function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop', scrollElementId) {
-            const sheet = document.getElementById(sheetId);
-            const backdrop = document.getElementById(backdropId);
-
-            if (!sheet || !backdrop) return () => {};
-
-            if (_activeSheets[backdropId]) {
-                _activeSheets[backdropId]();
-            }
-
-            _sheetIdCounter++;
-            const depth = _sheetIdCounter;
-            const sheetZ = 7000 + depth * 100;
-            const backdropZ = 6999 + depth * 100;
-            sheet.style.zIndex = sheetZ;
-            backdrop.style.zIndex = backdropZ;
-
-            sheet.style.transform = '';
-            sheet.classList.add('open');
-            backdrop.classList.add('open');
-
-            let startY = 0;
-            let currentY = 0;
-            let isDragging = false;
-            let usingTouch = false;
-            let touchFallback = false;
-
-            const closeSheet = () => {
-                sheet.classList.remove('open');
-                backdrop.classList.remove('open');
-                sheet.style.transform = '';
-                sheet.style.transition = '';
-                sheet.style.zIndex = '';
-                backdrop.style.zIndex = '';
-                backdrop.onclick = null;
-                cleanup();
-                if (_activeSheets[backdropId] === closeSheet) {
-                    delete _activeSheets[backdropId];
-                }
-            };
-
-            backdrop.onclick = closeSheet;
-
-            const onDragStart = (clientY) => {
-                startY = clientY;
-                currentY = clientY;
-                isDragging = true;
-                sheet.style.transition = 'none';
-            };
-
-            const onDragMove = (clientY) => {
-                if (!isDragging) return;
-                const scrollEl = getScrollElement(sheet, scrollElementId);
-                if (scrollEl.scrollTop > 0) return;
-                currentY = clientY;
-                const diff = currentY - startY;
-                if (diff > 0) {
-                    sheet.style.transform = `translateY(${diff}px)`;
-                }
-            };
-
-            const onDragEnd = () => {
-                if (!isDragging) return;
-                isDragging = false;
-                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                if (currentY - startY > 100) {
-                    closeSheet();
-                } else {
-                    sheet.style.transform = 'translateY(0)';
-                }
-            };
-
-            const onPointerDown = (e) => {
-                usingTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
-                onDragStart(e.clientY);
-            };
-
-            const onPointerMove = (e) => {
-                onDragMove(e.clientY);
-            };
-
-            const onPointerUp = () => {
-                onDragEnd();
-            };
-
-            const onPointerCancel = () => {
-                if (!isDragging) return;
-                touchFallback = true;
-                sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-            };
-
-            const onTouchStart = (e) => {
-                if (usingTouch) return;
-                usingTouch = true;
-                onDragStart(e.touches[0].clientY);
-            };
-
-            const onTouchMove = (e) => {
-                if (touchFallback) {
-                    if (!isDragging) return;
-                    const scrollEl = getScrollElement(sheet, scrollElementId);
-                    if (scrollEl.scrollTop > 0) return;
-                    currentY = e.touches[0].clientY;
-                    const diff = currentY - startY;
-                    if (diff > 0) {
-                        sheet.style.transform = `translateY(${diff}px)`;
-                    }
-                    return;
-                }
-                if (usingTouch) return;
-                if (sheet.scrollTop > 0) return;
-                onDragMove(e.touches[0].clientY);
-            };
-
-            const onTouchEnd = () => {
-                if (touchFallback) {
-                    touchFallback = false;
-                    isDragging = false;
-                    if (currentY - startY > 100) {
-                        closeSheet();
-                    } else {
-                        sheet.style.transform = 'translateY(0)';
-                    }
-                    return;
-                }
-                if (usingTouch) return;
-                onDragEnd();
-            };
-
-            const cleanup = () => {
-                touchFallback = false;
-                sheet.removeEventListener('pointerdown', onPointerDown);
-                window.removeEventListener('pointermove', onPointerMove);
-                window.removeEventListener('pointerup', onPointerUp);
-                window.removeEventListener('pointercancel', onPointerCancel);
-                sheet.removeEventListener('touchstart', onTouchStart);
-                sheet.removeEventListener('touchmove', onTouchMove);
-                sheet.removeEventListener('touchend', onTouchEnd);
-                window.removeEventListener('touchend', onTouchEnd);
-            };
-
-            sheet.addEventListener('pointerdown', onPointerDown);
-            window.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('pointerup', onPointerUp);
-            window.addEventListener('pointercancel', onPointerCancel);
-            sheet.addEventListener('touchstart', onTouchStart, { passive: true });
-            sheet.addEventListener('touchmove', onTouchMove, { passive: true });
-            sheet.addEventListener('touchend', onTouchEnd);
-            window.addEventListener('touchend', onTouchEnd);
-
-            _activeSheets[backdropId] = closeSheet;
-            return closeSheet;
-        }
         window.openBottomSheet = openBottomSheet;
 
         function openChangelogDetail(item) {

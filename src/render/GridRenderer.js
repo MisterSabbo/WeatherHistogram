@@ -1,6 +1,7 @@
 import { state } from '../store.js';
 import { getThemeColor, getThemeFont } from '../theme.js';
 import { normalizeY } from '../utils/math.js';
+import { formatHour } from '../utils/time.js';
 
 export function drawGrid(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     ctx.strokeStyle = '#e0e0e0'; 
@@ -104,7 +105,7 @@ export function drawAxes(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR, CHART_HE
         const isOverlapping = sunMarkers.some(markerX => Math.abs(markerX - x) < 25);
         if (isOverlapping) continue;
 
-        const label = d.localHour.toString().padStart(2, '0');
+        const label = formatHour(d.localHour);
 
         // Sombra para legibilidad
         ctx.save();

@@ -1,6 +1,7 @@
 import { state } from '../store.js';
 import { getThemeFont, getThemeColor } from '../theme.js';
 import { getLocale } from '../utils/i18n.js';
+import { hexToRgb } from '../utils/color.js';
 
 export function drawWeatherPhenomena(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 2);
@@ -207,7 +208,7 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             else if (d.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#fbc02d');
             else uvColor = getThemeColor('uvLevels.low', '#4caf50');
 
-            const c = window.hexToRgb ? window.hexToRgb(uvColor) : {r: 0, g: 0, b: 0};
+            const c = hexToRgb(uvColor);
             const bgR = Math.round(255 * 0.8 + c.r * 0.2);
             const bgG = Math.round(255 * 0.8 + c.g * 0.2);
             const bgB = Math.round(255 * 0.8 + c.b * 0.2);
