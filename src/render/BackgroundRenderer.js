@@ -1,7 +1,8 @@
 import { state } from '../store.js';
-import { getThemeFont, getThemeColor } from '../theme.js';
-import { getLocale } from '../utils/i18n.js';
+import { getThemeColor } from '../theme.js';
 import { hexToRgb } from '../utils/color.js';
+import { drawMoon } from './MoonRenderer.js';
+export { drawSunMarkersOnCanvas } from './SunMarkers.js';
 
 export function drawWeatherPhenomena(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 2);
@@ -107,91 +108,6 @@ export function drawStarrySky(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     ctx.restore();
 }
 
-export function drawSunMarkersOnCanvas(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
-    if (!state.hourlyData.length) return;
-    const startTime = state.hourlyData[0].time;
-    const markerColor = '#666666'; // Siempre gris oscuro como los ejes
-
-    ctx.save();
-    ctx.font = `bold 10px ${getThemeFont()}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.lineWidth = 1.5;
-
-    Object.keys(state.sunData).forEach(dateStr => {
-        const sun = state.sunData[dateStr];
-        const sunriseX = ((sun.sunrise - startTime) / 3600000) * PIXELS_PER_HOUR;
-        const sunsetX = ((sun.sunset - startTime) / 3600000) * PIXELS_PER_HOUR;
-
-        const sunriseTime = new Date(sun.sunrise).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-        const sunsetTime = new Date(sun.sunset).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: state.timezone });
-
-        const drawMarker = (x, time, type) => {
-            if (x < viewX - 50 || x > viewX + viewW + 50) return;
-
-            ctx.save();
-            ctx.translate(x, 0); // Posicionado en el borde superior
-            ctx.strokeStyle = markerColor;
-            ctx.fillStyle = markerColor;
-            ctx.lineWidth = 2; // Igual que los ejes
-
-            // Sombra blanca para legibilidad, igual que los ejes
-            ctx.shadowColor = 'white';
-            ctx.shadowBlur = 3;
-
-            // Icon (Line design) - Upside down
-            ctx.beginPath();
-            // Ground line
-            ctx.moveTo(-12, 0); ctx.lineTo(12, 0);
-            
-            // Sun semi-circle (pointing down)
-            ctx.moveTo(6, 0);
-            ctx.arc(0, 0, 6, 0, Math.PI, false);
-            
-            // Rays
-            const rayLen = 4;
-            for (let j = 0; j < 5; j++) {
-                const a = (j * Math.PI) / 4;
-                ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
-                ctx.lineTo(Math.cos(a) * (8 + rayLen), Math.sin(a) * (8 + rayLen));
-            }
-            
-            if (type === 'sunrise') {
-                // Arrow pointing down (into the sun) - Swapped
-                ctx.moveTo(-3, 15); ctx.lineTo(0, 18); ctx.lineTo(3, 15);
-                ctx.moveTo(0, 18); ctx.lineTo(0, 11);
-            } else {
-                // Arrow pointing up (from the sun) - Swapped
-                ctx.moveTo(-3, 14); ctx.lineTo(0, 11); ctx.lineTo(3, 14);
-                ctx.moveTo(0, 11); ctx.lineTo(0, 18);
-            }
-            
-            // Draw white outline for glow
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 4;
-            ctx.stroke();
-
-            // Draw actual icon
-            ctx.strokeStyle = markerColor;
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Time text
-            ctx.font = 'bold 10px Inter';
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = 'white';
-            ctx.strokeText(time, 0, 20); // Add stroke for shadow effect
-            ctx.fillStyle = markerColor;
-            ctx.fillText(time, 0, 20); // Text below icon
-            ctx.restore();
-        };
-
-        drawMarker(sunriseX, sunriseTime, 'sunrise');
-        drawMarker(sunsetX, sunsetTime, 'sunset');
-    });
-    ctx.restore();
-}
-
 export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 2);
     const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 2);
@@ -286,28 +202,6 @@ function drawSun(ctx, x, y, sunColor, rayColor) {
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
-}
-
-function drawMoon(ctx, x, y, moonColor, glowColor) {
-    const radius = 20;
-    ctx.save();
-    const grad = ctx.createRadialGradient(x, y, radius, x, y, radius + 40);
-    grad.addColorStop(0, 'rgba(144, 202, 249, 0.2)');
-    grad.addColorStop(1, 'rgba(144, 202, 249, 0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, radius + 40, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = moonColor;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = glowColor;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0.2 * Math.PI, 1.8 * Math.PI);
-    ctx.quadraticCurveTo(x + radius * 0.5, y, x + radius * Math.cos(0.2 * Math.PI), y + radius * Math.sin(0.2 * Math.PI));
-    ctx.fill();
-
     ctx.restore();
 }
 
