@@ -2,7 +2,7 @@ import { t } from '../utils/i18n.js';
 
 export function getAQIInfo(aqi) {
     if (aqi === null) return { text: '--', rec: '' };
-    let level = 1;
+    let level;
     if (aqi <= 50) level = 1;         // Buena
     else if (aqi <= 100) level = 2;   // Moderada
     else if (aqi <= 150) level = 3;   // Dañina para sensibles

@@ -328,9 +328,7 @@ let weatherCache = new Map();
                     
                     elUviBox.innerText = uv.toFixed(1);
                     
-                    let riskStr = '';
-                    let riskDesc = '';
-                    let riskColor = '';
+                    let riskStr, riskDesc, riskColor;
                     
                     if (uv < 3) {
                         riskStr = 'Bajo'; riskDesc = t('config.spfModalRiskLow'); riskColor = '#22c55e';
@@ -357,7 +355,7 @@ let weatherCache = new Map();
                     document.getElementById('spf-modal-time-val').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? '> 120' : timeToBurn) : '--';
                     document.getElementById('spf-modal-time-desc').innerText = `${t('config.spfModalTimeNone')} ${skinTypes[sType - 1] || "II"}`;
 
-                    let spfText = 'SPF 15';
+                    let spfText;
                     if (uv >= 8) spfText = 'SPF 50+';
                     else if (uv >= 6) spfText = 'SPF 50';
                     else if (uv >= 3) spfText = 'SPF 30+';
@@ -558,12 +556,14 @@ let weatherCache = new Map();
                 }
                 // Keep settings toggle in sync when theme changes externally
                 const origToggleTheme = toggleTheme;
-                toggleTheme = function() {
+                const wrappedToggleTheme = function() {
                     origToggleTheme();
                     if (settingsThemeToggle) {
                         settingsThemeToggle.checked = state.theme === 'dark';
                     }
                 };
+                // eslint-disable-next-line no-func-assign
+                toggleTheme = wrappedToggleTheme;
 
                 // Collapsible sections
                 document.querySelectorAll('.collapsible-trigger').forEach(trigger => {
@@ -1239,7 +1239,6 @@ let weatherCache = new Map();
                     state.lon = loc.lon;
                     state.locationName = loc.name || "Ubicación Guardada";
                     updateLocationUI();
-                    closeMobilePanels();
                     await loadWeather();
                     return;
                 }
@@ -1268,7 +1267,6 @@ let weatherCache = new Map();
                 }
             }
             updateLocationUI();
-            closeMobilePanels();
             await loadWeather();
         }
 
@@ -1336,10 +1334,6 @@ let weatherCache = new Map();
                     name: state.locationName
                 });
             }
-        }
-
-        function closeMobilePanels() {
-            // No longer needed
         }
 
         /**
@@ -1546,8 +1540,7 @@ let weatherCache = new Map();
             if (!state.hourlyData.length) return;
 
             const splitIndex = getSplitIndex();
-            let minimapData;
-            let startIndex = 0;
+            let minimapData, startIndex;
 
             if (minimapMode === 'past') {
                 minimapData = state.hourlyData.slice(0, splitIndex);
@@ -2343,8 +2336,7 @@ let weatherCache = new Map();
             const index = Math.floor(floatIndex);
             const progress = floatIndex - index;
 
-            let d;
-            let interpolatedData = {};
+            let d, interpolatedData;
 
             if (index >= 0 && index < state.hourlyData.length - 1) {
                 const d1 = state.hourlyData[index];
