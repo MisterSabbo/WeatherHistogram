@@ -557,28 +557,46 @@
                 animation: pulse-horizontal-left 2s infinite;
             }
 
-            #metrics-dots {
+            .top-panel-metrics #metrics-dots {
+                position: sticky;
+                right: 10px;
+                bottom: 5px;
+                z-index: 2;
+                flex-shrink: 0;
+                align-self: flex-end;
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                gap: 6px;
-                order: 1;
-                padding: 6px 0 2px;
-                min-height: 16px;
+                gap: 3px;
+                padding: 3px 8px;
+                background: color-mix(in srgb, var(--card-bg) 85%, transparent);
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
+                border-radius: 8px;
+                border: 1px solid var(--grid-color);
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+                pointer-events: none;
+                margin-left: auto;
             }
-            #metrics-dots .metric-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: var(--grid-color);
-                transition: background 0.3s, transform 0.3s;
+            .top-panel-metrics #metrics-dots .metric-dot {
+                width: 12px;
+                height: 3px;
+                border-radius: 2px;
+                background: var(--text-secondary);
+                opacity: 0.4;
+                transition: opacity 0.3s, background 0.3s;
                 flex-shrink: 0;
-                cursor: default;
             }
-            #metrics-dots .metric-dot.active {
+            .top-panel-metrics #metrics-dots .metric-dot.active {
                 background: var(--accent-precip);
-                transform: scale(1.3);
-                box-shadow: 0 0 6px var(--accent-precip);
+                opacity: 1;
+            }
+            .top-panel-metrics #metrics-dots .metric-page-counter {
+                font-size: 0.5rem;
+                color: var(--text-secondary);
+                margin-left: 4px;
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+                line-height: 1;
             }
         }
 

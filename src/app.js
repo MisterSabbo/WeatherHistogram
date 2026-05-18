@@ -1163,8 +1163,10 @@ let weatherCache = new Map();
                         if (metricsDots) {
                             if (!hasOverflow) {
                                 metricsDots.innerHTML = '';
+                                metricsDots.style.display = 'none';
                                 return;
                             }
+                            metricsDots.style.display = '';
                             const pageWidth = metricsContainer.clientWidth;
                             const totalPages = Math.max(1, Math.ceil(metricsContainer.scrollWidth / pageWidth));
                             const currentPage = Math.round(metricsContainer.scrollLeft / pageWidth);
@@ -1173,7 +1175,7 @@ let weatherCache = new Map();
                                 html += '<span class="metric-dot' + (i === currentPage ? ' active' : '') + '"></span>';
                             }
                             if (totalPages > 1) {
-                                html += '<span style="font-size:0.55rem;color:var(--text-secondary);margin-left:4px;font-weight:600;font-variant-numeric:tabular-nums;">' + (currentPage + 1) + '/' + totalPages + '</span>';
+                                html += '<span class="metric-page-counter">' + (currentPage + 1) + '/' + totalPages + '</span>';
                             }
                             metricsDots.innerHTML = html;
                         }
