@@ -1707,49 +1707,11 @@
             color: #fff;
         }
 
-        /* YIP Chips Scroll Wrapper */
         .yip-chips-scroll-wrapper {
-            position: relative;
             flex: 1;
             display: flex;
             align-items: center;
             min-width: 0;
-        }
-
-        .yip-scroll-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 2;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 1px solid var(--grid-color);
-            background: var(--card-bg);
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            touch-action: manipulation;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-            transition: opacity 0.2s;
-        }
-        .yip-scroll-btn:hover {
-            background: var(--input-bg);
-        }
-        .yip-scroll-btn:active {
-            transform: translateY(-50%) scale(0.9);
-        }
-        .yip-scroll-btn.visible {
-            display: flex;
-        }
-        .yip-scroll-left {
-            left: 2px;
-        }
-        .yip-scroll-right {
-            right: 2px;
         }
 
         /* YIP Location Dots */

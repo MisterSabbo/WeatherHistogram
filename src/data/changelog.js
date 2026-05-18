@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.12c",
+    "changes": [
+      "Remove: YIP location selector scroll buttons (◀▶) removed — the pagination dots alone are sufficient for indicating overflow and current position."
+    ]
+  },
+  {
     "version": "1.8.12b",
     "changes": [
       "Fix: bottom-sheet scroll guard now checks the correct scrollable element — added missing IDs (info-sheet-content, changelog-scroll-content, changelog-detail-scroll-content) and removed stale yip-param-options-container reference (populateParamSheet appends to sheet, not the container)."
