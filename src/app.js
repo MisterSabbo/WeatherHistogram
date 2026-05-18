@@ -28,6 +28,10 @@ import { initFavoritesModal } from './ui/FavoritesModal.js';
 import { initYearInPixels } from './ui/YearInPixels.js';
 import { openBottomSheet, closeBottomSheet, onSheetClose } from './ui/BottomSheet.js';
 import { initScrollIndicator } from './ui/ScrollIndicator.js';
+import { initPullToRefresh } from './ui/PullToRefresh.js';
+import { initSpfModal } from './ui/SpfModal.js';
+import { generateAlerts, renderAlerts } from './utils/AlertEngine.js';
+import { initTooltipManager } from './ui/TooltipManager.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -136,115 +140,10 @@ let weatherCache = new Map();
             updateNetworkStatus();
 
                        // Pull To Refresh Logic
-            let ptrStartY = 0;
-            let ptrStartX = 0;
-            let ptrDist = 0;
-            const ptrIndicator = document.getElementById('ptr-indicator');
-            const appWrapper = document.getElementById('app-wrapper');
-
-            document.addEventListener('touchstart', (e) => {
-                const hasOverlayOpen = document.querySelectorAll('.yip-sheet-backdrop.open, #info-modal[style*="display: flex"], #favorites-modal[style*="display: flex"], #map-location-modal[style*="display: flex"], #prompt-modal[style*="display: flex"], #changelog-modal.open, #yip-modal[style*="display: flex"]').length > 0;
-                if (e.touches.length === 1 && !hasOverlayOpen && !e.target.closest('#search-results')) {
-                    ptrStartY = e.touches[0].clientY;
-                    ptrStartX = e.touches[0].clientX;
-                    ptrDist = 0;
-                } else {
-                    ptrStartY = 0;
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1 && ptrStartY > 0) {
-                    const currentY = e.touches[0].clientY;
-                    const currentX = e.touches[0].clientX;
-                    
-                    // If horizontal movement is greater than vertical, cancel PTR
-                    if (Math.abs(currentX - ptrStartX) > Math.abs(currentY - ptrStartY)) {
-                        ptrStartY = 0;
-                        ptrDist = 0;
-                        if (ptrIndicator) ptrIndicator.style.transform = `translateY(-100%)`;
-                        if (appWrapper) appWrapper.style.transform = `translateY(0)`;
-                        return;
-                    }
-
-                    if (currentY > ptrStartY) { 
-                        // Vertical dragging down -> prevent native browser scroll to avoid micro-scrolling elastic bounce
-                        if (e.cancelable) e.preventDefault();
-                        
-                        ptrDist = currentY - ptrStartY;
-                        // Visual feedback
-                        if (ptrDist > 0 && ptrDist < 200 && !state.isFetching) {
-                            let visualDist = Math.min(75, ptrDist / 2.5); // Max pull down is 75px
-                            if (ptrIndicator) {
-                                ptrIndicator.style.transition = 'none';
-                                ptrIndicator.style.transform = `translateY(${visualDist - 75}px)`;
-                                const ptrIcon = document.getElementById('ptr-icon');
-                                if (ptrIcon) {
-                                    const rotation = Math.min(360, (visualDist / 75) * 360);
-                                    ptrIcon.style.transform = `rotate(${rotation}deg)`;
-                                    ptrIcon.style.opacity = Math.min(1, visualDist / 40);
-                                }
-                            }
-                            if (appWrapper) {
-                                appWrapper.style.transition = 'none';
-                                appWrapper.style.transform = `translateY(${visualDist}px)`;
-                            }
-                        }
-                    } else {
-                        ptrDist = 0; 
-                    }
-                }
-            }, { passive: false }); // Needs to be false to prevent default
-
-            document.addEventListener('touchend', () => {
-                const resetUI = () => {
-                    const ptrIcon = document.getElementById('ptr-icon');
-                    if (ptrIcon) {
-                        ptrIcon.dataset.spinning = 'false';
-                        if (ptrIcon.dataset.spinInterval) {
-                            clearInterval(parseInt(ptrIcon.dataset.spinInterval));
-                        }
-                    }
-                    if (ptrIndicator) {
-                        ptrIndicator.style.transition = 'transform 0.3s ease-out';
-                        ptrIndicator.style.transform = `translateY(-100%)`;
-                    }
-                    if (appWrapper) {
-                        appWrapper.style.transition = 'transform 0.3s ease-out';
-                        appWrapper.style.transform = `translateY(0)`;
-                    }
-                };
-
-                if (ptrDist > 60 && state.lat && state.lon && !state.isFetching) {
-                    const ptrIcon = document.getElementById('ptr-icon');
-                    if (ptrIcon) {
-                        ptrIcon.style.transition = 'transform 0.5s linear';
-                        // Keep rotating
-                        ptrIcon.dataset.spinning = 'true';
-                        let spinDeg = 360;
-                        const spinInterval = setInterval(() => {
-                           if (ptrIcon.dataset.spinning !== 'true') {
-                               clearInterval(spinInterval);
-                               return;
-                           }
-                           spinDeg += 360;
-                           ptrIcon.style.transform = `rotate(${spinDeg}deg)`;
-                        }, 500);
-                        // Save interval id to stop it later
-                        ptrIcon.dataset.spinInterval = spinInterval;
-                    }
-
-                    if (ptrIndicator) {
-                        ptrIndicator.style.transition = 'transform 0.2s ease-out';
-                        ptrIndicator.style.transform = `translateY(0px)`;
-                    }
-                    if (appWrapper) {
-                        appWrapper.style.transition = 'transform 0.2s ease-out';
-                        appWrapper.style.transform = `translateY(75px)`;
-                    }
+            initPullToRefresh({
+                onRefresh: async () => {
                     weatherCache.clear();
-                    
-                    // Clear canvases to provide visual feedback of refresh
+
                     tiles.forEach(t => {
                         t.drawn = false;
                         t.ctx.clearRect(0, 0, t.canvas.width, t.canvas.height);
@@ -260,33 +159,24 @@ let weatherCache = new Map();
                     if (minimapCtx && minimapCanvas) {
                         minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
                     }
-                    
-                    const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
-                    const doRefresh = async () => {
-                        document.getElementById('app-wrapper').classList.add('loading');
-                        document.getElementById('error-msg').style.display = 'none';
-                        try {
-                            if (originalLocation) {
-                                const results = await geoService.searchLocation(originalLocation, 1);
-                                if (results.length > 0) {
-                                    state.lat = results[0].latitude;
-                                    state.lon = results[0].longitude;
-                                    state.locationName = results[0].name + (results[0].admin1 ? `, ${results[0].admin1}` : "");
-                                }
-                            }
-                            await loadWeather();
-                        } finally {
-                            resetUI();
-                        }
-                    };
-                    doRefresh();
-                } else {
-                    resetUI();
-                }
 
-                ptrStartY = 0;
-                ptrStartX = 0;
-                ptrDist = 0;
+                    const originalLocation = state.locationName ? state.locationName.replace(/\*$/, '') : '';
+                    document.getElementById('app-wrapper').classList.add('loading');
+                    document.getElementById('error-msg').style.display = 'none';
+                    try {
+                        if (originalLocation) {
+                            const results = await geoService.searchLocation(originalLocation, 1);
+                            if (results.length > 0) {
+                                state.lat = results[0].latitude;
+                                state.lon = results[0].longitude;
+                                state.locationName = results[0].name + (results[0].admin1 ? `, ${results[0].admin1}` : "");
+                            }
+                        }
+                        await loadWeather();
+                    } catch (e) {
+                        console.error('PTR refresh failed:', e);
+                    }
+                }
             });
 
             // Block zoom/pinch on iOS
@@ -297,67 +187,7 @@ let weatherCache = new Map();
             }, { passive: false });
 
             // SPF Modal Logic
-            const spfInfoContainer = document.getElementById('spf-info-container');
-            const spfModal = document.getElementById('spf-modal');
-            const closeSpfBtn = document.getElementById('close-spf-btn');
-            const spfSettingsBtn = document.getElementById('spf-settings-btn');
-            const infoModal = document.getElementById('info-modal');
-
-            if (spfInfoContainer && spfModal) {
-                spfInfoContainer.addEventListener('click', () => {
-                    const uv = parseFloat(spfInfoContainer.dataset.uv || 0);
-                    
-                    const elUviBox = document.getElementById('spf-modal-uvi-box');
-                    const elUviTitle = document.getElementById('spf-modal-uvi-title');
-                    const elUviDesc = document.getElementById('spf-modal-uvi-desc');
-                    
-                    elUviBox.innerText = uv.toFixed(1);
-                    
-                    let riskStr, riskDesc, riskColor;
-                    
-                    if (uv < 3) {
-                        riskStr = 'Bajo'; riskDesc = t('config.spfModalRiskLow'); riskColor = '#22c55e';
-                    } else if (uv < 6) {
-                        riskStr = 'Moderado'; riskDesc = t('config.spfModalRiskMod'); riskColor = '#eab308';
-                    } else if (uv < 8) {
-                        riskStr = 'Alto'; riskDesc = t('config.spfModalRiskHigh'); riskColor = '#f97316';
-                    } else if (uv < 11) {
-                        riskStr = 'Muy Alto'; riskDesc = t('config.spfModalRiskVHigh'); riskColor = '#ef4444';
-                    } else {
-                        riskStr = 'Extremo'; riskDesc = t('config.spfModalRiskExt'); riskColor = '#a855f7';
-                    }
-                    
-                    elUviBox.style.backgroundColor = riskColor;
-                    elUviTitle.style.color = riskColor;
-                    elUviTitle.innerText = `${t('config.spfModalTitleUVI')}: ${riskStr}`;
-                    elUviDesc.innerText = riskDesc;
-                    
-                    const skinTypes = ["I", "II", "III", "IV", "V", "VI"];
-                    const skinBaseMins = [67, 100, 200, 300, 400, 600];
-                    const sType = state.skinType || 2;
-                    
-                    const timeToBurn = uv > 0 ? Math.round(skinBaseMins[sType - 1] / uv) : 0;
-                    document.getElementById('spf-modal-time-val').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? '> 120' : timeToBurn) : '--';
-                    document.getElementById('spf-modal-time-desc').innerText = `${t('config.spfModalTimeNone')} ${skinTypes[sType - 1] || "II"}`;
-
-                    let spfText;
-                    if (uv >= 8) spfText = 'SPF 50+';
-                    else if (uv >= 6) spfText = 'SPF 50';
-                    else if (uv >= 3) spfText = 'SPF 30+';
-                    else if (uv > 0 && sType <= 2) spfText = 'SPF 15';
-                    else spfText = '--';
-                    
-                    document.getElementById('spf-modal-rec-val').innerText = spfText;
-                    document.getElementById('spf-modal-rec-desc').innerText = t('config.spfModalReapply');
-                    
-                    openBottomSheet('spf-modal');
-                });
-
-                spfSettingsBtn.addEventListener('click', () => {
-                    closeBottomSheet('spf-modal');
-                    openBottomSheet('info-modal', 'info-sheet-backdrop', 'info-sheet-content');
-                });
-            }
+            initSpfModal();
 
             const pollenWarningIcon = document.getElementById('pollen-warning-icon');
             const pollenModal = document.getElementById('pollen-modal');
@@ -843,74 +673,8 @@ let weatherCache = new Map();
 
                 // Removed obsolete suggestion box closing logic
 
-                // Header tooltips hover reliability (Desktop)
-                document.querySelectorAll('.info-icon, .location-group').forEach(el => {
-                    el.addEventListener('mouseenter', () => {
-                        if (window.innerWidth >= 600) {
-                            const container = el.classList.contains('info-icon') ? el.closest('.data-value') : el;
-                            const tt = container.querySelector('.custom-tooltip');
-                            if (tt) {
-                                // For location-group, only show if text is truncated
-                                if (el.classList.contains('location-group')) {
-                                    const locName = document.getElementById('location-name');
-                                    const summary = document.getElementById('weather-summary');
-                                    const isTruncated = (locName.scrollWidth > locName.clientWidth) || (summary.scrollWidth > summary.clientWidth);
-                                    if (isTruncated) {
-                                        tt.style.display = 'block';
-                                    }
-                                } else {
-                                    tt.style.display = 'block';
-                                }
-                            }
-                        }
-                    });
-                    el.addEventListener('mouseleave', () => {
-                        if (window.innerWidth >= 600) {
-                            const container = el.classList.contains('info-icon') ? el.closest('.data-value') : el;
-                            const tt = container.querySelector('.custom-tooltip');
-                            if (tt) tt.style.display = '';
-                        }
-                    });
-                });
-
-                // Tooltips en móvil al tocar el valor o la ubicación
-                document.querySelectorAll('.data-value, .location-group').forEach(val => {
-                    val.addEventListener('click', (e) => {
-                        if (window.innerWidth < 600) {
-                            const tooltip = val.querySelector('.custom-tooltip');
-                            if (tooltip) {
-                                // For location-group, only show if text is truncated
-                                if (val.classList.contains('location-group')) {
-                                    const locName = document.getElementById('location-name');
-                                    const summary = document.getElementById('weather-summary');
-                                    const isTruncated = (locName.scrollWidth > locName.clientWidth) || (summary.scrollWidth > summary.clientWidth);
-                                    if (!isTruncated) return;
-                                }
-                                const isVisible = tooltip.style.display === 'block';
-                                // Cerrar otros tooltips
-                                document.querySelectorAll('.custom-tooltip').forEach(t => {
-                                    t.style.display = '';
-                                    t.style.position = '';
-                                    t.style.top = '';
-                                    t.style.left = '';
-                                    t.style.transform = '';
-                                    t.style.zIndex = '';
-                                });
-                                
-                                if (!isVisible) {
-                                    tooltip.style.display = 'block';
-                                    const rect = val.getBoundingClientRect();
-                                    tooltip.style.position = 'fixed';
-                                    tooltip.style.top = (rect.bottom + 10) + 'px';
-                                    tooltip.style.left = '50%';
-                                    tooltip.style.transform = 'translateX(-50%)';
-                                    tooltip.style.zIndex = '9999';
-                                }
-                                e.stopPropagation();
-                            }
-                        }
-                    });
-                });
+                // Tooltip Manager (desktop hover + mobile click)
+                initTooltipManager();
 
                 // Iniciamos con un timeout de seguridad para la carga
                 setTimeout(() => {
@@ -1101,19 +865,6 @@ let weatherCache = new Map();
                         }
                     });
                 }
-
-                document.addEventListener('click', () => {
-                    if (window.innerWidth < 600) {
-                        document.querySelectorAll('.custom-tooltip').forEach(t => {
-                            t.style.display = '';
-                            t.style.position = '';
-                            t.style.top = '';
-                            t.style.left = '';
-                            t.style.transform = '';
-                            t.style.zIndex = '';
-                        });
-                    }
-                });
 
                 const metricsContainer = document.querySelector('.top-panel-metrics');
                 const scrollIndLeft = document.querySelector('.scroll-indicator-left');
@@ -2374,89 +2125,8 @@ let weatherCache = new Map();
             timeDisplay.querySelector('.date-sub').innerText = isToday ? `${t('topPanel.today')}, ${dateStr}` : dateStr;
 
             // Generate Alerts (based on current data + next 12h)
-            const alerts = [];
-            const alertTypes = new Set();
-            let alertLevel = 0; // 0: none, 1: yellow, 2: orange, 3: red
-            
-            for(let i = index; i < Math.min(state.hourlyData.length, index + 12); i++) {
-                const hourData = state.hourlyData[i];
-                if (!hourData) continue;
-                
-                // Temp
-                if (hourData.temp >= 38 && !alertTypes.has("temp")) {
-                    alerts.push({ type: "temp", level: 3, msg: "Calor extremo (>38°C)" });
-                    alertTypes.add("temp");
-                    alertLevel = Math.max(alertLevel, 3);
-                } else if (hourData.temp >= 35 && !alertTypes.has("temp")) {
-                    alerts.push({ type: "temp", level: 2, msg: "Altas temperaturas (>35°C)" });
-                    alertTypes.add("temp");
-                    alertLevel = Math.max(alertLevel, 2);
-                } else if (hourData.temp <= -5 && !alertTypes.has("temp")) {
-                    alerts.push({ type: "temp", level: 2, msg: "Frío extremo (<-5°C)" });
-                    alertTypes.add("temp");
-                    alertLevel = Math.max(alertLevel, 2);
-                }
-
-                // Wind
-                if (hourData.gusts >= 90 && !alertTypes.has("wind")) {
-                    alerts.push({ type: "wind", level: 3, msg: "Vientos huracanados (>90km/h)" });
-                    alertTypes.add("wind");
-                    alertLevel = Math.max(alertLevel, 3);
-                } else if (hourData.gusts >= 70 && !alertTypes.has("wind")) {
-                    alerts.push({ type: "wind", level: 2, msg: "Rachas muy fuertes (>70km/h)" });
-                    alertTypes.add("wind");
-                    alertLevel = Math.max(alertLevel, 2);
-                }
-
-                // Precip
-                if (hourData.precip >= 15 && !alertTypes.has("rain")) {
-                    alerts.push({ type: "rain", level: 3, msg: "Lluvias torrenciales (>15mm/h)" });
-                    alertTypes.add("rain");
-                    alertLevel = Math.max(alertLevel, 3);
-                } else if (hourData.precip >= 8 && !alertTypes.has("rain")) {
-                    alerts.push({ type: "rain", level: 2, msg: "Lluvias intensas (>8mm/h)" });
-                    alertTypes.add("rain");
-                    alertLevel = Math.max(alertLevel, 2);
-                }
-                
-                // UV
-                if (hourData.uv >= 11 && !alertTypes.has("uv")) {
-                    alerts.push({ type: "uv", level: 3, msg: "Índice UV Extremo (≥11)" });
-                    alertTypes.add("uv");
-                    alertLevel = Math.max(alertLevel, 3);
-                }
-
-                // Snow
-                const isSnow = [71, 73, 75, 77, 85, 86].includes(hourData.weatherCode);
-                if (isSnow && hourData.precip >= 2 && !alertTypes.has("snow")) {
-                    alerts.push({ type: "snow", level: 2, msg: "Nevadas intensas" });
-                    alertTypes.add("snow");
-                    alertLevel = Math.max(alertLevel, 2);
-                }
-            }
-
-            const alertContainer = document.getElementById('alerts-container');
-            const alertTooltip = document.getElementById('alerts-tooltip');
-            
-            if (alerts.length > 0 && alertContainer && alertTooltip) {
-                alertContainer.style.display = 'flex';
-                
-                let alertHtml = `<div style="font-weight:bold; margin-bottom:5px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:3px; color:var(--text-primary);">${t('topPanel.activeAlerts')}</div>`;
-                
-                let iconColor = '#fbc02d'; // Yellow
-                if (alertLevel === 3) iconColor = '#d32f2f'; // Red
-                else if (alertLevel === 2) iconColor = '#f57c00'; // Orange
-                
-                alertContainer.querySelector('.material-symbols-outlined').style.color = iconColor;
-
-                alerts.forEach(a => {
-                    let c = a.level === 3 ? '#ef5350' : a.level === 2 ? '#ff9800' : '#ffca28';
-                    alertHtml += `<div style="display:flex; align-items:center; gap:6px; margin:4px 0; color:var(--text-primary);"><span style="min-width:8px; width:8px; height:8px; border-radius:50%; background:${c};"></span> <span style="font-size:0.85rem; text-align:left;">${a.msg}</span></div>`;
-                });
-                alertTooltip.innerHTML = alertHtml;
-            } else if (alertContainer) {
-                alertContainer.style.display = 'none';
-            }
+            const { alerts, alertLevel } = generateAlerts(state.hourlyData, index)
+            renderAlerts(alerts, alertLevel)
 
             document.getElementById('weather-summary').innerText = getWeatherDescription(d.weatherCode);
 

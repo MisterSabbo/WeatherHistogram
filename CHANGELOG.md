@@ -2,6 +2,15 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.14] - 2026-05-18
+### Refactoring
+- **Low-Coupling Feature Extraction (Phase 4)**: Extracted 4 self-contained modules from `src/app.js`:
+  - `src/ui/PullToRefresh.js` — Pull-to-refresh touch handling with visual feedback (pull indicator, rotation icon, spin animation). Exposes `initPullToRefresh({ onRefresh })` → `{ destroy }`.
+  - `src/ui/SpfModal.js` — SPF/sun protection bottom sheet with UV risk, skin type time-to-burn calculation, and SPF recommendation. Exposes `{ openSpfSheet, closeSpfSheet, initSpfModal }`.
+  - `src/utils/AlertEngine.js` — Weather alert generation scanning next 12 hours for extreme temp, wind, rain, UV, and snow conditions. Exposes `{ generateAlerts, renderAlerts }`.
+  - `src/ui/TooltipManager.js` — Desktop hover and mobile click tooltip interactions for header `.custom-tooltip` elements. Exposes `{ showTooltip, hideTooltip, initTooltipManager }`.
+  - All modules have unit tests (Vitest + jsdom). Zero visual regression. `app.js` reduced by ~220 lines.
+
 ## [v1.8.13b] - 2026-05-18
 ### Bug Fixes
 - **Settings panel positioned at bottom-left on desktop**: Fixed CSS cascade order regression introduced in v1.8.13a — `year-in-pixels.css` (`.yip-bottom-sheet`) was imported after `modals.css` (`.info-sheet`), reversing the original cascade and causing `.yip-bottom-sheet`'s `translateY` to override `.info-sheet`'s desktop media query (`translateX`). Reordered `@import` in `style.css` so `year-in-pixels.css` comes before `modals.css`, restoring the correct cascade.

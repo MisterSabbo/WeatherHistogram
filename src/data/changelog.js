@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.14",
+    "changes": [
+      "Refactor: Extracted PullToRefresh, SpfModal, AlertEngine, and TooltipManager into separate modules — PTR touch handling moved to src/ui/PullToRefresh.js, SPF modal logic to src/ui/SpfModal.js, weather alert generation/rendering to src/utils/AlertEngine.js, and header tooltip interactions to src/ui/TooltipManager.js. All four modules have unit tests. No functional regression."
+    ]
+  },
+  {
     "version": "1.8.13b",
     "changes": [
       "Fix: Settings panel positioned at bottom-left on desktop — reordered @import in style.css so year-in-pixels.css comes before modals.css, restoring the correct cascade where .info-sheet's desktop media query (translateX) overrides .yip-bottom-sheet's default (translateY)."
