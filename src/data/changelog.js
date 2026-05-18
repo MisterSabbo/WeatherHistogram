@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.12b",
+    "changes": [
+      "Fix: bottom-sheet scroll guard now checks the correct scrollable element — added missing IDs (info-sheet-content, changelog-scroll-content, changelog-detail-scroll-content) and removed stale yip-param-options-container reference (populateParamSheet appends to sheet, not the container)."
+    ]
+  },
+  {
     "version": "1.8.12a",
     "changes": [
       "Metrics row pagination dots: Added dot indicators below the horizontally scrollable metrics cards on mobile, making it obvious that additional metrics are available by swiping.",

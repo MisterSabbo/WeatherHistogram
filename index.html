@@ -1368,7 +1368,7 @@
       <button id="close-info-btn" class="sheet-close-btn">
         <span class="material-symbols-outlined" style="font-size:18px">close</span>
       </button>
-      <div class="info-sheet-content">
+      <div id="info-sheet-content" class="info-sheet-content">
 
         <!-- About -->
         <div class="info-section">
@@ -1376,7 +1376,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.8.12a</span>
+              <span id="app-version-label">v1.8.12b</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1589,7 +1589,7 @@
         <h3 id="changelog-title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">Novedades</h3>
         <button id="changelog-close-btn" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 8px;"><span class="material-symbols-outlined">close</span></button>
       </div>
-      <div style="padding: 20px 24px calc(20px + env(safe-area-inset-bottom)) 24px; overflow-y: auto; flex: 1; position: relative;">
+      <div id="changelog-scroll-content" style="padding: 20px 24px calc(20px + env(safe-area-inset-bottom)) 24px; overflow-y: auto; flex: 1; position: relative;">
         <!-- The Timeline line -->
         <div style="position: absolute; left: 35px; top: 20px; bottom: 20px; width: 2px; background: var(--grid-color); z-index: var(--z-base);"></div>
         <div id="changelog-list" style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 24px; list-style: none; margin: 0; padding: 0;"></div>
@@ -1604,7 +1604,7 @@
     <div id="changelog-detail-backdrop" class="yip-sheet-backdrop" style="z-index: var(--z-sheet);"></div>
     <div id="changelog-detail-sheet" class="yip-bottom-sheet" style="padding: 0; display: flex; flex-direction: column;">
         <div id="changelog-detail-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 12px auto; cursor: grab;"></div>
-        <div style="padding: 0 24px 24px 24px; overflow-y: auto; flex: 1;">
+        <div id="changelog-detail-scroll-content" style="padding: 0 24px 24px 24px; overflow-y: auto; flex: 1;">
           <h3 id="changelog-detail-title" style="margin-bottom: 4px; color: var(--text-primary); font-size: 1.25rem;"></h3>
           <p id="changelog-detail-subtitle" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;"></p>
           <ul id="changelog-detail-list" style="margin: 0; padding-left: 20px; color: var(--text-primary); line-height: 1.6; font-size: 0.95rem;"></ul>

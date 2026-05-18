@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.12b] - 2026-05-18
+### Bug Fixes
+- **Bottom-sheet scroll guard broken on all scrollable sheets**: Fixed `getScrollElement()` resolving to the wrong element — the info-sheet's `.info-sheet-content` was a class (not an ID), so `document.getElementById()` fell back to the sheet itself (which has `overflow:hidden`; `scrollTop` always 0). Changelog sheets had no `scrollElementId` at all — same fallback issue. YIP param sheet passed a valid ID but `populateParamSheet()` appends options to the sheet itself (via `.yip-bottom-sheet-body`), leaving the target container empty. Added proper IDs to all scrollable child elements and removed the stale YIP param container reference so the guard correctly reads `scrollTop` from the element that actually scrolls.
+
 ## [v1.8.12a] - 2026-05-17
 ### UX Improvements
 - **Metrics row pagination dots**: Added dot indicators below the horizontally scrollable metrics cards on mobile, making it obvious that additional metrics are available by swiping. Reuses the same dot pattern as the YIP location chips.

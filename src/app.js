@@ -2936,7 +2936,7 @@ let weatherCache = new Map();
                 listEl.appendChild(li);
             }
             
-            openBottomSheet('changelog-detail-sheet', 'changelog-detail-backdrop');
+            openBottomSheet('changelog-detail-sheet', 'changelog-detail-backdrop', 'changelog-detail-scroll-content');
         }
 
         function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn) {
@@ -3023,7 +3023,7 @@ let weatherCache = new Map();
                 listEl.appendChild(li);
             });
 
-            const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop');
+            const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop', 'changelog-scroll-content');
 
             closeBtn.onclick = () => closeSheet();
             updateBtn.onclick = async () => {

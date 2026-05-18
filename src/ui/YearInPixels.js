@@ -22,7 +22,7 @@ export function initYearInPixels() {
   if (paramDisplay) {
     paramDisplay.addEventListener('click', () => {
       populateParamSheet();
-      _closeSheet = window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop', 'yip-param-options-container');
+      _closeSheet = window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop');
     });
   }
 
