@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.13] - 2026-05-18
+### Tooling Infrastructure
+- **TypeScript JSDoc checking**: Added `tsconfig.json` with `checkJs: true` for incremental type-checking via JSDoc annotations. New `npm run typecheck` script to verify type correctness.
+- **Vitest test runner**: Added `vitest.config.ts` with jsdom environment. New `npm test` and `npm test:watch` scripts for running unit tests.
+
 ## [v1.8.12f] - 2026-05-18
 ### Bug Fixes
 - **Bottom-sheet clickable elements broken on desktop**: Removed `setPointerCapture()` in `openBottomSheet()` — pointer capture redirected `pointerup` to the sheet element, breaking the browser's target-matching for `click` event synthesis, making all interactive elements (buttons, skin cards, lang cards, sliders, theme options, confirm buttons) unresponsive inside bottom sheets on desktop. The window-level listeners already handle drag-to-dismiss, so the capture was redundant.

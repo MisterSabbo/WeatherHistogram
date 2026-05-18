@@ -1,5 +1,12 @@
 export const changelogData = [
   {
+    "version": "1.8.13",
+    "changes": [
+      "Tooling: Added TypeScript JSDoc checking via tsconfig.json — npm run typecheck to verify type correctness.",
+      "Tooling: Added Vitest test runner with jsdom environment — npm test / npm test:watch for unit tests."
+    ]
+  },
+  {
     "version": "1.8.12f",
     "changes": [
       "Fix: bottom-sheet clickable elements not working on desktop — removed setPointerCapture that prevented click events from firing on interactive elements inside bottom sheets."
