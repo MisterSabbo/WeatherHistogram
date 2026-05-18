@@ -1,5 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.8.16",
+    "changes": [
+      "Fix: Minimap invisible after auto mode-switch (past/future) — MINIMAP_HEIGHT now stored as constructor property in MinimapRenderer, removing dependency from method parameters. Triggered when updateViewport was called without MINIMAP_HEIGHT, causing NaN canvas height on auto-switch via setMode → draw. No functional regression."
+    ]
+  },
+  {
+    "version": "1.8.15",
+    "changes": [
+      "Refactor (Phase 5): Extracted MinimapRenderer (past/future modes, caching, click-to-scroll), ChangelogModal (init, open, render with detail navigation), PWA helpers (registerSW, handleInstallPrompt, checkAppVersion, clearCacheAndReload), and debounce utility into separate modules. All have unit tests. 4 new files. No functional regression."
+    ]
+  },
+  {
     "version": "1.8.14",
     "changes": [
       "Refactor: Extracted PullToRefresh, SpfModal, AlertEngine, and TooltipManager into separate modules — PTR touch handling moved to src/ui/PullToRefresh.js, SPF modal logic to src/ui/SpfModal.js, weather alert generation/rendering to src/utils/AlertEngine.js, and header tooltip interactions to src/ui/TooltipManager.js. All four modules have unit tests. No functional regression."

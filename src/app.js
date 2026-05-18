@@ -13,10 +13,11 @@ import { generateMockData } from './services/MockData.js';
 import { getAQIInfo, getPollenText, getAggregatedPollenLevel, getPollenLevelByType } from './services/AqiManager.js';
 import { drawAQIRadar } from './ui/AqiRadar.js';
 import { drawPollenRadar } from './ui/PollenRadar.js';
-import { changelogData } from './data/changelog.js';
 import { getWeatherDescription } from './utils/weather.js';
+import { showChangelogModal, initChangelog } from './ui/ChangelogModal.js';
+import { registerSW, handleInstallPrompt, showUpdateToast, checkAppVersion, clearCacheAndReload } from './utils/pwa.js';
 import { hexToRgb } from './utils/color.js';
-import { dateToX, getSplitIndex, formatTooltipTime } from './utils/time.js';
+import { dateToX, formatTooltipTime } from './utils/time.js';
 import { normalizeY } from './utils/math.js';
 import { drawHumidity, drawWind, drawTemperature } from './render/MetricsRenderer.js';
 import { drawClouds, drawPrecipitation, drawPrecipitationProbability } from './render/AtmosphereRenderer.js';
@@ -32,6 +33,7 @@ import { initPullToRefresh } from './ui/PullToRefresh.js';
 import { initSpfModal } from './ui/SpfModal.js';
 import { generateAlerts, renderAlerts } from './utils/AlertEngine.js';
 import { initTooltipManager } from './ui/TooltipManager.js';
+import { MinimapRenderer } from './render/MinimapRenderer.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
 const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
@@ -43,35 +45,12 @@ let weatherCache = new Map();
 
         let minimapCanvas, minimapCtx;
         let fixedOverlayCanvas, fixedOverlayCtx;
-        let minimapCacheCanvas = null;
         let tiles = [];
         let cachedTileHeight = 0;
         let TILE_WIDTH = window.innerWidth < 600 ? 720 : 1440;
-        let scrollContainer, minimapViewport, themeToggle;
-        let isMinimapDragging = false;
-        let minimapMode = 'future'; // 'past' or 'future'
-        
-        const setMinimapMode = (mode, isUserInteraction = false) => {
-            const hasChanged = minimapMode !== mode;
-            minimapMode = mode;
-            
-            if (isUserInteraction) {
-                if (mode === 'future') {
-                    centerOnCurrentTime();
-                } else if (mode === 'past') {
-                    // Scroll to the very beginning of the data
-                    scrollContainer.scrollLeft = 0;
-                }
-            }
-
-            if (hasChanged) {
-                requestAnimationFrame(() => {
-                    minimapCacheCanvas = null;
-                    updateMinimapViewport();
-                    drawMinimap();
-                });
-            }
-        };
+        let scrollContainer, themeToggle;
+        let minimapRenderer;
+        let onClearCache;
 
         let searchTimeout = null;
         let ticking = false;
@@ -218,12 +197,19 @@ let weatherCache = new Map();
 
             minimapCanvas = document.getElementById('minimap-canvas');
             minimapCtx = minimapCanvas.getContext('2d', { alpha: true });
-
             fixedOverlayCanvas = document.getElementById('fixed-overlay-canvas');
-            fixedOverlayCtx = fixedOverlayCanvas.getContext('2d');
-
+            fixedOverlayCtx = fixedOverlayCanvas.getContext('2d', { alpha: true });
             scrollContainer = document.getElementById('scroll-container');
-            minimapViewport = document.getElementById('minimap-viewport');
+            const minimapViewport = document.getElementById('minimap-viewport');
+            minimapRenderer = new MinimapRenderer({
+                canvas: minimapCanvas,
+                ctx: minimapCtx,
+                viewportEl: minimapViewport,
+                scrollContainer,
+                centerOnCurrentTime,
+                updateNowButtonPosition,
+                minimapHeight: MINIMAP_HEIGHT
+            });
             themeToggle = document.getElementById('theme-toggle');
 
             // Initialize map modal
@@ -408,23 +394,10 @@ let weatherCache = new Map();
                     });
                 }
 
-                let isChangelogLoading = false;
+                initChangelog(() => {
+                    if (closeInfoSheet) closeInfoSheet();
+                });
 
-                const openChangelogLink = document.getElementById('open-changelog-link');
-                if (openChangelogLink) {
-                    const onChangelogOpen = (e) => {
-                        e.preventDefault();
-                        if (isChangelogLoading) return;
-                        isChangelogLoading = true;
-                        if (closeInfoSheet) closeInfoSheet();
-                        requestAnimationFrame(() => {
-                            try { showChangelogModal(); } catch (e) { console.error("Changelog err:", e); }
-                            isChangelogLoading = false;
-                        });
-                    };
-                    openChangelogLink.addEventListener('click', onChangelogOpen);
-                }
-                
                 // I18n Logic
                 const langCards = document.querySelectorAll('.lang-card');
                 const updateLangCardsUI = (lang) => {
@@ -461,9 +434,9 @@ let weatherCache = new Map();
                             // Redraw graphics requiring translation
                             requestAnimationFrame(() => {
                                 tiles.forEach(t => t.drawn = false);
-                                minimapCacheCanvas = null;
+                                minimapRenderer.invalidateCache();
                                 render();
-                                drawMinimap();
+                                minimapRenderer.draw(state, { PIXELS_PER_HOUR });
                             });
                         });
                     });
@@ -517,7 +490,7 @@ let weatherCache = new Map();
                                     await loadChartTheme(state.activeChartTheme);
                                     updateThemeUI(t.id, t.name, t.colors.tempLine);
                                     tiles.forEach(t => t.drawn = false);
-                                    minimapCacheCanvas = null;
+                                    minimapRenderer.invalidateCache();
                                     render();
                                     closeBottomSheet('theme-select-sheet', 'theme-sheet-backdrop');
                                 });
@@ -636,7 +609,7 @@ let weatherCache = new Map();
                             t('config.clearCacheMsg') || "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?", 
                             async () => {
                                 state.isFetching = true;
-                                await performClearCacheAndReload();
+                                await onClearCache();
                             }
                         );
                     });
@@ -714,8 +687,7 @@ let weatherCache = new Map();
                         if (toggle) toggle.style.display = 'flex';
                         dailyCardsContainer.style.display = 'none';
                         toggleNavBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>';
-                        drawMinimap();
-                        updateMinimapViewport();
+                        minimapRenderer.draw(state, { PIXELS_PER_HOUR });
                     }
                     storageService.set('viewMode', state.isDailyCardsView ? 'daily' : 'minimap');
                 };
@@ -758,34 +730,33 @@ let weatherCache = new Map();
                 }
 
                 if (minimapContainer) {
-                    // Reverting to basic mouse/touch events to ensure standard behavior that was working before
                     minimapContainer.style.touchAction = '';
 
                     minimapContainer.addEventListener('mousedown', (e) => {
-                        isMinimapDragging = true;
-                        handleMinimapClick(e);
+                        minimapRenderer.isDragging = true;
+                        scrollContainer.scrollLeft = minimapRenderer.handleClick(e.clientX, state, { PIXELS_PER_HOUR });
                     });
 
                     minimapContainer.addEventListener('touchstart', (e) => {
-                        isMinimapDragging = true;
-                        handleMinimapClick(e.touches[0]);
+                        minimapRenderer.isDragging = true;
+                        scrollContainer.scrollLeft = minimapRenderer.handleClick(e.touches[0].clientX, state, { PIXELS_PER_HOUR });
                     }, { passive: true });
                 }
 
                 window.addEventListener('mousemove', (e) => {
-                    if (isMinimapDragging) handleMinimapClick(e);
+                    if (minimapRenderer.isDragging) scrollContainer.scrollLeft = minimapRenderer.handleClick(e.clientX, state, { PIXELS_PER_HOUR });
                 });
 
                 window.addEventListener('mouseup', () => {
-                    isMinimapDragging = false;
+                    minimapRenderer.isDragging = false;
                 });
 
                 window.addEventListener('touchmove', (e) => {
-                    if (isMinimapDragging) handleMinimapClick(e.touches[0]);
+                    if (minimapRenderer.isDragging) scrollContainer.scrollLeft = minimapRenderer.handleClick(e.touches[0].clientX, state, { PIXELS_PER_HOUR });
                 }, { passive: true });
 
                 window.addEventListener('touchend', () => {
-                    isMinimapDragging = false;
+                    minimapRenderer.isDragging = false;
                 });
                 scrollContainer.addEventListener('pointerdown', (e) => {
                     if (e.pointerType !== 'mouse') return;
@@ -948,7 +919,7 @@ let weatherCache = new Map();
                 }
 
                 centerOnCurrentTime();
-                drawMinimap();
+                minimapRenderer.draw(state, { PIXELS_PER_HOUR });
                 render();
             } catch (err) {
                 console.error("Error in loadWeather:", err);
@@ -982,7 +953,7 @@ let weatherCache = new Map();
             themeToggle.innerHTML = state.theme === 'dark' ? '<span class="material-symbols-outlined">light_mode</span>' : '<span class="material-symbols-outlined">dark_mode</span>';
             tiles.forEach(t => t.drawn = false);
             render();
-            drawMinimap();
+            minimapRenderer.draw(state, { PIXELS_PER_HOUR });
         }
 
         function updateLocationUI() {
@@ -1131,292 +1102,9 @@ let weatherCache = new Map();
                 }
             }
 
-            updateMinimapViewport();
+            minimapRenderer.updateViewport(state, { PIXELS_PER_HOUR });
             updateTopPanel();
             drawFixedOverlay();
-        }
-
-        // Functions logic removed because it is handled by DailyCards.js
-
-
-
-        function updateMinimapViewport() {
-            if (!state.hourlyData.length) return;
-
-            const splitIndex = getSplitIndex(state.hourlyData[0].time, state.hourlyData.length);
-            let startIndex = minimapMode === 'past' ? 0 : splitIndex;
-            let dataLength = minimapMode === 'past' ? splitIndex : state.hourlyData.length - splitIndex;
-            if (dataLength <= 0) return;
-
-            const totalMainWidth = state.hourlyData.length * PIXELS_PER_HOUR;
-            const scrollRatio = scrollContainer.scrollLeft / totalMainWidth;
-            const visibleRatio = scrollContainer.clientWidth / totalMainWidth;
-
-            const currentLeftIndex = scrollContainer.scrollLeft / PIXELS_PER_HOUR;
-            const currentRightIndex = (scrollContainer.scrollLeft + scrollContainer.clientWidth) / PIXELS_PER_HOUR;
-            const centerIndex = currentLeftIndex + (currentRightIndex - currentLeftIndex) / 2;
-
-            // Auto-switch mode based on center of screen
-            if (!isMinimapDragging) { // don't auto-switch while dragging minimap
-                if (minimapMode === 'future' && centerIndex < splitIndex) {
-                    setMinimapMode('past'); // helper handles the toggle + redraw
-                    return;
-                } else if (minimapMode === 'past' && centerIndex >= splitIndex && centerIndex < state.hourlyData.length) {
-                    setMinimapMode('future');
-                    return;
-                }
-            }
-
-            const minimapW = minimapCanvas.clientWidth;
-            
-            // Map the global ratio to the local data slice
-            const localLeftIndex = currentLeftIndex - startIndex;
-            const localRightIndex = currentRightIndex - startIndex;
-            
-            const vpLeft = (localLeftIndex / dataLength) * minimapW;
-            const vpWidth = ((localRightIndex - localLeftIndex) / dataLength) * minimapW;
-
-            minimapViewport.style.width = vpWidth + 'px';
-            minimapViewport.style.left = vpLeft + 'px';
-
-            // Auto-scroll the minimap container if it's wider than the screen
-            const mContainer = document.getElementById('minimap-container');
-            if (mContainer && minimapW > mContainer.clientWidth) {
-                const vpCenter = vpLeft + (vpWidth / 2);
-                mContainer.scrollLeft = vpCenter - (mContainer.clientWidth / 2);
-            }
-
-            updateNowButtonPosition();
-        }
-
-        function drawMinimap() {
-            if (!state.hourlyData.length) return;
-
-            const splitIndex = getSplitIndex(state.hourlyData[0].time, state.hourlyData.length);
-            let minimapData, startIndex;
-
-            if (minimapMode === 'past') {
-                minimapData = state.hourlyData.slice(0, splitIndex);
-                startIndex = 0;
-            } else {
-                minimapData = state.hourlyData.slice(splitIndex);
-                startIndex = splitIndex;
-            }
-
-            if (!minimapData.length) return;
-
-            const w = minimapCanvas.clientWidth || window.innerWidth;
-            const h = 80;
-            const dpr = state.dpr;
-
-            if (!minimapCacheCanvas) minimapCacheCanvas = document.createElement('canvas');
-            if (minimapCacheCanvas.width !== w * dpr || minimapCacheCanvas.height !== h * dpr) {
-                minimapCacheCanvas.width = w * dpr;
-                minimapCacheCanvas.height = h * dpr;
-            }
-
-            const ctx = minimapCacheCanvas.getContext('2d');
-            ctx.save();
-            ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, w, h);
-
-            const step = w / minimapData.length;
-
-            // 1. Background (Day/Night)
-            ctx.fillStyle = '#fffde7'; // Day
-            ctx.fillRect(0, 0, w, h);
-
-            ctx.fillStyle = '#f3e8ff'; // Night
-            minimapData.forEach((d, i) => {
-                if (d.isNight) {
-                    ctx.fillRect(i * step, 0, step + 0.5, h);
-                }
-            });
-
-            // 2. Grid & Day Labels
-            ctx.save();
-            let lastLabelX = -100;
-            minimapData.forEach((d, i) => {
-                const x = i * step;
-                if (d.localHour === 0 || (i === 0 && d.localHour !== 0)) {
-                    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, h);
-                    ctx.stroke();
-
-                    // Only draw text if it's midnight or first entry in segment AND enough space
-                    const dateObj = new Date(d.time);
-                    const dayStr = String(dateObj.getDate()).padStart(2, '0');
-                    const monthStr = String(dateObj.getMonth() + 1).padStart(2, '0');
-                    const dayText = `${d.localDayShort} ${dayStr}/${monthStr}`;
-                    
-                    const labelWidth = ctx.measureText(dayText).width + 16; // Increased gap to prevent overlapping
-                    if (x > lastLabelX + labelWidth) {
-                        ctx.fillStyle = '#666666';
-                        ctx.font = `bold 9px ${getThemeFont()}`;
-                        ctx.fillText(dayText, x + 4, 12);
-                        lastLabelX = x;
-                    }
-                }
-            });
-            ctx.restore();
-
-            // 3. Layers (Simplified for minimap)
-            // Zero line (0°C)
-            const y0 = normalizeY(0, -20, 40, h);
-            ctx.strokeStyle = 'rgba(2, 136, 209, 0.4)';
-            ctx.setLineDash([2, 2]);
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, y0);
-            ctx.lineTo(w, y0);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Clouds
-            ctx.save();
-            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
-            ctx.strokeStyle = 'rgba(100, 116, 139, 0.6)';
-            ctx.lineWidth = 1;
-            const cloudPath = new Path2D();
-            minimapData.forEach((d, i) => {
-                const x = i * step;
-                const y = h - (h * (d.clouds / 100));
-                if (i === 0) cloudPath.moveTo(x, y);
-                else cloudPath.lineTo(x, y);
-            });
-            ctx.stroke(cloudPath);
-            cloudPath.lineTo(w, h);
-            cloudPath.lineTo(0, h);
-            ctx.fill(cloudPath);
-            ctx.restore();
-
-            // Gradient color helper for precipitation type
-            const buildPrecipGradient = (alpha) => {
-                const grad = ctx.createLinearGradient(0, 0, w, 0);
-                if (minimapData.length === 0) return `rgba(2, 136, 209, ${alpha})`;
-                minimapData.forEach((d, i) => {
-                    const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
-                    const isThunder = [95, 96, 99].includes(d.weatherCode);
-                    let baseColor = '2, 136, 209'; // Default blue
-                    if (isSnow) baseColor = '0, 188, 212'; // Cyan
-                    else if (isThunder) baseColor = '126, 87, 194'; // Purple
-
-                    grad.addColorStop(i / (minimapData.length - 1 || 1), `rgba(${baseColor}, ${alpha})`);
-                });
-                return grad;
-            };
-
-            const precipBarGrad = buildPrecipGradient(0.6);
-            const probStrokeGrad = buildPrecipGradient(1.0);
-            const probFillGrad = buildPrecipGradient(0.2);
-
-            // Precipitation bars
-            ctx.fillStyle = precipBarGrad;
-            minimapData.forEach((d, i) => {
-                if (d.precip > 0) {
-                    const x = i * step;
-                    const barH = Math.max(2, Math.min(h, d.precip * 5));
-                    ctx.fillRect(x, h - barH, Math.max(1, step - 0.5), barH);
-                }
-            });
-
-            // Precipitation Probability
-            ctx.save();
-            ctx.fillStyle = probFillGrad;
-            ctx.strokeStyle = probStrokeGrad;
-            ctx.lineWidth = 1;
-            const probPath = new Path2D();
-            minimapData.forEach((d, i) => {
-                const x = i * step;
-                const y = h - (h * (d.precipProb / 100));
-                if (i === 0) probPath.moveTo(x, y);
-                else probPath.lineTo(x, y);
-            });
-            ctx.stroke(probPath);
-            probPath.lineTo(w, h);
-            probPath.lineTo(0, h);
-            ctx.fill(probPath);
-            ctx.restore();
-
-            // Temperature Line
-            ctx.strokeStyle = '#d32f2f';
-            ctx.lineWidth = 1.8;
-            ctx.beginPath();
-            minimapData.forEach((d, i) => {
-                const x = i * step;
-                const y = normalizeY(d.temp, -20, 40, h);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            // UV Segments
-            minimapData.forEach((d, i) => {
-                if (d.uv >= 1) {
-                    const x = i * step;
-                    let color = getThemeColor('uvLevels.low', '#4caf50');
-                    if (d.uv >= 3 && d.uv < 6) color = getThemeColor('uvLevels.moderate', '#fbc02d');
-                    else if (d.uv >= 6 && d.uv < 8) color = getThemeColor('uvLevels.high', '#f57c00');
-                    else if (d.uv >= 8 && d.uv < 11) color = getThemeColor('uvLevels.veryHigh', '#d32f2f');
-                    else if (d.uv >= 11) color = getThemeColor('uvLevels.extreme', '#7b1fa2');
-
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x, 0, Math.max(1, step), 3);
-                }
-            });
-
-            // Modern vertical line for 'Now'
-            const now = Date.now();
-            const nowIndex = (now - state.hourlyData[0].time) / 3600000;
-            const localNowIndex = nowIndex - startIndex;
-            
-            if (localNowIndex >= 0 && localNowIndex <= minimapData.length) {
-                const nowX = localNowIndex * step;
-                ctx.save();
-                    
-                    // Outer glow shadow
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
-                    
-                    // Vertical line
-                    ctx.strokeStyle = '#ef4444';
-                    ctx.lineWidth = 2.5;
-                    ctx.beginPath();
-                    ctx.moveTo(nowX, 0);
-                    ctx.lineTo(nowX, h);
-                    ctx.stroke();
-                    
-                    // Little indicator circle at top
-                    ctx.fillStyle = '#ef4444';
-                    ctx.beginPath();
-                    ctx.arc(nowX, 0, 4, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                    
-                    ctx.restore();
-            }
-
-            if (minimapMode === 'past') {
-                ctx.save();
-                ctx.fillStyle = getThemeColor('minimapPastOverlay', 'rgba(0, 0, 0, 0.45)');
-                // If it's light mode, it could have a different tint, but let the user's theme system handle it, or just use blackish
-                if (state.theme === 'light') ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
-                ctx.fillRect(0, 0, w, h);
-                ctx.restore();
-            }
-
-            ctx.restore();
-
-            // Draw to main minimap canvas
-            minimapCtx.resetTransform();
-            minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
-            minimapCtx.drawImage(minimapCacheCanvas, 0, 0);
-            updateMinimapViewport();
         }
 
         let lastNowBtnX = -1;
@@ -2175,11 +1863,7 @@ let weatherCache = new Map();
                 }
             }
 
-            const minimapTargetWidth = minimapCanvas.parentElement.clientWidth || window.innerWidth;
-            minimapCanvas.width = minimapTargetWidth * state.dpr;
-            minimapCanvas.height = MINIMAP_HEIGHT * state.dpr;
-            minimapCanvas.style.width = minimapTargetWidth + 'px';
-            minimapCanvas.style.height = MINIMAP_HEIGHT + 'px';
+            minimapRenderer.setCanvasSize(state);
 
             const chartArea = document.getElementById('chart-area');
             fixedOverlayCanvas.width = chartArea.clientWidth * state.dpr;
@@ -2187,7 +1871,7 @@ let weatherCache = new Map();
             fixedOverlayCtx.resetTransform();
             fixedOverlayCtx.scale(state.dpr, state.dpr);
 
-            drawMinimap();
+            minimapRenderer.draw(state, { PIXELS_PER_HOUR });
             render();
         }
 
@@ -2209,22 +1893,6 @@ let weatherCache = new Map();
             render();
         }
 
-        function handleMinimapClick(e) {
-            const rect = minimapCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const ratio = Math.max(0, Math.min(1, x / rect.width));
-            
-            const splitIndex = getSplitIndex(state.hourlyData[0].time, state.hourlyData.length);
-            const startIndex = minimapMode === 'past' ? 0 : splitIndex;
-            const dataLength = minimapMode === 'past' ? splitIndex : state.hourlyData.length - splitIndex;
-
-            const targetLocalIndex = ratio * dataLength;
-            const targetGlobalIndex = startIndex + targetLocalIndex;
-            
-            const targetScrollX = (targetGlobalIndex * PIXELS_PER_HOUR) - (scrollContainer.clientWidth / 2);
-            scrollContainer.scrollLeft = targetScrollX;
-        }
-
         function showError(msg) {
             const errDiv = document.getElementById('error-msg');
             errDiv.innerHTML = `
@@ -2237,283 +1905,21 @@ let weatherCache = new Map();
             errDiv.style.display = 'block';
         }
 
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", async () => {
-                try {
-                    const reg = await navigator.serviceWorker.register("./sw.js");
-                    console.log("ServiceWorker registered: ./sw.js");
-                    
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        if (newWorker) {
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    showUpdateToast();
-                                }
-                            });
-                        }
-                    });
-
-                    // Reload when new SW takes over
-                    navigator.serviceWorker.addEventListener('controllerchange', () => {
-                        window.location.reload();
-                    });
-                } catch(err) {
-                    console.warn("SW registration failed:", err);
-                }
-                
-                checkAppVersion();
-            });
-        }
-
-        // PWA Install Prompt
-        let deferredInstallPrompt = null;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredInstallPrompt = e;
-            showInstallButton();
-        });
-
-        window.addEventListener('appinstalled', () => {
-            deferredInstallPrompt = null;
-            const installBtn = document.getElementById('pwa-install-btn');
-            if (installBtn) installBtn.style.display = 'none';
-            console.log('PWA installed successfully');
-        });
-
-        function showInstallButton() {
-            const existing = document.getElementById('pwa-install-btn');
-            if (existing) {
-                existing.style.display = 'flex';
-                return;
-            }
-            const container = document.querySelector('.controls-right');
-            if (!container || !deferredInstallPrompt) return;
-
-            const btn = document.createElement('button');
-            btn.id = 'pwa-install-btn';
-            btn.title = t('config.installApp');
-            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; background:transparent; border:none; color:inherit; cursor:pointer; margin-right:4px;';
-            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">download</span>';
-            btn.addEventListener('click', async () => {
-                if (!deferredInstallPrompt) return;
-                deferredInstallPrompt.prompt();
-                const result = await deferredInstallPrompt.userChoice;
-                deferredInstallPrompt = null;
-                btn.style.display = 'none';
-            });
-            container.insertBefore(btn, container.firstChild);
-        }
-        
-        async function checkAppVersion() {
-            try {
-                const response = await fetch('./version.json?t=' + Date.now());
-                if (!response.ok) return;
-                const data = await response.json();
-                const remoteVersion = data.version;
-                const localVersion = localStorage.getItem('appVersion');
-                
-                if (localVersion && remoteVersion && localVersion !== remoteVersion) {
-                    localStorage.setItem('appVersion', remoteVersion);
-                    showChangelogModal(remoteVersion);
-                } else if (!localVersion && remoteVersion) {
-                    localStorage.setItem('appVersion', remoteVersion);
-                }
-            } catch (error) {
-                console.warn('Failed to check app version:', error);
-            }
-        }
-        
-        function showUpdateToast() {
-            const toast = document.getElementById('update-toast');
-            const text = document.getElementById('update-toast-text');
-            const btn = document.getElementById('update-toast-btn');
-            
-            if (document.getElementById('changelog-modal').classList.contains('open')) {
-                return;
-            }
-            
-            if (toast && text && btn) {
-                text.textContent = t('config.newVersionAvailable') || 'Nueva versión disponible';
-                btn.textContent = t('config.whatsNew') || 'Ver Novedades';
-                
-                btn.onclick = () => {
-                    toast.style.display = 'none';
-                    checkAppVersion(); 
-                };
-                
-                toast.style.display = 'flex';
-            }
-        }
-        
-        window.openBottomSheet = openBottomSheet;
-
-        function openChangelogDetail(item) {
-            document.getElementById('changelog-detail-title').textContent = `v${item.version}`;
-            document.getElementById('changelog-detail-subtitle').textContent = "Detalles de esta versión";
-            
-            const listEl = document.getElementById('changelog-detail-list');
-            listEl.innerHTML = '';
-            
-            if (item.changes && item.changes.length > 0) {
-                item.changes.forEach(change => {
-                    const li = document.createElement('li');
-                    li.textContent = change;
-                    li.style.marginBottom = '12px';
-                    listEl.appendChild(li);
-                });
-            } else {
-                const li = document.createElement('li');
-                li.textContent = 'Actualizaciones menores y corrección de errores.';
-                listEl.appendChild(li);
-            }
-            
-            openBottomSheet('changelog-detail-sheet', 'changelog-detail-backdrop', 'changelog-detail-scroll-content');
-        }
-
-        function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn) {
-            const renderData = version ? [changelogData.find(item => item.version === version) || {version: version, changes: []}] : changelogData;
-
-            renderData.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.style.position = 'relative';
-                li.style.paddingLeft = '30px';
-                li.style.cursor = 'pointer';
-                li.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.1}s`;
-                li.style.opacity = '0';
-                li.style.transform = 'translateY(10px)';
-
-                const isMajor = item.version.endsWith('.0');
-
-                const marker = document.createElement('div');
-                marker.style.position = 'absolute';
-                marker.style.left = '-7px';
-                marker.style.top = '16px';
-                marker.style.width = '16px';
-                marker.style.height = '16px';
-                marker.style.borderRadius = '50%';
-                marker.style.background = isMajor ? 'var(--accent-temp)' : 'var(--grid-color)';
-                marker.style.border = '3px solid var(--bg-color)';
-                marker.style.zIndex = '2';
-                li.appendChild(marker);
-
-                const content = document.createElement('div');
-                content.style.background = 'var(--card-bg)';
-                content.style.borderRadius = '12px';
-                content.style.padding = '16px';
-                content.style.border = '1px solid var(--grid-color)';
-
-                const header = document.createElement('div');
-                header.style.display = 'flex';
-                header.style.alignItems = 'center';
-                header.style.gap = '8px';
-                header.style.marginBottom = '8px';
-
-                const tag = document.createElement('span');
-                tag.textContent = isMajor ? 'Major' : 'Patch';
-                tag.style.fontSize = '0.7rem';
-                tag.style.fontWeight = 'bold';
-                tag.style.padding = '2px 8px';
-                tag.style.borderRadius = '12px';
-                tag.style.background = isMajor ? 'rgba(59, 130, 246, 0.1)' : 'rgba(156, 163, 175, 0.1)';
-                tag.style.color = isMajor ? '#3b82f6' : 'var(--text-secondary)';
-                header.appendChild(tag);
-
-                const title = document.createElement('div');
-                title.textContent = `v${item.version}`;
-                title.style.fontWeight = 'bold';
-                title.style.fontSize = isMajor ? '1.1rem' : '1rem';
-                title.style.color = 'var(--text-primary)';
-                header.appendChild(title);
-
-                if (version && index === 0) {
-                    const unreadDot = document.createElement('div');
-                    unreadDot.style.width = '8px';
-                    unreadDot.style.height = '8px';
-                    unreadDot.style.borderRadius = '50%';
-                    unreadDot.style.background = '#3b82f6';
-                    unreadDot.style.marginLeft = 'auto';
-                    header.appendChild(unreadDot);
-                }
-
-                content.appendChild(header);
-
-                const desc = document.createElement('div');
-                desc.style.fontSize = '0.85rem';
-                desc.style.color = 'var(--text-secondary)';
-                desc.style.display = '-webkit-box';
-                desc.style.webkitLineClamp = '2';
-                desc.style.webkitBoxOrient = 'vertical';
-                desc.style.overflow = 'hidden';
-                desc.textContent = (item.changes && item.changes.length > 0) ? item.changes[0] : 'Actualizaciones menores y corrección de errores.';
-                content.appendChild(desc);
-
-                li.appendChild(content);
-
-                li.onclick = () => openChangelogDetail(item);
-
-                listEl.appendChild(li);
-            });
-
-            const closeSheet = openBottomSheet('changelog-modal', 'changelog-sheet-backdrop', 'changelog-scroll-content');
-
-            closeBtn.onclick = () => closeSheet();
-            updateBtn.onclick = async () => {
-                closeSheet();
-                await performClearCacheAndReload();
-            };
-        }
-
-        function showChangelogModal(version) {
-            const modal = document.getElementById('changelog-modal');
-            const titleEl = document.getElementById('changelog-title');
-            const listEl = document.getElementById('changelog-list');
-            const closeBtn = document.getElementById('changelog-close-btn');
-            const updateContainer = document.getElementById('changelog-update-container');
-            const updateBtn = document.getElementById('changelog-update-btn');
-
-            if (!modal || !titleEl || !listEl || !closeBtn || !updateBtn) return;
-
-            // Clear previous content immediately to avoid stale items
-            listEl.innerHTML = '';
-
-            if (version) {
-                const titleFormat = t('config.changelogTitle') || 'Novedades v{version}';
-                titleEl.textContent = titleFormat.replace('{version}', version);
-                updateContainer.style.display = 'flex';
-                updateBtn.textContent = (t('config.update') || 'Actualizar') + ' a v' + version;
-            } else {
-                titleEl.textContent = t('config.changelogTitleAll') || 'Todos los cambios';
-                updateContainer.style.display = 'none';
-}
-
-            renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn);
-        }
-        
-        let _isClearingCache = false;
-
-        async function performClearCacheAndReload() {
-            if (_isClearingCache) return;
-            _isClearingCache = true;
+        onClearCache = async () => {
             weatherCache.clear();
             try { storageService.db?.close(); } catch(e) {}
-            if ('caches' in window) {
-                try {
-                    const cacheNames = await caches.keys();
-                    await Promise.all(cacheNames.map(name => caches.delete(name)));
-                } catch(e) { console.warn(e); }
-            }
-            if ('serviceWorker' in navigator) {
-                try {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (let reg of registrations) {
-                        if (reg.active) reg.active.postMessage({ action: 'skipWaiting' });
-                        await reg.unregister();
-                    }
-                } catch(e) { console.warn(e); }
-            }
-            const url = new URL(location.href);
-            url.searchParams.set('_t', Date.now());
-            location.href = url.toString();
-        }
+            await clearCacheAndReload();
+        };
+
+        const swHandlers = registerSW();
+        swHandlers.onUpdate = () => showUpdateToast(() => {
+            checkAppVersion((remoteVersion) => {
+                showChangelogModal(remoteVersion, onClearCache);
+            });
+        });
+        handleInstallPrompt();
+        checkAppVersion((remoteVersion) => {
+            showChangelogModal(remoteVersion, onClearCache);
+        });
+        
+        window.openBottomSheet = openBottomSheet;

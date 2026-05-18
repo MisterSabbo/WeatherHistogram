@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.16] - 2026-05-18
+### Bug Fixes
+- **Minimap invisible after auto mode-switch**: `MINIMAP_HEIGHT` now stored as a constructor property in `MinimapRenderer`, removing the dependency from method parameters. The bug occurred when `updateViewport` was called without `MINIMAP_HEIGHT`, triggering auto-switch (`setMode` → `draw`) with an undefined canvas height, rendering the minimap invisible until a manual redraw.
+
 ## [v1.8.14] - 2026-05-18
 ### Refactoring
 - **Low-Coupling Feature Extraction (Phase 4)**: Extracted 4 self-contained modules from `src/app.js`:
