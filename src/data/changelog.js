@@ -1,5 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.8.13b",
+    "changes": [
+      "Fix: Settings panel positioned at bottom-left on desktop — reordered @import in style.css so year-in-pixels.css comes before modals.css, restoring the correct cascade where .info-sheet's desktop media query (translateX) overrides .yip-bottom-sheet's default (translateY)."
+    ]
+  },
+  {
+    "version": "1.8.13a",
+    "changes": [
+      "Refactor: Split src/style.css (1889 lines) into 8 per-section CSS modules — variables.css, controls.css, layout.css, daily-cards.css, minimap.css, modals.css, year-in-pixels.css, animations.css. style.css now serves as an @import index. Zero visual regression."
+    ]
+  },
+  {
     "version": "1.8.13",
     "changes": [
       "Tooling: Added TypeScript JSDoc checking via tsconfig.json — npm run typecheck to verify type correctness.",

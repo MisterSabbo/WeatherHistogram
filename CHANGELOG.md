@@ -2,6 +2,14 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.13b] - 2026-05-18
+### Bug Fixes
+- **Settings panel positioned at bottom-left on desktop**: Fixed CSS cascade order regression introduced in v1.8.13a — `year-in-pixels.css` (`.yip-bottom-sheet`) was imported after `modals.css` (`.info-sheet`), reversing the original cascade and causing `.yip-bottom-sheet`'s `translateY` to override `.info-sheet`'s desktop media query (`translateX`). Reordered `@import` in `style.css` so `year-in-pixels.css` comes before `modals.css`, restoring the correct cascade.
+
+## [v1.8.13a] - 2026-05-18
+### Refactoring
+- **CSS Modularization**: Split `src/style.css` (1889 lines) into 8 per-section modules under `src/styles/`: `variables.css`, `controls.css`, `layout.css`, `daily-cards.css`, `minimap.css`, `modals.css`, `year-in-pixels.css`, `animations.css`. `style.css` now acts as an `@import` index. No class names, DOM structure, or visual output changed.
+
 ## [v1.8.13] - 2026-05-18
 ### Tooling Infrastructure
 - **TypeScript JSDoc checking**: Added `tsconfig.json` with `checkJs: true` for incremental type-checking via JSDoc annotations. New `npm run typecheck` script to verify type correctness.
