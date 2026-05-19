@@ -2,6 +2,18 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.19] - 2026-05-19
+### E2E Testing (Phase 9)
+- **Playwright E2E test suite**: Added comprehensive end-to-end tests:
+  - **Visual screenshot tests**: Full chart, minimap, and daily cards view with deterministic mock data and 2% pixel diff tolerance.
+  - **Interaction tests**: Info/settings modal open/close via backdrop, changelog modal navigation, theme toggle verification, language switch, location modal open.
+  - **Theme tests**: Dark/light theme screenshots, chart theme selector open state.
+- **Playwright config**: `playwright.config.ts` with `testDir`, webServer pointing to `npm run dev` on port 3000, and snapshot comparison settings.
+- **Mock data helpers**: Deterministic seeded random data generation for forecast and AQI APIs, with route interception setup function.
+- **npm script**: `test:e2e` added.
+- **CI workflow**: `.github/workflows/ci.yml` with lint, typecheck, unit test, and E2E test steps.
+- All 11 E2E tests pass. Build successful. 0 lint errors.
+
 ## [v1.8.18] - 2026-05-19
 ### Refactoring (Phase 8)
 - **State & Config Consolidation**: Unified numeric constants in `CONFIG` and froze the object to prevent accidental mutation:

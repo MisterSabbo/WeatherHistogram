@@ -1,5 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.8.19",
+    "changes": [
+      "E2E Tests: Added Playwright-based end-to-end tests — visual screenshot comparisons (full chart, minimap, daily cards, themes), modal interaction tests (info/settings, changelog, theme toggle, language switch, location button), and theme screenshots. Added playwright.config.ts, test:e2e npm script, CI workflow (.github/workflows/ci.yml), and deterministic mock data helpers. All 11 E2E tests pass."
+    ]
+  },
+  {
+    "version": "1.8.18",
+    "changes": [
+      "Refactor (Phase 8): State & Config Consolidation — unified numeric constants in CONFIG, applied Object.freeze(), removed local const overrides in app.js, fixed stale TILE_WIDTH. All 81 unit tests pass."
+    ]
+  },
+  {
     "version": "1.8.17",
     "changes": [
       "Refactor (Phase 7): App.js Block Splitting — extracted TopPanel UI (src/ui/TopPanel.js), WeatherFetcher (src/domain/WeatherFetcher.js), OverlayRenderer helpers (src/render/OverlayRenderer.js), thresholds utility (src/utils/thresholds.js); refactored init() into 28 named functions. app.js reduced 1925→1366 lines (~29%). All 81 tests pass."
