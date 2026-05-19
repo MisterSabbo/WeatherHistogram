@@ -56,6 +56,10 @@ For theme switching and i18n patterns: @agent-rules/theme-i18n.md
 For hardcoded values and dimensions (TILE_WIDTH, PIXELS_PER_HOUR, etc.): @agent-rules/defaults-constants.md
 For Vite config, npm scripts, and tooling information: @agent-rules/build-config.md
 
+## Testing
+
+For E2E testing workflow (Playwright, mock data, snapshot management): @agent-rules/e2e-testing.md
+
 ## Special Behaviors
 
 For non-obvious interactions (pull-to-refresh, PWA detection, SW, IndexedDB migration): @agent-rules/key-interactions.md
