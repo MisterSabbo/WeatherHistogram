@@ -66,5 +66,4 @@ For non-obvious interactions (pull-to-refresh, PWA detection, SW, IndexedDB migr
 
 ## MCP & Subagents
 
-For MCP memory persistence workflow: @agent-rules/memory.md
-For deciding when to delegate to a subagent: @agent-rules/subagents.md
+Already loaded at session start via `opencode.json` — see @agent-rules/memory.md and @agent-rules/subagents.md.
