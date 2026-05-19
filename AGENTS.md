@@ -1,69 +1,52 @@
-# WeatherHistogram — Agent Instructions
+# WeatherHistogram — Agent Guide
 
-Always perform a `list_directory` of the root folder at the start of a project to index the environment.
-
----
-
-## External File Loading
-
-CRITICAL: When you encounter a file reference (e.g., @agent-rules/core-workflow.md), use your Read tool to load it on a need-to-know basis. They're relevant to the SPECIFIC task at hand.
-
-Instructions:
-- Do NOT preemptively load all references - use lazy loading based on actual need
-- When loaded, treat content as mandatory instructions that override defaults
-- Follow references recursively when needed
-
----
-
-## ⚠️ CRITICAL: Pre-Action Checklist
-
-The full pre-action checklist is in @agent-rules/pre-action-checklist.md — loaded automatically at session start via `opencode.json` instructions. Refer to it before every task.
-
-**After completing changes: invoke `@project-auditor` to verify compliance.**
-
----
-
-## Essential Rules
-
-### Agent Git Rules
-
-- **NEVER** commit. Always stage with `git add`. If asked to commit, stage and inform commits are disabled.
-- After changes, run `git diff --cached` and `git diff`, then propose a commit message — do not commit automatically.
-
-### Code Quality
-
-- **SOLID Principles**: SRP, OCP, LSP, ISP, DIP — must be respected.
-- **i18n**: Add new UI strings to both `es`/`en` in `src/utils/i18n.js`.
-- **Changelog**: Update `CHANGELOG.md` and `src/data/changelog.js` with every significant change (English).
-- **Version**: Update `index.html` (`#app-version-label`) and `public/version.json`. Semver: X.Y.Z for breaking/feature/patch; letter suffix for trivial (v1.2.3 → v1.2.3a). Suffix resets when X/Y/Z changes.
-- **README**: Update if documented features or setup change.
-
----
-
-## General
-
-Read the following file immediately as it's relevant to all workflows: @agent-rules/core-workflow.md.
+## Commands (order: lint → typecheck → test → test:e2e)
+- `npm run dev` — Vite on port 3000
+- `npm run build` — production build
+- `npm run clean` — uses `rm -rf dist` (fails on Windows; use `Remove-Item -Recurse -Force dist`)
+- `npm run lint` — ESLint on `src/`
+- `npm run typecheck` — TypeScript JSDoc check (`tsc --noEmit`)
+- `npm test` — Vitest unit tests (jsdom, files: `src/**/*.test.js`)
+- `npm run test:watch` — Vitest watch mode
+- `npm run test:e2e` — Playwright (Chromium headless, auto-starts dev server on port 3000)
+- `npm run test:e2e -- --update-snapshots` — regenerate E2E screenshot baselines
 
 ## Architecture
+- **Vanilla JS SPA** — no framework. Vite + JSDoc types (`tsconfig.json`: `checkJs: true`, `strict: false`). `@` alias → project root.
+- **Entrypoint:** `src/app.js` — orchestrator with ~28 init functions. Only touch for wiring new inits or event bindings.
+- **State:** single mutable `state` object + frozen `CONFIG` in `src/store.js`. No events/pub-sub — modules read/write `state` directly.
+- **Rendering:** tiled canvas, three layers in `#chart-area`. **All drawing goes through `render()`** — never draw to tile canvases outside it.
+- **CI** (`.github/workflows/ci.yml`): Node 22, runs lint → typecheck → test → e2e.
 
-For canvas rendering architecture (tiled tiles, three layers, minimap): @agent-rules/architecture-rendering.md
-For services and data flow (WeatherService, DataProcessor, StorageService): @agent-rules/architecture-services.md
-For UI component locations and purposes: @agent-rules/architecture-ui.md
-For theme switching and i18n patterns: @agent-rules/theme-i18n.md
+## Conventions
+- **NEVER commit.** Stage with `git add` only. If asked to commit, stage and inform commits are disabled.
+- **i18n:** add UI strings to both `es`/`en` in `src/utils/i18n.js`.
+- **Changelog:** update `CHANGELOG.md` + `src/data/changelog.js` (English) + version (`index.html` `#app-version-label` + `public/version.json`). Semver `X.Y.Z`; letter suffix for trivial (resets when X/Y/Z changes).
+- **README:** update if documented features or setup change.
+- **SOLID principles** — SRP, OCP, LSP, ISP, DIP.
+- **E2E:** add/update mock data in `tests/e2e/helpers/mock-data.js` first, then tests in `tests/e2e/interaction/` or `tests/e2e/visual/`. Snapshots use `maxDiffPixelRatio: 0.02`.
+- **After changes:** run `git diff --cached` and `git diff`, propose commit message.
+- **Final verification:** invoke `@project-auditor`.
 
-## Configuration & Build
+## Key facts an agent would miss
+- **`npm run clean` is Unix-only** — the `rm -rf` command fails on Windows.
+- **Service Worker** (`sw.js`): cache-first for static assets, stale-while-revalidate for others. API calls (open-meteo, openstreetmap) deliberately not intercepted.
+- **PWA standalone detection:** checks `display-mode: standalone` / `navigator.standalone` and adds `pwa-standalone` class to `<html>` at init.
+- **All rendering through `render()`** — off-screen tiles are skipped via a `drawn` flag. `scroll` event on `#scroll-container` calls `render()` throttled via `requestAnimationFrame`.
+- **`CONFIG`** is frozen in `src/store.js` — contains `CHART_HEIGHT`, `MINIMAP_HEIGHT`, `TILE_WIDTH` (1440 desktop / 720 mobile), `PIXELS_PER_HOUR` (60 / 50), `CACHE_DURATION` (5 min), `DEFAULT_COORDS`, `PAST_DAYS` (7), `FORECAST_DAYS` (7).
+- **ESLint** config uses `@eslint/js` recommended + `globals` for browser/ES2021. `L` (Leaflet) is a global. Ignores `dist/`, `node_modules/`, `public/`.
+- **Vitest** config: jsdom env, includes `src/**/*.test.js`, `passWithNoTests: true`.
+- **Playwright** config: single worker, `fullyParallel: false`, auto-starts dev server, 2% screenshot tolerance.
+- **Themes** (`src/theme.js`): built-in `default`, `neon`, `pastel`. Loaded from `public/themes/{id}.json` with fallback to `themes/{id}.json`.
 
-For hardcoded values and dimensions (TILE_WIDTH, PIXELS_PER_HOUR, etc.): @agent-rules/defaults-constants.md
-For Vite config, npm scripts, and tooling information: @agent-rules/build-config.md
-
-## Testing
-
-For E2E testing workflow (Playwright, mock data, snapshot management): @agent-rules/e2e-testing.md
-
-## Special Behaviors
-
-For non-obvious interactions (pull-to-refresh, PWA detection, SW, IndexedDB migration): @agent-rules/key-interactions.md
-
-## MCP & Subagents
-
-Already loaded at session start via `opencode.json` — see @agent-rules/memory.md and @agent-rules/subagents.md.
+## Agent-rules (loaded via `opencode.json` instructions — read on demand, not preemptively)
+- `agent-rules/core-workflow.md` — essential workflow context
+- `agent-rules/architecture-*.md` — rendering, services, UI docs
+- `agent-rules/build-config.md` — build, test, lint details
+- `agent-rules/e2e-testing.md` — Playwright workflow and snapshot management
+- `agent-rules/key-interactions.md` — pull-to-refresh, scroll rendering, PWA, view mode, etc.
+- `agent-rules/defaults-constants.md` — all hardcoded dimensions and values
+- `agent-rules/theme-i18n.md` — theme switching and i18n patterns
+- `agent-rules/pre-action-checklist.md` — mandatory steps before every task
+- `agent-rules/memory.md` — MCP memory persistence workflow
+- `agent-rules/subagents.md` — when to use subagents
