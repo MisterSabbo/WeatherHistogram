@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.17",
+    "changes": [
+      "Refactor (Phase 7): App.js Block Splitting — extracted TopPanel UI (src/ui/TopPanel.js), WeatherFetcher (src/domain/WeatherFetcher.js), OverlayRenderer helpers (src/render/OverlayRenderer.js), thresholds utility (src/utils/thresholds.js); refactored init() into 28 named functions. app.js reduced 1925→1366 lines (~29%). All 81 tests pass."
+    ]
+  },
+  {
     "version": "1.8.16",
     "changes": [
       "Fix: Minimap invisible after auto mode-switch (past/future) — MINIMAP_HEIGHT now stored as constructor property in MinimapRenderer, removing dependency from method parameters. Triggered when updateViewport was called without MINIMAP_HEIGHT, causing NaN canvas height on auto-switch via setMode → draw. No functional regression."

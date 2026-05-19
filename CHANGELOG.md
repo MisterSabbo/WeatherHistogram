@@ -2,6 +2,16 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.17] - 2026-05-18
+### Refactoring (Phase 7)
+- **App.js Block Splitting**: Major restructuring of `src/app.js` (1925→1366 lines, ~29% reduction):
+  - `src/utils/thresholds.js` — Dynamic Y-axis limits (`getYLimits`) for temperature, humidity, wind, UV based on actual data range.
+  - `src/ui/TopPanel.js` — Extracted `updateTopPanel()` with all DOM updates (temp, wind, AQI, pollen, precip, alerts, time). Pure function receiving `{ scrollContainer, PIXELS_PER_HOUR }`.
+  - `src/domain/WeatherFetcher.js` — Extracted complete fetch workflow with cache management (`weatherCache` Map), API call with 15s timeout, expired-cache fallback, and mock data fallback. Replaced `fetchWeatherData()` with importable function + callbacks.
+  - `src/render/OverlayRenderer.js` — Extracted scrubber label rendering (`drawScrubberPoint` with collision detection), weather zone updates (`updateWeatherZone` for stickman/icons/risk), UV block rendering (`updateUVBlock`), and Bezier cloud interpolation (`interpolateScrubberData`).
+  - **Init refactoring**: Grouped ~800-line `init()` into 28 named functions (`initStorage`, `initTheme`, `initLanguage`, `initCanvas`, `initViewMode`, etc.) keeping the same execution order and closure scope.
+- **All 81 unit tests pass. Zero lint errors. Build successful.**
+
 ## [v1.8.16] - 2026-05-18
 ### Bug Fixes
 - **Minimap invisible after auto mode-switch**: `MINIMAP_HEIGHT` now stored as a constructor property in `MinimapRenderer`, removing the dependency from method parameters. The bug occurred when `updateViewport` was called without `MINIMAP_HEIGHT`, triggering auto-switch (`setMode` → `draw`) with an undefined canvas height, rendering the minimap invisible until a manual redraw.
