@@ -48,7 +48,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
         let fixedOverlayCanvas, fixedOverlayCtx;
         let tiles = [];
         let cachedTileHeight = 0;
-        let TILE_WIDTH = window.innerWidth < 600 ? 720 : 1440;
+        let TILE_WIDTH = window.innerWidth < 600 ? 720 : CONFIG.TILE_WIDTH;
         let scrollContainer, themeToggle;
         let minimapRenderer;
         let onClearCache;
@@ -56,7 +56,6 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
         let searchTimeout = null;
         let ticking = false;
         let preventBackNavTimer = null;
-        const PIXELS_PER_MM = 10;
 
         /**
          * INICIALIZACIÓN
@@ -1169,7 +1168,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                 const pVal = d1.precip;
                 if (pVal > 0.01) {
                     const maxH = h * 0.9;
-                    let barH = pVal * PIXELS_PER_MM;
+                    let barH = pVal * CONFIG.PIXELS_PER_MM;
                     const isBroken = barH > maxH;
                     const visualH = Math.min(maxH, barH);
                     const barY = h - visualH;
@@ -1266,7 +1265,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
         function handleResize() {
             if (!scrollContainer) return;
             PIXELS_PER_HOUR = window.innerWidth < 600 ? 50 : 60;
-            TILE_WIDTH = window.innerWidth < 600 ? 720 : 1440;
+            TILE_WIDTH = window.innerWidth < 600 ? 720 : CONFIG.TILE_WIDTH;
             state.dpr = getDPR();
 
             const containerH = scrollContainer.clientHeight;

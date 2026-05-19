@@ -1,11 +1,11 @@
-export const CONFIG = {
+export const CONFIG = Object.freeze({
     CHART_HEIGHT: 250,
     MINIMAP_HEIGHT: 80,
     DEFAULT_COORDS: { lat: 40.4167, lon: -3.70325, name: "Madrid" },
     CACHE_DURATION: 5 * 60 * 1000,
-    TILE_WIDTH: 1024,
+    TILE_WIDTH: 1440,
     PIXELS_PER_MM: 10
-};
+});
 
 export const getDPR = () => Math.min(window.devicePixelRatio || 1, 2);
 

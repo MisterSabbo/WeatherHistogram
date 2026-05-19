@@ -2,6 +2,15 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.18] - 2026-05-19
+### Refactoring (Phase 8)
+- **State & Config Consolidation**: Unified numeric constants in `CONFIG` and froze the object to prevent accidental mutation:
+  - Fixed `CONFIG.TILE_WIDTH` from stale 1024 to 1440 (correct desktop default).
+  - Removed local `const PIXELS_PER_MM = 10` override in `app.js` — now uses `CONFIG.PIXELS_PER_MM` directly.
+  - `app.js` references `CONFIG.TILE_WIDTH` for desktop tile width (maintained as dynamic `let` due to mobile 720px override on resize).
+  - Applied `Object.freeze()` to `CONFIG` to prevent accidental mutations.
+  - Verified no code attempts to mutate CONFIG. All 81 unit tests pass.
+
 ## [v1.8.17] - 2026-05-18
 ### Refactoring (Phase 7)
 - **App.js Block Splitting**: Major restructuring of `src/app.js` (1925→1366 lines, ~29% reduction):
