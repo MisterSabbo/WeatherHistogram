@@ -1,3 +1,12 @@
+import { openBottomSheet } from './BottomSheet.js'
+
+const METRIC_MODALS = {
+  'val-aqi': 'aqi-modal',
+  'aqi-tooltip': 'aqi-modal',
+  'val-pollen': 'pollen-modal',
+  'pollen-tooltip': 'pollen-modal',
+}
+
 let _initialized = false
 
 function getTooltipContainer(el) {
@@ -73,6 +82,15 @@ export function initTooltipManager() {
   document.querySelectorAll('.data-value, .location-group').forEach(el => {
     el.addEventListener('click', (e) => {
       if (window.innerWidth >= 600) return
+
+      const container = getTooltipContainer(el)
+      if (container && METRIC_MODALS[container.id]) {
+        closeAllTooltips()
+        openBottomSheet(METRIC_MODALS[container.id])
+        e.stopPropagation()
+        return
+      }
+
       const tt = getTooltip(el)
       if (!tt) return
 
