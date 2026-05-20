@@ -23,6 +23,7 @@ export function registerSW() {
         });
 
         navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (_isClearingCache) return;
           window.location.reload();
         });
       } catch (err) {

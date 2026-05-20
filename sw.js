@@ -47,10 +47,12 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // No interceptar peticiones a las APIs externas
+  // No interceptar peticiones a APIs externas y CDNs de terceros
   if (
     url.hostname.includes("open-meteo.com") ||
-    url.hostname.includes("openstreetmap.org")
+    url.hostname.includes("openstreetmap.org") ||
+    url.hostname.includes("fonts.googleapis.com") ||
+    url.hostname.includes("fonts.gstatic.com")
   ) {
     return; // Dejar que el navegador lo maneje sin Service Worker
   }

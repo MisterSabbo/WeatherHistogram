@@ -1,5 +1,12 @@
 export const changelogData = [
   {
+    "version": "1.8.20",
+    "changes": [
+      "Fix: clear-cache-and-reload no longer triggers double app reload — _isClearingCache guard added to controllerchange event handler to skip reload when cache clearing is in progress.",
+      "Fix: Service Worker no longer intercepts fonts.googleapis.com and fonts.gstatic.com requests, preventing network errors that caused missing icons and fonts after cache clearing."
+    ]
+  },
+  {
     "version": "1.8.19",
     "changes": [
       "E2E Tests: Added Playwright-based end-to-end tests — visual screenshot comparisons (full chart, minimap, daily cards, themes), modal interaction tests (info/settings, changelog, theme toggle, language switch, location button), and theme screenshots. Added playwright.config.ts, test:e2e npm script, CI workflow (.github/workflows/ci.yml), and deterministic mock data helpers. All 11 E2E tests pass."
