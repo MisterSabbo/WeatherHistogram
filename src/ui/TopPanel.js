@@ -3,7 +3,7 @@ import { getThemeIcon } from '../theme.js';
 import { t, getLocale } from '../utils/i18n.js';
 import { formatTooltipTime } from '../utils/time.js';
 import { getWeatherDescription } from '../utils/weather.js';
-import { getAQIInfo, getPollenText, getAggregatedPollenLevel } from '../services/AqiManager.js';
+import { getAQIInfo, getPollenText, getAggregatedPollenLevel, getPollenColor } from '../services/AqiManager.js';
 import { generateAlerts, renderAlerts } from '../utils/AlertEngine.js';
 import { drawAQIRadar } from './AqiRadar.js';
 import { drawPollenRadar } from './PollenRadar.js';
@@ -121,10 +121,7 @@ export function updateTopPanel({ scrollContainer, PIXELS_PER_HOUR }) {
   const headerPollenIcon = document.getElementById('header-pollen-icon');
   if (headerPollenIcon) {
     const pLevel = getAggregatedPollenLevel(currentData.pollenDetails || {});
-    if (pLevel === 0) headerPollenIcon.style.color = 'var(--text-secondary)';
-    else if (pLevel <= 1) headerPollenIcon.style.color = '#a3e635';
-    else if (pLevel <= 2) headerPollenIcon.style.color = '#fbbf24';
-    else headerPollenIcon.style.color = '#ef4444';
+    headerPollenIcon.style.color = getPollenColor(pLevel);
   }
 
   requestAnimationFrame(() => {

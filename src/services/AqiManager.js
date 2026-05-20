@@ -46,6 +46,13 @@ export function getAggregatedPollenLevel(pollenDetails) {
     return maxLevel;
 }
 
+export function getPollenColor(level) {
+    if (level === 0) return 'var(--text-secondary)';
+    if (level <= 1) return '#a3e635';
+    if (level <= 2) return '#fbbf24';
+    return '#ef4444';
+}
+
 export function getPollenText(val, pollenDetails) {
     if (pollenDetails) {
         const level = getAggregatedPollenLevel(pollenDetails);

@@ -1,5 +1,6 @@
 import { hexToRgb } from '../utils/color.js';
 import { getThemeColor, getThemeIcon, getThemeFont } from '../theme.js';
+import { getAggregatedPollenLevel, getPollenColor } from '../services/AqiManager.js';
 
 export function interpolateScrubberData(d1, d2, progress) {
   const interpolate = (v1, v2) => v1 + (v2 - v1) * progress;
@@ -54,11 +55,10 @@ export function updateWeatherZone(currentData, state, { haloColor, isDark, walkP
   const spfValueText = document.getElementById('spf-value-text');
 
   if (aqiWarningIcon && pollenWarningIcon && spfInfoContainer && spfValueText) {
-    if (currentData.pollen > 10) {
+    const pLevel = getAggregatedPollenLevel(currentData.pollenDetails || {});
+    if (pLevel >= 2) {
       pollenWarningIcon.style.display = 'block';
-      if (currentData.pollen <= 50) pollenWarningIcon.style.color = '#fbbf24';
-      else if (currentData.pollen <= 100) pollenWarningIcon.style.color = '#ef4444';
-      else pollenWarningIcon.style.color = '#9333ea';
+      pollenWarningIcon.style.color = getPollenColor(pLevel);
     } else pollenWarningIcon.style.display = 'none';
 
     if (currentData.aqi !== null && currentData.aqi >= 101) {
