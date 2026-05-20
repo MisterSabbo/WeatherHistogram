@@ -5,7 +5,6 @@ coverage/
 .DS_Store
 *.log
 .env*
-package-lock.json
 !.env.example
 .agents/
 .opencode/node_modules/
