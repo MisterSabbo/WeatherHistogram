@@ -8,6 +8,14 @@ export function registerSW() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
+        let _skipControllerReload = false;
+        try {
+          if (sessionStorage.getItem('_skipSwReload') === '1') {
+            _skipControllerReload = true;
+            sessionStorage.removeItem('_skipSwReload');
+          }
+        } catch (e) {}
+
         const reg = await navigator.serviceWorker.register('./sw.js');
         console.log('ServiceWorker registered: ./sw.js');
 
@@ -23,7 +31,7 @@ export function registerSW() {
         });
 
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (_isClearingCache) return;
+          if (_isClearingCache || _skipControllerReload) return;
           window.location.reload();
         });
       } catch (err) {
@@ -133,6 +141,8 @@ export async function clearCacheAndReload() {
       }
     } catch (e) { console.warn(e); }
   }
+  try { sessionStorage.setItem('_skipSwReload', '1'); } catch (e) {}
+
   const url = new URL(location.href);
   url.searchParams.set('_t', String(Date.now()));
   location.href = url.toString();

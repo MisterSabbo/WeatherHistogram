@@ -2,7 +2,7 @@ export const changelogData = [
   {
     "version": "1.8.20",
     "changes": [
-      "Fix: clear-cache-and-reload no longer triggers double app reload — _isClearingCache guard added to controllerchange event handler to skip reload when cache clearing is in progress.",
+      "Fix: clear-cache-and-reload no longer triggers double app reload — sessionStorage flag (_skipSwReload) set before navigation to prevent controllerchange in the new SW registration from triggering a second reload.",
       "Fix: Service Worker no longer intercepts fonts.googleapis.com and fonts.gstatic.com requests, preventing network errors that caused missing icons and fonts after cache clearing."
     ]
   },

@@ -4,7 +4,7 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 
 ## [v1.8.20] - 2026-05-20
 ### Bug Fix
-- **Clear cache double reload**: Added `_isClearingCache` guard to `controllerchange` event handler to prevent `window.location.reload()` firing when cache clearing is in progress. Fixes the double reload caused by SW unregistration triggering `controllerchange` followed by the explicit `location.href` navigation.
+- **Clear cache double reload**: Added `_skipSwReload` sessionStorage flag set before navigation in `clearCacheAndReload()` and checked in `registerSW()` to suppress the `controllerchange` event on the newly loaded page. Fixes the double reload caused by the new SW registration's `clients.claim()` triggering `controllerchange` → `window.location.reload()` on the fresh page load.
 - **Missing icons/fonts after cache clear**: Added `fonts.googleapis.com` and `fonts.gstatic.com` to SW's bypass list in `sw.js` so the Service Worker doesn't intercept Google Fonts requests. When the cache was cleared and the SW tried to serve these requests, it failed with `TypeError: Failed to convert value to 'Response'`, preventing Material Symbols and font families from loading.
 
 ## [v1.8.19] - 2026-05-19
