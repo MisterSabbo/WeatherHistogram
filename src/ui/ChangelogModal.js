@@ -33,9 +33,15 @@ function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn
     li.style.position = 'relative';
     li.style.paddingLeft = '30px';
     li.style.cursor = 'pointer';
-    li.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.1}s`;
     li.style.opacity = '0';
     li.style.transform = 'translateY(10px)';
+    li.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.1}s`;
+    li.addEventListener('animationend', function cleanup() {
+      this.style.opacity = '1';
+      this.style.transform = 'none';
+      this.style.animation = 'none';
+      this.removeEventListener('animationend', cleanup);
+    });
 
     const isMajor = item.version.endsWith('.0');
 
@@ -127,10 +133,11 @@ export function showChangelogModal(version, onUpdate) {
   const closeBtn = document.getElementById('changelog-close-btn');
   const updateContainer = document.getElementById('changelog-update-container');
   const updateBtn = document.getElementById('changelog-update-btn');
+  const itemsContainer = document.getElementById('changelog-items');
 
-  if (!modal || !titleEl || !listEl || !closeBtn || !updateBtn) return;
+  if (!modal || !titleEl || !listEl || !closeBtn || !updateBtn || !itemsContainer) return;
 
-  listEl.innerHTML = '';
+  itemsContainer.innerHTML = '';
 
   if (version) {
     const titleFormat = t('config.changelogTitle') || 'Novedades v{version}';
@@ -142,7 +149,7 @@ export function showChangelogModal(version, onUpdate) {
     updateContainer.style.display = 'none';
   }
 
-  renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn, onUpdate);
+  renderChangelogData(changelogData, version, itemsContainer, closeBtn, updateBtn, onUpdate);
 }
 
 export function initChangelog(onBeforeOpen) {

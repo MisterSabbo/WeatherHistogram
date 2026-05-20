@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.8.20a] - 2026-05-20
+### Bug Fix
+- **Changelog timeline line truncated**: The vertical timeline line in the changelog modal only appeared across the first ~5 items because it was absolutely positioned within the scroll container with a fixed height (`top: 20px; bottom: 20px` relative to the viewport). Moved inside `#changelog-items` wrapper with `top: 0; bottom: 0` so it grows with content height and scrolls with the items.
+
 ## [v1.8.20] - 2026-05-20
 ### Bug Fix
 - **Clear cache double reload**: Added `_skipSwReload` sessionStorage flag set before navigation in `clearCacheAndReload()` and checked in `registerSW()` to suppress the `controllerchange` event on the newly loaded page. Fixes the double reload caused by the new SW registration's `clients.claim()` triggering `controllerchange` → `window.location.reload()` on the fresh page load.

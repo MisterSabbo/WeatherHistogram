@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.8.20a",
+    "changes": [
+      "Fix: changelog timeline line now extends across all items — moved from fixed position in scroll container to inside #changelog-list, so it grows with content height and scrolls with items."
+    ]
+  },
+  {
     "version": "1.8.20",
     "changes": [
       "Fix: clear-cache-and-reload no longer triggers double app reload — sessionStorage flag (_skipSwReload) set before navigation to prevent controllerchange in the new SW registration from triggering a second reload.",

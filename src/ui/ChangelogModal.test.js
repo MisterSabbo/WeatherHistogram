@@ -28,7 +28,9 @@ describe('ChangelogModal', () => {
     document.body.innerHTML = `
       <div id="changelog-modal">
         <div id="changelog-title"></div>
-        <ul id="changelog-list"></ul>
+        <div id="changelog-list">
+          <div id="changelog-items"></div>
+        </div>
         <button id="changelog-close-btn">Close</button>
         <div id="changelog-update-container" style="display:none">
           <button id="changelog-update-btn">Update</button>
@@ -48,14 +50,14 @@ describe('ChangelogModal', () => {
 
   it('showChangelogModal renders changelog list', () => {
     showChangelogModal()
-    const listEl = document.getElementById('changelog-list')
-    expect(listEl.children.length).toBe(2)
+    const itemsEl = document.getElementById('changelog-items')
+    expect(itemsEl.children.length).toBe(2)
   })
 
   it('showChangelogModal with version filters to single item', () => {
     showChangelogModal('2.0.0')
-    const listEl = document.getElementById('changelog-list')
-    expect(listEl.children.length).toBe(1)
+    const itemsEl = document.getElementById('changelog-items')
+    expect(itemsEl.children.length).toBe(1)
     expect(document.getElementById('changelog-title').textContent).toContain('2.0.0')
   })
 
