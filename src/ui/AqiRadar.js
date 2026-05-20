@@ -1,7 +1,7 @@
 import { state } from '../store.js';
 
 export function drawAQIRadar(data, targetId = 'aqi-radar', detailsId = 'aqi-details') {
-    const canvas = document.getElementById(targetId);
+    const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById(targetId));
     if (!canvas || !data.aqiDetails) return;
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;

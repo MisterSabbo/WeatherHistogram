@@ -133,6 +133,6 @@ export async function clearCacheAndReload() {
     } catch (e) { console.warn(e); }
   }
   const url = new URL(location.href);
-  url.searchParams.set('_t', Date.now());
+  url.searchParams.set('_t', String(Date.now()));
   location.href = url.toString();
 }

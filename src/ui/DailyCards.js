@@ -32,7 +32,7 @@ export function generateDailyCards(centerOnCurrentTimeCallback) {
     state.dailyData.forEach((day, index) => {
         const card = document.createElement('div');
         card.className = 'daily-card';
-        card.dataset.index = index;
+        card.dataset.index = String(index);
         
         const date = new Date(day.time);
         const dayName = date.toLocaleDateString(getLocale(), { weekday: 'short', timeZone: state.timezone }).toUpperCase();
@@ -143,14 +143,15 @@ export function updateActiveDailyCard() {
         card.classList.toggle('active', isActive);
         
         if (isActive) {
-            card.style.setProperty('--arrow-pos', `${Math.max(0, Math.min(1, dayProgress)) * 100}%`);
+            const c = /** @type {HTMLElement} */ (card);
+            c.style.setProperty('--arrow-pos', `${Math.max(0, Math.min(1, dayProgress)) * 100}%`);
 
             if (dayChanged) {
-                const cardRect = card.getBoundingClientRect();
+                const cardRect = c.getBoundingClientRect();
                 const containerRect = container.getBoundingClientRect();
                 
                 if (cardRect.left < containerRect.left || cardRect.right > containerRect.right) {
-                    const scrollLeft = card.offsetLeft - (container.clientWidth / 2) + (card.clientWidth / 2);
+                    const scrollLeft = c.offsetLeft - (container.clientWidth / 2) + (card.clientWidth / 2);
                     container.scrollTo({ left: scrollLeft, behavior: 'instant' });
                 }
             }

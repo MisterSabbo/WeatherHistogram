@@ -82,12 +82,12 @@ export function updateTopPanel({ scrollContainer, PIXELS_PER_HOUR }) {
     if (t2 < 10) windColor = '#3b82f6';
     else if (t2 > 28) windColor = '#ef4444';
     arrow.style.background = windColor;
-    arrow.firstElementChild.style.borderBottomColor = windColor;
+    /** @type {HTMLElement} */ (arrow.firstElementChild).style.borderBottomColor = windColor;
     document.getElementById('wind-compass').style.borderColor = windColor;
   }
 
   const aqiInfo = getAQIInfo(currentData.aqi);
-  document.querySelector('#val-aqi .aqi-text').innerText = aqiInfo.text;
+  /** @type {HTMLElement} */ (document.querySelector('#val-aqi .aqi-text')).innerText = aqiInfo.text;
   const headerAqiIcon = document.getElementById('header-aqi-icon');
   if (headerAqiIcon) {
     if (currentData.aqi === null || currentData.aqi <= 50) headerAqiIcon.style.color = '#22c55e';
@@ -117,7 +117,7 @@ export function updateTopPanel({ scrollContainer, PIXELS_PER_HOUR }) {
   if (aqiModalRadar) aqiModalRadar.style.display = 'block';
 
   const pollenText = getPollenText(currentData.pollen, currentData.pollenDetails);
-  document.querySelector('#val-pollen .pollen-text').innerText = pollenText;
+  /** @type {HTMLElement} */ (document.querySelector('#val-pollen .pollen-text')).innerText = pollenText;
   const headerPollenIcon = document.getElementById('header-pollen-icon');
   if (headerPollenIcon) {
     const pLevel = getAggregatedPollenLevel(currentData.pollenDetails || {});
@@ -143,9 +143,9 @@ export function updateTopPanel({ scrollContainer, PIXELS_PER_HOUR }) {
   const date = new Date(exactTime);
   const { timeStr, dateStr, isToday } = formatTooltipTime(date, getLocale(), state.timezone);
 
-  const timeDisplay = document.getElementById('current-time-display');
-  timeDisplay.querySelector('.time-main').innerText = timeStr;
-  timeDisplay.querySelector('.date-sub').innerText = isToday ? `${t('topPanel.today')}, ${dateStr}` : dateStr;
+  const timeDisplay = /** @type {HTMLElement} */ (document.getElementById('current-time-display'));
+  /** @type {HTMLElement} */ (timeDisplay.querySelector('.time-main')).innerText = timeStr;
+  /** @type {HTMLElement} */ (timeDisplay.querySelector('.date-sub')).innerText = isToday ? `${t('topPanel.today')}, ${dateStr}` : dateStr;
 
   const { alerts, alertLevel } = generateAlerts(state.hourlyData, index);
   renderAlerts(alerts, alertLevel);

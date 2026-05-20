@@ -22,8 +22,9 @@ export function getThemeIcon(path, fallbackIcon) {
     return typeof val === 'string' ? val : fallbackIcon;
 }
 
-export function getThemeFont() {
-    return (state.themeConfig && state.themeConfig.font) ? state.themeConfig.font : 'Inter, sans-serif';
+export function getThemeFont(size = '') {
+    const font = (state.themeConfig && state.themeConfig.font) ? state.themeConfig.font : 'Inter, sans-serif';
+    return size ? `${size} ${font}` : font;
 }
 
 export async function loadChartTheme(themeId) {
@@ -52,7 +53,7 @@ export async function loadChartTheme(themeId) {
 
 export function applyThemeDOM() {
     document.body.style.fontFamily = getThemeFont();
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const metaTheme = /** @type {HTMLMetaElement} */ (document.querySelector('meta[name="theme-color"]'));
     if (metaTheme) {
         const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
         metaTheme.content = bg || '#2B2D31';

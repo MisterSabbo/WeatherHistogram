@@ -13,7 +13,7 @@ export function openSpfSheet() {
   const spfInfoContainer = document.getElementById('spf-info-container')
   if (!spfInfoContainer) return
 
-  const uv = parseFloat(spfInfoContainer.dataset.uv || 0)
+  const uv = parseFloat(spfInfoContainer.dataset.uv || '0')
 
   const elUviBox = document.getElementById('spf-modal-uvi-box')
   const elUviTitle = document.getElementById('spf-modal-uvi-title')
@@ -42,7 +42,7 @@ export function openSpfSheet() {
 
   const sType = state.skinType || 2
   const timeToBurn = uv > 0 ? Math.round(SKIN_BASE_MINS[sType - 1] / uv) : 0
-  document.getElementById('spf-modal-time-val').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? '> 120' : timeToBurn) : '--'
+  document.getElementById('spf-modal-time-val').innerText = timeToBurn > 0 ? (timeToBurn > 120 ? '> 120' : String(timeToBurn)) : '--'
   document.getElementById('spf-modal-time-desc').innerText = `${t('config.spfModalTimeNone')} ${SKIN_TYPES[sType - 1] || 'II'}`
 
   let spfText

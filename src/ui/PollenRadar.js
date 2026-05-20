@@ -2,7 +2,7 @@ import { state } from '../store.js';
 import { t } from '../utils/i18n.js';
 
 export function drawPollenRadar(data, targetId = 'pollen-radar', detailsId = 'pollen-details') {
-    const canvas = document.getElementById(targetId);
+    const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById(targetId));
     if (!canvas || !data.pollenDetails) return;
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;

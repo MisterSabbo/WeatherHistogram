@@ -117,7 +117,7 @@ export function initMapModal(onLocationSelected) {
 
     goBtn.onclick = () => {
       const nameEl = div.querySelector(".popup-loc-name");
-      const finalName = nameEl ? nameEl.innerText : nameLabel;
+      const finalName = nameEl ? /** @type {HTMLElement} */ (nameEl).innerText : nameLabel;
       document.getElementById("map-location-modal").style.display = "none";
       document.getElementById("map-search-overlay").style.display = "none";
       onLocationSelected(lat, lon, finalName);
@@ -138,7 +138,7 @@ export function initMapModal(onLocationSelected) {
 
     favBtn.onclick = async () => {
       const nameEl = div.querySelector(".popup-loc-name");
-      const finalName = nameEl ? nameEl.innerText : nameLabel;
+      const finalName = nameEl ? /** @type {HTMLElement} */ (nameEl).innerText : nameLabel;
       const { favoritesService } = await import('../services/FavoritesService.js');
       await favoritesService.add(lat, lon, finalName);
       
@@ -170,18 +170,20 @@ export function initMapModal(onLocationSelected) {
       // Update popup if still open
       const nameEls = document.querySelectorAll(".popup-loc-name");
       if (nameEls.length > 0) {
-        nameEls.forEach(el => el.innerText = name);
+        nameEls.forEach(el => /** @type {HTMLElement} */ (el).innerText = name);
         
         document.querySelectorAll(".popup-go-btn").forEach(goBtn => {
-          goBtn.disabled = false;
-          goBtn.style.opacity = "1";
-          goBtn.style.cursor = "pointer";
+          const btn = /** @type {HTMLButtonElement} */ (goBtn);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
         });
         
         document.querySelectorAll(".popup-fav-btn").forEach(favBtn => {
-          favBtn.disabled = false;
-          favBtn.style.opacity = "1";
-          favBtn.style.cursor = "pointer";
+          const btn = /** @type {HTMLButtonElement} */ (favBtn);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
         });
       } else {
         // If popup was closed but we wanted to update the marker's bind
@@ -196,16 +198,18 @@ export function initMapModal(onLocationSelected) {
 
       const nameEls = document.querySelectorAll(".popup-loc-name");
       if (nameEls.length > 0 && e.message !== "Cancelled") {
-        nameEls.forEach(el => el.innerText = "Ubicación Seleccionada");
+        nameEls.forEach(el => /** @type {HTMLElement} */ (el).innerText = "Ubicación Seleccionada");
         document.querySelectorAll(".popup-go-btn").forEach(goBtn => {
-          goBtn.disabled = false;
-          goBtn.style.opacity = "1";
-          goBtn.style.cursor = "pointer";
+          const btn = /** @type {HTMLButtonElement} */ (goBtn);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
         });
         document.querySelectorAll(".popup-fav-btn").forEach(favBtn => {
-          favBtn.disabled = false;
-          favBtn.style.opacity = "1";
-          favBtn.style.cursor = "pointer";
+          const btn = /** @type {HTMLButtonElement} */ (favBtn);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
         });
       }
     }
@@ -259,14 +263,14 @@ export function initMapModal(onLocationSelected) {
 
   closeSearchBtn.addEventListener("click", () => {
     searchOverlay.style.display = "none";
-    searchInput.value = "";
+    /** @type {HTMLInputElement} */ (searchInput).value = "";
     suggestionsBox.style.display = "none";
   });
 
   // Search input
   searchInput.addEventListener("input", (e) => {
     clearTimeout(searchTimeout);
-    const query = e.target.value.trim();
+    const query = /** @type {HTMLInputElement} */ (e.target).value.trim();
     if (query.length < 2) {
       suggestionsBox.style.display = "none";
       return;
@@ -340,7 +344,7 @@ export function initMapModal(onLocationSelected) {
             placeMarker(loc.latitude, loc.longitude, fullName);
 
             searchOverlay.style.display = "none";
-            searchInput.value = "";
+            /** @type {HTMLInputElement} */ (searchInput).value = "";
             suggestionsBox.style.display = "none";
           };
           suggestionsBox.appendChild(div);

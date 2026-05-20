@@ -3,16 +3,12 @@
          */
 import { state, CONFIG, getDPR } from './store.js';
 import { storageService } from './services/StorageService.js';
-import { getThemeColor, getThemeIcon, getThemeFont, loadChartTheme, applyThemeDOM } from './theme.js';
-import { getLocale, setLanguage, getLanguage, applyTranslations, t } from './utils/i18n.js';
-import { weatherService } from './services/WeatherService.js';
+import { getThemeColor, getThemeIcon, getThemeFont, loadChartTheme } from './theme.js';
+import { setLanguage, getLanguage, applyTranslations, t } from './utils/i18n.js';
 import { geoService } from './services/GeoService.js';
-import { generateDailyCards, updateActiveDailyCard, getWeatherIconSVG } from './ui/DailyCards.js';
+import { generateDailyCards, updateActiveDailyCard } from './ui/DailyCards.js';
 import { processData } from './services/DataProcessor.js';
 import { fetchWeatherData, clearWeatherCache } from './domain/WeatherFetcher.js';
-import { getAQIInfo, getPollenText, getAggregatedPollenLevel, getPollenLevelByType } from './services/AqiManager.js';
-import { drawAQIRadar } from './ui/AqiRadar.js';
-import { drawPollenRadar } from './ui/PollenRadar.js';
 import { getWeatherDescription } from './utils/weather.js';
 import { showChangelogModal, initChangelog } from './ui/ChangelogModal.js';
 import { registerSW, handleInstallPrompt, showUpdateToast, checkAppVersion, clearCacheAndReload } from './utils/pwa.js';
@@ -44,8 +40,14 @@ const MINIMAP_HEIGHT = CONFIG.MINIMAP_HEIGHT;
 const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
 const CACHE_DURATION = CONFIG.CACHE_DURATION;
 
-        let minimapCanvas, minimapCtx;
-        let fixedOverlayCanvas, fixedOverlayCtx;
+        /** @type {HTMLCanvasElement} */
+        let minimapCanvas;
+        /** @type {CanvasRenderingContext2D} */
+        let minimapCtx;
+        /** @type {HTMLCanvasElement} */
+        let fixedOverlayCanvas;
+        /** @type {CanvasRenderingContext2D} */
+        let fixedOverlayCtx;
         let tiles = [];
         let cachedTileHeight = 0;
         let TILE_WIDTH = window.innerWidth < 600 ? 720 : CONFIG.TILE_WIDTH;
@@ -137,7 +139,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             }
 
             function initPwaDetection() {
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || /** @type {any} */ (window.navigator).standalone === true;
                 if (isStandalone) {
                     document.documentElement.classList.add('pwa-standalone');
                 }
@@ -221,9 +223,9 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             }
 
             function initCanvas() {
-                minimapCanvas = document.getElementById('minimap-canvas');
+                minimapCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('minimap-canvas'));
                 minimapCtx = minimapCanvas.getContext('2d', { alpha: true });
-                fixedOverlayCanvas = document.getElementById('fixed-overlay-canvas');
+                fixedOverlayCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('fixed-overlay-canvas'));
                 fixedOverlayCtx = fixedOverlayCanvas.getContext('2d', { alpha: true });
                 scrollContainer = document.getElementById('scroll-container');
                 const minimapViewport = document.getElementById('minimap-viewport');
@@ -291,7 +293,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             }
 
             function initLocationTooltip() {
-                const locationGroup = document.querySelector('.location-group');
+                const locationGroup = /** @type {HTMLElement} */ (document.querySelector('.location-group'));
                 if (locationGroup) {
                     const checkOverflow = () => {
                         const locName = document.getElementById('location-name');
@@ -323,7 +325,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                             const tooltip = document.getElementById('alerts-tooltip');
                             if (tooltip) {
                                 const isVisible = tooltip.style.opacity === '1';
-                                document.querySelectorAll('.custom-tooltip').forEach(t => t.style.display = '');
+                                document.querySelectorAll('.custom-tooltip').forEach(t => /** @type {HTMLElement} */ (t).style.display = '');
                                 if (!isVisible) {
                                     alertsContainer.classList.add('active');
                                     tooltip.style.position = 'fixed';
@@ -361,24 +363,23 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             }
 
             function initTheme() {
-                themeToggle.addEventListener('click', toggleTheme);
-                const settingsThemeToggle = document.getElementById('settings-theme-toggle');
+                const settingsThemeToggle = /** @type {HTMLInputElement} */ (document.getElementById('settings-theme-toggle'));
                 if (settingsThemeToggle) {
                     settingsThemeToggle.checked = state.theme === 'dark';
-                    settingsThemeToggle.addEventListener('change', () => {
-                        const targetTheme = settingsThemeToggle.checked ? 'dark' : 'light';
-                        if (state.theme !== targetTheme) toggleTheme();
-                    });
                 }
-                const origToggleTheme = toggleTheme;
-                const wrappedToggleTheme = function() {
-                    origToggleTheme();
+                const syncToggleTheme = () => {
+                    toggleTheme();
                     if (settingsThemeToggle) {
                         settingsThemeToggle.checked = state.theme === 'dark';
                     }
                 };
-                // eslint-disable-next-line no-func-assign
-                toggleTheme = wrappedToggleTheme;
+                themeToggle.addEventListener('click', syncToggleTheme);
+                if (settingsThemeToggle) {
+                    settingsThemeToggle.addEventListener('change', () => {
+                        const targetTheme = settingsThemeToggle.checked ? 'dark' : 'light';
+                        if (state.theme !== targetTheme) syncToggleTheme();
+                    });
+                }
             }
 
             function initCollapsibleSections() {
@@ -396,7 +397,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
 
             function initNowButton() {
                 const floatingNowBtn = document.getElementById('floating-now-btn');
-                if (floatingNowBtn) floatingNowBtn.addEventListener('click', centerOnCurrentTime);
+                if (floatingNowBtn) floatingNowBtn.addEventListener('click', () => centerOnCurrentTime());
             }
 
             function initInfoModal() {
@@ -419,12 +420,13 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                 const langCards = document.querySelectorAll('.lang-card');
                 const updateLangCardsUI = (lang) => {
                     langCards.forEach(card => {
-                        if (card.dataset.value === lang) {
-                            card.style.borderColor = '#3b82f6';
-                            card.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                        const el = /** @type {HTMLElement} */ (card);
+                        if (el.dataset.value === lang) {
+                            el.style.borderColor = '#3b82f6';
+                            el.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
                         } else {
-                            card.style.borderColor = 'var(--grid-color)';
-                            card.style.backgroundColor = 'var(--card-bg)';
+                            el.style.borderColor = 'var(--grid-color)';
+                            el.style.backgroundColor = 'var(--card-bg)';
                         }
                     });
                 };
@@ -432,13 +434,8 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                     updateLangCardsUI(getLanguage());
                     langCards.forEach(card => {
                         card.addEventListener('click', async () => {
-                            const newLang = card.dataset.value;
+                            const newLang = /** @type {HTMLElement} */ (card).dataset.value;
                             if (newLang === getLanguage()) return;
-                            const confirmed = await showConfirm(
-                                t('config.confirmAction', 'Confirmar'),
-                                t('config.langChangeConfirm', '¿Cambiar idioma? La aplicación se actualizará.')
-                            );
-                            if (!confirmed) return;
                             setLanguage(newLang);
                             updateLangCardsUI(newLang);
                             applyTranslations();
@@ -469,7 +466,10 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                     if (themeCurrentLabel) themeCurrentLabel.textContent = themeName;
                     if (themeCurrentSwatch) themeCurrentSwatch.style.background = themeColor || 'var(--accent-temp)';
                     const opts = document.querySelectorAll('.theme-option');
-                    opts.forEach(o => o.classList.toggle('active', o.dataset.value === themeId));
+                    opts.forEach(o => {
+                        const el = /** @type {HTMLElement} */ (o);
+                        el.classList.toggle('active', el.dataset.value === themeId);
+                    });
                 };
 
                 const loadThemeOptions = async () => {
@@ -529,22 +529,22 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
 
             function initStickmanSliders() {
                 const initSlider = (id, stateKey, displayId, onchange) => {
-                    const slider = document.getElementById(id);
+                    const slider = /** @type {HTMLInputElement} */ (document.getElementById(id));
                     const display = document.getElementById(displayId);
                     if (!slider) return;
                     const val = state.stickmanThresholds[stateKey];
-                    slider.value = val;
-                    if (display) display.textContent = val;
+                    slider.value = String(val);
+                    if (display) display.textContent = String(val);
                     slider.addEventListener('input', (e) => {
-                        const v = e.target.value;
+                        const v = /** @type {HTMLInputElement} */ (e.target).value;
                         if (display) display.textContent = v;
                     });
                     slider.addEventListener('change', (e) => {
-                        const v = parseFloat(e.target.value);
+                        const v = parseFloat(/** @type {HTMLInputElement} */ (e.target).value);
                         if (!isNaN(v)) {
                             state.stickmanThresholds[stateKey] = v;
                             storageService.set('stickmanThresholds', state.stickmanThresholds);
-                            document.getElementById('slider-' + stateKey + '-val').textContent = v;
+                            document.getElementById('slider-' + stateKey + '-val').textContent = String(v);
                             if (onchange) onchange();
                             if (stateKey === 'wind') render();
                             drawFixedOverlay();
@@ -563,7 +563,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                     const updateActiveCard = () => {
                         const activeVal = state.skinType || 2;
                         skinCards.forEach(card => {
-                            if (parseInt(card.dataset.value) === activeVal) {
+                            if (parseInt(/** @type {HTMLElement} */ (card).dataset.value) === activeVal) {
                                 card.classList.add('active');
                             } else {
                                 card.classList.remove('active');
@@ -573,7 +573,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                     updateActiveCard();
                     skinCards.forEach(card => {
                         card.addEventListener('click', () => {
-                            const val = parseInt(card.dataset.value);
+                            const val = parseInt(/** @type {HTMLElement} */ (card).dataset.value);
                             if (!isNaN(val)) {
                                 state.skinType = val;
                                 storageService.set('skinType', val);
@@ -645,7 +645,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                                 });
                                 try { localStorage.clear(); } catch (e) {}
                                 const url = new URL(location.href);
-                                url.searchParams.set('_t', Date.now());
+                                url.searchParams.set('_t', String(Date.now()));
                                 location.href = url.toString();
                             }
                         );

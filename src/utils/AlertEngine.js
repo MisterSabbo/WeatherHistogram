@@ -74,7 +74,7 @@ export function renderAlerts(alerts, alertLevel) {
     else if (alertLevel === 2) iconColor = '#f57c00'
 
     const icon = alertContainer.querySelector('.material-symbols-outlined')
-    if (icon) icon.style.color = iconColor
+    if (icon) /** @type {HTMLElement} */ (icon).style.color = iconColor
 
     alerts.forEach(a => {
       const c = a.level === 3 ? '#ef5350' : a.level === 2 ? '#ff9800' : '#ffca28'

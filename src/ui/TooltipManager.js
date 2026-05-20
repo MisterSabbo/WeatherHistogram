@@ -22,12 +22,13 @@ function isLocationTruncated() {
 
 function closeAllTooltips() {
   document.querySelectorAll('.custom-tooltip').forEach(t => {
-    t.style.display = ''
-    t.style.position = ''
-    t.style.top = ''
-    t.style.left = ''
-    t.style.transform = ''
-    t.style.zIndex = ''
+    const el = /** @type {HTMLElement} */ (t)
+    el.style.display = ''
+    el.style.position = ''
+    el.style.top = ''
+    el.style.left = ''
+    el.style.transform = ''
+    el.style.zIndex = ''
   })
 }
 

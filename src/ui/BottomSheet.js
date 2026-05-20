@@ -31,8 +31,8 @@ export function openBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop', scr
   const depth = _sheetIdCounter;
   const sheetZ = 7000 + depth * 100;
   const backdropZ = 6999 + depth * 100;
-  sheet.style.zIndex = sheetZ;
-  backdrop.style.zIndex = backdropZ;
+  sheet.style.zIndex = String(sheetZ);
+  backdrop.style.zIndex = String(backdropZ);
 
   sheet.style.transform = '';
   sheet.classList.add('open');

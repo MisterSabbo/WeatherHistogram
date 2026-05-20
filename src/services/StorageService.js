@@ -13,11 +13,11 @@ export class StorageService {
         const request = indexedDB.open(this.dbName, 2);
         request.onerror = (e) => reject(request.error);
         request.onsuccess = (e) => {
-          this.db = e.target.result;
+          this.db = /** @type {IDBOpenDBRequest} */ (e.target).result;
           resolve();
         };
         request.onupgradeneeded = (e) => {
-          const db = e.target.result;
+          const db = /** @type {IDBOpenDBRequest} */ (e.target).result;
           if (!db.objectStoreNames.contains(this.storeName)) {
             db.createObjectStore(this.storeName);
           }

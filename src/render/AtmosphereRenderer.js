@@ -136,7 +136,7 @@ export function drawPrecipitation(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR,
 
             const strokeColorParts = strokeColor.match(/[\d.]+/g);
             const sR = strokeColorParts[0], sG = strokeColorParts[1], sB = strokeColorParts[2], sA = strokeColorParts[3];
-            const semiTransparentStroke = `rgba(${sR}, ${sG}, ${sB}, ${Math.max(0.3, sA * 0.5)})`;
+            const semiTransparentStroke = `rgba(${sR}, ${sG}, ${sB}, ${Math.max(0.3, Number(sA) * 0.5)})`;
 
             const strokeGrad = ctx.createLinearGradient(0, barY, 0, Math.min(h, barY + 30));
             strokeGrad.addColorStop(0, semiTransparentStroke);

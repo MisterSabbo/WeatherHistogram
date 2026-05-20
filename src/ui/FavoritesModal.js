@@ -118,7 +118,7 @@ export function initFavoritesModal(onSelect) {
                     }
                     
                     promptTitle.textContent = t('config.edit') || "Editar nombre";
-                    promptInput.value = (fav.alias && fav.alias !== fav.originName) ? fav.alias : city;
+                    /** @type {HTMLInputElement} */ (promptInput).value = (fav.alias && fav.alias !== fav.originName) ? fav.alias : city;
                     promptCancel.textContent = t('config.cancel') || 'Cancelar';
                     promptOk.textContent = t('config.accept') || 'Aceptar';
                     
@@ -131,9 +131,9 @@ export function initFavoritesModal(onSelect) {
                     const newCancel = promptCancel.cloneNode(true);
                     promptCancel.parentNode.replaceChild(newCancel, promptCancel);
                     
-                    newCancel.onclick = () => { promptModal.style.display = 'none'; };
-                    newOk.onclick = () => {
-                        const newAlias = promptInput.value;
+                    /** @type {HTMLElement} */ (newCancel).onclick = () => { promptModal.style.display = 'none'; };
+                    /** @type {HTMLElement} */ (newOk).onclick = () => {
+                        const newAlias = /** @type {HTMLInputElement} */ (promptInput).value;
                         if (newAlias !== null && newAlias.trim() !== '') {
                             favoritesService.updateAlias(index, newAlias.trim()).then(() => {
                                 promptModal.style.display = 'none';

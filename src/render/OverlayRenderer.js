@@ -41,7 +41,7 @@ export function updateWeatherZone(currentData, state, { haloColor, isDark, walkP
 
   const isWindy = currentData.gusts >= state.stickmanThresholds.wind;
   const isNight = !!currentData.isNight;
-  const stickmanCanvas = document.getElementById('stickman-canvas');
+  const stickmanCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('stickman-canvas'));
   if (stickmanCanvas) {
     const sCtx = stickmanCanvas.getContext('2d');
     sCtx.clearRect(0, 0, stickmanCanvas.width, stickmanCanvas.height);

@@ -22,7 +22,7 @@ export function initYearInPixels() {
   if (paramDisplay) {
     paramDisplay.addEventListener('click', () => {
       populateParamSheet();
-      _closeSheet = window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop');
+      _closeSheet = window.openBottomSheet ? window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop') : undefined;
     });
   }
 
@@ -64,11 +64,11 @@ export function initYearInPixels() {
              selectedLocation = null;
              renderYIPGrid(null);
          } else {
-             keys.forEach(k => {
-                 const chip = document.createElement('div');
-                 chip.className = 'yip-chip';
-                 chip.dataset.value = k;
-                 chip.textContent = k;
+              keys.forEach(k => {
+                  const chip = document.createElement('div');
+                  chip.className = 'yip-chip';
+                  chip.dataset.value = String(k);
+                  chip.textContent = String(k);
                  if (k === selectedLocation || (!selectedLocation && keys.indexOf(k) === 0)) {
                      chip.classList.add('active');
                      if (!selectedLocation) selectedLocation = k;
@@ -378,7 +378,7 @@ function openYIPDetail(data, dateStr) {
     `;
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
 
-    window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
+    if (window.openBottomSheet) window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
 }
 
 function getColorForParam(param, value) {
@@ -528,7 +528,7 @@ async function showConfirm(title, message) {
         if (okBtn) {
             const newOk = okBtn.cloneNode(true);
             okBtn.parentNode.replaceChild(newOk, okBtn);
-            newOk.onclick = () => {
+            /** @type {HTMLElement} */ (newOk).onclick = () => {
                 closeFn();
                 resolve(true);
             };
@@ -536,12 +536,13 @@ async function showConfirm(title, message) {
         if (cancelBtn) {
             const newCancel = cancelBtn.cloneNode(true);
             cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-            newCancel.onclick = () => {
+            /** @type {HTMLElement} */ (newCancel).onclick = () => {
                 closeFn();
                 resolve(false);
             };
         }
 
         const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => { resolve(confirm(message)); };
+
     });
 }

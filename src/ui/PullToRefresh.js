@@ -83,7 +83,7 @@ function onTouchMove(e) {
           if (ptrIcon) {
             const rotation = Math.min(360, (visualDist / 75) * 360)
             ptrIcon.style.transform = `rotate(${rotation}deg)`
-            ptrIcon.style.opacity = Math.min(1, visualDist / 40)
+            ptrIcon.style.opacity = String(Math.min(1, visualDist / 40))
           }
         }
         const appWrapper = document.getElementById('app-wrapper')
@@ -113,7 +113,7 @@ function onTouchEnd() {
         spinDeg += 360
         ptrIcon.style.transform = `rotate(${spinDeg}deg)`
       }, 500)
-      ptrIcon.dataset.spinInterval = spinInterval
+      ptrIcon.dataset.spinInterval = String(spinInterval)
     }
 
     const ptrIndicator = document.getElementById('ptr-indicator')
@@ -141,6 +141,9 @@ function onTouchEnd() {
   _ptrDist = 0
 }
 
+/**
+ * @param {{ onRefresh?: () => void }} [opts]
+ */
 export function initPullToRefresh({ onRefresh } = {}) {
   _onRefreshCallback = onRefresh || null
 
