@@ -1268,7 +1268,8 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             TILE_WIDTH = window.innerWidth < 600 ? 720 : CONFIG.TILE_WIDTH;
             state.dpr = getDPR();
 
-            const containerH = scrollContainer.clientHeight;
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const containerH = Math.ceil(containerRect.height) + 1;
             cachedTileHeight = containerH;
             const totalWidth = state.hourlyData.length * PIXELS_PER_HOUR;
 
