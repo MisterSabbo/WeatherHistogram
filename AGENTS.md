@@ -24,7 +24,7 @@
 - **Changelog:** update `CHANGELOG.md` + `src/data/changelog.js` (English) + version (`index.html` `#app-version-label` + `public/version.json`). Semver `X.Y.Z`; letter suffix for trivial (resets when X/Y/Z changes).
 - **README:** update if documented features or setup change.
 - **SOLID principles** — SRP, OCP, LSP, ISP, DIP.
-- **E2E:** add/update mock data in `tests/e2e/helpers/mock-data.js` first, then tests in `tests/e2e/interaction/` or `tests/e2e/visual/`. Snapshots use `maxDiffPixelRatio: 0.02`.
+- **E2E:** add/update mock data in `tests/e2e/helpers/mock-data.js` first, then tests in `tests/e2e/interaction/` or `tests/e2e/visual/`. Snapshots use `maxDiffPixelRatio: 0.07`.
 - **After changes:** run `git diff --cached` and `git diff`, propose commit message.
 - **Final verification:** invoke `@project-auditor`.
 
