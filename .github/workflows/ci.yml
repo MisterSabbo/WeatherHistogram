@@ -14,4 +14,5 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - uses: microsoft/playwright-github-action@v1
       - run: npm run test:e2e
