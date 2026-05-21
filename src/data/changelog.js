@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.0",
+    "changes": [
+      "Mood tracking per day in YIP: Users can now assign mood states to individual days in the Year in Pixels dashboard. Six classic moods (Happy, Neutral, Sad, Angry, Anxious, Tired) with emoji icons and distinct colors. Mood is a selectable grid parameter and shown as emoji icon on cells. Multi-select mood toggles in the day detail sheet. Persisted in IndexedDB via storageService.updateDayMoods(). Spanish and English translations included."
+    ]
+  },
+  {
     "version": "1.9.0",
     "changes": [
       "Personal notes per day in YIP: Users can now add personal text notes to individual days in the Year in Pixels dashboard. Notes are persisted in IndexedDB via storageService.updateDayNotes(). Days with notes show a notebook icon in their grid cell. Spanish and English translations included."

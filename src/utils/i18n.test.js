@@ -79,6 +79,41 @@ describe('i18n', () => {
     });
   });
 
+  describe('YIP mood keys', () => {
+    it('returns mood.happy in Spanish', () => {
+      expect(t('moods.happy')).toMatch(/Feliz/);
+    });
+
+    it('returns mood.happy in English after language change', () => {
+      setLanguage('en');
+      expect(t('moods.happy')).toMatch(/Happy/);
+    });
+
+    it('returns all mood labels in Spanish', () => {
+      expect(t('moods.neutral')).toMatch(/Neutral/);
+      expect(t('moods.sad')).toMatch(/Triste/);
+      expect(t('moods.angry')).toMatch(/Enfadado/);
+      expect(t('moods.anxious')).toMatch(/Ansioso/);
+      expect(t('moods.tired')).toMatch(/Cansado/);
+    });
+
+    it('returns config.yipMoodsLabel text', () => {
+      expect(t('config.yipMoodsLabel')).toMatch(/ánimo/);
+    });
+
+    it('returns config.yipMoodsSave text', () => {
+      expect(t('config.yipMoodsSave')).toMatch(/Guardar/);
+    });
+
+    it('returns config.yipMoodsSaved text', () => {
+      expect(t('config.yipMoodsSaved')).toMatch(/guardado/);
+    });
+
+    it('returns config.yipMoodsParam text', () => {
+      expect(t('config.yipMoodsParam')).toMatch(/Ánimo/);
+    });
+  });
+
   describe('getLanguage() / setLanguage()', () => {
     it('defaults to es', () => {
       expect(getLanguage()).toBe('es');

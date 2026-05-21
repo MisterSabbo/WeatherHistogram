@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.0] - 2026-05-21
+### New Feature
+- **Mood tracking per day in YIP**: Users can now assign mood states to individual days in the Year in Pixels dashboard. Six classic moods (Happy, Neutral, Sad, Angry, Anxious, Tired) with emoji icons and distinct colors. Mood is a selectable parameter in the grid (cells colored by mood) and also shown as an emoji icon on cells regardless of the active parameter. The day detail bottom sheet includes a multi-select mood toggle section alongside the existing notes. Moods are persisted in IndexedDB via `storageService.updateDayMoods()`. Multiple moods per day supported. Spanish and English translations included.
+
 ## [v1.9.0] - 2026-05-21
 ### New Feature
 - **Personal notes per day in YIP**: Users can now add personal text notes to individual days in the Year in Pixels dashboard. The notes section appears in the day detail bottom sheet with a textarea (up to 500 characters), save/cancel buttons, and a "saved" confirmation message. Notes are persisted in IndexedDB alongside weather data via `storageService.updateDayNotes()`. The existing data merge in `DataProcessor.saveHistoryData()` automatically preserves notes. Days with notes show a notebook icon (`sticky_note_2`) in the top-right corner of their grid cell. Spanish and English translations included.

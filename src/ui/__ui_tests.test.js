@@ -7,7 +7,7 @@ vi.mock('../store.js', () => ({
 
 vi.mock('../utils/i18n.js', () => ({
   t: vi.fn((k) => {
-    const map = { 'pollen.alder': 'Aliso', 'pollen.birch': 'Abedul', 'pollen.grass': 'Gramíneas', 'pollen.mugwort': 'Artemisa', 'pollen.olive': 'Olivo', 'pollen.ragweed': 'Ambrosía', 'pollen.noData': 'S/D', 'aqi.title': 'Air Quality', 'topPanel.today': 'TODAY', 'map.noFavorites': 'No favorites' };
+    const map = { 'pollen.alder': 'Aliso', 'pollen.birch': 'Abedul', 'pollen.grass': 'Gramíneas', 'pollen.mugwort': 'Artemisa', 'pollen.olive': 'Olivo', 'pollen.ragweed': 'Ambrosía', 'pollen.noData': 'S/D', 'aqi.title': 'Air Quality', 'topPanel.today': 'TODAY', 'map.noFavorites': 'No favorites', 'moods.happy': 'Feliz', 'moods.neutral': 'Neutral', 'moods.sad': 'Triste', 'moods.angry': 'Enfadado', 'moods.anxious': 'Ansioso', 'moods.tired': 'Cansado', 'config.yipMoodsSave': 'Guardar estado', 'config.yipMoodsSaved': '¡Estado guardado!' };
     return map[k] || k;
   }),
   getLocale: vi.fn(() => 'es-ES')
@@ -190,7 +190,7 @@ describe('FavoritesModal', () => {
 });
 
 describe('YearInPixels', () => {
-  let initYearInPixels, saveDayNote, openYIPDetail, renderYIPGrid;
+  let initYearInPixels, saveDayNote, saveDayMoods, openYIPDetail, renderYIPGrid;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -198,6 +198,7 @@ describe('YearInPixels', () => {
     const mod = await import('./YearInPixels.js');
     initYearInPixels = mod.initYearInPixels;
     saveDayNote = mod.saveDayNote;
+    saveDayMoods = mod.saveDayMoods;
     openYIPDetail = mod.openYIPDetail;
     renderYIPGrid = mod.renderYIPGrid;
   });
@@ -310,6 +311,130 @@ describe('YearInPixels', () => {
     expect(cell).not.toBeNull();
     expect(cell.classList.contains('has-notes')).toBe(false);
     expect(cell.innerHTML).not.toContain('sticky_note_2');
+  });
+
+  it('renderYIPGrid with param=mood colors cell by first mood', () => {
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    const currentYear = new Date().getFullYear();
+    const jan1 = new Date(currentYear, 0, 1).getTime();
+    const history = {
+      daily: [{ time: jan1, tempMax: 20, moods: ['happy', 'tired'] }]
+    };
+    renderYIPGrid(history, 'mood');
+    const cell = document.querySelector('.yip-day-cell');
+    expect(cell).not.toBeNull();
+    expect(cell.classList.contains('completed')).toBe(true);
+    expect(cell.style.backgroundColor).toBeTruthy();
+  });
+
+  it('renderYIPGrid with param=mood shows empty cell when no moods', () => {
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    const currentYear = new Date().getFullYear();
+    const jan1 = new Date(currentYear, 0, 1).getTime();
+    const history = {
+      daily: [{ time: jan1, tempMax: 20 }]
+    };
+    renderYIPGrid(history, 'mood');
+    const cell = document.querySelector('.yip-day-cell');
+    expect(cell).not.toBeNull();
+    expect(cell.classList.contains('completed')).toBe(false);
+  });
+
+  it('renderYIPGrid shows mood emoji icon when day has moods', () => {
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    const currentYear = new Date().getFullYear();
+    const jan1 = new Date(currentYear, 0, 1).getTime();
+    const history = {
+      daily: [{ time: jan1, tempMax: 20, moods: ['happy'] }]
+    };
+    renderYIPGrid(history, 'maxTemp');
+    const cell = document.querySelector('.yip-day-cell');
+    expect(cell).not.toBeNull();
+    expect(cell.classList.contains('has-mood')).toBe(true);
+    expect(cell.innerHTML).toContain('yip-mood-icon');
+  });
+
+  it('renderYIPGrid shows both mood icon and notes icon when both exist', () => {
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    const currentYear = new Date().getFullYear();
+    const jan1 = new Date(currentYear, 0, 1).getTime();
+    const history = {
+      daily: [{ time: jan1, tempMax: 20, moods: ['happy'], notes: 'my note' }]
+    };
+    renderYIPGrid(history, 'maxTemp');
+    const cell = document.querySelector('.yip-day-cell');
+    expect(cell).not.toBeNull();
+    expect(cell.classList.contains('has-mood')).toBe(true);
+    expect(cell.classList.contains('has-notes')).toBe(true);
+    expect(cell.innerHTML).toContain('yip-mood-icon');
+    expect(cell.innerHTML).toContain('sticky_note_2');
+  });
+
+  it('openYIPDetail shows mood toggles when data has moods', () => {
+    document.body.innerHTML = `
+      <div id="yip-detail-date"></div>
+      <div id="yip-detail-desc"></div>
+      <div id="yip-detail-metrics"></div>
+      <div id="yip-detail-notes-section" style="display:none"><label>Notes</label><textarea id="yip-detail-notes-input"></textarea></div>
+      <div id="yip-detail-moods-section" style="display:none"><label>Mood</label><div id="yip-moods-selector"></div><div class="yip-moods-actions"><button id="yip-moods-save-btn">Save</button><button id="yip-moods-cancel-btn">Cancel</button></div><span id="yip-moods-saved-msg" style="display:none">Saved</span></div>
+    `;
+    const data = { time: 1000, tempMax: 25, moods: ['happy', 'tired'] };
+    openYIPDetail(data, '1 Jan 2026', 'TestCity');
+    const moodBtns = document.querySelectorAll('.yip-mood-btn');
+    expect(moodBtns.length).toBe(6);
+    const activeBtns = document.querySelectorAll('.yip-mood-btn.active');
+    expect(activeBtns.length).toBe(2);
+  });
+
+  it('openYIPDetail shows no active mood toggles when data has no moods', () => {
+    document.body.innerHTML = `
+      <div id="yip-detail-date"></div>
+      <div id="yip-detail-desc"></div>
+      <div id="yip-detail-metrics"></div>
+      <div id="yip-detail-notes-section" style="display:none"><label>Notes</label><textarea id="yip-detail-notes-input"></textarea></div>
+      <div id="yip-detail-moods-section" style="display:none"><label>Mood</label><div id="yip-moods-selector"></div><div class="yip-moods-actions"><button id="yip-moods-save-btn">Save</button><button id="yip-moods-cancel-btn">Cancel</button></div><span id="yip-moods-saved-msg" style="display:none">Saved</span></div>
+    `;
+    const data = { time: 1000, tempMax: 25 };
+    openYIPDetail(data, '1 Jan 2026', 'TestCity');
+    const activeBtns = document.querySelectorAll('.yip-mood-btn.active');
+    expect(activeBtns.length).toBe(0);
+  });
+
+  it('saveDayMoods calls storageService.updateDayMoods with selected moods', async () => {
+    document.body.innerHTML = `
+      <div id="yip-moods-selector">
+        <button class="yip-mood-btn active" data-mood="happy">😊 Feliz</button>
+        <button class="yip-mood-btn active" data-mood="tired">😴 Cansado</button>
+        <button class="yip-mood-btn" data-mood="sad">😢 Triste</button>
+      </div>
+      <span id="yip-moods-saved-msg" style="display:none"></span>
+    `;
+    const mockUpdate = vi.fn(async () => true);
+    const storageMod = await import('../services/StorageService.js');
+    storageMod.storageService.updateDayMoods = mockUpdate;
+
+    const data = { time: 1000 };
+    await saveDayMoods(data, 'TestCity');
+    expect(mockUpdate).toHaveBeenCalledWith('TestCity', 1000, ['happy', 'tired']);
+    expect(data.moods).toEqual(['happy', 'tired']);
+  });
+
+  it('saveDayMoods with no moods selected clears moods', async () => {
+    document.body.innerHTML = `
+      <div id="yip-moods-selector">
+        <button class="yip-mood-btn" data-mood="happy">😊 Feliz</button>
+        <button class="yip-mood-btn" data-mood="tired">😴 Cansado</button>
+      </div>
+      <span id="yip-moods-saved-msg" style="display:none"></span>
+    `;
+    const mockUpdate = vi.fn(async () => true);
+    const storageMod = await import('../services/StorageService.js');
+    storageMod.storageService.updateDayMoods = mockUpdate;
+
+    const data = { time: 1000, moods: ['happy'] };
+    await saveDayMoods(data, 'TestCity');
+    expect(mockUpdate).toHaveBeenCalledWith('TestCity', 1000, []);
+    expect(data.moods).toBeUndefined();
   });
 });
 

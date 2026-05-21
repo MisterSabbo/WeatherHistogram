@@ -3,6 +3,24 @@ import { getThemeColor } from '../theme.js';
 import { t } from '../utils/i18n.js';
 import { getPollenLevelByType, getAggregatedPollenLevel } from '../services/AqiManager.js';
 
+const MOODS = [
+  { id: 'happy', emoji: '😊', labelKey: 'moods.happy', color: '#fbbf24' },
+  { id: 'neutral', emoji: '😐', labelKey: 'moods.neutral', color: '#94a3b8' },
+  { id: 'sad', emoji: '😢', labelKey: 'moods.sad', color: '#60a5fa' },
+  { id: 'angry', emoji: '😠', labelKey: 'moods.angry', color: '#ef4444' },
+  { id: 'anxious', emoji: '😰', labelKey: 'moods.anxious', color: '#a855f7' },
+  { id: 'tired', emoji: '😴', labelKey: 'moods.tired', color: '#6b7280' }
+];
+
+const MOOD_EMOJI_MAP = {
+  happy: '😊',
+  neutral: '😐',
+  sad: '😢',
+  angry: '😠',
+  anxious: '😰',
+  tired: '😴'
+};
+
 let selectedLocation = null;
 let selectedParam = 'maxTemp';
 let _closeSheet = null;
@@ -144,6 +162,9 @@ function populateParamSheet() {
       { value: 'pollen_mugwort', label: t('config.yipPollenMugwort', 'Polen (Artemisa)') },
       { value: 'pollen_olive', label: t('config.yipPollenOlive', 'Polen (Olivo)') },
       { value: 'pollen_ragweed', label: t('config.yipPollenRagweed', 'Polen (Ambrosía)') }
+    ]},
+    { key: 'mood', label: t('config.yipMoodsParam', 'Mood'), params: [
+      { value: 'mood', label: t('config.yipMoodsParam', 'Mood') }
     ]}
   ];
 
@@ -221,6 +242,11 @@ function renderYIPGrid(history, param) {
                 const type = param.replace('pollen_', '');
                 const raw = (d.pollenDetails && d.pollenDetails[type]) ? d.pollenDetails[type] : 0;
                 val = getPollenLevelByType(type, raw);
+            } else if (param === 'mood') {
+                if (d.moods && d.moods.length > 0) {
+                    const moodDef = MOODS.find(m => m.id === d.moods[0]);
+                    val = moodDef ? moodDef.id : null;
+                }
             }
 
             yearGrid[m][day] = val;
@@ -327,6 +353,13 @@ function renderYIPGrid(history, param) {
                         cell.classList.add('has-notes');
                         cell.insertAdjacentHTML('beforeend', '<span class="yip-note-icon material-symbols-outlined">sticky_note_2</span>');
                     }
+                    if (dayData && dayData.moods && dayData.moods.length > 0) {
+                        cell.classList.add('has-mood');
+                        const moodEmoji = MOOD_EMOJI_MAP[dayData.moods[0]] || '';
+                        if (moodEmoji) {
+                            cell.insertAdjacentHTML('beforeend', `<span class="yip-mood-icon">${moodEmoji}</span>`);
+                        }
+                    }
                     cell.onclick = () => openYIPDetail(dayData, `${day+1} ${monthNames[m]} ${currentYear}`);
                 }
             }
@@ -374,6 +407,52 @@ function openYIPDetail(data, dateStr, locationName) {
         };
     }
     if (notesInput) notesInput.placeholder = t('config.yipNotesPlaceholder', 'Write your notes...');
+
+    const moodsSection = document.getElementById('yip-detail-moods-section');
+    const moodsSelector = document.getElementById('yip-moods-selector');
+    const moodsSaveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-moods-save-btn'));
+    const moodsCancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-moods-cancel-btn'));
+    const moodsSavedMsg = document.getElementById('yip-moods-saved-msg');
+    const existingMoods = data.moods || [];
+
+    if (moodsSection) moodsSection.style.display = 'block';
+    if (moodsSavedMsg) moodsSavedMsg.style.display = 'none';
+
+    if (moodsSelector) {
+        moodsSelector.innerHTML = '';
+        MOODS.forEach(mood => {
+            const btn = document.createElement('button');
+            btn.className = 'yip-mood-btn' + (existingMoods.includes(mood.id) ? ' active' : '');
+            btn.dataset.mood = mood.id;
+            btn.style.setProperty('--mood-color', mood.color);
+            btn.innerHTML = `${mood.emoji} ${t(mood.labelKey, mood.id)}<span class="yip-mood-check material-symbols-outlined">check</span>`;
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+            });
+            moodsSelector.appendChild(btn);
+        });
+    }
+
+    if (moodsSaveBtn) {
+        moodsSaveBtn.textContent = t('config.yipMoodsSave', 'Save mood');
+        const newMoodsSave = /** @type {HTMLElement} */ (moodsSaveBtn.cloneNode(true));
+        moodsSaveBtn.parentNode.replaceChild(newMoodsSave, moodsSaveBtn);
+        newMoodsSave.onclick = () => saveDayMoods(data, loc);
+    }
+    if (moodsCancelBtn) {
+        moodsCancelBtn.textContent = t('config.cancel', 'Cancel');
+        const newMoodsCancel = /** @type {HTMLElement} */ (moodsCancelBtn.cloneNode(true));
+        moodsCancelBtn.parentNode.replaceChild(newMoodsCancel, moodsCancelBtn);
+        newMoodsCancel.onclick = () => {
+            if (moodsSelector) {
+                moodsSelector.querySelectorAll('.yip-mood-btn').forEach((btn) => {
+                    const b = /** @type {HTMLElement} */ (btn);
+                    b.classList.toggle('active', existingMoods.includes(b.dataset.mood));
+                });
+            }
+            if (moodsSavedMsg) moodsSavedMsg.style.display = 'none';
+        };
+    }
 
     const details = data.pollenDetails || {};
     const pollenLevel = getAggregatedPollenLevel(details);
@@ -434,6 +513,32 @@ async function saveDayNote(data, locationName) {
     }
 }
 
+async function saveDayMoods(data, locationName) {
+    const moodsSelector = document.getElementById('yip-moods-selector');
+    const moodsSavedMsg = document.getElementById('yip-moods-saved-msg');
+    const loc = locationName || selectedLocation;
+
+    const selectedMoods = [];
+    if (moodsSelector) {
+        moodsSelector.querySelectorAll('.yip-mood-btn.active').forEach((btn) => {
+            const b = /** @type {HTMLElement} */ (btn);
+            selectedMoods.push(b.dataset.mood);
+        });
+    }
+
+    const success = await storageService.updateDayMoods(loc, data.time, selectedMoods);
+    if (success) {
+        data.moods = selectedMoods.length > 0 ? selectedMoods : undefined;
+        if (moodsSavedMsg) {
+            moodsSavedMsg.textContent = t('config.yipMoodsSaved', 'Mood saved!');
+            moodsSavedMsg.style.display = 'inline';
+        }
+        setTimeout(() => {
+            if (moodsSavedMsg) moodsSavedMsg.style.display = 'none';
+        }, 2000);
+    }
+}
+
 function getColorForParam(param, value) {
     if (param === 'maxTemp' || param === 'minTemp' || param === 'apparentMax') {
         if (value < 0) return '#3b82f6';
@@ -469,6 +574,10 @@ function getColorForParam(param, value) {
         if (value === 2) return '#facc15';
         if (value === 3) return '#f97316';
         return '#dc2626';
+    } else if (param === 'mood') {
+        const moodDef = MOODS.find(m => m.id === value);
+        if (moodDef) return moodDef.color;
+        return 'var(--grid-color)';
     }
     return 'var(--grid-color)';
 }
@@ -513,6 +622,11 @@ function renderLegend(param, legendContainer) {
             { c: '#f97316', l: t('pollenLevels.high', 'Alto') },
             { c: '#dc2626', l: t('pollenLevels.veryHigh', 'Muy Alto') }
         ];
+    } else if (param === 'mood') {
+        steps = MOODS.map(m => ({
+            c: m.color,
+            l: `${m.emoji} ${t(m.labelKey, m.id)}`
+        }));
     }
 
     steps.forEach(s => {
@@ -565,7 +679,7 @@ function updateYipScrollUI() {
     dotsContainer.innerHTML = html;
 }
 
-export { renderYIPGrid, saveDayNote, openYIPDetail };
+export { renderYIPGrid, saveDayNote, saveDayMoods, openYIPDetail };
 
 async function showConfirm(title, message) {
     return new Promise((resolve) => {

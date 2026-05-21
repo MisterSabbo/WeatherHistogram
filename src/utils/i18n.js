@@ -96,9 +96,21 @@ export const translations = {
             yipNotesSaved: "¡Nota guardada!",
             yipNotesCancel: "Cancelar",
             yipNotesDelete: "Eliminar nota",
+            yipMoodsLabel: "Estado de ánimo",
+            yipMoodsSave: "Guardar estado",
+            yipMoodsSaved: "¡Estado guardado!",
+            yipMoodsParam: "Estado de Ánimo",
             langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
         theme: {
+        },
+        moods: {
+            happy: "Feliz",
+            neutral: "Neutral",
+            sad: "Triste",
+            angry: "Enfadado",
+            anxious: "Ansioso",
+            tired: "Cansado"
         },
         overlay: {
             skipWait: "Saltar espera"
@@ -326,9 +338,21 @@ export const translations = {
             yipNotesSaved: "Note saved!",
             yipNotesCancel: "Cancel",
             yipNotesDelete: "Delete note",
+            yipMoodsLabel: "Mood",
+            yipMoodsSave: "Save mood",
+            yipMoodsSaved: "Mood saved!",
+            yipMoodsParam: "Mood",
             langChangeConfirm: "Change language? The application will update."
         },
         theme: {
+        },
+        moods: {
+            happy: "Happy",
+            neutral: "Neutral",
+            sad: "Sad",
+            angry: "Angry",
+            anxious: "Anxious",
+            tired: "Tired"
         },
         overlay: {
             skipWait: "Skip wait"

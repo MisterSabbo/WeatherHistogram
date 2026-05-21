@@ -116,6 +116,23 @@ export class StorageService {
       return false;
     }
   }
+
+  async updateDayMoods(locationName, dayTimestamp, moods) {
+    try {
+      const history = await this.getHistory(locationName);
+      const day = history.daily.find(d => d.time === dayTimestamp);
+      if (!day) return false;
+      if (moods && moods.length > 0) {
+        day.moods = moods;
+      } else {
+        delete day.moods;
+      }
+      await this.setHistory(locationName, history);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
 }
 
 export const storageService = new StorageService();
