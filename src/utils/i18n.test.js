@@ -48,6 +48,37 @@ describe('i18n', () => {
     });
   });
 
+  describe('YIP notes keys', () => {
+    it('returns yipNotesLabel in Spanish', () => {
+      expect(t('config.yipNotesLabel')).toMatch(/Notas personales/);
+    });
+
+    it('returns yipNotesLabel in English after language change', () => {
+      setLanguage('en');
+      expect(t('config.yipNotesLabel')).toMatch(/Personal notes/);
+    });
+
+    it('returns yipNotesSave text', () => {
+      expect(t('config.yipNotesSave')).toMatch(/Guardar/);
+    });
+
+    it('returns yipNotesPlaceholder text', () => {
+      expect(t('config.yipNotesPlaceholder')).toMatch(/notas/);
+    });
+
+    it('returns yipNotesSaved text', () => {
+      expect(t('config.yipNotesSaved')).toMatch(/guardada/);
+    });
+
+    it('returns yipNotesDelete text', () => {
+      expect(t('config.yipNotesDelete')).toMatch(/Eliminar/);
+    });
+
+    it('returns yipNotesCancel text', () => {
+      expect(t('config.yipNotesCancel')).toMatch(/Cancel/);
+    });
+  });
+
   describe('getLanguage() / setLanguage()', () => {
     it('defaults to es', () => {
       expect(getLanguage()).toBe('es');

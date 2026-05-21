@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.9.0",
+    "changes": [
+      "Personal notes per day in YIP: Users can now add personal text notes to individual days in the Year in Pixels dashboard. Notes are persisted in IndexedDB via storageService.updateDayNotes(). Days with notes show a notebook icon in their grid cell. Spanish and English translations included."
+    ]
+  },
+  {
     "version": "1.8.20a",
     "changes": [
       "Fix: changelog timeline line now extends across all items — moved from fixed position in scroll container to inside #changelog-list, so it grows with content height and scrolls with items."

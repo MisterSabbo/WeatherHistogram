@@ -39,7 +39,6 @@ Orquestador de fetching de datos meteorológicos con caché en memoria, fallback
 **Descripción:** Fetch con caché, fallback a datos expirados, fallback a mock data.
 
 **Callbacks:**
-- `onProcessData` — para procesar datos
 - `onResize` — para redimensionar
 - `onUpdateLocationUI` — para actualizar UI de ubicación
 - `onCenterOnCurrentTime` — para centrar en tiempo actual

@@ -31,6 +31,10 @@ Sin dependencias internas.
 
 **Descripción:** Guarda historial de una ubicación.
 
+### `async updateDayNotes(locationName: string, dayTimestamp: number, notes: string): Promise<boolean>`
+
+**Descripción:** Actualiza las notas de un día específico en el historial de una ubicación. Busca la entrada diaria donde `d.time === dayTimestamp`, asigna `d.notes = notes` (o elimina la key si `notes` es string vacío), y persiste con `setHistory`. Retorna `true` si encontró el día y actualizó, `false` si no lo encontró.
+
 ### `export const storageService: StorageService` (singleton)
 
 ## Comportamiento
@@ -49,6 +53,9 @@ Sin dependencias internas.
 | `set` con valor circular | JSON.stringify falla → error en localStorage |
 | `getHistory` sin datos | `{ hourly: [], daily: [] }` |
 | `init` llamado múltiples veces | Solo abre una vez |
+| `updateDayNotes` sin datos del día | Retorna `false` |
+| `updateDayNotes` con notes vacío | Elimina la key `notes` del objeto daily |
+| `updateDayNotes` con notes texto | Asigna `d.notes = notes` y persiste |
 
 ## Escenarios de test
 
@@ -59,9 +66,14 @@ Sin dependencias internas.
 5. **init idempotente:** llamado múltiples veces no recrea DB
 6. **Fallback localStorage:** si IndexedDB falla, usa localStorage
 7. **Singleton:** storageService es instancia única
+8. **updateDayNotes día existente:** encuentra el día, asigna notas, persiste, retorna `true`
+9. **updateDayNotes día inexistente:** retorna `false`
+10. **updateDayNotes notes vacío:** elimina key y persiste
+11. **updateDayNotes API expuesta:** storageService tiene método `updateDayNotes`
 
 ## Historial de cambios
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
 | 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Añadido `updateDayNotes` para notas personales YIP | SDD |

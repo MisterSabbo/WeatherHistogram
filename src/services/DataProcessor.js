@@ -187,6 +187,8 @@ async function saveHistoryData(state) {
         }
     });
 
+    // Daily merge: Set-based dedup only appends new days — never overwrites
+    // existing entries, so extra fields like `notes` are preserved.
     const dailyTimes = new Set(history.daily.map(d => new Date(d.time).toLocaleDateString('en-CA', { timeZone: state.timezone })));
     pastDaily.forEach(d => {
         const dStr = new Date(d.time).toLocaleDateString('en-CA', { timeZone: state.timezone });

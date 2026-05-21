@@ -32,6 +32,7 @@ vi.mock('../services/AqiManager.js', () => ({
   getAQIInfo: vi.fn(() => ({ text: 'Good', rec: '', val: 30 })),
   getPollenText: vi.fn(() => 'Low'),
   getAggregatedPollenLevel: vi.fn(() => 0),
+  getPollenLevelByType: vi.fn(() => 0),
   getPollenColor: vi.fn(() => '#000')
 }));
 
@@ -189,16 +190,126 @@ describe('FavoritesModal', () => {
 });
 
 describe('YearInPixels', () => {
-  let initYearInPixels;
+  let initYearInPixels, saveDayNote, openYIPDetail, renderYIPGrid;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    document.body.innerHTML = '';
     const mod = await import('./YearInPixels.js');
     initYearInPixels = mod.initYearInPixels;
+    saveDayNote = mod.saveDayNote;
+    openYIPDetail = mod.openYIPDetail;
+    renderYIPGrid = mod.renderYIPGrid;
   });
 
   it('does not throw when DOM elements are missing', () => {
     expect(() => initYearInPixels()).not.toThrow();
+  });
+
+  it('openYIPDetail populates textarea when data has notes', () => {
+    document.body.innerHTML = `
+      <div id="yip-detail-date"></div>
+      <div id="yip-detail-desc"></div>
+      <div id="yip-detail-metrics"></div>
+      <div id="yip-detail-notes-section" style="display:none">
+        <label>Personal notes</label>
+        <textarea id="yip-detail-notes-input"></textarea>
+        <div class="yip-notes-actions">
+          <button id="yip-notes-save-btn">Save</button>
+          <button id="yip-notes-cancel-btn">Cancel</button>
+        </div>
+        <span id="yip-notes-saved-msg" style="display:none">Saved</span>
+      </div>
+    `;
+    const data = { time: 1000, tempMax: 25, notes: 'my personal note' };
+    openYIPDetail(data, '1 Jan 2026', 'TestCity');
+    const textarea = document.getElementById('yip-detail-notes-input');
+    const section = document.getElementById('yip-detail-notes-section');
+    expect(section.style.display).not.toBe('none');
+    expect(textarea.value).toBe('my personal note');
+  });
+
+  it('openYIPDetail shows empty textarea when data has no notes', () => {
+    document.body.innerHTML = `
+      <div id="yip-detail-date"></div>
+      <div id="yip-detail-desc"></div>
+      <div id="yip-detail-metrics"></div>
+      <div id="yip-detail-notes-section" style="display:none">
+        <label>Personal notes</label>
+        <textarea id="yip-detail-notes-input"></textarea>
+        <div class="yip-notes-actions">
+          <button id="yip-notes-save-btn">Save</button>
+          <button id="yip-notes-cancel-btn">Cancel</button>
+        </div>
+        <span id="yip-notes-saved-msg" style="display:none">Saved</span>
+      </div>
+    `;
+    const data = { time: 1000, tempMax: 25 };
+    openYIPDetail(data, '1 Jan 2026', 'TestCity');
+    const textarea = document.getElementById('yip-detail-notes-input');
+    expect(textarea.value).toBe('');
+  });
+
+  it('saveDayNote calls storageService.updateDayNotes with text', async () => {
+    document.body.innerHTML = `
+      <textarea id="yip-detail-notes-input"></textarea>
+      <span id="yip-notes-saved-msg" style="display:none"></span>
+      <button id="yip-notes-cancel-btn">Cancel</button>
+    `;
+    const mockUpdate = vi.fn(async () => true);
+    const storageMod = await import('../services/StorageService.js');
+    storageMod.storageService.updateDayNotes = mockUpdate;
+
+    const data = { time: 1000, notes: undefined };
+    document.getElementById('yip-detail-notes-input').value = 'hello';
+    await saveDayNote(data, 'TestCity');
+    expect(mockUpdate).toHaveBeenCalledWith('TestCity', 1000, 'hello');
+    expect(data.notes).toBe('hello');
+  });
+
+  it('saveDayNote with empty text clears notes field', async () => {
+    document.body.innerHTML = `
+      <textarea id="yip-detail-notes-input"></textarea>
+      <span id="yip-notes-saved-msg" style="display:none"></span>
+      <button id="yip-notes-cancel-btn">Cancel</button>
+    `;
+    const mockUpdate = vi.fn(async () => true);
+    const storageMod = await import('../services/StorageService.js');
+    storageMod.storageService.updateDayNotes = mockUpdate;
+
+    const data = { time: 1000, notes: 'old note' };
+    document.getElementById('yip-detail-notes-input').value = '';
+    await saveDayNote(data, 'TestCity');
+    expect(mockUpdate).toHaveBeenCalledWith('TestCity', 1000, '');
+    expect(data.notes).toBeUndefined();
+  });
+
+  it('renderYIPGrid adds has-notes class and icon when day has notes', () => {
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    const currentYear = new Date().getFullYear();
+    const jan1 = new Date(currentYear, 0, 1).getTime();
+    const history = {
+      daily: [{ time: jan1, tempMax: 20, notes: 'my note' }]
+    };
+    renderYIPGrid(history, 'maxTemp');
+    const cell = document.querySelector('.yip-day-cell');
+    expect(cell).not.toBeNull();
+    expect(cell.classList.contains('has-notes')).toBe(true);
+    expect(cell.innerHTML).toContain('sticky_note_2');
+  });
+
+  it('renderYIPGrid does not add notes icon when day has no notes', () => {
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    const currentYear = new Date().getFullYear();
+    const jan1 = new Date(currentYear, 0, 1).getTime();
+    const history = {
+      daily: [{ time: jan1, tempMax: 20 }]
+    };
+    renderYIPGrid(history, 'maxTemp');
+    const cell = document.querySelector('.yip-day-cell');
+    expect(cell).not.toBeNull();
+    expect(cell.classList.contains('has-notes')).toBe(false);
+    expect(cell.innerHTML).not.toContain('sticky_note_2');
   });
 });
 

@@ -49,7 +49,7 @@ Renderiza fondos, fenómenos meteorológicos (viento, estrellas, UV, sol, noche)
 
 **Metadatos:** Mutates state: No, Async: No
 
-### `export function drawSunnyBackground(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, drawSunIcon: Function, PIXELS_PER_HOUR: number): void`
+### `export function drawSunnyBackground(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, drawSunIcon: boolean, PIXELS_PER_HOUR: number): void`
 
 **Descripción:** Dibuja fondo amarillo con icono de sol en horas diurnas.
 

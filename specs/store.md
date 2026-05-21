@@ -67,7 +67,7 @@ Sin dependencias internas.
 | Entrada | Comportamiento esperado |
 |---------|------------------------|
 | `devicePixelRatio` no definido | `getDPR()` retorna 1 (`window.devicePixelRatio \|\| 1` fallback) |
-| `window.innerWidth` < 768 | `PIXELS_PER_HOUR` cambia a 50, `TILE_WIDTH` cambia a 720 |
+| `window.innerWidth` < 600 | `PIXELS_PER_HOUR` cambia a 50, `TILE_WIDTH` cambia a 720 |
 | `window.innerWidth` = 0 (headless/test) | `PIXELS_PER_HOUR` usa rama desktop (60/1440) |
 | `Object.freeze(CONFIG)` falla (modo estricto desactivado) | CONFIG sigue siendo modificable |
 | `state.lat`/`state.lon` set a `null` | Aplicación en estado sin ubicación, usa DEFAULT_COORDS como fallback |

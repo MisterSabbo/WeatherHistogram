@@ -1376,7 +1376,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.8.20a</span>
+              <span id="app-version-label">v1.9.0</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1664,6 +1664,15 @@
         <p id="yip-detail-desc" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
         <div id="yip-detail-metrics" class="yip-detail-grid">
             <!-- Detailed metrics generated dynamically -->
+        </div>
+        <div id="yip-detail-notes-section" class="yip-notes-section" style="display:none">
+            <label for="yip-detail-notes-input" data-i18n="config.yipNotesLabel">Personal notes</label>
+            <textarea id="yip-detail-notes-input" class="yip-notes-textarea" rows="3" maxlength="500" data-i18n-placeholder="config.yipNotesPlaceholder"></textarea>
+            <div class="yip-notes-actions">
+                <button id="yip-notes-save-btn" class="yip-notes-save-btn" data-i18n="config.yipNotesSave">Save note</button>
+                <button id="yip-notes-cancel-btn" class="yip-notes-cancel-btn" data-i18n="config.yipNotesCancel">Cancel</button>
+            </div>
+            <span id="yip-notes-saved-msg" class="yip-notes-saved-msg" style="display:none" data-i18n="config.yipNotesSaved">Note saved</span>
         </div>
     </div>
 

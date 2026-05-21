@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.9.0] - 2026-05-21
+### New Feature
+- **Personal notes per day in YIP**: Users can now add personal text notes to individual days in the Year in Pixels dashboard. The notes section appears in the day detail bottom sheet with a textarea (up to 500 characters), save/cancel buttons, and a "saved" confirmation message. Notes are persisted in IndexedDB alongside weather data via `storageService.updateDayNotes()`. The existing data merge in `DataProcessor.saveHistoryData()` automatically preserves notes. Days with notes show a notebook icon (`sticky_note_2`) in the top-right corner of their grid cell. Spanish and English translations included.
+
 ## [v1.8.20a] - 2026-05-20
 ### Bug Fix
 - **Changelog timeline line truncated**: The vertical timeline line in the changelog modal only appeared across the first ~5 items because it was absolutely positioned within the scroll container with a fixed height (`top: 20px; bottom: 20px` relative to the viewport). Moved inside `#changelog-items` wrapper with `top: 0; bottom: 0` so it grows with content height and scrolls with the items.

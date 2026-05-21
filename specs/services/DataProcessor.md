@@ -38,6 +38,7 @@ Procesa los datos crudos de la API (forecast + AQI), los transforma al formato i
 7. Recalcula precipTotal diario como suma de datos horarios
 8. Llama a `generateDailyCards(centerOnCurrentTime)`
 9. Persiste historial en IndexedDB (solo días pasados)
+10. El merge de `saveHistoryData` preserva campos extra (como `notes`) porque solo añade días nuevos con Set-based dedup — nunca sobrescribe entradas existentes del `daily[]`
 
 ## Casos borde
 

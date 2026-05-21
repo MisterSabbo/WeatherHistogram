@@ -90,6 +90,12 @@ export const translations = {
             yipCategoryWind: "Viento",
             yipCategoryAQI: "Calidad del Aire",
             yipCategoryPollen: "Polen",
+            yipNotesLabel: "Notas personales",
+            yipNotesPlaceholder: "Escribe tus notas...",
+            yipNotesSave: "Guardar nota",
+            yipNotesSaved: "¡Nota guardada!",
+            yipNotesCancel: "Cancelar",
+            yipNotesDelete: "Eliminar nota",
             langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
         theme: {
@@ -314,6 +320,12 @@ export const translations = {
             yipCategoryWind: "Wind",
             yipCategoryAQI: "Air Quality",
             yipCategoryPollen: "Pollen",
+            yipNotesLabel: "Personal notes",
+            yipNotesPlaceholder: "Write your notes...",
+            yipNotesSave: "Save note",
+            yipNotesSaved: "Note saved!",
+            yipNotesCancel: "Cancel",
+            yipNotesDelete: "Delete note",
             langChangeConfirm: "Change language? The application will update."
         },
         theme: {

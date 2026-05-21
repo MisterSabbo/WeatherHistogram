@@ -91,7 +91,7 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 | Fetch falla (network error) | `loadWeather` captura error, muestra `showError`, `isFetching=false` |
 | `state.hourlyData` vacío al renderizar | `render()` no dibuja nada, retorna sin error |
 | Datos incompletos (sin `sunData`, sin `dailyData`) | Graceful degradation: algunas secciones no se renderizan |
-| `window.innerWidth` < 768 | `handleResize` cambia `PIXELS_PER_HOUR` a 50 y `TILE_WIDTH` a 720 |
+| `window.innerWidth` < 600 | `handleResize` cambia `PIXELS_PER_HOUR` a 50 y `TILE_WIDTH` a 720 |
 | `devicePixelRatio` no definido | Fallback a 1 en cálculos de DPR |
 | `init()` llamado antes de `DOMContentLoaded` | Listeners pueden no attacharse (no controlado) |
 | Resize durante renderizado en curso | `handleResize` interrumpe y recrea tiles |
@@ -104,7 +104,7 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, `render()` retorna sin error
 3. **No lanza con DOMContentLoaded:** `init()` se ejecuta sin errores
 4. **Fetch falla:** `loadWeather` captura error, `isFetching = false`
-5. **Resize responsive:** `window.innerWidth < 768` cambia PIXELS_PER_HOUR y TILE_WIDTH
+5. **Resize responsive:** `window.innerWidth < 600` cambia PIXELS_PER_HOUR y TILE_WIDTH
 6. **Scroll rápido:** Render throttle via requestAnimationFrame sin errores
 
 ## Historial de cambios

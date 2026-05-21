@@ -322,7 +322,12 @@ function renderYIPGrid(history, param) {
                 if (val !== null && val !== undefined) {
                     cell.style.backgroundColor = getColorForParam(param, val);
                     cell.classList.add('completed');
-                    cell.onclick = () => openYIPDetail(yearFullData[m][day], `${day+1} ${monthNames[m]} ${currentYear}`);
+                    const dayData = yearFullData[m][day];
+                    if (dayData && dayData.notes) {
+                        cell.classList.add('has-notes');
+                        cell.insertAdjacentHTML('beforeend', '<span class="yip-note-icon material-symbols-outlined">sticky_note_2</span>');
+                    }
+                    cell.onclick = () => openYIPDetail(dayData, `${day+1} ${monthNames[m]} ${currentYear}`);
                 }
             }
             monthGrid.appendChild(cell);
@@ -335,12 +340,40 @@ function renderYIPGrid(history, param) {
     renderLegend(param, legend);
 }
 
-function openYIPDetail(data, dateStr) {
+function openYIPDetail(data, dateStr, locationName) {
     if (!data) return;
 
     document.getElementById('yip-detail-date').textContent = dateStr;
     const desc = document.getElementById('yip-detail-desc');
     desc.textContent = `T. Máx: ${data.tempMax !== undefined ? Math.round(data.tempMax) : '-'}°C | T. Mín: ${data.tempMin !== undefined ? Math.round(data.tempMin) : '-'}°C`;
+
+    const notesSection = document.getElementById('yip-detail-notes-section');
+    const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
+    const saveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-notes-save-btn'));
+    const cancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-notes-cancel-btn'));
+    const savedMsg = document.getElementById('yip-notes-saved-msg');
+    const loc = locationName || selectedLocation;
+
+    if (notesSection) notesSection.style.display = 'block';
+    if (notesInput) notesInput.value = data.notes || '';
+    if (savedMsg) savedMsg.style.display = 'none';
+
+    if (saveBtn) {
+        saveBtn.textContent = t('config.yipNotesSave', 'Save note');
+        const newSave = /** @type {HTMLElement} */ (saveBtn.cloneNode(true));
+        saveBtn.parentNode.replaceChild(newSave, saveBtn);
+        newSave.onclick = () => saveDayNote(data, loc);
+    }
+    if (cancelBtn) {
+        cancelBtn.textContent = t('config.yipNotesCancel', 'Cancel');
+        const newCancel = /** @type {HTMLElement} */ (cancelBtn.cloneNode(true));
+        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+        newCancel.onclick = () => {
+            if (notesInput) notesInput.value = data.notes || '';
+            if (savedMsg) savedMsg.style.display = 'none';
+        };
+    }
+    if (notesInput) notesInput.placeholder = t('config.yipNotesPlaceholder', 'Write your notes...');
 
     const details = data.pollenDetails || {};
     const pollenLevel = getAggregatedPollenLevel(details);
@@ -379,6 +412,26 @@ function openYIPDetail(data, dateStr) {
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
 
     if (window.openBottomSheet) window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
+}
+
+async function saveDayNote(data, locationName) {
+    const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
+    const savedMsg = document.getElementById('yip-notes-saved-msg');
+    const cancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-notes-cancel-btn'));
+    const value = notesInput ? notesInput.value : '';
+
+    const success = await storageService.updateDayNotes(locationName, data.time, value);
+    if (success) {
+        data.notes = value || undefined;
+        if (savedMsg) {
+            savedMsg.textContent = t('config.yipNotesSaved', 'Note saved');
+            savedMsg.style.display = 'inline';
+        }
+        if (cancelBtn) cancelBtn.style.display = 'none';
+        setTimeout(() => {
+            if (savedMsg) savedMsg.style.display = 'none';
+        }, 2000);
+    }
 }
 
 function getColorForParam(param, value) {
@@ -511,6 +564,8 @@ function updateYipScrollUI() {
     }
     dotsContainer.innerHTML = html;
 }
+
+export { renderYIPGrid, saveDayNote, openYIPDetail };
 
 async function showConfirm(title, message) {
     return new Promise((resolve) => {

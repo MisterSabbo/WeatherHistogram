@@ -149,6 +149,80 @@ describe('DataProcessor', () => {
     expect(state.dailyData).toBeDefined();
   });
 
+  it('preserves notes field across saveHistoryData merge', async () => {
+    const todayMidnight = Math.floor(Date.now() / 86400000) * 86400000;
+    const yesterdayMidnight = todayMidnight - 86400000;
+    const pastDaySec = yesterdayMidnight / 1000;
+    const futureHourSec = pastDaySec + 90000;
+    const pastHourMs = yesterdayMidnight + 3600000;
+    const pastHourSec = pastHourMs / 1000;
+
+    mockStorage.getHistory.mockResolvedValue({
+      hourly: [],
+      daily: [{ time: yesterdayMidnight, tempMax: 20, notes: 'my note' }]
+    });
+
+    const forecastData = {
+      timezone: 'UTC',
+      hourly: {
+        time: [pastHourSec, futureHourSec],
+        temperature_2m: [20, 21],
+        apparent_temperature: [18, 18],
+        precipitation: [0, 0],
+        precipitation_probability: [0, 0],
+        cloudcover: [50, 50],
+        wind_speed_10m: [10, 10],
+        wind_gusts_10m: [15, 15],
+        wind_direction_10m: [180, 180],
+        weather_code: [0, 0],
+        relative_humidity_2m: [50, 50],
+        surface_pressure: [1013, 1013],
+        uv_index: [5, 5],
+        visibility: [10000, 10000],
+        is_day: [1, 1]
+      },
+      daily: {
+        time: [pastDaySec],
+        sunrise: [pastDaySec + 3600],
+        sunset: [pastDaySec + 3600 * 12],
+        weather_code: [0],
+        temperature_2m_max: [20],
+        temperature_2m_min: [15],
+        precipitation_sum: [0.5],
+        wind_speed_10m_max: [10],
+        wind_gusts_10m_max: [15],
+        apparent_temperature_max: [18]
+      }
+    };
+    const aqiData = {
+      hourly: {
+        time: [pastHourSec, futureHourSec],
+        us_aqi: [30, 30],
+        european_aqi: [25, 25],
+        pm10: [5, 5],
+        pm2_5: [2, 2],
+        nitrogen_dioxide: [10, 10],
+        ozone: [50, 50],
+        alder_pollen: [0, 0],
+        birch_pollen: [0, 0],
+        grass_pollen: [0, 0],
+        mugwort_pollen: [0, 0],
+        olive_pollen: [0, 0],
+        ragweed_pollen: [0, 0]
+      }
+    };
+
+    processData(forecastData, aqiData, vi.fn());
+
+    await vi.waitFor(() => {
+      expect(mockStorage.setHistory).toHaveBeenCalled();
+    });
+    const savedData = mockStorage.setHistory.mock.calls[0][1];
+    const savedDay = savedData.daily.find(d => d.time === yesterdayMidnight);
+    expect(savedDay).toBeDefined();
+    expect(savedDay.notes).toBe('my note');
+  });
+
   it('calls generateDailyCards', () => {
     const now = Math.floor(Date.now() / 1000);
     const forecastData = {

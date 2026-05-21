@@ -62,7 +62,6 @@ afterEach(() => {
 });
 
 const defaultCallbacks = {
-  onProcessData: vi.fn(),
   onResize: vi.fn(),
   onUpdateLocationUI: vi.fn(),
   onCenterOnCurrentTime: vi.fn()

@@ -99,6 +99,23 @@ export class StorageService {
       });
     } catch(e) {}
   }
+
+  async updateDayNotes(locationName, dayTimestamp, notes) {
+    try {
+      const history = await this.getHistory(locationName);
+      const day = history.daily.find(d => d.time === dayTimestamp);
+      if (!day) return false;
+      if (notes) {
+        day.notes = notes;
+      } else {
+        delete day.notes;
+      }
+      await this.setHistory(locationName, history);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
 }
 
 export const storageService = new StorageService();
