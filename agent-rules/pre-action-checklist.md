@@ -32,6 +32,20 @@ Before every task, verify these rules **in order**:
     | `PWA dual`, `standalone mode`, `browser vs PWA` | `pwa-dual-mode-verifier` |
     | `docs`, `documentation`, `README`, `write docs` | `docs-writer` |
     | `new skill`, `create skill`, `skill for` | `skill-creator` |
+- [ ] **SDD check** — If the task involves modifying or creating code, check if SDD applies:
+
+    | Situation | Action |
+    |---|---|
+    | Feature nueva sin código | Invocar orquestador SDD: `Task(general + sdd-orchestrator)` en modo `spec-first` |
+    | Cambio en módulo existente con spec | Invocar orquestador SDD en modo `spec-update` |
+    | Cambio en módulo existente SIN spec | Invocar orquestador SDD en modo `spec-retro` |
+    | User story sin detalles técnicos | Invocar orquestador SDD en modo `feature` |
+    | Directorio completo o todo el proyecto | Invocar orquestador SDD en modo `spec-crawl` |
+    | Bugfix trivial (1 línea, sin cambio de comportamiento) | Saltar SDD, ir directo a implementación |
+
+    > Para invocar: `Task(general + sdd-orchestrator)` con la descripción de lo que se quiere hacer.
+    > El orquestador detecta el modo automáticamente.
+
 - [ ] **Respect SOLID principles** — SRP, OCP, LSP, ISP, DIP
 - [ ] **All rendering goes through `render()`** — never draw to tile canvases outside this function
 - [ ] **Verify code** → Run `npm run lint && npm run typecheck && npm test && npm run test:e2e` and fix any failures before proceeding

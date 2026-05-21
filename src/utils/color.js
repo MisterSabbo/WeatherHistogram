@@ -5,7 +5,7 @@
 export function hexToRgb(hex) {
   let r = 0, g = 0, b = 0;
   if (typeof hex !== 'string') return { r, g, b };
-  if (hex.startsWith('rgba')) {
+  if (hex.startsWith('rgb')) {
     const parts = hex.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (parts) { r = parseInt(parts[1]); g = parseInt(parts[2]); b = parseInt(parts[3]); }
   } else {

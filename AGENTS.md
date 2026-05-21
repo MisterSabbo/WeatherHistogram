@@ -50,3 +50,10 @@
 - `agent-rules/pre-action-checklist.md` — mandatory steps before every task
 - `agent-rules/memory.md` — MCP memory persistence workflow
 - `agent-rules/subagents.md` — when to use subagents
+- `agent-rules/spec-driven-development.md` — SDD workflow orchestration
+
+## SDD Workflow
+- **Orquestador:** `Task(general + sdd-orchestrator)` — acepta cualquier input (ruta de módulo, user story, feature request) y ejecuta SDD completo automáticamente.
+- **Roles SDD:** definidos en `.agents/skills/sdd-orchestrator/` — analyst, spec-writer, spec-reviewer, test-writer, implementer, verifier.
+- **Modos:** `spec-retro` (código existente sin spec), `spec-first` (feature nueva), `spec-update` (cambio sobre spec existente), `spec-crawl` (directorio completo o todo el proyecto), `feature` (desglose automático de user stories).
+- **Especs vivas en `specs/`:** mirror de `src/`. Plantilla en `specs/_template.md`.
