@@ -11,7 +11,6 @@ export function clearWeatherCache() {
 }
 
 export async function fetchWeatherData(pastDays, forecastDays, {
-  onProcessData,
   onResize,
   onUpdateLocationUI,
   onCenterOnCurrentTime

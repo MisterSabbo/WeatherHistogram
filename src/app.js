@@ -890,7 +890,6 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             try {
                 state.hourlyData = [];
                 await fetchWeatherData(7, 7, {
-                  onProcessData: processData,
                   onResize: handleResize,
                   onUpdateLocationUI: updateLocationUI,
                   onCenterOnCurrentTime: centerOnCurrentTime
