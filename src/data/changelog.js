@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.0a",
+    "changes": [
+      "Fix: YIP location selector dots now match saved locations — dots render 1:1 with .yip-chip elements using getBoundingClientRect center proximity instead of scroll-width pages. Always visible when chips exist. Added resize listener."
+    ]
+  },
+  {
     "version": "1.10.0",
     "changes": [
       "Mood tracking per day in YIP: Users can now assign mood states to individual days in the Year in Pixels dashboard. Six classic moods (Happy, Neutral, Sad, Angry, Anxious, Tired) with emoji icons and distinct colors. Mood is a selectable grid parameter and shown as emoji icon on cells. Multi-select mood toggles in the day detail sheet. Persisted in IndexedDB via storageService.updateDayMoods(). Spanish and English translations included."

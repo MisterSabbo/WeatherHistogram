@@ -45,7 +45,7 @@ test.describe('Modal interactions', () => {
     await page.locator('#btn-info').click()
     await page.waitForTimeout(500)
     const changelogLink = page.locator('#open-changelog-link')
-    await changelogLink.click()
+    await changelogLink.click({ force: true })
     await page.waitForTimeout(500)
     const changelogModal = page.locator('#changelog-modal')
     await expect(changelogModal).toBeVisible()

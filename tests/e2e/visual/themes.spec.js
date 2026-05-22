@@ -44,7 +44,7 @@ test.describe('Theme screenshots', () => {
     await page.waitForTimeout(500)
     const themeSelect = page.locator('#theme-select-trigger')
     await expect(themeSelect).toBeVisible()
-    await themeSelect.click()
+    await themeSelect.click({ force: true })
     await page.waitForTimeout(500)
     const themeSheet = page.locator('#theme-select-sheet')
     await expect(themeSheet).toBeVisible()

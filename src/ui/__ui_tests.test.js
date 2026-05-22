@@ -419,6 +419,99 @@ describe('YearInPixels', () => {
     expect(data.moods).toEqual(['happy', 'tired']);
   });
 
+  describe('updateYipScrollUI', () => {
+    let updateYipScrollUI;
+
+    beforeEach(async () => {
+      const mod = await import('./YearInPixels.js');
+      updateYipScrollUI = mod.updateYipScrollUI;
+    });
+
+    function setupChips(count) {
+      document.body.innerHTML = `
+        <div id="yip-location-chips" style="display:flex;gap:6px;overflow-x:auto;width:200px;">
+          ${Array.from({ length: count }, (_, i) => `<div class="yip-chip" data-value="loc${i}">Location ${i}</div>`).join('')}
+        </div>
+        <div id="yip-location-dots" class="yip-dots-container"></div>
+      `;
+    }
+
+    it('clears dots when there are no chips', () => {
+      setupChips(0);
+      updateYipScrollUI();
+      const dots = document.getElementById('yip-location-dots');
+      expect(dots.innerHTML).toBe('');
+    });
+
+    it('renders exactly one dot per chip', () => {
+      setupChips(3);
+      updateYipScrollUI();
+      const dots = document.querySelectorAll('.yip-dot');
+      expect(dots.length).toBe(3);
+    });
+
+    it('marks first dot as active by default', () => {
+      setupChips(4);
+      updateYipScrollUI();
+      const dots = document.querySelectorAll('.yip-dot');
+      expect(dots[0].classList.contains('active')).toBe(true);
+      expect(dots[1].classList.contains('active')).toBe(false);
+    });
+
+    it('renders dots even without overflow (no scroll needed)', () => {
+      setupChips(2);
+      updateYipScrollUI();
+      const dots = document.querySelectorAll('.yip-dot');
+      expect(dots.length).toBe(2);
+    });
+
+    it('updates active dot based on scroll position', () => {
+      setupChips(5);
+      const container = document.getElementById('yip-location-chips');
+      const chips = container.querySelectorAll('.yip-chip');
+
+      // Mock getBoundingClientRect so chips are at known positions
+      // Container is at left=0, chips at left=0,60,120,180,240
+      const chipRects = [
+        { left: 0, right: 50, width: 50 },
+        { left: 60, right: 110, width: 50 },
+        { left: 120, right: 170, width: 50 },
+        { left: 180, right: 230, width: 50 },
+        { left: 240, right: 290, width: 50 }
+      ];
+      chips.forEach((chip, i) => {
+        chip.getBoundingClientRect = vi.fn(() => ({
+          top: 0, bottom: 30, height: 30,
+          left: chipRects[i].left,
+          right: chipRects[i].right,
+          width: chipRects[i].width,
+          x: chipRects[i].left, y: 0,
+          toJSON() { return this; }
+        }));
+      });
+
+      // Container getBoundingClientRect at left=0
+      container.getBoundingClientRect = vi.fn(() => ({
+        top: 0, bottom: 30, height: 30,
+        left: 0, right: 200, width: 200,
+        x: 0, y: 0,
+        toJSON() { return this; }
+      }));
+
+      // Scroll so center is ~100 → between chip 1 (center at 25) and chip 2 (center at 85)
+      // Chip 1 center: 60+25=85, Chip 2 center: 120+25=145
+      // Container center: 0+200/2=100
+      // chip0: |0-100|=100, chip1: |85-100|=15, chip2: |145-100|=45
+      // chip1 (index 1) should be active
+      container.scrollLeft = 0;
+      updateYipScrollUI();
+      const dots = document.querySelectorAll('.yip-dot');
+      expect(dots[1].classList.contains('active')).toBe(true);
+      expect(dots[0].classList.contains('active')).toBe(false);
+      expect(dots[2].classList.contains('active')).toBe(false);
+    });
+  });
+
   it('saveDayMoods with no moods selected clears moods', async () => {
     document.body.innerHTML = `
       <div id="yip-moods-selector">

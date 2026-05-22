@@ -649,6 +649,7 @@ function initYipLocationScroll() {
     if (!container) return;
 
     container.addEventListener('scroll', updateYipScrollUI, { passive: true });
+    window.addEventListener('resize', updateYipScrollUI);
 
     const observer = new MutationObserver(() => {
         requestAnimationFrame(updateYipScrollUI);
@@ -661,25 +662,36 @@ function updateYipScrollUI() {
     const dotsContainer = document.getElementById('yip-location-dots');
     if (!container || !dotsContainer) return;
 
-    const hasOverflow = container.scrollWidth > container.clientWidth;
-
-    if (!hasOverflow) {
+    const chips = container.querySelectorAll('.yip-chip');
+    if (chips.length === 0) {
         dotsContainer.innerHTML = '';
         return;
     }
 
-    const pageWidth = container.clientWidth;
-    const totalPages = Math.max(1, Math.ceil(container.scrollWidth / pageWidth));
-    const currentPage = Math.round(container.scrollLeft / pageWidth);
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    let activeIndex = 0;
+    let minDist = Infinity;
+
+    chips.forEach((chip, i) => {
+        const chipRect = chip.getBoundingClientRect();
+        const chipCenter = chipRect.left + chipRect.width / 2;
+        const dist = Math.abs(chipCenter - containerCenter);
+        if (dist < minDist) {
+            minDist = dist;
+            activeIndex = i;
+        }
+    });
 
     let html = '';
-    for (let i = 0; i < totalPages; i++) {
-        html += `<span class="yip-dot${i === currentPage ? ' active' : ''}"></span>`;
+    for (let i = 0; i < chips.length; i++) {
+        html += `<span class="yip-dot${i === activeIndex ? ' active' : ''}"></span>`;
     }
     dotsContainer.innerHTML = html;
 }
 
-export { renderYIPGrid, saveDayNote, saveDayMoods, openYIPDetail };
+export { renderYIPGrid, saveDayNote, saveDayMoods, openYIPDetail, updateYipScrollUI };
 
 async function showConfirm(title, message) {
     return new Promise((resolve) => {

@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.0a] - 2026-05-22
+### Bug Fix
+- **YIP location selector dots now match saved locations**: Pagination dots in the Year in Pixels location selector now render 1:1 with saved location chips, using `getBoundingClientRect` to determine the active dot by center proximity instead of calculating pages from scroll width. Dots remain visible even without overflow. Added `resize` listener and exported `updateYipScrollUI` for testability.
+
 ## [v1.10.0] - 2026-05-21
 ### New Feature
 - **Mood tracking per day in YIP**: Users can now assign mood states to individual days in the Year in Pixels dashboard. Six classic moods (Happy, Neutral, Sad, Angry, Anxious, Tired) with emoji icons and distinct colors. Mood is a selectable parameter in the grid (cells colored by mood) and also shown as an emoji icon on cells regardless of the active parameter. The day detail bottom sheet includes a multi-select mood toggle section alongside the existing notes. Moods are persisted in IndexedDB via `storageService.updateDayMoods()`. Multiple moods per day supported. Spanish and English translations included.
