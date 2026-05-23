@@ -62,7 +62,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
    - Los dots se renderizan **1:1 con el número de chips `.yip-chip`** dentro de `#yip-location-chips`
    - Cada dot representa UNA ubicación guardada, no una página de scroll
    - El dot activo corresponde al chip más cercano al centro del viewport del contenedor (determinado vía `getBoundingClientRect`)
-   - Los dots son **siempre visibles** (incluso si todos los chips caben sin overflow), a menos que no haya chips
+   - Los dots se muestran **solo si hay overflow** (scrollWidth > clientWidth). Si no hay overflow, los dots se ocultan.
    - Se actualizan en evento `scroll` del contenedor, `resize` de ventana, y mediante `MutationObserver` en `#yip-location-chips`
 7. **Parámetro `mood`**: cuando `param === 'mood'`, las celdas se colorean con el color del primer mood del día (o gris si no hay moods). La leyenda muestra los 6 colores de mood.
 8. **Icono de mood en celda**: si `data.moods?.length > 0`, la celda muestra el emoji del primer mood como icono (similar al icono `sticky_note_2` para notas). Si hay tanto moods como notas, se muestran ambos iconos.
@@ -138,7 +138,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
 25. **`updateYipScrollUI` con 0 chips:** dotsContainer se vacía
 26. **`updateYipScrollUI` con N chips:** renderiza exactamente N dots (uno por chip)
 27. **`updateYipScrollUI` — dot activo:** el dot del chip más cercano al centro del viewport tiene clase `active`
-28. **`updateYipScrollUI` — dots visibles sin overflow:** los dots se renderizan incluso si `scrollWidth <= clientWidth`
+28. **`updateYipScrollUI` — sin overflow:** si `scrollWidth <= clientWidth`, el dotsContainer se vacía (no se renderizan dots)
 29. **`updateYipScrollUI` — scroll cambia dot activo:** al hacer scroll, el dot activo cambia al chip más cercano al centro
 
 ## Historial de cambios
@@ -150,4 +150,4 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
 | 2026-05-21 | Añadido icono visual en celdas con notas (`has-notes` class + `sticky_note_2`) | SDD |
 | 2026-05-21 | Añadido parámetro `mood` al YIP: grid coloreado por mood, icono emoji en celdas, selector multi-mood en detail sheet, función `saveDayMoods` | SDD |
 | 2026-05-21 | **Rediseño visual del mood selector**: grid 2 columnas, botones tipo píldora con `--mood-color`, check icon en estado activo, fondo de color cuando `.active` | SDD |
-| 2026-05-22 | **`updateYipScrollUI` bugfix**: dots ahora 1:1 con chips (no scroll-pages), siempre visibles, dot activo por proximidad al centro del viewport. Añadido listener `resize`. Tests y spec actualizados. | SDD |
+| 2026-05-22 | **`updateYipScrollUI` bugfix**: dots ahora 1:1 con chips (no scroll-pages), ocultos sin overflow, dot activo por mayor proporción visible (con tiebreaker por centro). Añadido listener `resize`. Tests y spec actualizados. | SDD |

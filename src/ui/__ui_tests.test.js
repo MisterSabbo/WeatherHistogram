@@ -436,6 +436,13 @@ describe('YearInPixels', () => {
       `;
     }
 
+    function mockOverflow(container) {
+      Object.defineProperties(container, {
+        scrollWidth: { value: 600, configurable: true },
+        clientWidth: { value: 200, configurable: true }
+      });
+    }
+
     it('clears dots when there are no chips', () => {
       setupChips(0);
       updateYipScrollUI();
@@ -445,6 +452,7 @@ describe('YearInPixels', () => {
 
     it('renders exactly one dot per chip', () => {
       setupChips(3);
+      mockOverflow(document.getElementById('yip-location-chips'));
       updateYipScrollUI();
       const dots = document.querySelectorAll('.yip-dot');
       expect(dots.length).toBe(3);
@@ -452,22 +460,29 @@ describe('YearInPixels', () => {
 
     it('marks first dot as active by default', () => {
       setupChips(4);
+      mockOverflow(document.getElementById('yip-location-chips'));
       updateYipScrollUI();
       const dots = document.querySelectorAll('.yip-dot');
       expect(dots[0].classList.contains('active')).toBe(true);
       expect(dots[1].classList.contains('active')).toBe(false);
     });
 
-    it('renders dots even without overflow (no scroll needed)', () => {
+    it('clears dots when no overflow (all chips fit)', () => {
       setupChips(2);
+      const container = document.getElementById('yip-location-chips');
+      Object.defineProperties(container, {
+        scrollWidth: { value: 200, configurable: true },
+        clientWidth: { value: 200, configurable: true }
+      });
       updateYipScrollUI();
-      const dots = document.querySelectorAll('.yip-dot');
-      expect(dots.length).toBe(2);
+      const dots = document.getElementById('yip-location-dots');
+      expect(dots.innerHTML).toBe('');
     });
 
     it('updates active dot based on scroll position', () => {
       setupChips(5);
       const container = document.getElementById('yip-location-chips');
+      mockOverflow(container);
       const chips = container.querySelectorAll('.yip-chip');
 
       // Mock getBoundingClientRect so chips are at known positions
@@ -509,6 +524,44 @@ describe('YearInPixels', () => {
       expect(dots[1].classList.contains('active')).toBe(true);
       expect(dots[0].classList.contains('active')).toBe(false);
       expect(dots[2].classList.contains('active')).toBe(false);
+    });
+
+    it('activates the most visible chip when widths differ', () => {
+      setupChips(2);
+      const container = document.getElementById('yip-location-chips');
+      mockOverflow(container);
+      const chips = container.querySelectorAll('.yip-chip');
+
+      // Chip 0: wide (280px), Chip 1: narrow (50px)
+      // After scroll to end, chip 0 left is mostly outside viewport
+      // Container at left=0, width=200, center=100
+      container.getBoundingClientRect = vi.fn(() => ({
+        top: 0, bottom: 30, height: 30,
+        left: 0, right: 200, width: 200,
+        x: 0, y: 0,
+        toJSON() { return this; }
+      }));
+
+      // Scroll to end: chip 1 is fully visible, chip 0 is 70% visible
+      // Chip 0: left=-130, right=150 → visible 0-150 = 150/280 = 53.6%
+      // Chip 1: left=150, right=200 → visible 150-200 = 50/50 = 100%
+      chips[0].getBoundingClientRect = vi.fn(() => ({
+        top: 0, bottom: 30, height: 30,
+        left: -130, right: 150, width: 280,
+        x: -130, y: 0,
+        toJSON() { return this; }
+      }));
+      chips[1].getBoundingClientRect = vi.fn(() => ({
+        top: 0, bottom: 30, height: 30,
+        left: 150, right: 200, width: 50,
+        x: 150, y: 0,
+        toJSON() { return this; }
+      }));
+
+      updateYipScrollUI();
+      const dots = document.querySelectorAll('.yip-dot');
+      expect(dots[1].classList.contains('active')).toBe(true);
+      expect(dots[0].classList.contains('active')).toBe(false);
     });
   });
 

@@ -668,25 +668,42 @@ function updateYipScrollUI() {
         return;
     }
 
+    const hasOverflow = container.scrollWidth > container.clientWidth;
+    if (!hasOverflow) {
+        dotsContainer.innerHTML = '';
+        return;
+    }
+
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.left + containerRect.width / 2;
 
-    let activeIndex = 0;
-    let minDist = Infinity;
+    let bestIndex = 0;
+    let bestRatio = 0;
 
     chips.forEach((chip, i) => {
         const chipRect = chip.getBoundingClientRect();
-        const chipCenter = chipRect.left + chipRect.width / 2;
-        const dist = Math.abs(chipCenter - containerCenter);
-        if (dist < minDist) {
-            minDist = dist;
-            activeIndex = i;
+        const visibleLeft = Math.max(chipRect.left, containerRect.left);
+        const visibleRight = Math.min(chipRect.right, containerRect.right);
+        const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+        const visibleRatio = visibleWidth / chipRect.width;
+
+        if (visibleRatio > bestRatio) {
+            bestRatio = visibleRatio;
+            bestIndex = i;
+        } else if (visibleRatio === bestRatio && visibleRatio > 0) {
+            const chipCenter = chipRect.left + chipRect.width / 2;
+            const bestChip = chips[bestIndex];
+            const bestRect = bestChip.getBoundingClientRect();
+            const bestCenter = bestRect.left + bestRect.width / 2;
+            if (Math.abs(chipCenter - containerCenter) < Math.abs(bestCenter - containerCenter)) {
+                bestIndex = i;
+            }
         }
     });
 
     let html = '';
     for (let i = 0; i < chips.length; i++) {
-        html += `<span class="yip-dot${i === activeIndex ? ' active' : ''}"></span>`;
+        html += `<span class="yip-dot${i === bestIndex ? ' active' : ''}"></span>`;
     }
     dotsContainer.innerHTML = html;
 }
