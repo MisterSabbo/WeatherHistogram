@@ -12,9 +12,9 @@ export default [
       },
     },
     rules: {
-      'no-unused-vars': 'warn',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-undef': 'error',
-      'prefer-const': 'warn',
+      'prefer-const': 'error',
       'no-var': 'error',
       'no-empty': ['error', { allowEmptyCatch: true }],
     },

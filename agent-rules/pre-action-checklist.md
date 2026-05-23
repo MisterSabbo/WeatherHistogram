@@ -48,7 +48,7 @@ Before every task, verify these rules **in order**:
 
 - [ ] **Respect SOLID principles** — SRP, OCP, LSP, ISP, DIP
 - [ ] **All rendering goes through `render()`** — never draw to tile canvases outside this function
-- [ ] **Verify code** → Run `npm run lint && npm run typecheck && npm test && npm run test:e2e` and fix any failures before proceeding
+- [ ] **Verify code** → Run `npm run lint && npm run typecheck && npm test && npm run test:e2e` — **lint must report 0 warnings and 0 errors** before proceeding
 - [ ] **After changes** → Run `git diff --cached` and `git diff`, then propose commit message
 - [ ] **Task done?** → `memory_add_observations` on relevant entities summarizing what changed, issues, and next step (see @agent-rules/memory.md)
 - [ ] **Final audit** → Invoke `@project-auditor` to verify all rules were followed
