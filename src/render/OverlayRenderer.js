@@ -1,5 +1,5 @@
 import { hexToRgb } from '../utils/color.js';
-import { getThemeColor, getThemeIcon, getThemeFont } from '../theme.js';
+import { getThemeColor, getThemeFont } from '../theme.js';
 import { getAggregatedPollenLevel, getPollenColor } from '../services/AqiManager.js';
 
 export function interpolateScrubberData(d1, d2, progress) {
@@ -7,7 +7,7 @@ export function interpolateScrubberData(d1, d2, progress) {
 
   let tBezier = 0.5, minT = 0, maxT = 1;
   for (let i = 0; i < 10; i++) {
-    let bx = 1.5 * tBezier - 1.5 * tBezier * tBezier + tBezier * tBezier * tBezier;
+    const bx = 1.5 * tBezier - 1.5 * tBezier * tBezier + tBezier * tBezier * tBezier;
     if (bx < progress) minT = tBezier; else maxT = tBezier;
     tBezier = (minT + maxT) / 2;
   }
@@ -31,7 +31,7 @@ export function getWeatherIconName(weatherCode) {
   return 'clear_day';
 }
 
-export function updateWeatherZone(currentData, state, { haloColor, isDark, walkPhase, scrollContainer, drawStickman, PIXELS_PER_HOUR }) {
+export function updateWeatherZone(currentData, state, { haloColor, isDark, walkPhase, drawStickman }) {
   const summaryIconDOM = document.getElementById('summary-icon-dom');
   const summaryIconName = getWeatherIconName(currentData.weatherCode);
   if (summaryIconDOM) {
@@ -113,7 +113,6 @@ export function drawScrubberPoint(fixedOverlayCtx, y, color, value, unit, {
   drawX = 60,
   h,
   w,
-  state,
   labelRects
 }) {
   if (y >= h - 5) return;
@@ -155,7 +154,7 @@ export function drawScrubberPoint(fixedOverlayCtx, y, color, value, unit, {
     const col1W = Math.max(iconWidth, secIconWidth);
     const bgW = Math.max(textMetrics.width, secMetrics.width) + col1W + 14;
 
-    let rect = { x: drawX, y: constrainedY, w: bgW, h: bgH };
+    const rect = { x: drawX, y: constrainedY, w: bgW, h: bgH };
 
     let attempts = 0;
     let direction = 1;

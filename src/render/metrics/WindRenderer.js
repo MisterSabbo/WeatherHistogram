@@ -30,7 +30,7 @@ export function drawWind(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
                 windColor = state.theme === 'dark' ? getThemeColor('wind.strongDefaultDark', '#f87171') : getThemeColor('wind.strongDefaultLight', '#dc2626');
             }
 
-            let wIcon = getThemeIcon('windDirection', null);
+            const wIcon = getThemeIcon('windDirection', null);
             if (wIcon) {
                 ctx.font = '14px "Material Symbols Outlined"';
                 ctx.textAlign = 'center';

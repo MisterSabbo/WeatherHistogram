@@ -72,8 +72,8 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             const avgClouds = (d.clouds + nextD.clouds) / 2;
             const avgProb = ((d.precipProb || 0) + (nextD.precipProb || 0)) / 2;
 
-            let isWet = avgY >= avgProbY && avgProb > 15;
-            let isCloudy = avgY >= avgCloudY && avgClouds >= 25;
+            const isWet = avgY >= avgProbY && avgProb > 15;
+            const isCloudy = avgY >= avgCloudY && avgClouds >= 25;
 
             // 1. Dibujado de Efectos Continuos (Glow/Sombra)
             ctx.save();
@@ -212,11 +212,11 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
 
         // Cloudy shadow overlay
         if ((isCloudy1 || isCloudy2) && (!isWet1 && !isWet2)) {
-            let gradD = ctx.createLinearGradient(x1, y1, x2, y2);
+            const gradD = ctx.createLinearGradient(x1, y1, x2, y2);
             gradD.addColorStop(0, isCloudy1 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0)');
             gradD.addColorStop(1, isCloudy2 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0)');
 
-            let gradL = ctx.createLinearGradient(x1, y1, x2, y2);
+            const gradL = ctx.createLinearGradient(x1, y1, x2, y2);
             gradL.addColorStop(0, isCloudy1 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0)');
             gradL.addColorStop(1, isCloudy2 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0)');
 
@@ -253,7 +253,7 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
         if (isWet1 || isWet2) {
             const hasSnow = (isSnow1 && isWet1) || (isSnow2 && isWet2);
 
-            let grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2);
 
             if (hasSnow) {
                 grad.addColorStop(0, isWet1 && isSnow1 ? 'rgba(0, 220, 255, 0.7)' : 'rgba(0, 220, 255, 0)');
@@ -281,7 +281,7 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.restore();
 
             if (hasSnow) {
-                let innerGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+                const innerGrad = ctx.createLinearGradient(x1, y1, x2, y2);
                 innerGrad.addColorStop(0, isWet1 && isSnow1 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0)');
                 innerGrad.addColorStop(1, isWet2 && isSnow2 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0)');
 
@@ -301,25 +301,25 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
         if ((isThunder1 && isWet1) || (isThunder2 && isWet2)) {
             ctx.save();
             ctx.beginPath();
-            let dx = x2 - x1;
-            let dy = y2 - y1;
-            let dist = Math.sqrt(dx * dx + dy * dy);
-            let steps = Math.floor(dist / 4);
-            let tOffset = (Date.now() / 150) % (Math.PI * 2);
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const steps = Math.floor(dist / 4);
+            const tOffset = (Date.now() / 150) % (Math.PI * 2);
 
             for (let j = 0; j <= steps; j++) {
-                let t = j / steps;
-                let cx = x1 + dx * t;
-                let cy = y1 + dy * t;
-                let perpX = -dy / dist;
-                let perpY = dx / dist;
-                let phase = t * Math.PI * 15 + tOffset;
-                let amp = Math.sin(phase) * 3;
+                const t = j / steps;
+                const cx = x1 + dx * t;
+                const cy = y1 + dy * t;
+                const perpX = -dy / dist;
+                const perpY = dx / dist;
+                const phase = t * Math.PI * 15 + tOffset;
+                const amp = Math.sin(phase) * 3;
                 if(j===0) ctx.moveTo(cx, cy);
                 else ctx.lineTo(cx + perpX * amp, cy + perpY * amp);
             }
 
-            let grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2);
             grad.addColorStop(0, (isThunder1 && isWet1) ? 'rgba(253, 224, 71, 0.9)' : 'rgba(253, 224, 71, 0)');
             grad.addColorStop(1, (isThunder2 && isWet2) ? 'rgba(253, 224, 71, 0.9)' : 'rgba(253, 224, 71, 0)');
 

@@ -63,8 +63,8 @@ export function drawStickman(ctx, x, y, walkPhase, apparentTemp, precCode, isWin
 
     // Back Arm (Arm 2) swinging opposite to back leg
     const arm2Angle = swing1 * 1.2; 
-    let arm2tipX = Math.sin(arm2Angle) * 9;
-    let arm2tipY = neckY + 2 + Math.cos(arm2Angle) * 9;
+    const arm2tipX = Math.sin(arm2Angle) * 9;
+    const arm2tipY = neckY + 2 + Math.cos(arm2Angle) * 9;
     
     // Always draw back arm unless it's doing something very specific that needs hiding (we don't need hiding)
     ctx.beginPath();

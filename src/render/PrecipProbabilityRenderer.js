@@ -72,7 +72,7 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     ctx.globalAlpha = isDark ? 0.2 : 0.15;
 
     const rand = (seed) => {
-        let x = Math.sin(seed * 9.9898) * 43758.5453;
+        const x = Math.sin(seed * 9.9898) * 43758.5453;
         return x - Math.floor(x);
     };
 

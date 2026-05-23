@@ -9,14 +9,12 @@ import { geoService } from './services/GeoService.js';
 import { generateDailyCards, updateActiveDailyCard } from './ui/DailyCards.js';
 import { processData } from './services/DataProcessor.js';
 import { fetchWeatherData, clearWeatherCache } from './domain/WeatherFetcher.js';
-import { getWeatherDescription } from './utils/weather.js';
 import { showChangelogModal, initChangelog } from './ui/ChangelogModal.js';
 import { registerSW, handleInstallPrompt, showUpdateToast, checkAppVersion, clearCacheAndReload } from './utils/pwa.js';
-import { hexToRgb } from './utils/color.js';
-import { dateToX, formatTooltipTime } from './utils/time.js';
+import { dateToX } from './utils/time.js';
 import { normalizeY } from './utils/math.js';
 
-import { drawHumidity, drawWind, drawTemperature } from './render/MetricsRenderer.js';
+import { drawWind, drawTemperature } from './render/MetricsRenderer.js';
 import { drawClouds, drawPrecipitation, drawPrecipitationProbability } from './render/AtmosphereRenderer.js';
 import { drawGrid, drawDayNames, drawAxes } from './render/GridRenderer.js';
 import { drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunMarkersOnCanvas, drawSunnyBackground, drawNightOverlay, drawNightShadow } from './render/BackgroundRenderer.js';
@@ -25,20 +23,19 @@ import { interpolateScrubberData, updateWeatherZone, drawScrubberPoint, updateUV
 import { initMapModal } from './ui/MapSelector.js';
 import { initFavoritesModal } from './ui/FavoritesModal.js';
 import { initYearInPixels } from './ui/YearInPixels.js';
-import { openBottomSheet, closeBottomSheet, onSheetClose } from './ui/BottomSheet.js';
+import { openBottomSheet, closeBottomSheet } from './ui/BottomSheet.js';
 import { initScrollIndicator as initScrollIndicatorRef } from './ui/ScrollIndicator.js';
 import { updateTopPanel as updateTopPanelRef } from './ui/TopPanel.js';
 import { initPullToRefresh as initPullToRefreshRef } from './ui/PullToRefresh.js';
 import { initSpfModal as initSpfModalRef } from './ui/SpfModal.js';
-import { generateAlerts, renderAlerts } from './utils/AlertEngine.js';
+
 import { initTooltipManager } from './ui/TooltipManager.js';
 import { MinimapRenderer } from './render/MinimapRenderer.js';
 
 let PIXELS_PER_HOUR = state.PIXELS_PER_HOUR;
-const CHART_HEIGHT = CONFIG.CHART_HEIGHT;
 const MINIMAP_HEIGHT = CONFIG.MINIMAP_HEIGHT;
 const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
-const CACHE_DURATION = CONFIG.CACHE_DURATION;
+
 
         /** @type {HTMLCanvasElement} */
         let minimapCanvas;
@@ -53,9 +50,6 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
         let TILE_WIDTH = window.innerWidth < 600 ? 720 : CONFIG.TILE_WIDTH;
         let scrollContainer, themeToggle;
         let minimapRenderer;
-        let onClearCache;
-
-        let searchTimeout = null;
         let ticking = false;
         let preventBackNavTimer = null;
 
@@ -117,7 +111,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                     });
                     const lastLoc = localStorage.getItem('last_weather_location');
                     if (lastLoc) {
-                        try { await storageService.set('lastLocation', JSON.parse(lastLoc)); } catch (e) {}
+                        try { await storageService.set('lastLocation', JSON.parse(lastLoc)); } catch {}
                     }
                     await storageService.set('chartTheme', localStorage.getItem('chart_theme') || 'default');
                     await storageService.set('viewMode', localStorage.getItem('view_mode') || 'minimap');
@@ -304,7 +298,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                         return isOverflowing;
                     };
                     locationGroup.addEventListener('mouseenter', checkOverflow);
-                    locationGroup.addEventListener('click', (e) => {
+                    locationGroup.addEventListener('click', () => {
                         if (window.innerWidth <= 600) {
                             locationGroup.classList.toggle('active');
                             if (locationGroup.classList.contains('active')) {
@@ -636,14 +630,14 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                                 state.isFetching = true;
                                 const { favoritesService } = await import('./services/FavoritesService.js');
                                 await favoritesService.clear();
-                                try { storageService.db?.close(); } catch (e) {}
+                                try { storageService.db?.close(); } catch {}
                                 await new Promise((resolve) => {
                                     const req = indexedDB.deleteDatabase("WeatherHistDB");
                                     req.onsuccess = () => resolve();
                                     req.onerror = () => resolve();
                                     req.onblocked = () => resolve();
                                 });
-                                try { localStorage.clear(); } catch (e) {}
+                                try { localStorage.clear(); } catch {}
                                 const url = new URL(location.href);
                                 url.searchParams.set('_t', String(Date.now()));
                                 location.href = url.toString();
@@ -863,7 +857,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                 // Reverse geocoding
                 try {
                     state.locationName = await geoService.reverseGeocode(state.lat, state.lon);
-                } catch (e) {
+                } catch {
                     state.locationName = "Ubicación actual";
                 }
             } catch (err) {
@@ -973,7 +967,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             drawNightOverlay(ctx, xOffset, w, h, PIXELS_PER_HOUR);
             drawNightShadow(ctx, xOffset, w, h, PIXELS_PER_HOUR);
             drawStarrySky(ctx, xOffset, w, h, PIXELS_PER_HOUR);
-            drawGrid(ctx, xOffset, w, h, styles, PIXELS_PER_HOUR);
+            drawGrid(ctx, xOffset, w, h);
             drawDayNames(ctx, xOffset, w, h, styles, PIXELS_PER_HOUR);
             drawClouds(ctx, xOffset, w, h, styles, PIXELS_PER_HOUR);
             drawUVSegments(ctx, xOffset, w, h, PIXELS_PER_HOUR); // Add UV segments
@@ -986,7 +980,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
 
             drawTemperature(ctx, xOffset, w, h, styles, PIXELS_PER_HOUR);
             drawSunMarkersOnCanvas(ctx, xOffset, w, h, PIXELS_PER_HOUR);
-            drawAxes(ctx, xOffset, w, h, styles, PIXELS_PER_HOUR, CHART_HEIGHT);
+            drawAxes(ctx, xOffset, w, h, styles, PIXELS_PER_HOUR);
 
             ctx.restore();
             tile.drawn = true;
@@ -1011,9 +1005,6 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             updateTopPanel();
             drawFixedOverlay();
         }
-
-        let lastNowBtnX = -1;
-        let lastNowBtnMini = null;
 
         function drawFixedOverlay() {
             if (document.getElementById('app-wrapper').classList.contains('loading')) return;
@@ -1095,7 +1086,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                 
                 fixedOverlayCtx.save();
                 const walkPhase = (scrollContainer.scrollLeft % 80) / 80;
-                updateWeatherZone(currentData, state, { haloColor, isDark, walkPhase, scrollContainer, drawStickman, PIXELS_PER_HOUR });
+                updateWeatherZone(currentData, state, { haloColor, isDark, walkPhase, drawStickman });
                 fixedOverlayCtx.restore();
 
                 fixedOverlayCtx.save();
@@ -1140,7 +1131,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                 const labelRects = state.labelRects;
 
                 const drawPoint = (y, color, value, unit, shape = 'circle', icon = '', secondaryText = null, secondaryColor = null, secondaryIcon = '') => {
-                  drawScrubberPoint(fixedOverlayCtx, y, color, value, unit, { shape, icon, secondaryText, secondaryColor, secondaryIcon, drawX, h, w, state, labelRects });
+                  drawScrubberPoint(fixedOverlayCtx, y, color, value, unit, { shape, icon, secondaryText, secondaryColor, secondaryIcon, drawX, h, w, labelRects });
                 };
 
                 // 1. Temperatura
@@ -1167,7 +1158,7 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
                 const pVal = d1.precip;
                 if (pVal > 0.01) {
                     const maxH = h * 0.9;
-                    let barH = pVal * CONFIG.PIXELS_PER_MM;
+                    const barH = pVal * CONFIG.PIXELS_PER_MM;
                     const isBroken = barH > maxH;
                     const visualH = Math.min(maxH, barH);
                     const barY = h - visualH;
@@ -1342,9 +1333,9 @@ const CACHE_DURATION = CONFIG.CACHE_DURATION;
             errDiv.style.display = 'block';
         }
 
-        onClearCache = async () => {
+        const onClearCache = async () => {
             clearWeatherCache();
-            try { storageService.db?.close(); } catch(e) {}
+            try { storageService.db?.close(); } catch {}
             await clearCacheAndReload();
         };
 

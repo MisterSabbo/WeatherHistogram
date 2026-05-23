@@ -95,18 +95,18 @@ export function drawPrecipitation(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR,
     for (let i = startIdx; i < endIdx; i++) {
         const d = state.hourlyData[i];
         if (d.precip > 0) {
-            let barH = d.precip * PIXELS_PER_MM;
+            const barH = d.precip * PIXELS_PER_MM;
             const x = i * PIXELS_PER_HOUR + 5;
             const bw = PIXELS_PER_HOUR - 10;
 
             const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
             const isThunder = [95, 96, 99].includes(d.weatherCode);
 
-            let baseColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(148, 163, 184, 0.4)') :
+            const baseColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(148, 163, 184, 0.4)') :
                             isThunder ? 'rgba(57, 73, 171, 0.4)' :
                             getThemeColor('precipBar', 'rgba(13, 71, 161, 0.4)');
 
-            let strokeColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(100, 116, 139, 0.8)') :
+            const strokeColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(100, 116, 139, 0.8)') :
                               isThunder ? 'rgba(57, 73, 171, 0.8)' :
                               'rgba(13, 71, 161, 0.8)';
 
@@ -114,8 +114,8 @@ export function drawPrecipitation(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR,
             ctx.strokeStyle = strokeColor;
             ctx.lineWidth = 1;
 
-            let drawH = Math.min(maxH, barH);
-            let barY = h - drawH;
+            const drawH = Math.min(maxH, barH);
+            const barY = h - drawH;
 
             const grad = ctx.createLinearGradient(0, barY, 0, Math.min(h, barY + 30));
             const colorParts = baseColor.match(/[\d.]+/g);

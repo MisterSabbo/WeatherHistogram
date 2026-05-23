@@ -1,5 +1,4 @@
 import { favoritesService } from '../services/FavoritesService.js';
-import { state } from '../store.js';
 import { t } from '../utils/i18n.js';
 
 export function initFavoritesModal(onSelect) {

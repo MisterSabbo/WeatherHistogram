@@ -1,6 +1,5 @@
 import { state } from '../store.js';
 import { getThemeColor } from '../theme.js';
-import { hexToRgb } from '../utils/color.js';
 import { drawMoon } from './MoonRenderer.js';
 export { drawSunMarkersOnCanvas } from './SunMarkers.js';
 
@@ -80,7 +79,7 @@ export function drawStarrySky(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
     const rand = (seed) => {
-        let x = Math.sin(seed * 9.9898) * 43758.5453;
+        const x = Math.sin(seed * 9.9898) * 43758.5453;
         return x - Math.floor(x);
     };
 
@@ -92,9 +91,9 @@ export function drawStarrySky(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
                 const seed = i * 100 + s;
                 const sx = xOffset + rand(seed) * PIXELS_PER_HOUR;
                 const sy = rand(seed + 1) * h * 0.85; // Stars up to 85% of height (was 0.5)
-                let sSize = rand(seed + 2) * 1.5 + 0.5;
+                const sSize = rand(seed + 2) * 1.5 + 0.5;
                 
-                let alpha = rand(seed + 3) * 0.8 + 0.2;
+                const alpha = rand(seed + 3) * 0.8 + 0.2;
                 // Add twinkle effect dynamically (just use time directly would flicker, so pseudo-random opacity)
                 // Minimap doesn't call this, only main chart.
 
@@ -123,19 +122,6 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             else if (d.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#f57c00');
             else if (d.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#fbc02d');
             else uvColor = getThemeColor('uvLevels.low', '#4caf50');
-
-            const c = hexToRgb(uvColor);
-            const bgR = Math.round(255 * 0.8 + c.r * 0.2);
-            const bgG = Math.round(255 * 0.8 + c.g * 0.2);
-            const bgB = Math.round(255 * 0.8 + c.b * 0.2);
-            const opacityColor = `rgba(${bgR}, ${bgG}, ${bgB}, 0.95)`;
-            
-            let textColor = uvColor;
-            if (uvColor === getThemeColor('uvLevels.moderate', '#fbc02d') || uvColor === '#fbc02d') {
-                textColor = '#e65100';
-            }
-
-            const uvText = `UV ${parseFloat(d.uv).toFixed(1)}`;
 
             ctx.save();
             // Draw rectangle block (reduced height, solid intense color)

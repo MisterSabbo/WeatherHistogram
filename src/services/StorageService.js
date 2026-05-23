@@ -11,7 +11,7 @@ export class StorageService {
     return new Promise((resolve, reject) => {
       try {
         const request = indexedDB.open(this.dbName, 2);
-        request.onerror = (e) => reject(request.error);
+        request.onerror = () => reject(request.error);
         request.onsuccess = (e) => {
           this.db = /** @type {IDBOpenDBRequest} */ (e.target).result;
           resolve();
@@ -34,7 +34,7 @@ export class StorageService {
   async get(key, defaultValue = null) {
     try {
       await this.init();
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const transaction = this.db.transaction([this.storeName], "readonly");
         const store = transaction.objectStore(this.storeName);
         const request = store.get(key);
@@ -47,7 +47,7 @@ export class StorageService {
       try {
         const item = localStorage.getItem(`weatherhist_${key}`);
         return item !== null ? JSON.parse(item) : defaultValue;
-      } catch (err) {
+      } catch {
         return defaultValue;
       }
     }
@@ -56,18 +56,18 @@ export class StorageService {
   async set(key, value) {
     try {
       await this.init();
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const transaction = this.db.transaction([this.storeName], "readwrite");
         const store = transaction.objectStore(this.storeName);
         const request = store.put(value, key);
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => resolve();
       });
     } catch (e) {
       console.warn("Storage.set IndexedDB failed, using localStorage", e);
       try {
         localStorage.setItem(`weatherhist_${key}`, JSON.stringify(value));
-      } catch (err) {
+      } catch {
         // ignore
       }
     }
@@ -75,14 +75,14 @@ export class StorageService {
   async getHistory(locationName) {
     try {
       await this.init();
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const transaction = this.db.transaction([this.historyStoreName], "readonly");
         const store = transaction.objectStore(this.historyStoreName);
         const request = store.get(locationName);
         request.onsuccess = () => resolve(request.result || { hourly: [], daily: [] });
         request.onerror = () => resolve({ hourly: [], daily: [] });
       });
-    } catch(e) {
+    } catch {
       return { hourly: [], daily: [] };
     }
   }
@@ -90,14 +90,14 @@ export class StorageService {
   async setHistory(locationName, pastData) {
     try {
       await this.init();
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const transaction = this.db.transaction([this.historyStoreName], "readwrite");
         const store = transaction.objectStore(this.historyStoreName);
         const request = store.put(pastData, locationName);
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => resolve();
       });
-    } catch(e) {}
+    } catch {}
   }
 
   async updateDayNotes(locationName, dayTimestamp, notes) {
@@ -112,7 +112,7 @@ export class StorageService {
       }
       await this.setHistory(locationName, history);
       return true;
-    } catch(e) {
+    } catch {
       return false;
     }
   }
@@ -129,7 +129,7 @@ export class StorageService {
       }
       await this.setHistory(locationName, history);
       return true;
-    } catch(e) {
+    } catch {
       return false;
     }
   }

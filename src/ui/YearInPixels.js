@@ -1,5 +1,4 @@
 import { storageService } from '../services/StorageService.js';
-import { getThemeColor } from '../theme.js';
 import { t } from '../utils/i18n.js';
 import { getPollenLevelByType, getAggregatedPollenLevel } from '../services/AqiManager.js';
 

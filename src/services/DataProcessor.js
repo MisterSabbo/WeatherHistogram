@@ -16,7 +16,7 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
     let tz = forecastData.timezone;
     try {
         new Intl.DateTimeFormat('en-US', { timeZone: tz });
-    } catch (e) {
+    } catch {
         console.warn("Invalid timezone from API, falling back to UTC", tz);
         tz = 'UTC';
     }
@@ -164,7 +164,7 @@ async function saveHistoryData(state) {
     const now = new Date();
     const todayStr = now.toLocaleDateString('en-CA', { timeZone: state.timezone });
     
-    let history = await storageService.getHistory(locClean);
+    const history = await storageService.getHistory(locClean);
     let changed = false;
     
     const pastHourly = state.hourlyData.filter(h => {

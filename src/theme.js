@@ -4,7 +4,7 @@ export function getThemeColor(path, fallbackColor) {
     if (!state.themeConfig || !state.themeConfig.colors) return fallbackColor;
     const parts = path.split('.');
     let val = state.themeConfig.colors;
-    for (let p of parts) {
+    for (const p of parts) {
         if (val && val[p]) val = val[p];
         else return fallbackColor;
     }
@@ -15,7 +15,7 @@ export function getThemeIcon(path, fallbackIcon) {
     if (!state.themeConfig || !state.themeConfig.icons) return fallbackIcon;
     const parts = path.split('.');
     let val = state.themeConfig.icons;
-    for (let p of parts) {
+    for (const p of parts) {
         if (val && val[p]) val = val[p];
         else return fallbackIcon;
     }
@@ -39,7 +39,7 @@ export async function loadChartTheme(themeId) {
 
     try {
         state.themeConfig = await doFetch(primaryPath);
-    } catch(e) {
+    } catch {
         console.warn(`Theme not found at ${primaryPath}, trying ${fallbackPath}...`);
         try {
             state.themeConfig = await doFetch(fallbackPath);

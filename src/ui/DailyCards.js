@@ -1,4 +1,4 @@
-import { state, CONFIG } from '../store.js';
+import { state } from '../store.js';
 import { getThemeIcon } from '../theme.js';
 import { getLocale } from '../utils/i18n.js';
 

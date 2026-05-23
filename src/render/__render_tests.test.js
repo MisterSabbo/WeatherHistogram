@@ -192,7 +192,7 @@ describe('GridRenderer', () => {
   });
 
   it('drawGrid does not throw', () => {
-    expect(() => mod.drawGrid(mockCtx, 0, 200, 200, {}, 60)).not.toThrow();
+    expect(() => mod.drawGrid(mockCtx, 0, 200, 200)).not.toThrow();
   });
 
   it('drawDayNames does not throw', () => {

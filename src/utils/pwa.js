@@ -14,7 +14,7 @@ export function registerSW() {
             _skipControllerReload = true;
             sessionStorage.removeItem('_skipSwReload');
           }
-        } catch (e) {}
+        } catch {}
 
         const reg = await navigator.serviceWorker.register('./sw.js');
         console.log('ServiceWorker registered: ./sw.js');
@@ -141,7 +141,7 @@ export async function clearCacheAndReload() {
       }
     } catch (e) { console.warn(e); }
   }
-  try { sessionStorage.setItem('_skipSwReload', '1'); } catch (e) {}
+  try { sessionStorage.setItem('_skipSwReload', '1'); } catch {}
 
   const url = new URL(location.href);
   url.searchParams.set('_t', String(Date.now()));

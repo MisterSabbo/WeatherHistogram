@@ -3,7 +3,7 @@ import { getThemeColor, getThemeFont } from '../theme.js';
 import { normalizeY } from '../utils/math.js';
 import { formatHour } from '../utils/time.js';
 
-export function drawGrid(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
+export function drawGrid(ctx, viewX, viewW, h) {
     ctx.strokeStyle = '#e0e0e0'; 
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -28,10 +28,6 @@ export function drawGrid(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     ctx.restore();
 
     ctx.strokeStyle = 'rgba(0,0,0,0.08)'; 
-    const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
-    const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
-
-    // Grid vertical lines previously drawn at localHour === 0 have been removed to prevent visual artifact complaints
 }
 
 export function drawDayNames(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
@@ -78,7 +74,7 @@ export function drawDayNames(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     ctx.restore();
 }
 
-export function drawAxes(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR, CHART_HEIGHT) {
+export function drawAxes(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     ctx.save();
     ctx.fillStyle = getThemeColor('xAxisLabel', '#666666');
     ctx.font = `bold 10px ${getThemeFont()}`;

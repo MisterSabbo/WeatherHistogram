@@ -49,7 +49,7 @@ export class GeoService {
                 if (!res.ok) throw new Error("Error during reverse geocoding");
                 const data = await res.json();
                 
-                let nameParts = [];
+                const nameParts = [];
                 if (data.address) {
                     if (data.address.city || data.address.town || data.address.village) {
                         nameParts.push(data.address.city || data.address.town || data.address.village);
