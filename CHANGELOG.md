@@ -5,6 +5,7 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 ## [v1.10.0b] - 2026-05-23
 ### Bug Fix
 - **Settings modal X button now works reliably on mobile**: Added `touch-action: manipulation` to `.sheet-close-btn` to prevent the browser from interpreting taps as scroll gestures on some mobile browsers, fixing an intermittent issue where the close button required multiple taps.
+- **Changelog modal X button now works reliably on mobile**: Same `touch-action: manipulation` fix applied to the changelog close button (`#changelog-close-btn`).
 
 ## [v1.10.0a] - 2026-05-22
 ### Bug Fix

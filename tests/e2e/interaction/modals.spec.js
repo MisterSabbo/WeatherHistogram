@@ -51,6 +51,23 @@ test.describe('Modal interactions', () => {
     await expect(changelogModal).toBeVisible()
   })
 
+  test('close changelog modal via X button', async ({ page }) => {
+    await page.locator('#btn-info').click()
+    await page.waitForTimeout(500)
+    await page.locator('#open-changelog-link').click({ force: true })
+    await page.waitForTimeout(500)
+    const changelogModal = page.locator('#changelog-modal')
+    await expect(changelogModal).toBeVisible()
+
+    await page.locator('#changelog-close-btn').click()
+    await page.waitForTimeout(800)
+    const hasOpenClass = await page.evaluate(() => {
+      const modal = document.getElementById('changelog-modal')
+      return modal.classList.contains('open')
+    })
+    expect(hasOpenClass).toBe(false)
+  })
+
   test('theme toggle interaction', async ({ page }) => {
     const themeToggle = page.locator('#theme-toggle')
     await themeToggle.click()

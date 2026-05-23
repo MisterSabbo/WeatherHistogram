@@ -2,7 +2,8 @@ export const changelogData = [
   {
     "version": "1.10.0b",
     "changes": [
-      "Fix: settings modal X button now works reliably on mobile — added touch-action: manipulation to .sheet-close-btn to prevent the browser from interpreting taps as scroll gestures on some mobile browsers."
+      "Fix: settings modal X button now works reliably on mobile — added touch-action: manipulation to .sheet-close-btn to prevent the browser from interpreting taps as scroll gestures on some mobile browsers.",
+      "Fix: changelog modal X button now works reliably on mobile — same touch-action: manipulation fix applied to the changelog close button."
     ]
   },
   {
