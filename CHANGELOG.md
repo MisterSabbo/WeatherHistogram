@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.0b] - 2026-05-23
+### Bug Fix
+- **Settings modal X button now works reliably on mobile**: Added `touch-action: manipulation` to `.sheet-close-btn` to prevent the browser from interpreting taps as scroll gestures on some mobile browsers, fixing an intermittent issue where the close button required multiple taps.
+
 ## [v1.10.0a] - 2026-05-22
 ### Bug Fix
 - **YIP location selector dots now match saved locations**: Pagination dots in the Year in Pixels location selector now render 1:1 with saved location chips, using `getBoundingClientRect` to determine the active dot by center proximity instead of calculating pages from scroll width. Dots remain visible even without overflow. Added `resize` listener and exported `updateYipScrollUI` for testability.

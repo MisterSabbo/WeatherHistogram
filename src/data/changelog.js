@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.0b",
+    "changes": [
+      "Fix: settings modal X button now works reliably on mobile — added touch-action: manipulation to .sheet-close-btn to prevent the browser from interpreting taps as scroll gestures on some mobile browsers."
+    ]
+  },
+  {
     "version": "1.10.0a",
     "changes": [
       "Fix: YIP location selector dots now match saved locations — dots render 1:1 with .yip-chip elements using getBoundingClientRect center proximity instead of scroll-width pages. Always visible when chips exist. Added resize listener."

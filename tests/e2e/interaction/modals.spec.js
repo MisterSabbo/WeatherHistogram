@@ -59,6 +59,21 @@ test.describe('Modal interactions', () => {
     expect(['dark', 'light']).toContain(isDark)
   })
 
+  test('close info/settings modal via X button', async ({ page }) => {
+    await page.locator('#btn-info').click()
+    await page.waitForTimeout(500)
+    const infoModal = page.locator('#info-modal')
+    await expect(infoModal).toBeVisible()
+
+    await page.locator('#close-info-btn').click()
+    await page.waitForTimeout(800)
+    const hasOpenClass = await page.evaluate(() => {
+      const modal = document.getElementById('info-modal')
+      return modal.classList.contains('open')
+    })
+    expect(hasOpenClass).toBe(false)
+  })
+
   test('language switch opens correctly', async ({ page }) => {
     await page.locator('#btn-info').click()
     await page.waitForTimeout(500)
