@@ -4,7 +4,7 @@
 - `npm run dev` — Vite on port 3000
 - `npm run build` — production build
 - `npm run clean` — uses `rm -rf dist` (fails on Windows; use `Remove-Item -Recurse -Force dist`)
-- `npm run lint` — ESLint on `src/`
+- `npm run lint` — ESLint on `src/` (CI uses `--max-warnings 0`)
 - `npm run typecheck` — TypeScript JSDoc check (`tsc --noEmit`)
 - `npm test` — Vitest unit tests (jsdom, files: `src/**/*.test.js`)
 - `npm run test:watch` — Vitest watch mode
@@ -33,7 +33,7 @@
 - **Service Worker** (`sw.js`): cache-first for static assets, stale-while-revalidate for others. API calls (open-meteo, openstreetmap) deliberately not intercepted.
 - **PWA standalone detection:** checks `display-mode: standalone` / `navigator.standalone` and adds `pwa-standalone` class to `<html>` at init.
 - **All rendering through `render()`** — off-screen tiles are skipped via a `drawn` flag. `scroll` event on `#scroll-container` calls `render()` throttled via `requestAnimationFrame`.
-- **`CONFIG`** is frozen in `src/store.js` — contains `CHART_HEIGHT`, `MINIMAP_HEIGHT`, `TILE_WIDTH` (1440 desktop / 720 mobile), `PIXELS_PER_HOUR` (60 / 50), `CACHE_DURATION` (5 min), `DEFAULT_COORDS`, `PAST_DAYS` (7), `FORECAST_DAYS` (7).
+- **`CONFIG`** frozen in `src/store.js`: `CHART_HEIGHT` (250), `MINIMAP_HEIGHT` (80), `TILE_WIDTH` (1440; mobile 720 override in app.js), `CACHE_DURATION` (5 min), `DEFAULT_COORDS` (Madrid), `PIXELS_PER_MM` (10). `PIXELS_PER_HOUR` (60/50 based on width) is on `state`, not CONFIG.
 - **ESLint** config uses `@eslint/js` recommended + `globals` for browser/ES2021. `L` (Leaflet) is a global. Ignores `dist/`, `node_modules/`, `public/`.
 - **Vitest** config: jsdom env, includes `src/**/*.test.js`, `passWithNoTests: true`.
 - **Playwright** config: single worker, `fullyParallel: false`, auto-starts dev server, 2% screenshot tolerance.
