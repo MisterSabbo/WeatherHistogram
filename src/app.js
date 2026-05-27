@@ -960,10 +960,6 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
             ctx.imageSmoothingQuality = 'high';
 
             ctx.clearRect(0, 0, w, h);
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.fillStyle = 'rgba(0,0,0,1)';
-            ctx.fillRect(0, 0, w, h);
-            ctx.globalCompositeOperation = 'source-over';
             ctx.save();
             ctx.translate(-xOffset, 0);
 
@@ -1269,7 +1265,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
 
             const canvasWrapper = document.getElementById('canvas-wrapper');
             if (canvasWrapper) {
-                canvasWrapper.style.width = totalWidth + 'px';
+                canvasWrapper.style.width = (totalWidth + 1) + 'px';
 
                 // Tiling logic
                 const numTiles = Math.ceil(totalWidth / TILE_WIDTH);
@@ -1280,9 +1276,9 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
 
                 for (let i = 0; i < numTiles; i++) {
                     const canvas = document.createElement('canvas');
-                    canvas.width = TILE_WIDTH * state.dpr;
+                    canvas.width = (TILE_WIDTH + 1) * state.dpr;
                     canvas.height = containerH * state.dpr;
-                    canvas.style.width = TILE_WIDTH + 'px';
+                    canvas.style.width = (TILE_WIDTH + 1) + 'px';
                     canvas.style.height = containerH + 'px';
                     canvas.style.position = 'absolute';
                     canvas.style.left = (i * TILE_WIDTH) + 'px';

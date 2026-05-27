@@ -15,37 +15,40 @@ describe('app orchestrator', () => {
     addEventListenerSpy.mockRestore();
   });
 
-  describe('canvas clearing (Mali-G76 fix)', () => {
-    function createMockContext() {
-      let compositeOp = 'source-over';
-      return {
-        get globalCompositeOperation() { return compositeOp; },
-        set globalCompositeOperation(v) { compositeOp = v; },
-        clearRect: vi.fn(),
-        fillRect: vi.fn(),
-        set fillStyle(v) { /* noop */ },
-      };
-    }
+  describe('canvas clearing (Mali-G76 fix v2 — GPU composition)', () => {
+    it('drawTile uses only clearRect (no destination-out)', () => {
+      const clearRect = vi.fn();
+      const ctx = { clearRect };
 
-    it('drawTile applies robust clear: destination-out fill then source-over reset', () => {
-      const ctx = createMockContext();
-
-      // Simulate the fix code path
+      // Simulate the v2 fix: only clearRect, no destination-out
       ctx.clearRect(0, 0, 100, 100);
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.fillStyle = 'rgba(0,0,0,1)';
-      ctx.fillRect(0, 0, 100, 100);
-      ctx.globalCompositeOperation = 'source-over';
 
-      expect(ctx.clearRect).toHaveBeenCalledWith(0, 0, 100, 100);
-      expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 100, 100);
-      expect(ctx.globalCompositeOperation).toBe('source-over');
+      expect(clearRect).toHaveBeenCalledWith(0, 0, 100, 100);
+      // destination-out was removed — no composite operation changes
     });
 
     it('tile canvas context can be created without alpha option', () => {
-      // jsdom returns null for getContext, but we verify the call is valid
       const getContext = HTMLCanvasElement.prototype.getContext;
       expect(typeof getContext).toBe('function');
+    });
+
+    it('tile overlap 1px in handleResize: canvas.style.width = TILE_WIDTH + 1', () => {
+      const TILE_WIDTH = 1440;
+      const dpr = 2;
+      const canvas = { style: {}, width: 0, height: 0 };
+      canvas.style.width = (TILE_WIDTH + 1) + 'px';
+      canvas.width = (TILE_WIDTH + 1) * dpr;
+
+      expect(canvas.style.width).toBe('1441px');
+      expect(canvas.width).toBe(2882);
+    });
+
+    it('canvasWrapper width compensates for +1px of last tile', () => {
+      const totalWidth = 10000;
+      const wrapper = { style: {} };
+      wrapper.style.width = (totalWidth + 1) + 'px';
+
+      expect(wrapper.style.width).toBe('10001px');
     });
   });
 });

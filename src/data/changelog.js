@@ -1,8 +1,14 @@
 export const changelogData = [
   {
+    "version": "1.10.0d",
+    "changes": [
+      "Fix: Mali-G76 GPU layer composition artifacts (Redmi Note 10S) — REAL root cause fix. CSS will-change:transform + transform-style:preserve-3d on ALL canvases created independent GPU 3D layers per tile, causing sub-pixel seams, opaque translucent layers, and clipped elements on Mali-G76. 3D CSS properties now apply ONLY to #fixed-overlay-canvas. Tile canvases use will-change:auto, transform-style:flat, image-rendering:pixelated. #canvas-wrapper uses translateZ(0) for a single GPU layer. Tile canvases overlap 1px to hide sub-pixel seams. Reverted destination-out workaround from v1.10.0c — only clearRect() remains."
+    ]
+  },
+  {
     "version": "1.10.0c",
     "changes": [
-      "Fix: Mali-G76 alpha compositing artifacts (Redmi Note 10S) — robust canvas clearing via clearRect + destination-out fill + source-over reset in drawTile(). Tile canvases created without alpha channel to prevent GPU compositing corruption on alternating tiles."
+      "Fix: Mali-G76 alpha compositing artifacts (Redmi Note 10S) — robust canvas clearing via clearRect + destination-out fill + source-over reset in drawTile(). Tile canvases created without alpha channel to prevent GPU compositing corruption on alternating tiles. (Superseded by v1.10.0d — real root cause was GPU layer composition.)"
     ]
   },
   {

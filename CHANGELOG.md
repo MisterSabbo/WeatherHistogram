@@ -2,9 +2,13 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.0d] - 2026-05-27
+### Bug Fix
+- **Mali-G76 GPU layer composition artifacts (Redmi Note 10S)**: Fixed the REAL root cause of Mali-G76 rendering corruption. The previous fix (v1.10.0c: `destination-out` fill) was incorrect — the bug was GPU layer composition, not alpha compositing. CSS `will-change: transform` + `transform-style: preserve-3d` on ALL canvases converted each tile into an independent GPU 3D layer. On Mali-G76, composing adjacent 3D textures introduces sub-pixel seams, opaque translucent layers, and clipped elements. **Fix**: 3D CSS properties now apply ONLY to `#fixed-overlay-canvas`. Tile canvases use `will-change: auto`, `transform-style: flat`, and `image-rendering: pixelated`. `#canvas-wrapper` gets `transform: translateZ(0)` for a single GPU layer. Tile canvases overlap 1px to hide sub-pixel seams. The `destination-out` workaround in `drawTile()` is reverted — only `clearRect()` remains.
+
 ## [v1.10.0c] - 2026-05-27
 ### Bug Fix
-- **Mali-G76 alpha compositing artifacts (Redmi Note 10S)**: Fixed GPU corruption on tile canvases where `clearRect` on alpha-enabled canvases failed to properly clear pixels on Mali-G76 GPUs. Robust clearing now uses `clearRect` + `destination-out` fill + explicit `source-over` reset. Tile canvases created without `{ alpha: true }` to prevent alpha compositing issues. Fixes black night backgrounds, opaque day names, opaque temperature glow, and visible vertical divisions between canvases.
+- **Mali-G76 alpha compositing artifacts (Redmi Note 10S)**: Fixed GPU corruption on tile canvases where `clearRect` on alpha-enabled canvases failed to properly clear pixels on Mali-G76 GPUs. Robust clearing now uses `clearRect` + `destination-out` fill + explicit `source-over` reset. Tile canvases created without `{ alpha: true }` to prevent alpha compositing issues. Fixes black night backgrounds, opaque day names, opaque temperature glow, and visible vertical divisions between canvases. **(Note: this fix was superseded by v1.10.0d — the real root cause was GPU layer composition, not alpha compositing.)**
 
 ## [v1.10.0b] - 2026-05-23
 ### Bug Fix

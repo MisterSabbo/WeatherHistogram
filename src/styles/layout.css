@@ -465,20 +465,25 @@
 
         #scroll-container::-webkit-scrollbar { display: none; }
 
-        canvas {
+        #fixed-overlay-canvas {
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
-            image-rendering: -webkit-optimize-contrast; /* Help with sharpness on iOS */
-        }
-
-        #fixed-overlay-canvas {
-            will-change: transform;
+            image-rendering: -webkit-optimize-contrast;
             pointer-events: none;
             transform: translate3d(0,0,0);
             -webkit-transform: translate3d(0,0,0);
+        }
+
+        #canvas-wrapper > canvas {
+            will-change: auto;
+            backface-visibility: visible;
+            -webkit-backface-visibility: visible;
+            transform-style: flat;
+            -webkit-transform-style: flat;
+            image-rendering: pixelated;
         }
 
         #canvas-wrapper {
@@ -486,6 +491,7 @@
             flex: 1 0 auto;
             min-height: 250px;
             width: 100%;
+            transform: translateZ(0);
         }
 
         #main-canvas {
