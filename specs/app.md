@@ -21,11 +21,11 @@ Orquestador principal de la aplicación. Inicializa ~28 funciones, maneja render
 ### Módulos internos
 Prácticamente todos los módulos del proyecto son importados.
 
-## GPU Layer Composition (Mali-G76)
+## Mali-G76 GPU Driver Bug (Redmi Note 10S)
 
-### Causa raíz (descubrimiento v1.10.0d)
+### Causa raíz (descubrimiento v1.10.0e)
 
-El CSS global en `src/styles/layout.css` aplicaba `will-change: transform`, `backface-visibility: hidden`, y `transform-style: preserve-3d` a TODOS los `<canvas>`. Esto convertía cada tile canvas en una capa 3D independiente en la GPU. En Mali-G76 (Redmi Note 10S), componer texturas 3D adyacentes introduce:
+El chipset Mali-G76 del Redmi Note 10S tiene un bug en el pipeline de **GPU compositing de múltiples canvases 2D**. Cuando el navegador intenta componer varios elementos `<canvas>` 2D adyacentes usando la GPU (hardware-accelerated compositing), el driver del Mali-G76 produce artefactos visuales:
 
 - **Líneas de costura verticales** entre canvases tiles (1px gap sub-pixel)
 - **Capas translúcidas opacas**: nubes y sombras nocturnas se renderizan como bloques sólidos
@@ -33,21 +33,31 @@ El CSS global en `src/styles/layout.css` aplicaba `will-change: transform`, `bac
 - **Iconos climáticos truncados** en bordes de tile
 - **Patrón alternante**: canvas sí / canvas no
 
-### Solución implementada
+### Intentos de fix previos (incorrectos)
 
-1. **CSS específico**: Las propiedades 3D (`will-change: transform`, `backface-visibility`, `transform-style: preserve-3d`) se aplican SOLO a `#fixed-overlay-canvas`. Los tile canvases (`#canvas-wrapper > canvas`) usan `will-change: auto`, `backface-visibility: visible`, `transform-style: flat`, e `image-rendering: pixelated`. Esto evita que cada tile sea una capa 3D independiente.
+| Versión | Hipótesis | Solución | Resultado |
+|---------|-----------|----------|-----------|
+| v1.10.0c | Alpha compositing | `destination-out` + `source-over` en `drawTile()`, canvas sin alpha | Falló |
+| v1.10.0d | CSS 3D layers | CSS 3D props solo en overlay, overlap 1px, `translateZ(0)` en wrapper | Falló — la causa raíz REAL es el driver GPU |
 
-2. **`#canvas-wrapper` con `translateZ(0)`**: Se añade `transform: translateZ(0)` al wrapper para promover SOLO una capa GPU (el wrapper completo), no cada tile individual.
+Ambos intentos asumían problemas de configuración (alpha channel, CSS 3D layers) cuando el bug real está en el **driver de GPU del dispositivo**: el Mali-G76 no compone correctamente múltiples canvases 2D por hardware.
 
-3. **Overlap de 1px**: Cada tile canvas se crea con `style.width = TILE_WIDTH + 1` para solapar 1px con el tile vecino, eliminando la línea de costura sub-pixel. `canvas.width` se escala con DPR: `(TILE_WIDTH + 1) * state.dpr`.
+### Solución implementada (v1.10.0e)
 
-4. **Revertir drawTile**: Se elimina el bloque `destination-out` + `source-over` (fix incorrecto de v1.10.0c). Solo queda `ctx.clearRect(0, 0, w, h);`. El contexto 2D se mantiene sin `{ alpha: true }`.
+1. **Software rendering forzado**: Todos los tile canvases se crean con `canvas.getContext('2d', { willReadFrequently: true })`. Esta opción indica al navegador que el canvas será leído con frecuencia, lo que fuerza el renderizado por CPU (software rendering) en lugar de usar la GPU. En navegadores que no soporten el hint, se usa el fallback `canvas.getContext('2d')`.
+
+2. **CSS `image-rendering: auto`**: Los tile canvases usan `image-rendering: auto` en lugar de `pixelated`, ya que el renderizado por CPU maneja correctamente el suavizado de imágenes.
+
+3. **Snap scroll a entero**: Se añade un bloque de snap-to-integer-position al finalizar el scroll (`scrollend`, `mouseup`, `touchend`) para prevenir que posiciones sub-pixel causen artefactos en la composición de tiles durante el scroll suave.
+
+4. **Revertir overlap 1px**: Se elimina el overlap de 1px entre tiles (introducido en v1.10.0d) porque ya no es necesario — el software rendering elimina la causa raíz. Los tiles vuelven a `TILE_WIDTH` exacto.
 
 ### Contexto de canvas
 
-- **Tile canvases** (creados en `handleResize`): `canvas.getContext('2d')` sin `{ alpha: true }`. Sin canal alpha para evitar artefactos en GPUs problemáticas.
-- **Limpieza de tile canvas** (en `drawTile`): solo `ctx.clearRect(0, 0, w, h);`. El `destination-out` fill fue eliminado porque no soluciona el bug real (era síntoma, no causa).
+- **Tile canvases** (creados en `handleResize`): `canvas.getContext('2d', { willReadFrequently: true })` con fallback a `canvas.getContext('2d')`. Sin `{ alpha: true }`. Renderizado por CPU.
+- **Limpieza de tile canvas** (en `drawTile`): solo `ctx.clearRect(0, 0, w, h);`.
 - **`minimapCanvas` y `fixedOverlayCanvas`** (en `initCanvas`): usan `{ alpha: true }` porque overlays necesitan transparencia.
+- **`#canvas-wrapper > canvas`**: ya no necesita `will-change: auto` o `backface-visibility` específicos, pero se mantienen como defensa pasiva.
 
 ## API Pública
 
@@ -111,10 +121,10 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 3. Scroll render vía requestAnimationFrame
 4. Scrubber overlay con interpolación subpixel y detección de colisión de labels
 5. Resize responsive: cambia PIXELS_PER_HOUR y TILE_WIDTH según viewport
-6. **Tile canvases sin alpha**: `handleResize()` crea contextos sin `{ alpha: true }` para evitar problemas de compositing en GPUs problemáticas
-7. **Tile overlap 1px**: Cada tile se crea con `TILE_WIDTH + 1` para solapar bordes y eliminar costuras sub-pixel en GPUs Mali-G76
-8. **Sin propiedades 3D en tile canvases**: Los tile canvases no tienen `will-change: transform` ni `transform-style: preserve-3d` — esas propiedades solo están en `#fixed-overlay-canvas` para evitar capas GPU independientes por tile
-9. **drawTile sin destination-out**: Solo `clearRect()` para limpiar canvas; el fix `destination-out` de v1.10.0c se revirtió (no solucionaba la causa raíz)
+6. **Tile canvases con willReadFrequently**: `handleResize()` crea contextos con `{ willReadFrequently: true }` para forzar renderizado por CPU en GPUs problemáticas (Mali-G76). Fallback a `getContext('2d')` sin opciones si el hint no es soportado.
+7. **Tile width exacto (sin overlap)**: Cada tile se crea con `TILE_WIDTH` exacto (sin `+1`). El overlap 1px fue revertido porque la solución real (software rendering) elimina la causa raíz.
+8. **Snap scroll a entero**: Al finalizar scroll (`scrollend`, `mouseup`, `touchend`) se redondea `scrollLeft` a entero para prevenir artefactos sub-pixel en composición de tiles.
+9. **drawTile sin destination-out**: Solo `clearRect()` para limpiar canvas.
 
 ## Casos borde
 
@@ -129,7 +139,7 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 | Resize durante renderizado en curso | `handleResize` interrumpe y recrea tiles |
 | Scroll muy rápido | Render throttle via `requestAnimationFrame`, frames se saltan |
 | Múltiples clicks en "now" | `centerOnCurrentTime` se ejecuta múltiples veces (no hay debounce) |
-| GPU Mali-G76 con composición 3D | CSS no debe aplicar `transform-style: preserve-3d` a tile canvases; `#canvas-wrapper` usa `translateZ(0)` para capa GPU única; tiles se solapan 1px para ocultar costuras |
+| GPU Mali-G76 con composición de múltiples canvases | `getContext('2d', { willReadFrequently: true })` fuerza renderizado por CPU; no depende de CSS. Tiles sin overlap (exact TILE_WIDTH). Snap scroll a entero para evitar artefactos sub-pixel |
 | Canvas con alpha en resize | `handleResize` crea contextos sin alpha para evitar artefactos en tiles alternos |
 
 ## Escenarios de test
@@ -141,8 +151,8 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 5. **Resize responsive:** `window.innerWidth < 600` cambia PIXELS_PER_HOUR y TILE_WIDTH
 6. **Scroll rápido:** Render throttle via requestAnimationFrame sin errores
 7. **Canvas clearing simple:** `drawTile()` aplica solo `clearRect(0, 0, w, h)` sin `destination-out`, sin lanzar error
-8. **Canvas sin alpha en resize:** `handleResize()` crea contextos sin `{ alpha: true }`, el canvas se renderiza correctamente
-9. **Tile overlap 1px en handleResize:** `canvas.style.width = (TILE_WIDTH + 1) + 'px'` y `canvasWrapper.style.width = (totalWidth + 1) + 'px'`
+8. **Canvas con willReadFrequently en resize:** `handleResize()` pasa `{ willReadFrequently: true }` a `getContext('2d')`; si no soportado, fallback a `getContext('2d')` sin opciones
+9. **Tile width exacto en handleResize:** `canvas.width = TILE_WIDTH * state.dpr`, `canvas.style.width = TILE_WIDTH + 'px'`, y `canvasWrapper.style.width = totalWidth + 'px'` (sin +1, revertido overlap)
 
 ## Historial de cambios
 
@@ -151,3 +161,4 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 | 2026-05-21 | Spec inicial | SDD |
 | 2026-05-27 | Bugfix Mali-G76 v1: limpieza robusta canvas, remove alpha en tile canvases, reset compositing | SDD |
 | 2026-05-27 | Bugfix Mali-G76 v2 (spec-update): corrige causa raíz real — GPU layer composition. CSS 3D props solo en fixed-overlay-canvas, tile canvases con overlap 1px, revert destination-out. | SDD |
+| 2026-05-27 | Bugfix Mali-G76 v3 (spec-update): corrige causa raíz REAL — driver GPU Mali-G76. Software rendering via `willReadFrequently: true`. Revert overlap 1px. Snap scroll a entero. image-rendering: auto. Los fixes previos v1.10.0c (destination-out) y v1.10.0d (CSS 3D layers) se marcan como superseded. | SDD |

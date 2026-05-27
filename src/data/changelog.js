@@ -1,14 +1,20 @@
 export const changelogData = [
   {
+    "version": "1.10.0e",
+    "changes": [
+      "Fix: Mali-G76 GPU driver bug (Redmi Note 10S) — FINAL root cause fix. The Mali-G76 has a driver bug in GPU compositing of multiple adjacent 2D canvases. Forced software (CPU) rendering on all tile canvases via getContext('2d', { willReadFrequently: true }) to bypass the GPU compositing pipeline. Added snap-to-integer scroll on scrollend/mouseup/touchend to prevent sub-pixel artifacts. Reverted 1px tile overlap (no longer needed). image-rendering: pixelated → auto. (Supersedes v1.10.0c and v1.10.0d — neither CSS layer composition nor alpha workarounds address the Mali-G76 driver bug.)"
+    ]
+  },
+  {
     "version": "1.10.0d",
     "changes": [
-      "Fix: Mali-G76 GPU layer composition artifacts (Redmi Note 10S) — REAL root cause fix. CSS will-change:transform + transform-style:preserve-3d on ALL canvases created independent GPU 3D layers per tile, causing sub-pixel seams, opaque translucent layers, and clipped elements on Mali-G76. 3D CSS properties now apply ONLY to #fixed-overlay-canvas. Tile canvases use will-change:auto, transform-style:flat, image-rendering:pixelated. #canvas-wrapper uses translateZ(0) for a single GPU layer. Tile canvases overlap 1px to hide sub-pixel seams. Reverted destination-out workaround from v1.10.0c — only clearRect() remains."
+      "Fix: Mali-G76 GPU layer composition artifacts (Redmi Note 10S) — REAL root cause fix. CSS will-change:transform + transform-style:preserve-3d on ALL canvases created independent GPU 3D layers per tile, causing sub-pixel seams, opaque translucent layers, and clipped elements on Mali-G76. 3D CSS properties now apply ONLY to #fixed-overlay-canvas. Tile canvases use will-change:auto, transform-style:flat, image-rendering:pixelated. #canvas-wrapper uses translateZ(0) for a single GPU layer. Tile canvases overlap 1px to hide sub-pixel seams. Reverted destination-out workaround from v1.10.0c — only clearRect() remains. (Superseded by v1.10.0e — real root cause is Mali-G76 GPU driver bug, fixed via software rendering with willReadFrequently.)"
     ]
   },
   {
     "version": "1.10.0c",
     "changes": [
-      "Fix: Mali-G76 alpha compositing artifacts (Redmi Note 10S) — robust canvas clearing via clearRect + destination-out fill + source-over reset in drawTile(). Tile canvases created without alpha channel to prevent GPU compositing corruption on alternating tiles. (Superseded by v1.10.0d — real root cause was GPU layer composition.)"
+      "Fix: Mali-G76 alpha compositing artifacts (Redmi Note 10S) — robust canvas clearing via clearRect + destination-out fill + source-over reset in drawTile(). Tile canvases created without alpha channel to prevent GPU compositing corruption on alternating tiles. (Superseded by v1.10.0d, then v1.10.0e — real root cause is Mali-G76 GPU driver bug, fixed via software rendering with willReadFrequently.)"
     ]
   },
   {

@@ -52,6 +52,15 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
         let minimapRenderer;
         let ticking = false;
         let preventBackNavTimer = null;
+        let scrollSnapTimer = null;
+        const snapScroll = () => {
+            if (!state.hourlyData.length) return;
+            const rounded = Math.round(scrollContainer.scrollLeft);
+            if (scrollContainer.scrollLeft !== rounded) {
+                scrollContainer.scrollLeft = rounded;
+                render();
+            }
+        };
 
         /**
          * INICIALIZACIÓN
@@ -813,6 +822,16 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                         }
                     });
                 }
+
+                scrollContainer.addEventListener('touchend', () => {
+                    clearTimeout(scrollSnapTimer);
+                    scrollSnapTimer = setTimeout(snapScroll, 200);
+                });
+                scrollContainer.addEventListener('mouseup', () => {
+                    clearTimeout(scrollSnapTimer);
+                    scrollSnapTimer = setTimeout(snapScroll, 200);
+                });
+                scrollContainer.addEventListener('scrollend', snapScroll);
             }
 
             function initScrollIndicator() {
@@ -1265,7 +1284,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
 
             const canvasWrapper = document.getElementById('canvas-wrapper');
             if (canvasWrapper) {
-                canvasWrapper.style.width = (totalWidth + 1) + 'px';
+                canvasWrapper.style.width = totalWidth + 'px';
 
                 // Tiling logic
                 const numTiles = Math.ceil(totalWidth / TILE_WIDTH);
@@ -1276,16 +1295,16 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
 
                 for (let i = 0; i < numTiles; i++) {
                     const canvas = document.createElement('canvas');
-                    canvas.width = (TILE_WIDTH + 1) * state.dpr;
+                    canvas.width = TILE_WIDTH * state.dpr;
                     canvas.height = containerH * state.dpr;
-                    canvas.style.width = (TILE_WIDTH + 1) + 'px';
+                    canvas.style.width = TILE_WIDTH + 'px';
                     canvas.style.height = containerH + 'px';
                     canvas.style.position = 'absolute';
                     canvas.style.left = (i * TILE_WIDTH) + 'px';
                     canvas.style.top = '0';
                     canvasWrapper.appendChild(canvas);
 
-                    const ctx = canvas.getContext('2d');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d');
                     ctx.scale(state.dpr, state.dpr);
                     tiles.push({ canvas, ctx, index: i, drawn: false });
                 }

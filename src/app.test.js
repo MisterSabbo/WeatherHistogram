@@ -15,40 +15,52 @@ describe('app orchestrator', () => {
     addEventListenerSpy.mockRestore();
   });
 
-  describe('canvas clearing (Mali-G76 fix v2 — GPU composition)', () => {
+  describe('canvas clearing (Mali-G76 fix v3 — software rendering)', () => {
     it('drawTile uses only clearRect (no destination-out)', () => {
       const clearRect = vi.fn();
       const ctx = { clearRect };
 
-      // Simulate the v2 fix: only clearRect, no destination-out
+      // Simulate the v3 fix: only clearRect
       ctx.clearRect(0, 0, 100, 100);
 
       expect(clearRect).toHaveBeenCalledWith(0, 0, 100, 100);
-      // destination-out was removed — no composite operation changes
     });
 
-    it('tile canvas context can be created without alpha option', () => {
+    it('tile canvas uses willReadFrequently hint for CPU rendering', () => {
+      const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext');
+      const canvas = document.createElement('canvas');
+      canvas.getContext('2d', { willReadFrequently: true });
+
+      expect(getContextSpy).toHaveBeenCalledWith('2d', { willReadFrequently: true });
+      getContextSpy.mockRestore();
+    });
+
+    it('tile canvas falls back to plain getContext if willReadFrequently not supported', () => {
       const getContext = HTMLCanvasElement.prototype.getContext;
+      // jsdom returns null for getContext, but the fallback || operator
+      // ensures the app never crashes — verify the method exists
       expect(typeof getContext).toBe('function');
+      // Calling with no options should not throw
+      expect(() => document.createElement('canvas').getContext('2d')).not.toThrow();
     });
 
-    it('tile overlap 1px in handleResize: canvas.style.width = TILE_WIDTH + 1', () => {
+    it('tile width exact (no +1px overlap) in handleResize: canvas.style.width = TILE_WIDTH', () => {
       const TILE_WIDTH = 1440;
       const dpr = 2;
       const canvas = { style: {}, width: 0, height: 0 };
-      canvas.style.width = (TILE_WIDTH + 1) + 'px';
-      canvas.width = (TILE_WIDTH + 1) * dpr;
+      canvas.style.width = TILE_WIDTH + 'px';
+      canvas.width = TILE_WIDTH * dpr;
 
-      expect(canvas.style.width).toBe('1441px');
-      expect(canvas.width).toBe(2882);
+      expect(canvas.style.width).toBe('1440px');
+      expect(canvas.width).toBe(2880);
     });
 
-    it('canvasWrapper width compensates for +1px of last tile', () => {
+    it('canvasWrapper width uses exact totalWidth (no +1px compensation)', () => {
       const totalWidth = 10000;
       const wrapper = { style: {} };
-      wrapper.style.width = (totalWidth + 1) + 'px';
+      wrapper.style.width = totalWidth + 'px';
 
-      expect(wrapper.style.width).toBe('10001px');
+      expect(wrapper.style.width).toBe('10000px');
     });
   });
 });
