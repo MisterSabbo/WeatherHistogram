@@ -960,6 +960,10 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
             ctx.imageSmoothingQuality = 'high';
 
             ctx.clearRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+            ctx.fillRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'source-over';
             ctx.save();
             ctx.translate(-xOffset, 0);
 
@@ -1285,7 +1289,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                     canvas.style.top = '0';
                     canvasWrapper.appendChild(canvas);
 
-                    const ctx = canvas.getContext('2d', { alpha: true });
+                    const ctx = canvas.getContext('2d');
                     ctx.scale(state.dpr, state.dpr);
                     tiles.push({ canvas, ctx, index: i, drawn: false });
                 }

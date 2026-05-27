@@ -21,6 +21,18 @@ Orquestador principal de la aplicación. Inicializa ~28 funciones, maneja render
 ### Módulos internos
 Prácticamente todos los módulos del proyecto son importados.
 
+## Canvas & Alpha Compositing
+
+- **Tile canvases** (creados en `handleResize`): se crean con `canvas.getContext('2d', { alpha: false })` (inicialmente `{ alpha: true }` antes del bugfix). Sin canal alpha para evitar artefactos en GPUs problemáticas.
+- **Limpieza de tile canvas** (en `drawTile`): usa `clearRect` + `destination-out` fill para forzar limpieza completa del buffer alpha en GPUs Mali-G76 que no respetan `clearRect` con alpha.
+- **Reset de compositing** tras limpieza: `ctx.globalCompositeOperation = 'source-over'` explícito.
+- **`minimapCanvas` y `fixedOverlayCanvas`** (en `initCanvas`): usan `{ alpha: true }` porque overlays necesitan transparencia.
+- **Bug conocido Mali-G76** (Redmi Note 10S, Android 13): `clearRect` no elimina correctamente píxeles en canvases con alpha en tiles alternos, resultando en:
+  - Fondo nocturno negro (acumulación alpha)
+  - Nombres de día opacos
+  - Glow de temperatura opaco
+  - Divisiones visibles entre canvases (líneas verticales)
+
 ## API Pública
 
 Sin exports públicos; el módulo se ejecuta al importarse.
@@ -83,6 +95,8 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 3. Scroll render vía requestAnimationFrame
 4. Scrubber overlay con interpolación subpixel y detección de colisión de labels
 5. Resize responsive: cambia PIXELS_PER_HOUR y TILE_WIDTH según viewport
+6. **Limpieza robusta de canvas**: `drawTile()` usa `clearRect` + `destination-out` fill + reset `source-over` para evitar artefactos alpha en GPU Mali-G76
+7. **Tile canvases sin alpha**: `handleResize()` crea contextos sin `{ alpha: true }` para evitar problemas de compositing en GPUs problemáticas
 
 ## Casos borde
 
@@ -97,6 +111,8 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 | Resize durante renderizado en curso | `handleResize` interrumpe y recrea tiles |
 | Scroll muy rápido | Render throttle via `requestAnimationFrame`, frames se saltan |
 | Múltiples clicks en "now" | `centerOnCurrentTime` se ejecuta múltiples veces (no hay debounce) |
+| GPU Mali-G76 con alpha compositing | `drawTile` debe forzar limpieza alpha con `destination-out`; tile canvases sin `{ alpha: true }` |
+| Canvas con alpha en resize | `handleResize` crea contextos sin alpha para evitar artefactos en tiles alternos |
 
 ## Escenarios de test
 
@@ -106,9 +122,13 @@ Sin exports públicos; el módulo se ejecuta al importarse.
 4. **Fetch falla:** `loadWeather` captura error, `isFetching = false`
 5. **Resize responsive:** `window.innerWidth < 600` cambia PIXELS_PER_HOUR y TILE_WIDTH
 6. **Scroll rápido:** Render throttle via requestAnimationFrame sin errores
+7. **Canvas clearing robusto:** `drawTile()` aplica `clearRect` + `destination-out` fill + reset `source-over`, sin lanzar error
+8. **Canvas sin alpha en resize:** `handleResize()` crea contextos sin `{ alpha: true }`, el canvas se renderiza correctamente
+9. **Compositing reset en drawTile:** `ctx.globalCompositeOperation` se resetea a `'source-over'` tras limpieza, sin afectar render posteriores
 
 ## Historial de cambios
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
 | 2026-05-21 | Spec inicial | SDD |
+| 2026-05-27 | Bugfix Mali-G76: limpieza robusta canvas, remove alpha en tile canvases, reset compositing | SDD |

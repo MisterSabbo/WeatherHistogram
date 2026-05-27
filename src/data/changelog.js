@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.0c",
+    "changes": [
+      "Fix: Mali-G76 alpha compositing artifacts (Redmi Note 10S) — robust canvas clearing via clearRect + destination-out fill + source-over reset in drawTile(). Tile canvases created without alpha channel to prevent GPU compositing corruption on alternating tiles."
+    ]
+  },
+  {
     "version": "1.10.0b",
     "changes": [
       "Fix: settings modal X button now works reliably on mobile — added touch-action: manipulation to .sheet-close-btn to prevent the browser from interpreting taps as scroll gestures on some mobile browsers.",

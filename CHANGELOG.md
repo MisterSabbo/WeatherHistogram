@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.0c] - 2026-05-27
+### Bug Fix
+- **Mali-G76 alpha compositing artifacts (Redmi Note 10S)**: Fixed GPU corruption on tile canvases where `clearRect` on alpha-enabled canvases failed to properly clear pixels on Mali-G76 GPUs. Robust clearing now uses `clearRect` + `destination-out` fill + explicit `source-over` reset. Tile canvases created without `{ alpha: true }` to prevent alpha compositing issues. Fixes black night backgrounds, opaque day names, opaque temperature glow, and visible vertical divisions between canvases.
+
 ## [v1.10.0b] - 2026-05-23
 ### Bug Fix
 - **Settings modal X button now works reliably on mobile**: Added `touch-action: manipulation` to `.sheet-close-btn` to prevent the browser from interpreting taps as scroll gestures on some mobile browsers, fixing an intermittent issue where the close button required multiple taps.
