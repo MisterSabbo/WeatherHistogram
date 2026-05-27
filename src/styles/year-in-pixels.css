@@ -69,6 +69,37 @@
             );
         }
 
+        .yip-month-day-headers {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 2px;
+            margin-top: 4px;
+        }
+        .yip-month-day-header {
+            text-align: center;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 0;
+            pointer-events: none;
+        }
+        .yip-day-number {
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            font-weight: 500;
+            color: #fff;
+            text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.5);
+            pointer-events: none;
+            line-height: 1;
+            z-index: 1;
+        }
+
         .yip-day-cell.has-notes {
             position: relative;
         }
@@ -77,6 +108,7 @@
             top: 1px;
             right: 1px;
             font-size: 12px;
+            z-index: 2;
             font-variation-settings: 'FILL' 1;
             color: rgba(255,255,255,0.75);
             filter: drop-shadow(0 0 2px rgba(0,0,0,0.4));

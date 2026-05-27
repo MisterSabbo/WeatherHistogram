@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.0f",
+    "changes": [
+      "YIP grid: added day-of-week column headers (LUN/MAR/MIÉ/JUE/VIE/SÁB/DOM) above each month block and day number (1-31) centered at the top of each cell. Headers use i18n `days.short` keys aligned to Monday-start. Day number uses small font (8px) with `text-shadow` for readability over colored backgrounds. Zero functional regression."
+    ]
+  },
+  {
     "version": "1.10.0e",
     "changes": [
       "Fix: Mali-G76 GPU driver bug (Redmi Note 10S) — FINAL root cause fix. The Mali-G76 has a driver bug in GPU compositing of multiple adjacent 2D canvases. Forced software (CPU) rendering on all tile canvases via getContext('2d', { willReadFrequently: true }) to bypass the GPU compositing pipeline. Added snap-to-integer scroll on scrollend/mouseup/touchend to prevent sub-pixel artifacts. Reverted 1px tile overlap (no longer needed). image-rendering: pixelated → auto. (Supersedes v1.10.0c and v1.10.0d — neither CSS layer composition nor alpha workarounds address the Mali-G76 driver bug.)"

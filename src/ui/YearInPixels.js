@@ -322,6 +322,19 @@ function renderYIPGrid(history, param) {
         titleRow.appendChild(delBtn);
         monthBlock.appendChild(titleRow);
 
+        // DAY-OF-WEEK HEADERS
+        const dayHeaders = document.createElement('div');
+        dayHeaders.className = 'yip-month-day-headers';
+        const dayNames = t('days.short', ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']);
+        const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+        for (let d = 0; d < 7; d++) {
+            const header = document.createElement('span');
+            header.className = 'yip-month-day-header';
+            header.textContent = dayNames[dayOrder[d]];
+            dayHeaders.appendChild(header);
+        }
+        monthBlock.appendChild(dayHeaders);
+
         const monthGrid = document.createElement('div');
         monthGrid.className = 'yip-month-grid';
 
@@ -338,6 +351,11 @@ function renderYIPGrid(history, param) {
         for (let day=0; day<daysInMonth; day++) {
             const cell = document.createElement('div');
             cell.className = 'yip-day-cell';
+
+            const dayNum = document.createElement('span');
+            dayNum.className = 'yip-day-number';
+            dayNum.textContent = String(day + 1);
+            cell.appendChild(dayNum);
 
             const isFuture = (m > currentMonth) || (m === currentMonth && day > currentDay - 1);
             if (isFuture) {

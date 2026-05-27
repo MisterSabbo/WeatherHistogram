@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.0f] - 2026-05-27
+### Enhancement
+- **YIP grid day-of-week headers + day numbers**: Added column headers (LUN/MAR/MIÉ/JUE/VIE/SÁB/DOM) above each month block using i18n `days.short` keys with Monday-start alignment. Each cell now displays its day number (1-31) centered at the top in an 8px font with `text-shadow` for readability on colored backgrounds. Zero functional regression. All 337 unit tests + 13 E2E tests pass.
+
 ## [v1.10.0e] - 2026-05-27
 ### Bug Fix
 - **Mali-G76 GPU driver bug (Redmi Note 10S)**: FINAL root cause fix. The Mali-G76 has a bug in its GPU compositing pipeline for multiple adjacent 2D canvases — neither CSS layer isolation (v1.10.0d) nor alpha compositing workarounds (v1.10.0c) solve it. **Real fix**: force software (CPU) rendering on all tile canvases via `getContext('2d', { willReadFrequently: true })`, which bypasses the GPU compositing path entirely. Added snap-to-integer scroll on scrollend/mouseup/touchend to prevent sub-pixel artifacts during tile composition. Reverted the 1px tile overlap (no longer needed). Changed `image-rendering: pixelated` to `image-rendering: auto` for correct CPU-rendered scaling. **(Note: v1.10.0c and v1.10.0d are both superseded — neither CSS layer composition nor canvas alpha workarounds address the Mali-G76 driver bug.)**

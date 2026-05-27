@@ -80,6 +80,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
    - Botones de acción: `.yip-moods-save-btn` y `.yip-moods-cancel-btn` con estilo similar a la sección de notas
    - Funcionalidad: multi-select toggle (clic marca/desmarca), Botón "Guardar" persiste vía `saveDayMoods`
 10. `saveDayMoods`: lee los moods seleccionados del DOM, construye array de mood ids activos, llama `storageService.updateDayMoods(locationName, data.time, moods)`. Si éxito, actualiza `data.moods` en memoria y muestra mensaje "guardado". Modalidad multi-select (pueden seleccionarse varios moods para un mismo día).
+11. **Cabeceras de día de la semana**: cada `.yip-month-block` contiene una fila `.yip-month-day-headers` con 7 celdas `.yip-month-day-header` usando los nombres cortos de `days.short` reordenados a start Monday (índices `[1,2,3,4,5,6,0]`). La fila usa el mismo grid de 7 columnas que `.yip-month-grid` para alineación perfecta. Las cabeceras son visualmente sutiles: font-size pequeño (~0.65rem), color `var(--text-secondary)`, sin interacción (pointer-events: none).
+12. **Número de día en cada celda**: cada `.yip-day-cell` contiene un `<span class="yip-day-number">` con el número de día (1-31), posicionado de forma absoluta centrado en la parte superior de la celda. Propiedades: font-size 8px, color `var(--text-secondary)`, `text-shadow` para legibilidad sobre fondos coloreados, `pointer-events: none`. Visible en todos los estados: future, past con datos, past sin datos. No solapa con icono de nota (top-right) ni con futuros dots (bottom).
 
 ## Casos borde
 
@@ -108,6 +110,14 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
 | `saveDayMoods` con ningún mood seleccionado | Persiste array vacío (elimina key moods) |
 | `saveDayMoods` sin datos del día | No persiste, retorna sin cambios |
 | Detail sheet mood toggles | Cada toggle es independiente, multi-select permitido |
+| Cabeceras de día renderizadas | Cada `.yip-month-block` tiene `.yip-month-day-headers` con 7 hijos `.yip-month-day-header` |
+| Alineación cabeceras-grid | `.yip-month-day-headers` usa mismo `grid-template-columns: repeat(7, 1fr)` que `.yip-month-grid` |
+| Reordenamiento días | `days.short` se recorren como `[1,2,3,4,5,6,0]` para start Monday |
+| Day number en celda | Cada `.yip-day-cell` contiene un `.yip-day-number` con el número de día (ej. `15`) |
+| Day number en celda future | Visible a pesar de `opacity: 0.3` de la celda (el número no hereda opacidad reducida) |
+| Day number en celda sin datos | Visible con `var(--text-secondary)` sobre `var(--card-bg)` |
+| Day number + nota coexistiendo | `.yip-day-number` (top-center) y `.yip-note-icon` (top-right) no solapan |
+| Day number en desktop 4-column | Las cabeceras y números aparecen en cada bloque mensual, no se pierden al cambiar a grid 4 columnas |
 
 ## Escenarios de test
 
@@ -140,6 +150,11 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
 27. **`updateYipScrollUI` — dot activo:** el dot del chip más cercano al centro del viewport tiene clase `active`
 28. **`updateYipScrollUI` — sin overflow:** si `scrollWidth <= clientWidth`, el dotsContainer se vacía (no se renderizan dots)
 29. **`updateYipScrollUI` — scroll cambia dot activo:** al hacer scroll, el dot activo cambia al chip más cercano al centro
+30. **Cabeceras de día renderizadas por mes:** cada `.yip-month-block` contiene `.yip-month-day-headers` con 7 elementos
+31. **Cabeceras usan `days.short` reordenado (Monday-start):** el texto de las cabeceras es `[LUN,MAR,MIÉ,JUE,VIE,SÁB,DOM]` en español / `[MON,TUE,WED,THU,FRI,SAT,SUN]` en inglés
+32. **Day number visible en celda con datos:** la celda contiene `.yip-day-number` con el número del día
+33. **Day number visible en celda future:** la celda future contiene `.yip-day-number` a pesar de `opacity: 0.3`
+34. **Day number no solapa con icono de nota:** celda con notas y day number — ambos elementos existen en el DOM
 
 ## Historial de cambios
 
@@ -151,3 +166,4 @@ Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos
 | 2026-05-21 | Añadido parámetro `mood` al YIP: grid coloreado por mood, icono emoji en celdas, selector multi-mood en detail sheet, función `saveDayMoods` | SDD |
 | 2026-05-21 | **Rediseño visual del mood selector**: grid 2 columnas, botones tipo píldora con `--mood-color`, check icon en estado activo, fondo de color cuando `.active` | SDD |
 | 2026-05-22 | **`updateYipScrollUI` bugfix**: dots ahora 1:1 con chips (no scroll-pages), ocultos sin overflow, dot activo por mayor proporción visible (con tiebreaker por centro). Añadido listener `resize`. Tests y spec actualizados. | SDD |
+| 2026-05-27 | Añadido cabeceras de día (`.yip-month-day-headers`) y número de día (`.yip-day-number`) en cada celda del grid YIP | SDD |
