@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.11.0b] - 2026-05-28
+### Enhancement
+- **Immediate visual feedback on YIP save**: The YIP grid now re-renders immediately after saving, with a 1.5s highlight flash on the saved cell. New "Clear" button in the detail sheet that empties all fields (notes, moods, cold, allergies) without closing the sheet. Error toast shown if save fails (sheet stays open for retry). Saving empty data is equivalent to deleting the day's previous data. All unit + E2E tests pass.
+
 ## [v1.11.0a] - 2026-05-28
 ### Enhancement
 - **YIP detail sheet: drag handle always visible + scroll reset on open**: The drag handle in the YIP day detail sheet no longer scrolls with content. Added `.yip-sheet-scroll-content` wrapper so the drag handle stays fixed at the top while content scrolls beneath it. `scrollTop` is reset to 0 when opening a new day, preventing scroll position leaks between days.

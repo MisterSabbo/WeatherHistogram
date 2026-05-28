@@ -23,8 +23,10 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `#yip-detail-notes-section` | getElementById style.display | openYIPDetail |
 | `#yip-detail-notes-input` | getElementById value | openYIPDetail, saveDayNote, saveDayDetail |
 | `#yip-detail-save-btn` | getElementById clone + onclick | openYIPDetail |
+| `#yip-detail-clear-btn` | getElementById clone + onclick | openYIPDetail |
 | `#yip-detail-cancel-btn` | getElementById clone + onclick | openYIPDetail |
 | `#yip-detail-saved-msg` | getElementById style.display | openYIPDetail, saveDayDetail |
+| `#yip-toast` | getElementById style.display + textContent | showErrorToast |
 | `#yip-detail-moods-section` | getElementById style.display | openYIPDetail |
 | `#yip-moods-selector` | getElementById innerHTML | openYIPDetail, saveDayMoods, saveDayDetail |
 | `#yip-detail-sheet` | openBottomSheet | openYIPDetail |
@@ -54,6 +56,12 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `../services/StorageService.js` | `storageService` | getHistory, updateDayNotes, updateDayMoods, init, db, historyStoreName |
 | `../utils/i18n.js` | `t` | Traducción de textos |
 | `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | Niveles de polen |
+
+### Funciones internas (no exportadas)
+| Función | Descripción |
+|---------|-------------|
+| `highlightYIPCell(time)` | Busca `.yip-day-cell[data-time="${time}"]` en el DOM, añade clase `.yip-highlight-flash` por 1.5s (animación CSS) |
+| `showErrorToast(message)` | Muestra `#yip-toast` con el mensaje, auto-dismiss tras 3s con fade out. Usa `_toastTimer` para evitar múltiples timers |
 
 ### Variables globales de módulo (no `state`)
 | Variable | Tipo | Inicial | Uso |
@@ -130,7 +138,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 
 ### `export function saveDayDetail(data: object, locationName: string): Promise<void>`
 
-**Descripción:** Función unificada que lee el textarea de notas (`#yip-detail-notes-input`), los moods activos (`#yip-moods-selector .yip-mood-btn.active`), y las condiciones de salud (`#yip-cold-toggle.active`, `#yip-allergies-toggle.active`), persiste todo en una sola operación vía `storageService.updateDayData()` para evitar race conditions, muestra feedback "✓ Guardado" en `#yip-detail-saved-msg`, y cierra el detail sheet tras 1 segundo.
+**Descripción:** Función unificada que lee el textarea de notas (`#yip-detail-notes-input`), los moods activos (`#yip-moods-selector .yip-mood-btn.active`), y las condiciones de salud (`#yip-cold-toggle.active`, `#yip-allergies-toggle.active`), persiste todo en una sola operación vía `storageService.updateDayData()` para evitar race conditions. Si éxito: actualiza `data` en memoria (incluye push a `cachedHistory.daily` si `data.time` no existe — caso past-no-data), re-renderiza el grid vía `renderYIPGrid(cachedHistory, selectedParam)`, aplica highlight flash (clase `.yip-highlight-flash` 1.5s) en la celda guardada, muestra feedback "✓ Guardado" en `#yip-detail-saved-msg`, y cierra el detail sheet inmediatamente (siguiente frame vía `requestAnimationFrame`). Si falla (ok=false o excepción): muestra error toast en `#yip-toast` con `t('config.yipSaveError')` y no cierra el sheet (permite reintentar).
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
@@ -143,7 +151,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 
 ### `export function openYIPDetail(data: object, dateStr: string, locationName?: string): void`
 
-**Descripción:** Abre detail sheet para un día específico. Resetea `scrollTop` del sheet a 0 para que el contenido siempre aparezca al inicio. Puebla fecha, descripción (temp max/min), métricas (precip, wind, AQI, polen), sección de notas (textarea), selector de moods (multi-select toggle), y sección de condiciones de salud (botones toggle "Cold" y "Allergies"). Enlaza botón "Guardar" → `saveDayDetail` y "Cancelar" → cierre inmediato del sheet. Usa `window.openBottomSheet` para mostrar `#yip-detail-sheet`. Clona botones para eliminar listeners previos. Guarda `_closeDetailSheet` del `openBottomSheet` para cierre programático.
+**Descripción:** Abre detail sheet para un día específico. Resetea `scrollTop` del sheet a 0 para que el contenido siempre aparezca al inicio. Puebla fecha, descripción (temp max/min), métricas (precip, wind, AQI, polen), sección de notas (textarea), selector de moods (multi-select toggle), y sección de condiciones de salud (botones toggle "Cold" y "Allergies"). Enlaza botón "Guardar" → `saveDayDetail`, botón "Clear" → vacía notes textarea, desactiva todos los moods y toggles cold/allergies (sin cerrar sheet), y "Cancelar" → cierre inmediato del sheet. Usa `window.openBottomSheet` para mostrar `#yip-detail-sheet`. Clona botones para eliminar listeners previos. Guarda `_closeDetailSheet` del `openBottomSheet` para cierre programático.
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
@@ -180,9 +188,12 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 12. **Detail sheet — notas**: textarea editable. Sin botón individual — la nota se guarda junto con los moods y condiciones mediante el botón unificado
 13. **Detail sheet — moods**: grid 2 columnas de botones tipo píldora con multi-select toggle. Sin botón individual — se guarda junto con nota y condiciones
 14. **Detail sheet — condiciones de salud**: dos botones toggle "🤧 Cold" y "🌿 Allergies" en sección `#yip-detail-conditions-section`. Al hacer click, toggle clase `active`. Los botones se poblan desde `data.cold` y `data.allergies`. Sin botón individual — se guarda junto con nota y moods
-15. **Detail sheet — guardar unificado**: botón "Guardar" clonado en `openYIPDetail` → llama `saveDayDetail`, que persiste nota + moods + conditions en paralelo vía `storageService.updateDayNotes` + `updateDayMoods` + `updateDayConditions`, muestra feedback "✓ Guardado" en `#yip-detail-saved-msg`, y cierra el sheet automáticamente tras 1 segundo
+15. **Detail sheet — guardar unificado**: botón "Guardar" clonado en `openYIPDetail` → llama `saveDayDetail`, que persiste nota + moods + conditions vía `storageService.updateDayData()`. Si éxito: actualiza `data` en memoria, añade `data` a `cachedHistory.daily` si no existe (past-no-data), re-renderiza el grid con `renderYIPGrid(cachedHistory, selectedParam)`, aplica highlight flash en la celda (clase `.yip-highlight-flash` durante 1.5s), muestra feedback "✓ Guardado" en `#yip-detail-saved-msg`, y cierra el sheet automáticamente (siguiente frame). Si falla: muestra toast de error en `#yip-toast` con `t('config.yipSaveError')` y no cierra el sheet (permite reintentar)
 16. **Detail sheet — cancelar unificado**: botón "Cancelar" clonado en `openYIPDetail` → cierra el sheet inmediatamente sin persistir cambios (usa `_closeDetailSheet`)
-17. **Confirmaciones**: `showConfirm` usa `window.openBottomSheet` para mostrar modal de confirmación, clonando botones OK/Cancel para eliminar listeners previos
+17. **Detail sheet — Clear button**: botón "Clear" clonado en `openYIPDetail` → vacía `#yip-detail-notes-input.value`, desactiva todos los `.yip-mood-btn.active`, desactiva `.yip-cold-toggle.active` y `.yip-allergies-toggle.active`. No cierra el sheet. No persiste cambios automáticamente. Guardar tras Clear con todos los campos vacíos persiste `undefined` en todos los campos (equivale a borrar los datos del día)
+18. **Highlight flash**: `saveDayDetail` exitoso → `highlightYIPCell(data.time)` busca `.yip-day-cell[data-time="${data.time}"]` en el DOM re-renderizado y aplica clase `.yip-highlight-flash` (animación CSS `@keyframes yip-highlight-flash` de 1.5s con box-shadow pulsante). La clase se remueve automáticamente al completar la animación
+19. **Error toast**: `saveDayDetail` falla (ok=false o excepción) → `showErrorToast(t('config.yipSaveError'))` muestra `#yip-toast` con estilo destructivo (borde rojo), auto-dismiss tras 3s con fade out. El sheet permanece abierto para que el usuario reintente
+20. **Confirmaciones**: `showConfirm` usa `window.openBottomSheet` para mostrar modal de confirmación, clonando botones OK/Cancel para eliminar listeners previos
 18. **Dot indicator system**: Cada `.yip-day-cell` con estado no meteorológico (has-notes, has-mood, cold, allergies) muestra micro-dots (4px círculos) al fondo de la celda, debajo del day number. Colores fijos/semánticos: notes=#60a5fa (azul), mood=#fbbf24 (amarillo), cold=#ef4444 (rojo), allergies=#22c55e (verde). Máximo 3 dots visibles; si hay más de 3 estados, se muestran los primeros 3 y un "…" (ellipsis). Los dots reemplazan los iconos individuales antiguos (.yip-mood-icon, .yip-note-icon). Los dots son siempre visibles independientemente del parámetro activo
 19. **Grid coloring por cold/allergies**: Cuando `selectedParam === 'cold'`, las celdas se colorean `#eab308` (yellow) si `data.cold === true`, o `var(--grid-color)` si no. Cuando `selectedParam === 'allergies'`, se colorean `#22c55e` (green) si `data.allergies === true`, o `var(--grid-color)` si no. La leyenda muestra 2 pasos: sí/no
 20. **Popup de toggles en detail sheet**: `openYIPDetail` lee `data.cold` y `data.allergies`, aplica clase `active` a los botones correspondientes. `saveDayDetail` lee el estado de `#yip-cold-toggle.active` y `#yip-allergies-toggle.active`, construye objeto `conditions = { cold: boolean, allergies: boolean }`, y persiste vía `storageService.updateDayConditions`
@@ -225,9 +236,19 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `storageService.init()` falla | Error no capturado (propaga) |
 | `storageService.getHistory(locationName)` retorna null | `cachedHistory = null`, renderYIPGrid muestra "sin historial" |
 | Botón save/cancel clickeado múltiples veces | Clonación de nodos elimina listeners previos, evitando duplicados |
-| `saveDayDetail` con textarea vacío y sin moods | Persiste texto vacío con updateDayNotes y array vacío con updateDayMoods |
+| `saveDayDetail` con textarea vacío y sin moods | Persiste notes:undefined, moods:undefined (equivale a borrar datos previos) |
 | `saveDayDetail` con `#yip-detail-save-btn` o `#yip-detail-cancel-btn` ausentes | openYIPDetail skip bindings, no lanza error |
+| `saveDayDetail` exitoso sin `cachedHistory` | No lanza error, skip grid re-render |
+| `saveDayDetail` ok=false | Muestra toast error, no cierra sheet |
+| `saveDayDetail` con excepción | Captura error, muestra toast error, no cierra sheet |
+| Clear button con datos existentes | Vacía form sin guardar, sheet permanece abierto |
+| Clear button + Save (todos campos vacíos) | updateDayData con todos undefined (borra datos del día) |
+| `highlightYIPCell` sin celda en DOM | No lanza error (querySelector retorna null) |
+| `yip-toast` no existe en DOM | showErrorToast retorna sin error |
+| `data.time` como string o número | dataset.time se guarda como string (coerción automática) |
 | `_closeDetailSheet` undefined al hacer cancel | No lanza error (if guardado) |
+| `saveDayDetail` con `data.time` no existente en `cachedHistory.daily` (past-no-data synthetic) | Se añade `data` a `cachedHistory.daily` tras `updateDayData` exitoso, re-render incluye la celda |
+| `saveDayDetail` con `cachedHistory` null/undefined | No lanza error (skip re-render y push), close vía requestAnimationFrame |
 | `window.openBottomSheet` no definido | Fallback: `_closeSheet = undefined` o `resolve(confirm(message))` |
 
 ## Escenarios de test
@@ -258,7 +279,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 23. **saveDayNote con texto vacío**: llama `storageService.updateDayNotes` con string vacío
 24. **saveDayMoods con moods seleccionados**: llama `storageService.updateDayMoods` con array de ids
 25. **saveDayMoods sin moods seleccionados**: llama `storageService.updateDayMoods` con array vacío
-26. **saveDayDetail con nota y moods**: llama updateDayNotes + updateDayMoods en paralelo, muestra feedback, cierra sheet tras 1s
+26. **saveDayDetail con nota y moods**: llama updateDayData con todos los campos, muestra feedback, re-renderiza grid, aplica highlight flash, cierra sheet inmediatamente (requestAnimationFrame)
 27. **Param sheet incluye categoría mood**: `populateParamSheet` renderiza opción mood
 28. **renderLegend para cada tipo de parámetro**: renderiza steps correctos para temp, precip, wind, AQI, pollen, mood
 29. **updateYipScrollUI con 0 chips**: dotsContainer se vacía
@@ -291,6 +312,16 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 56. **saveDayDetail sin cold ni allergies**: conditions = { cold: false, allergies: false }
 57. **renderLegend para cold**: 2 pasos: color amarillo + "Sí" / gris + "No"
 58. **renderLegend para allergies**: 2 pasos: color verde + "Sí" / gris + "No"
+59. **saveDayDetail re-renderiza grid tras éxito**: renderYIPGrid llamado después de updateDayData exitoso
+60. **saveDayDetail highlight flash en celda**: celda con data.time correspondiente recibe clase yip-highlight-flash
+61. **saveDayDetail con ok=false**: toast visible con mensaje de error, sheet no se cierra
+62. **saveDayDetail con excepción**: toast visible con mensaje de error, sheet no se cierra
+63. **Clear button vacía textarea**: notesInput.value = '' tras click
+64. **Clear button desactiva moods**: todos .yip-mood-btn.active pierden clase active
+65. **Clear button desactiva cold/allergies**: toggles pierden clase active
+66. **Celda renderizada con data-time attribute**: .yip-day-cell tiene dataset.time igual al time del dayData
+67. **saveDayDetail past-no-data (synthetic dayData)**: push data a cachedHistory.daily sí no existe tras update exitoso, re-render incluye celda
+68. **saveDayDetail past-no-data highlight**: highlightYIPCell encuentra celda en DOM tras re-render porque cachedHistory ya contiene el día
 
 ## Historial de cambios
 
@@ -298,4 +329,6 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 |-------|--------|-------|
 | 2026-05-27 | Spec retro — mapeo completo del código actual (sin state/theme, con variables de módulo) | SDD |
 | 2026-05-28 | Añadidas condiciones de salud (cold/allergies), dot indicator system, categoría Health en param sheet, toggles en detail sheet | SDD |
+| 2026-05-28 | Fix alineación botones (box-sizing), cierre sheet inmediato (requestAnimationFrame), push past-no-data a cachedHistory tras save | SDD |
 | 2026-05-28 | Drag handle fijo con scroll wrapper + scrollTop reset al abrir detail sheet | SDD |
+| 2026-05-28 | Inmediato visual feedback en save: re-render grid, highlight flash, error toast, Clear button | SDD |

@@ -1382,7 +1382,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.11.0a</span>
+              <span id="app-version-label">v1.11.0b</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1699,11 +1699,15 @@
             </div>
             <div class="yip-detail-actions">
                 <button id="yip-detail-save-btn" class="yip-save-btn" data-i18n="config.yipSaveAll">Save</button>
+                <button id="yip-detail-clear-btn" class="yip-clear-btn" data-i18n="config.yipClear">Clear</button>
                 <button id="yip-detail-cancel-btn" class="yip-cancel-btn" data-i18n="config.cancel">Cancel</button>
                 <span id="yip-detail-saved-msg" class="yip-saved-feedback" style="display:none" data-i18n="config.yipSavedAll">✓ Saved</span>
             </div>
         </div>
     </div>
+
+    <!-- YIP Toast -->
+    <div id="yip-toast" class="yip-toast" style="display: none;"></div>
 
     <script type="module" src="./src/app.js"></script>
   </body>

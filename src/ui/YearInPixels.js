@@ -375,6 +375,9 @@ function renderYIPGrid(history, param) {
                         dayData = { time: new Date(currentYear, m, day + 1).getTime() };
                     }
                 }
+                if (dayData && dayData.time !== undefined) {
+                    cell.dataset.time = String(dayData.time);
+                }
 
                 const dotStates = [];
                 if (dayData && dayData.notes) dotStates.push('notes');
@@ -526,6 +529,7 @@ function openYIPDetail(data, dateStr, locationName) {
     }
 
     const saveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-save-btn'));
+    const clearBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-clear-btn'));
     const cancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-cancel-btn'));
     const savedMsg = document.getElementById('yip-detail-saved-msg');
     if (savedMsg) savedMsg.style.display = 'none';
@@ -534,6 +538,20 @@ function openYIPDetail(data, dateStr, locationName) {
         const newSave = /** @type {HTMLElement} */ (saveBtn.cloneNode(true));
         saveBtn.parentNode.replaceChild(newSave, saveBtn);
         newSave.onclick = () => saveDayDetail(data, loc);
+    }
+    if (clearBtn) {
+        const newClear = /** @type {HTMLElement} */ (clearBtn.cloneNode(true));
+        clearBtn.parentNode.replaceChild(newClear, clearBtn);
+        newClear.onclick = () => {
+            if (notesInput) notesInput.value = '';
+            if (moodsSelector) {
+                moodsSelector.querySelectorAll('.yip-mood-btn.active').forEach((btn) => {
+                    btn.classList.remove('active');
+                });
+            }
+            if (coldToggle) coldToggle.classList.remove('active');
+            if (allergiesToggle) allergiesToggle.classList.remove('active');
+        };
     }
     if (cancelBtn) {
         const newCancel = /** @type {HTMLElement} */ (cancelBtn.cloneNode(true));
@@ -613,18 +631,36 @@ async function saveDayDetail(data, locationName) {
         allergies: allergiesToggle ? allergiesToggle.classList.contains('active') : false
     };
 
-    const ok = await storageService.updateDayData(loc, data.time, {
-        notes: noteValue || undefined,
-        moods: selectedMoods.length > 0 ? selectedMoods : undefined,
-        cold: conditions.cold || undefined,
-        allergies: conditions.allergies || undefined
-    });
+    try {
+        const ok = await storageService.updateDayData(loc, data.time, {
+            notes: noteValue || undefined,
+            moods: selectedMoods.length > 0 ? selectedMoods : undefined,
+            cold: conditions.cold || undefined,
+            allergies: conditions.allergies || undefined
+        });
 
-    if (ok) {
-        data.notes = noteValue || undefined;
-        data.moods = selectedMoods.length > 0 ? selectedMoods : undefined;
-        data.cold = conditions.cold || undefined;
-        data.allergies = conditions.allergies || undefined;
+        if (ok) {
+            data.notes = noteValue || undefined;
+            data.moods = selectedMoods.length > 0 ? selectedMoods : undefined;
+            data.cold = conditions.cold || undefined;
+            data.allergies = conditions.allergies || undefined;
+
+            if (cachedHistory && !cachedHistory.daily.some(d => d.time === data.time)) {
+                cachedHistory.daily.push(data);
+            }
+
+            renderYIPGrid(cachedHistory, selectedParam);
+            if (cachedHistory) {
+                highlightYIPCell(data.time);
+            }
+        } else {
+            showErrorToast(t('config.yipSaveError', 'Error saving'));
+            return;
+        }
+    } catch (err) {
+        console.error('YIP save error:', err);
+        showErrorToast(t('config.yipSaveError', 'Error saving'));
+        return;
     }
 
     if (savedMsg) {
@@ -632,9 +668,37 @@ async function saveDayDetail(data, locationName) {
         savedMsg.style.display = 'inline';
     }
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         if (_closeDetailSheet) _closeDetailSheet();
-    }, 1000);
+    });
+}
+
+function highlightYIPCell(time) {
+    const cell = /** @type {HTMLElement|null} */ (document.querySelector(`.yip-day-cell[data-time="${time}"]`));
+    if (cell) {
+        cell.classList.remove('yip-highlight-flash');
+        void cell.offsetWidth;
+        cell.classList.add('yip-highlight-flash');
+        setTimeout(() => {
+            cell.classList.remove('yip-highlight-flash');
+        }, 1500);
+    }
+}
+
+let _toastTimer = null;
+
+function showErrorToast(message) {
+    const toast = document.getElementById('yip-toast');
+    if (!toast) return;
+    if (_toastTimer) clearTimeout(_toastTimer);
+    toast.textContent = message;
+    toast.classList.add('visible');
+    toast.style.display = 'block';
+    _toastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+        setTimeout(() => { toast.style.display = 'none'; }, 300);
+        _toastTimer = null;
+    }, 3000);
 }
 
 function getColorForParam(param, value) {

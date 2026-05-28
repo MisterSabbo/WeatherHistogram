@@ -54,7 +54,9 @@ vi.mock('../utils/i18n.js', () => ({
       'pollenLevels.moderate': 'Moderado',
       'pollenLevels.high': 'Alto',
       'pollenLevels.veryHigh': 'Muy Alto',
-      'config.yipNoDataMeteo': 'Sin datos meteorológicos'
+      'config.yipNoDataMeteo': 'Sin datos meteorológicos',
+      'config.yipClear': 'Limpiar',
+      'config.yipSaveError': 'Error al guardar'
     }
     return map[key] || fallback || key
   }
@@ -100,11 +102,17 @@ function setDefaultDom() {
       <div id="yip-detail-moods-section">
         <div id="yip-moods-selector"></div>
       </div>
+      <div id="yip-detail-conditions-section">
+        <button id="yip-cold-toggle"></button>
+        <button id="yip-allergies-toggle"></button>
+      </div>
       <div class="yip-detail-actions">
         <button id="yip-detail-save-btn"></button>
+        <button id="yip-detail-clear-btn"></button>
         <button id="yip-detail-cancel-btn"></button>
         <span id="yip-detail-saved-msg" style="display:none"></span>
       </div>
+      <div id="yip-toast" style="display:none"></div>
       <div id="confirm-title"></div>
       <div id="confirm-message"></div>
       <button id="confirm-cancel-btn"></button>
@@ -531,6 +539,95 @@ describe('YearInPixels', () => {
       YIP.renderYIPGrid(mockData, 'mood')
       const legend = document.getElementById('yip-legend')
       expect(legend.children.length).toBe(6)
+    })
+  })
+
+  describe('saveDayDetail', () => {
+    const mockDayData = { time: '2026-06-15', tempMax: 25, notes: 'Old note', moods: ['happy'], cold: true }
+
+    beforeEach(() => {
+      mockStorageService.updateDayData.mockResolvedValue(true)
+      document.getElementById('yip-detail-notes-input').value = 'Updated note'
+      // Activate one mood
+      const moodsSelector = document.getElementById('yip-moods-selector')
+      moodsSelector.innerHTML = '<button class="yip-mood-btn active" data-mood="sad"></button><button class="yip-mood-btn" data-mood="happy"></button>'
+      document.getElementById('yip-cold-toggle').classList.remove('active')
+      document.getElementById('yip-allergies-toggle').classList.add('active')
+    })
+
+    it('llama storageService.updateDayData con los campos actualizados', async () => {
+      await YIP.saveDayDetail(mockDayData, 'Madrid')
+      expect(mockStorageService.updateDayData).toHaveBeenCalledWith('Madrid', '2026-06-15', {
+        notes: 'Updated note',
+        moods: ['sad'],
+        cold: undefined,
+        allergies: true
+      })
+    })
+
+    it('llama updateDayData con undefined si todos los campos están vacíos (Clear+Save)', async () => {
+      document.getElementById('yip-detail-notes-input').value = ''
+      document.getElementById('yip-moods-selector').innerHTML = '<button class="yip-mood-btn" data-mood="sad"></button>'
+      document.getElementById('yip-cold-toggle').classList.remove('active')
+      document.getElementById('yip-allergies-toggle').classList.remove('active')
+      await YIP.saveDayDetail(mockDayData, 'Madrid')
+      expect(mockStorageService.updateDayData).toHaveBeenCalledWith('Madrid', '2026-06-15', {
+        notes: undefined,
+        moods: undefined,
+        cold: undefined,
+        allergies: undefined
+      })
+    })
+
+    it('re-renderiza grid tras guardado exitoso (cambia el DOM del container)', async () => {
+      const history = { daily: [{ ...mockDayData }] }
+      YIP.renderYIPGrid(history, 'maxTemp')
+      const container = document.getElementById('yip-grid-container')
+      const initialHTML = container.innerHTML
+      document.getElementById('yip-detail-notes-input').value = 'Updated note'
+      await YIP.saveDayDetail(mockDayData, 'Madrid')
+      expect(container.innerHTML).not.toBe(initialHTML)
+    })
+
+    it('actualiza data en memoria tras éxito', async () => {
+      await YIP.saveDayDetail(mockDayData, 'Madrid')
+      expect(mockDayData.notes).toBe('Updated note')
+      expect(mockDayData.moods).toEqual(['sad'])
+      expect(mockDayData.cold).toBeUndefined()
+      expect(mockDayData.allergies).toBe(true)
+    })
+
+    it('muestra toast de error si updateDayData falla', async () => {
+      mockStorageService.updateDayData.mockResolvedValue(false)
+      const toastEl = document.getElementById('yip-toast')
+      await YIP.saveDayDetail(mockDayData, 'Madrid')
+      expect(toastEl.style.display).toBe('block')
+      expect(toastEl.textContent).toBe('Error al guardar')
+    })
+
+    it('muestra toast de error si updateDayData lanza excepción', async () => {
+      mockStorageService.updateDayData.mockRejectedValue(new Error('DB error'))
+      const toastEl = document.getElementById('yip-toast')
+      await YIP.saveDayDetail(mockDayData, 'Madrid')
+      expect(toastEl.style.display).toBe('block')
+      expect(toastEl.textContent).toBe('Error al guardar')
+    })
+
+    it('celdas renderizadas tienen data-time attribute', () => {
+      const today = new Date()
+      const mockData = {
+        daily: [{ time: `${today.getFullYear()}-01-15T00:00:00`, tempMax: 25, tempMin: 15 }]
+      }
+      YIP.renderYIPGrid(mockData, 'maxTemp')
+      const cells = document.querySelectorAll('.yip-day-cell[data-time]')
+      expect(cells.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('clear button', () => {
+    it('clear button existe en el DOM', () => {
+      const clearBtn = document.getElementById('yip-detail-clear-btn')
+      expect(clearBtn).toBeTruthy()
     })
   })
 })

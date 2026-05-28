@@ -106,7 +106,9 @@ export const translations = {
             yipConditionsLabel: "Condiciones",
             yipConditionsSaved: "Condiciones guardadas",
             yipSaveAll: "Guardar",
+            yipClear: "Limpiar",
             yipSavedAll: "✓ Guardado",
+            yipSaveError: "Error al guardar",
             yipNoDataMeteo: "Sin datos meteorológicos",
             langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
@@ -356,7 +358,9 @@ export const translations = {
             yipConditionsLabel: "Conditions",
             yipConditionsSaved: "Conditions saved",
             yipSaveAll: "Save",
+            yipClear: "Clear",
             yipSavedAll: "✓ Saved",
+            yipSaveError: "Error saving",
             yipNoDataMeteo: "No weather data",
             langChangeConfirm: "Change language? The application will update."
         },

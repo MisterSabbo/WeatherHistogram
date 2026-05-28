@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.11.0b",
+    "changes": [
+      "Immediate visual feedback on YIP save: grid now re-renders immediately after saving, with a 1.5s highlight flash on the saved cell. New 'Clear' button in the detail sheet that empties all fields (notes, moods, cold, allergies). Error toast shown if save fails (sheet stays open for retry). Saving with empty data is equivalent to deleting the day's previous data. All unit + E2E tests pass."
+    ]
+  },
+  {
     "version": "1.11.0a",
     "changes": [
       "YIP detail sheet: drag handle now stays fixed at top while content scrolls beneath. scrollTop resets to 0 on open, preventing scroll position leaks between days.",

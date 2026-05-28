@@ -321,4 +321,100 @@ test.describe('YIP Cold & Allergy Tracking', () => {
 
     await expect(page.locator('#yip-cold-toggle')).toHaveClass(/active/)
   })
+
+  test('clear button empties all form fields', async ({ page }) => {
+    await page.locator('#year-in-pixels-btn').click()
+    await page.waitForTimeout(1000)
+    const cells = page.locator('.yip-day-cell.completed')
+    await expect(cells.first()).toBeVisible({ timeout: 5000 })
+    await cells.first().click()
+    await page.waitForTimeout(500)
+
+    // Activate cold toggle and a mood first
+    await page.locator('#yip-cold-toggle').click()
+    await page.locator('.yip-mood-btn').first().click()
+
+    // Click clear
+    await page.locator('#yip-detail-clear-btn').click()
+    await page.waitForTimeout(200)
+
+    // Verify fields are cleared
+    const coldActive = await page.locator('#yip-cold-toggle').evaluate(el => el.classList.contains('active'))
+    expect(coldActive).toBe(false)
+    const allergiesActive = await page.locator('#yip-allergies-toggle').evaluate(el => el.classList.contains('active'))
+    expect(allergiesActive).toBe(false)
+    const noteText = await page.locator('#yip-detail-notes-input').inputValue()
+    expect(noteText).toBe('')
+    const activeMoods = await page.locator('.yip-mood-btn.active').count()
+    expect(activeMoods).toBe(0)
+  })
+
+  test('grid re-renders after saving data', async ({ page }) => {
+    await page.locator('#year-in-pixels-btn').click()
+    await page.waitForTimeout(1000)
+    const cells = page.locator('.yip-day-cell.completed')
+    await expect(cells.first()).toBeVisible({ timeout: 5000 })
+
+    // Open a cell, save without changes
+    await cells.first().click()
+    await page.waitForTimeout(500)
+    await page.locator('#yip-detail-save-btn').click()
+    await page.waitForTimeout(500)
+
+    // After save + re-render, the grid should still have cells
+    const cellCount = await page.locator('.yip-day-cell').count()
+    expect(cellCount).toBeGreaterThan(0)
+  })
+
+  test('clear button is visible in detail sheet', async ({ page }) => {
+    await page.locator('#year-in-pixels-btn').click()
+    await page.waitForTimeout(1000)
+    const cells = page.locator('.yip-day-cell.completed')
+    await expect(cells.first()).toBeVisible({ timeout: 5000 })
+    await cells.first().click()
+    await page.waitForTimeout(500)
+    await expect(page.locator('#yip-detail-clear-btn')).toBeVisible()
+  })
+
+  test('data persists after save on a past-no-data day', async ({ page }) => {
+    await page.locator('#year-in-pixels-btn').click()
+    await page.waitForTimeout(1000)
+    const pastNoDataCells = page.locator('.yip-day-cell.past-no-data')
+    await expect(pastNoDataCells.first()).toBeVisible({ timeout: 5000 })
+
+    await pastNoDataCells.first().click()
+    await page.waitForTimeout(500)
+
+    await page.locator('#yip-detail-notes-input').fill('No-data-day note')
+    await page.locator('#yip-cold-toggle').click()
+    await page.locator('.yip-mood-btn').first().click()
+
+    await page.locator('#yip-detail-save-btn').click()
+    await page.waitForTimeout(500)
+
+    const stored = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        const openReq = indexedDB.open('WeatherHistDB', 2)
+        openReq.onsuccess = (e) => {
+          const db = e.target.result
+          const tx = db.transaction('historyData', 'readonly')
+          const store = tx.objectStore('historyData')
+          const getAll = store.getAll()
+          getAll.onsuccess = () => {
+            const history = getAll.result[0]
+            const day = history.daily.find(d => d.notes === 'No-data-day note')
+            resolve(day
+              ? { notes: day.notes, cold: !!day.cold, moods: day.moods, time: day.time }
+              : null
+            )
+          }
+        }
+      })
+    })
+
+    expect(stored).not.toBeNull()
+    expect(stored.notes).toBe('No-data-day note')
+    expect(stored.cold).toBe(true)
+    expect(stored.moods).toEqual(['happy'])
+  })
 })
