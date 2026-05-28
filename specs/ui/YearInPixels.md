@@ -49,6 +49,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `.yip-month-block` | createElement | renderYIPGrid |
 | `.yip-dot-container` | createElement (inside cell) | renderYIPGrid |
 | `.yip-condition-dot` | createElement (inside cell) | renderYIPGrid |
+| `.yip-condition-dot` (CSS) | `width/height: 7px`, `border-radius: 50%`, `border: 1.5px solid #fff` (dark) / `rgba(0,0,0,0.25)` (light) | year-in-pixels.css |
 
 ### Módulos internos
 | Módulo | Export usado | Para qué |
@@ -81,7 +82,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 |-----------|-------|----------|
 | `MOODS` | Array de 6 objetos `{ id, emoji, labelKey, color }` | saveDayMoods, renderYIPGrid, openYIPDetail, getColorForParam, renderLegend |
 | `MOOD_EMOJI_MAP` | Mapa de `id → emoji` | renderYIPGrid (icono emoji en celda) |
-| `DOT_COLORS` | Mapa `{ notes: '#60a5fa', mood: '#fbbf24', cold: '#ef4444', allergies: '#22c55e' }` | renderYIPGrid (dots) |
+| `DOT_COLORS` | Mapa `{ notes: '#60a5fa', mood: '#fbbf24', cold: '#ef4444', allergies: '#22c55e' }` | renderYIPGrid (dots — tamaño 7px con border 1.5px) |
 
 ### Nuevos parámetros
 | Parámetro | Color sí | Color no |
@@ -196,7 +197,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 18. **Highlight flash**: `saveDayDetail` exitoso → `highlightYIPCell(data.time)` busca `.yip-day-cell[data-time="${data.time}"]` en el DOM re-renderizado y aplica clase `.yip-highlight-flash` (animación CSS `@keyframes yip-highlight-flash` de 1.5s con box-shadow pulsante). La clase se remueve automáticamente al completar la animación
 19. **Error toast**: `saveDayDetail` falla (ok=false o excepción) → `showErrorToast(t('config.yipSaveError'))` muestra `#yip-toast` con estilo destructivo (borde rojo), auto-dismiss tras 3s con fade out. El sheet permanece abierto para que el usuario reintente
 20. **Confirmaciones**: `showConfirm` usa `window.openBottomSheet` para mostrar modal de confirmación, clonando botones OK/Cancel para eliminar listeners previos
-18. **Dot indicator system**: Cada `.yip-day-cell` con estado no meteorológico (has-notes, has-mood, cold, allergies) muestra micro-dots (4px círculos) al fondo de la celda, debajo del day number. Colores fijos/semánticos: notes=#60a5fa (azul), mood=#fbbf24 (amarillo), cold=#ef4444 (rojo), allergies=#22c55e (verde). Máximo 3 dots visibles; si hay más de 3 estados, se muestran los primeros 3 y un "…" (ellipsis). Los dots reemplazan los iconos individuales antiguos (.yip-mood-icon, .yip-note-icon). Los dots son siempre visibles independientemente del parámetro activo
+18. **Dot indicator system**: Cada `.yip-day-cell` con estado no meteorológico (has-notes, has-mood, cold, allergies) muestra micro-dots (7px círculos con border 1.5px sólido) al fondo de la celda, debajo del day number. Colores fijos/semánticos: notes=#60a5fa (azul), mood=#fbbf24 (amarillo), cold=#ef4444 (rojo), allergies=#22c55e (verde). El border del dot es blanco (`#fff`) en modo oscuro y semitransparente (`rgba(0,0,0,0.25)`) en modo claro, para separar visualmente el dot del fondo de celda. Máximo 3 dots visibles; si hay más de 3 estados, se muestran los primeros 3 y un "…" (ellipsis). Los dots reemplazan los iconos individuales antiguos (.yip-mood-icon, .yip-note-icon). Los dots son siempre visibles independientemente del parámetro activo
 19. **Grid coloring por cold/allergies**: Cuando `selectedParam === 'cold'`, las celdas se colorean `#eab308` (yellow) si `data.cold === true`, o `var(--grid-color)` si no. Cuando `selectedParam === 'allergies'`, se colorean `#22c55e` (green) si `data.allergies === true`, o `var(--grid-color)` si no. La leyenda muestra 2 pasos: sí/no
 20. **Popup de toggles en detail sheet**: `openYIPDetail` lee `data.cold` y `data.allergies`, aplica clase `active` a los botones correspondientes. `saveDayDetail` lee el estado de `#yip-cold-toggle.active` y `#yip-allergies-toggle.active`, construye objeto `conditions = { cold: boolean, allergies: boolean }`, y persiste vía `storageService.updateDayConditions`
 
@@ -219,6 +220,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `data.cold === true` | Cold toggle con clase `active`, dot rojo visible en celda |
 | `data.allergies === true` | Allergies toggle con clase `active`, dot verde visible en celda |
 | 4+ estados no meteorológicos activos | Solo primeros 3 dots + "…" (ellipsis) |
+| Dot en modo claro sobre fondo claro (ej. dot azul #60a5fa sobre celda #bfdbfe) | Border semitransparente `rgba(0,0,0,0.25)` separa visualmente el dot del fondo |
+| Dot en modo oscuro sobre fondo oscuro | Border blanco `#fff` separa visualmente el dot del fondo |
 | 0 estados no meteorológicos | Sin dots, sin yip-dot-container |
 | `saveDayNote` con texto vacío | `storageService.updateDayNotes` llamado con string vacío |
 | `saveDayMoods` sin moods seleccionados | Array vacío persistido (elimina key moods) |
@@ -343,3 +346,4 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | 2026-05-28 | Drag handle fijo con scroll wrapper + scrollTop reset al abrir detail sheet | SDD |
 | 2026-05-28 | Inmediato visual feedback en save: re-render grid, highlight flash, error toast, Clear button | SDD |
 | 2026-05-28 | Ticket 001: Aumentar tamaño y contraste de números de día — font-size 8→11px, weight 500→700, color adaptativo por luminancia, eliminado text-shadow | SDD |
+| 2026-05-28 | Ticket 002: Dots más visibles — tamaño 4px→7px, añadido border 1.5px sólido (#fff dark / rgba(0,0,0,0.25) light) | SDD |
