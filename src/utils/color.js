@@ -20,3 +20,13 @@ export function hexToRgb(hex) {
   }
   return { r, g, b };
 }
+
+/**
+ * @param {string} bgColor
+ * @returns {string}
+ */
+export function getTextColorForBg(bgColor) {
+  const { r, g, b } = hexToRgb(bgColor);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+}

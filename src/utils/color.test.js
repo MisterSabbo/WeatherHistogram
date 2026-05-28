@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { hexToRgb } from './color.js'
+import { hexToRgb, getTextColorForBg } from './color.js'
 
 describe('hexToRgb', () => {
   it('converts full hex with #: #ff0000 to { r: 255, g: 0, b: 0 }', () => {
@@ -44,5 +44,44 @@ describe('hexToRgb', () => {
 
   it('returns zeros for empty string', () => {
     expect(hexToRgb('')).toEqual({ r: 0, g: 0, b: 0 })
+  })
+})
+
+describe('getTextColorForBg', () => {
+  it('returns dark text (#1a1a1a) for light background #ffffff', () => {
+    expect(getTextColorForBg('#ffffff')).toBe('#1a1a1a')
+  })
+
+  it('returns dark text for light background #fde047 (yellow)', () => {
+    expect(getTextColorForBg('#fde047')).toBe('#1a1a1a')
+  })
+
+  it('returns dark text for light background #bfdbfe (light blue)', () => {
+    expect(getTextColorForBg('#bfdbfe')).toBe('#1a1a1a')
+  })
+
+  it('returns white text for dark background #1d4ed8 (dark blue)', () => {
+    expect(getTextColorForBg('#1d4ed8')).toBe('#ffffff')
+  })
+
+  it('returns white text for dark background #dc2626 (dark red)', () => {
+    expect(getTextColorForBg('#dc2626')).toBe('#ffffff')
+  })
+
+  it('returns white text for dark background #1E1F22 (near-black)', () => {
+    expect(getTextColorForBg('#1E1F22')).toBe('#ffffff')
+  })
+
+  it('handles rgb() format', () => {
+    expect(getTextColorForBg('rgb(255, 255, 255)')).toBe('#1a1a1a')
+    expect(getTextColorForBg('rgb(0, 0, 0)')).toBe('#ffffff')
+  })
+
+  it('handles rgba() format', () => {
+    expect(getTextColorForBg('rgba(255, 255, 255, 0.5)')).toBe('#1a1a1a')
+  })
+
+  it('handles hex without # prefix', () => {
+    expect(getTextColorForBg('ffffff')).toBe('#1a1a1a')
   })
 })

@@ -1,6 +1,7 @@
 import { storageService } from '../services/StorageService.js';
 import { t } from '../utils/i18n.js';
 import { getPollenLevelByType, getAggregatedPollenLevel } from '../services/AqiManager.js';
+import { getTextColorForBg } from '../utils/color.js';
 
 const MOODS = [
   { id: 'happy', emoji: '😊', labelKey: 'moods.happy', color: '#fbbf24' },
@@ -262,6 +263,8 @@ function renderYIPGrid(history, param) {
         t('months.long.9', 'Octubre'), t('months.long.10', 'Noviembre'), t('months.long.11', 'Diciembre')
     ];
 
+    const cardBgColor = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim();
+
     for (let m=0; m<12; m++) {
         const monthBlock = document.createElement('div');
         monthBlock.className = 'yip-month-block';
@@ -361,15 +364,19 @@ function renderYIPGrid(history, param) {
 
             const isFuture = (m > currentMonth) || (m === currentMonth && day > currentDay - 1);
             if (isFuture) {
+                dayNum.style.color = getTextColorForBg(cardBgColor);
                 cell.classList.add('future');
             } else {
                 const val = yearGrid[m][day];
                 let dayData = yearFullData[m][day];
 
                 if (val !== null && val !== undefined) {
-                    cell.style.backgroundColor = getColorForParam(param, val);
+                    const cellBg = getColorForParam(param, val);
+                    cell.style.backgroundColor = cellBg;
+                    dayNum.style.color = getTextColorForBg(cellBg);
                     cell.classList.add('completed');
                 } else {
+                    dayNum.style.color = getTextColorForBg(cardBgColor);
                     cell.classList.add('past-no-data');
                     if (!dayData) {
                         dayData = { time: new Date(currentYear, m, day + 1).getTime() };

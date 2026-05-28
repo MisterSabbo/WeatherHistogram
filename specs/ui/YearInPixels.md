@@ -56,6 +56,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `../services/StorageService.js` | `storageService` | getHistory, updateDayNotes, updateDayMoods, init, db, historyStoreName |
 | `../utils/i18n.js` | `t` | Traducción de textos |
 | `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | Niveles de polen |
+| `../utils/color.js` | `getTextColorForBg` | Color de texto adaptativo por luminancia del fondo |
 
 ### Funciones internas (no exportadas)
 | Función | Descripción |
@@ -73,6 +74,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `_closeDetailSheet` | `function\|undefined` | `undefined` | Callback para cerrar el detail sheet |
 | `_yipScrollInit` | `boolean` | `false` | Flag para inicializar scroll de chips una sola vez |
 | `_yipScrollListenersAttached` | `boolean` | `false` | Flag para evitar duplicar listeners de scroll |
+| `cardBgColor` | `string` | computada en renderYIPGrid | Resolved `--card-bg` CSS variable, usada para adaptive text color en celdas sin datos |
 
 ### Constantes internas
 | Constante | Valor | Contexto |
@@ -99,7 +101,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 
 ### `export function renderYIPGrid(history: object|null, param: string): void`
 
-**Descripción:** Renderiza el grid anual (12 meses × 31 días) en `#yip-grid-container`. Asigna color a cada celda según el valor del parámetro. Muestra iconos de nota y mood si existen. Si no hay history, muestra mensaje "sin historial".
+**Descripción:** Renderiza el grid anual (12 meses × 31 días) en `#yip-grid-container`. Asigna color a cada celda según el valor del parámetro. Aplica color de texto adaptativo a `.yip-day-number` basado en la luminancia del fondo de celda: para celdas con datos usa el color asignado por `getColorForParam`; para celdas sin datos (past-no-data, future) usa `--card-bg` resuelto. El color de texto se calcula con `getTextColorForBg` (luminancia ponderada, retorna `#1a1a1a` si fondo claro, `#ffffff` si fondo oscuro). Muestra iconos de nota y mood si existen. Si no hay history, muestra mensaje "sin historial".
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
@@ -250,6 +252,11 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `saveDayDetail` con `data.time` no existente en `cachedHistory.daily` (past-no-data synthetic) | Se añade `data` a `cachedHistory.daily` tras `updateDayData` exitoso, re-render incluye la celda |
 | `saveDayDetail` con `cachedHistory` null/undefined | No lanza error (skip re-render y push), close vía requestAnimationFrame |
 | `window.openBottomSheet` no definido | Fallback: `_closeSheet = undefined` o `resolve(confirm(message))` |
+| Celda completed con fondo claro (ej. `#fde047`, `#bfdbfe`) | day-number color = `#1a1a1a` (texto oscuro sobre fondo claro) |
+| Celda completed con fondo oscuro (ej. `#1d4ed8`, `#dc2626`) | day-number color = `#ffffff` (texto claro sobre fondo oscuro) |
+| Celda past-no-data en dark mode (--card-bg = `#313338`) | day-number color = `#ffffff` sobre fondo oscuro del card |
+| Celda past-no-data en light mode (--card-bg = `#ffffff`) | day-number color = `#1a1a1a` sobre fondo claro del card |
+| Celda future | day-number color basado en `--card-bg` (misma lógica que past-no-data) |
 
 ## Escenarios de test
 
@@ -322,6 +329,9 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 66. **Celda renderizada con data-time attribute**: .yip-day-cell tiene dataset.time igual al time del dayData
 67. **saveDayDetail past-no-data (synthetic dayData)**: push data a cachedHistory.daily sí no existe tras update exitoso, re-render incluye celda
 68. **saveDayDetail past-no-data highlight**: highlightYIPCell encuentra celda en DOM tras re-render porque cachedHistory ya contiene el día
+69. **renderYIPGrid celda completed con fondo claro**: `.yip-day-number` color = `#1a1a1a` (getTextColorForBg retorna oscuro)
+70. **renderYIPGrid celda completed con fondo oscuro**: `.yip-day-number` color = `#ffffff` (getTextColorForBg retorna claro)
+71. **renderYIPGrid celda past-no-data/future**: `.yip-day-number` color basado en `--card-bg` resuelto
 
 ## Historial de cambios
 
@@ -332,3 +342,4 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | 2026-05-28 | Fix alineación botones (box-sizing), cierre sheet inmediato (requestAnimationFrame), push past-no-data a cachedHistory tras save | SDD |
 | 2026-05-28 | Drag handle fijo con scroll wrapper + scrollTop reset al abrir detail sheet | SDD |
 | 2026-05-28 | Inmediato visual feedback en save: re-render grid, highlight flash, error toast, Clear button | SDD |
+| 2026-05-28 | Ticket 001: Aumentar tamaño y contraste de números de día — font-size 8→11px, weight 500→700, color adaptativo por luminancia, eliminado text-shadow | SDD |

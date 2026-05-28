@@ -36,6 +36,23 @@ Ninguno.
 
 ---
 
+### `export function getTextColorForBg(bgColor: string): string`
+
+**Descripción:** Dado un color de fondo (hex, rgb, rgba), calcula la luminancia relativa del color usando la fórmula ponderada `0.299*R + 0.587*G + 0.114*B` y retorna el color de texto con mejor contraste: `#1a1a1a` (oscuro) para fondos claros (luminancia > 0.5) o `#ffffff` (blanco) para fondos oscuros (luminancia ≤ 0.5). Útil para adaptive text color en grids de Year in Pixels.
+
+**Parámetros:**
+| Nombre | Tipo | Descripción |
+|--------|------|-------------|
+| `bgColor` | `string` | Color de fondo en hex (`#ffffff`, `fff`), rgb o rgba |
+
+**Retorno:** `string` — `'#1a1a1a'` o `'#ffffff'` según la luminancia del fondo.
+
+**Mutates state:** No
+
+**Async:** No
+
+---
+
 ## Comportamiento
 
 1. **Non-string input:** Si `hex` no es un string, retorna `{ r: 0, g: 0, b: 0 }`.
@@ -72,6 +89,9 @@ Ninguno.
 9. **Input no-string:** Input `123` (number) → output `{ r: 0, g: 0, b: 0 }`
 10. **Input null:** Input `null` → output `{ r: 0, g: 0, b: 0 }`
 11. **String vacío:** Input `''` → output `{ r: 0, g: 0, b: 0 }`
+12. **getTextColorForBg fondo blanco:** Input `'#ffffff'` → output `'#1a1a1a'`
+13. **getTextColorForBg fondo negro:** Input `'#000000'` → output `'#ffffff'`
+14. **getTextColorForBg con rgb:** Input `'rgb(255, 255, 255)'` → output `'#1a1a1a'`
 
 ## Historial de cambios
 
@@ -79,3 +99,4 @@ Ninguno.
 |-------|--------|-------|
 | 2026-05-21 | Spec inicial (retro) | SDD |
 | 2026-05-21 | Fix: `startsWith('rgba')` → `startsWith('rgb')` para soportar formato `rgb(...)` sin alpha | SDD |
+| 2026-05-28 | Ticket 001: Añadida `getTextColorForBg` para adaptive text color en YIP | SDD |
