@@ -29,6 +29,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `#yip-moods-selector` | getElementById innerHTML | openYIPDetail, saveDayMoods, saveDayDetail |
 | `#yip-detail-sheet` | openBottomSheet | openYIPDetail |
 | `#yip-sheet-backdrop` | openBottomSheet | openYIPDetail |
+| `#yip-detail-sheet-drag-handle` | getElementById (fixed, non-scrolling) | HTML structure |
+| `.yip-sheet-scroll-content` | child div of sheet, `overflow-y: auto` | HTML structure |
 | `#yip-location-dots` | getElementById innerHTML | updateYipScrollUI |
 | `#confirm-title` | getElementById textContent | showConfirm |
 | `#confirm-message` | getElementById textContent | showConfirm |
@@ -141,7 +143,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 
 ### `export function openYIPDetail(data: object, dateStr: string, locationName?: string): void`
 
-**Descripción:** Abre detail sheet para un día específico. Puebla fecha, descripción (temp max/min), métricas (precip, wind, AQI, polen), sección de notas (textarea), selector de moods (multi-select toggle), y sección de condiciones de salud (botones toggle "Cold" y "Allergies"). Enlaza botón "Guardar" → `saveDayDetail` y "Cancelar" → cierre inmediato del sheet. Usa `window.openBottomSheet` para mostrar `#yip-detail-sheet`. Clona botones para eliminar listeners previos. Guarda `_closeDetailSheet` del `openBottomSheet` para cierre programático.
+**Descripción:** Abre detail sheet para un día específico. Resetea `scrollTop` del sheet a 0 para que el contenido siempre aparezca al inicio. Puebla fecha, descripción (temp max/min), métricas (precip, wind, AQI, polen), sección de notas (textarea), selector de moods (multi-select toggle), y sección de condiciones de salud (botones toggle "Cold" y "Allergies"). Enlaza botón "Guardar" → `saveDayDetail` y "Cancelar" → cierre inmediato del sheet. Usa `window.openBottomSheet` para mostrar `#yip-detail-sheet`. Clona botones para eliminar listeners previos. Guarda `_closeDetailSheet` del `openBottomSheet` para cierre programático.
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
@@ -152,6 +154,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 **Metadatos:**
 - Mutates state: No (modifica DOM, llama window.openBottomSheet)
 - Async: No
+- Scroll: Resetea `scrollTop = 0` en `#yip-detail-sheet` al inicio
 
 ### `export function updateYipScrollUI(): void`
 
@@ -207,6 +210,9 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `saveDayNote` con texto vacío | `storageService.updateDayNotes` llamado con string vacío |
 | `saveDayMoods` sin moods seleccionados | Array vacío persistido (elimina key moods) |
 | `openYIPDetail` con `data` null/undefined | Retorna sin hacer nada |
+| `openYIPDetail` después de scroll en otro día | `sheet.scrollTop` se resetea a 0 al abrir |
+| Drag handle con contenido corto (sin scroll) | Drag handle visible, swipe-to-dismiss funciona |
+| Drag handle con contenido largo (scroll) | Drag handle fijo arriba, contenido scrolla debajo |
 | `param === 'cold'` con cold=true en día | Celda amarilla (#eab308) |
 | `param === 'cold'` sin cold | Celda gris (var(--grid-color)) |
 | `param === 'allergies'` con allergies=true | Celda verde (#22c55e) |
@@ -246,7 +252,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 18. **openYIPDetail sin data.notes**: textarea vacío
 19. **openYIPDetail con data.moods**: mood toggles muestran moods activos
 20. **openYIPDetail sin data.moods**: todos los mood toggles desmarcados
-21. **openYIPDetail con data null**: retorna sin error, no modifica DOM
+21. **openYIPDetail resetea scrollTop a 0**: abre sheet, scrollTop debe ser 0
+22. **openYIPDetail con data null**: retorna sin error, no modifica DOM
 22. **saveDayNote con texto**: llama `storageService.updateDayNotes` con el texto, muestra mensaje
 23. **saveDayNote con texto vacío**: llama `storageService.updateDayNotes` con string vacío
 24. **saveDayMoods con moods seleccionados**: llama `storageService.updateDayMoods` con array de ids
@@ -291,3 +298,4 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 |-------|--------|-------|
 | 2026-05-27 | Spec retro — mapeo completo del código actual (sin state/theme, con variables de módulo) | SDD |
 | 2026-05-28 | Añadidas condiciones de salud (cold/allergies), dot indicator system, categoría Health en param sheet, toggles en detail sheet | SDD |
+| 2026-05-28 | Drag handle fijo con scroll wrapper + scrollTop reset al abrir detail sheet | SDD |

@@ -55,7 +55,7 @@ export function openSpfSheet() {
   document.getElementById('spf-modal-rec-val').innerText = spfText
   document.getElementById('spf-modal-rec-desc').innerText = t('config.spfModalReapply')
 
-  openBottomSheet('spf-modal')
+  openBottomSheet('spf-modal', 'pill-sheet-backdrop', 'spf-sheet-scroll-content')
 }
 
 export function initSpfModal() {

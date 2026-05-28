@@ -216,12 +216,12 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 const pollenWarningIcon = document.getElementById('pollen-warning-icon');
                 const pollenModal = document.getElementById('pollen-modal');
                 if (pollenWarningIcon && pollenModal) {
-                    pollenWarningIcon.addEventListener('click', () => openBottomSheet('pollen-modal'));
+                    pollenWarningIcon.addEventListener('click', () => openBottomSheet('pollen-modal', 'pill-sheet-backdrop', 'pollen-sheet-scroll-content'));
                 }
                 const aqiWarningIcon = document.getElementById('aqi-warning-icon');
                 const aqiModal = document.getElementById('aqi-modal');
                 if (aqiWarningIcon && aqiModal) {
-                    aqiWarningIcon.addEventListener('click', () => openBottomSheet('aqi-modal'));
+                    aqiWarningIcon.addEventListener('click', () => openBottomSheet('aqi-modal', 'pill-sheet-backdrop', 'aqi-sheet-scroll-content'));
                 }
             }
 
@@ -601,7 +601,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 okBtn.parentNode.replaceChild(newOk, okBtn);
                 const newCancel = cancelBtn.cloneNode(true);
                 cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-                const closeFn = openBottomSheet('confirm-modal', 'confirm-sheet-backdrop');
+                const closeFn = openBottomSheet('confirm-modal', 'confirm-sheet-backdrop', 'confirm-sheet-scroll-content');
                 let confirmed = false;
                 newCancel.addEventListener('click', () => closeFn());
                 newOk.addEventListener('click', () => {

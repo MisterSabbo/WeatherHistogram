@@ -61,7 +61,7 @@ Modal SPF que muestra riesgo UV, tiempo hasta quemadura y recomendación de prot
 2. Riesgo: <3 bajo, 3-5 moderado, 6-7 alto, 8-10 muy alto, 11+ extremo
 3. Tiempo hasta quemadura: `SKIN_BASE_MINS[skinType-1] / uv`
 4. SPF recomendado: UV≥8 → 50+, UV≥6 → 50, UV≥3 → 30+, UV>0 + skin≤2 → 15
-5. `openSpfSheet` abre bottom sheet 'spf-modal'
+5. `openSpfSheet` abre bottom sheet 'spf-modal' con `scrollElementId='spf-sheet-scroll-content'`
 6. `initSpfModal`: attach click a `#spf-info-container` y `#spf-settings-btn`
 
 ## Casos borde
@@ -87,4 +87,5 @@ Modal SPF que muestra riesgo UV, tiempo hasta quemadura y recomendación de prot
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
+| 2026-05-28 | Añadido scrollElementId a openSpfSheet (spf-sheet-scroll-content) para fixed-handle pattern | SDD |
 | 2026-05-21 | Spec inicial | SDD |

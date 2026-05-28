@@ -86,7 +86,8 @@ export function initTooltipManager() {
       const container = getTooltipContainer(el)
       if (container && METRIC_MODALS[container.id]) {
         closeAllTooltips()
-        openBottomSheet(METRIC_MODALS[container.id])
+        const _sheetId = METRIC_MODALS[container.id];
+        openBottomSheet(_sheetId, 'pill-sheet-backdrop', _sheetId.replace('-modal', '-sheet') + '-scroll-content')
         e.stopPropagation()
         return
       }

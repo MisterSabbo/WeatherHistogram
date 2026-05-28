@@ -1,5 +1,15 @@
 export const changelogData = [
   {
+    "version": "1.11.0a",
+    "changes": [
+      "YIP detail sheet: drag handle now stays fixed at top while content scrolls beneath. scrollTop resets to 0 on open, preventing scroll position leaks between days.",
+      "Fixed-handle pattern generalized to all 10 bottom sheets — AQI, Pollen, SPF, Confirm modals now use scroll wrapper pattern with correct scrollElementId passed to openBottomSheet(), ensuring swipe-to-dismiss guard works with overflow-y:hidden sheets.",
+      "Fixed populateParamSheet() to use #yip-param-options-container instead of creating .yip-bottom-sheet-body child.",
+      "Fixed TooltipManager.js scrollElementId: aqi-modal and pollen-modal now correctly use -sheet-scroll-content suffix instead of -modal-scroll-content.",
+      "All 376 unit tests + 25 E2E tests pass."
+    ]
+  },
+  {
     "version": "1.11.0",
     "changes": [
       "Cold & allergy tracking in YIP: Users can now mark whether they had a cold or allergies on any given day in the Year in Pixels grid. Two toggle buttons '🤧 Cold' and '🌿 Allergies' in the day detail sheet, persisted in IndexedDB via storageService.updateDayConditions(). New 'Health' category in param sheet with 'Cold' (yellow) and 'Allergies' (green) as selectable grid parameters. Dot indicator system replaces individual icons — each cell shows up to 3 semantic 4px dots at the bottom (blue=notes, yellow=mood, red=cold, green=allergies) with '…' ellipsis for 4+. Dots always visible regardless of active parameter. All 376 unit tests + 13 E2E tests pass."

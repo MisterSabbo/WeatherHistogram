@@ -38,7 +38,7 @@ export function initYearInPixels() {
   if (paramDisplay) {
     paramDisplay.addEventListener('click', () => {
       populateParamSheet();
-      _closeSheet = window.openBottomSheet ? window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop') : undefined;
+      _closeSheet = window.openBottomSheet ? window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop', 'yip-param-options-container') : undefined;
     });
   }
 
@@ -129,12 +129,9 @@ async function loadLocationData(locationName) {
 }
 
 function populateParamSheet() {
-  const container = document.getElementById('yip-param-sheet');
+  const container = document.getElementById('yip-param-options-container');
   if (!container) return;
-  const existingBody = container.querySelector('.yip-bottom-sheet-body');
-  const body = existingBody || document.createElement('div');
-  body.className = 'yip-bottom-sheet-body';
-  body.innerHTML = '';
+  container.innerHTML = '';
 
   const categories = [
     { key: 'temp', label: t('config.yipCategoryTemp', 'Temperatura'), params: [
@@ -198,10 +195,8 @@ function populateParamSheet() {
       catDiv.appendChild(opt);
     });
 
-    body.appendChild(catDiv);
+    container.appendChild(catDiv);
   });
-
-  if (!existingBody) container.appendChild(body);
 }
 
 function renderYIPGrid(history, param) {
@@ -421,6 +416,9 @@ function openYIPDetail(data, dateStr, locationName) {
     const hasWeatherData = data && (data.tempMax !== undefined || data.precipTotal !== undefined);
     const loc = locationName || selectedLocation;
 
+    const scrollContent = document.getElementById('yip-detail-sheet-scroll-content');
+    if (scrollContent) scrollContent.scrollTop = 0;
+
     document.getElementById('yip-detail-date').textContent = dateStr;
     const desc = document.getElementById('yip-detail-desc');
     if (hasWeatherData) {
@@ -524,7 +522,7 @@ function openYIPDetail(data, dateStr, locationName) {
     }
 
     if (window.openBottomSheet) {
-        _closeDetailSheet = window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
+        _closeDetailSheet = window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content');
     }
 
     const saveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-save-btn'));
@@ -854,7 +852,7 @@ async function showConfirm(title, message) {
             };
         }
 
-        const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop') : () => { resolve(confirm(message)); };
+        const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop', 'confirm-sheet-scroll-content') : () => { resolve(confirm(message)); };
 
     });
 }

@@ -816,35 +816,37 @@
       style="display: flex; flex-direction: column;"
     >
       <div id="aqi-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
-      <div
-        style="
-          position: relative;
-          color: var(--text-primary);
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        "
-      >
-        <button
-          id="close-aqi-btn"
-          style="display: none;"
-        >
-          <span class="material-symbols-outlined" style="font-size: 18px"
-            >close</span
-          >
-        </button>
-        <div id="aqi-modal-header-info" style="margin-bottom: 8px; width: 100%;"></div>
-        <canvas
-          id="aqi-modal-radar"
-          width="220"
-          height="220"
-          style="display: none; margin: 0 auto"
-        ></canvas>
+      <div class="yip-sheet-scroll-content" id="aqi-sheet-scroll-content">
         <div
-          id="aqi-modal-details"
-          style="font-size: 0.75rem; line-height: 1.3; margin-top: 5px; width: 100%; max-width: 220px;"
-        ></div>
+          style="
+            position: relative;
+            color: var(--text-primary);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          "
+        >
+          <button
+            id="close-aqi-btn"
+            style="display: none;"
+          >
+            <span class="material-symbols-outlined" style="font-size: 18px"
+              >close</span
+            >
+          </button>
+          <div id="aqi-modal-header-info" style="margin-bottom: 8px; width: 100%;"></div>
+          <canvas
+            id="aqi-modal-radar"
+            width="220"
+            height="220"
+            style="display: none; margin: 0 auto"
+          ></canvas>
+          <div
+            id="aqi-modal-details"
+            style="font-size: 0.75rem; line-height: 1.3; margin-top: 5px; width: 100%; max-width: 220px;"
+          ></div>
+        </div>
       </div>
     </div>
 
@@ -855,40 +857,42 @@
       style="display: flex; flex-direction: column;"
     >
       <div id="pollen-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
-      <div
-        style="
-          position: relative;
-          color: var(--text-primary);
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        "
-      >
-        <button
-          id="close-pollen-btn"
-          style="display: none;"
+      <div class="yip-sheet-scroll-content" id="pollen-sheet-scroll-content">
+        <div
+          style="
+            position: relative;
+            color: var(--text-primary);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          "
         >
-          <span class="material-symbols-outlined" style="font-size: 18px"
-            >close</span
+          <button
+            id="close-pollen-btn"
+            style="display: none;"
           >
-        </button>
-        <div
-          style="text-align: center; font-weight: bold; margin-bottom: 5px; width: 100%;"
-          data-i18n="pollen.riskTitle"
-        >
-          Riesgo por Planta
+            <span class="material-symbols-outlined" style="font-size: 18px"
+              >close</span
+            >
+          </button>
+          <div
+            style="text-align: center; font-weight: bold; margin-bottom: 5px; width: 100%;"
+            data-i18n="pollen.riskTitle"
+          >
+            Riesgo por Planta
+          </div>
+          <canvas
+            id="pollen-modal-radar"
+            width="220"
+            height="220"
+            style="margin: 0 auto; display: block;"
+          ></canvas>
+          <div
+            id="pollen-modal-details"
+            style="font-size: 0.75rem; line-height: 1.3; width: 100%; max-width: 220px;"
+          ></div>
         </div>
-        <canvas
-          id="pollen-modal-radar"
-          width="220"
-          height="220"
-          style="margin: 0 auto; display: block;"
-        ></canvas>
-        <div
-          id="pollen-modal-details"
-          style="font-size: 0.75rem; line-height: 1.3; width: 100%; max-width: 220px;"
-        ></div>
       </div>
     </div>
 
@@ -898,111 +902,112 @@
       style="display: flex; flex-direction: column;"
     >
       <div id="spf-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
-      <div
-        style="
-          color: var(--text-primary);
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          position: relative;
-          width: 100%;
-        "
-      >
-        <button
-          id="close-spf-btn"
-          style="display: none;"
-        >
-          <span class="material-symbols-outlined" style="font-size: 18px"
-            >close</span
-          >
-        </button>
-
+      <div class="yip-sheet-scroll-content" id="spf-sheet-scroll-content">
         <div
           style="
-            background: var(--input-bg);
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid var(--grid-color);
+            color: var(--text-primary);
             display: flex;
-            align-items: center;
-            gap: 16px;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            width: 100%;
           "
         >
-          <div
-            id="spf-modal-uvi-box"
-            style="
-              background: #eab308;
-              color: #fff;
-              width: 56px;
-              height: 56px;
-              border-radius: 12px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 1.5rem;
-              font-weight: 800;
-              flex-shrink: 0;
-            "
+          <button
+            id="close-spf-btn"
+            style="display: none;"
           >
-            4.5
-          </div>
-          <div>
-            <div
-              style="
-                font-weight: 700;
-                font-size: 0.95rem;
-                margin-bottom: 4px;
-                color: #eab308;
-              "
-              id="spf-modal-uvi-title"
+            <span class="material-symbols-outlined" style="font-size: 18px"
+              >close</span
             >
-              Índice UV: Moderado
-            </div>
-            <div
-              style="
-                font-size: 0.85rem;
-                color: var(--text-secondary);
-                line-height: 1.4;
-              "
-              id="spf-modal-uvi-desc"
-            >
-              Riesgo moderado de daño por exposición solar sin protección.
-            </div>
-          </div>
-        </div>
+          </button>
 
-        <div style="display: flex; gap: 12px">
           <div
             style="
-              flex: 1;
               background: var(--input-bg);
               border-radius: 12px;
               padding: 16px;
               border: 1px solid var(--grid-color);
+              display: flex;
+              align-items: center;
+              gap: 16px;
             "
           >
             <div
+              id="spf-modal-uvi-box"
               style="
+                background: #eab308;
+                color: #fff;
+                width: 56px;
+                height: 56px;
+                border-radius: 12px;
                 display: flex;
                 align-items: center;
-                gap: 6px;
-                margin-bottom: 12px;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: 800;
+                flex-shrink: 0;
               "
             >
-              <span
-                class="material-symbols-outlined"
-                style="font-size: 16px; color: #f97316"
-                >schedule</span
+              4.5
+            </div>
+            <div>
+              <div
+                style="
+                  font-weight: 700;
+                  font-size: 0.95rem;
+                  margin-bottom: 4px;
+                  color: #eab308;
+                "
+                id="spf-modal-uvi-title"
               >
-              <span
+                Índice UV: Moderado
+              </div>
+              <div
                 style="
                   font-size: 0.85rem;
-                  font-weight: 600;
-                  color: var(--text-primary);
+                  color: var(--text-secondary);
+                  line-height: 1.4;
                 "
-                >Tiempo hasta quemadura</span
+                id="spf-modal-uvi-desc"
               >
+                Riesgo moderado de daño por exposición solar sin protección.
+              </div>
             </div>
+          </div>
+
+          <div style="display: flex; gap: 12px">
+            <div
+              style="
+                flex: 1;
+                background: var(--input-bg);
+                border-radius: 12px;
+                padding: 16px;
+                border: 1px solid var(--grid-color);
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  margin-bottom: 12px;
+                "
+              >
+                <span
+                  class="material-symbols-outlined"
+                  style="font-size: 16px; color: #f97316"
+                  >schedule</span
+                >
+                <span
+                  style="
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                  "
+                  >Tiempo hasta quemadura</span
+                >
+              </div>
             <div
               style="
                 font-size: 1.8rem;
@@ -1107,6 +1112,7 @@
           >
           Cambiar Fototipo
         </button>
+        </div>
       </div>
     </div>
 
@@ -1376,7 +1382,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.11.0</span>
+              <span id="app-version-label">v1.11.0a</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1526,12 +1532,14 @@
     <!-- Confirm Modal -->
     <div id="confirm-modal" class="yip-bottom-sheet" style="display: flex; flex-direction: column;">
       <div id="confirm-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
-      <div style="background: transparent; border-radius: 0; width: 100%; text-align: center;">
-        <h3 id="confirm-title" style="margin-top: 0; margin-bottom: 12px; font-size: 1.2rem;">Confirmar</h3>
-        <p id="confirm-message" style="margin-bottom: 24px; font-size: 0.95rem; color: var(--text-secondary);"></p>
-        <div style="display: flex; gap: 12px; justify-content: center;">
-          <button id="confirm-cancel-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cancelar</button>
-          <button id="confirm-ok-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: #ef4444; color: white; font-weight: bold; cursor: pointer;">Aceptar</button>
+      <div class="yip-sheet-scroll-content" id="confirm-sheet-scroll-content">
+        <div style="background: transparent; border-radius: 0; width: 100%; text-align: center;">
+          <h3 id="confirm-title" style="margin-top: 0; margin-bottom: 12px; font-size: 1.2rem;">Confirmar</h3>
+          <p id="confirm-message" style="margin-bottom: 24px; font-size: 0.95rem; color: var(--text-secondary);"></p>
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button id="confirm-cancel-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--grid-color); background: transparent; color: var(--text-primary); font-weight: bold; cursor: pointer;">Cancelar</button>
+            <button id="confirm-ok-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: #ef4444; color: white; font-weight: bold; cursor: pointer;">Aceptar</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1659,39 +1667,41 @@
     <!-- Year In Pixels Detail Bottom Sheet -->
     <div id="yip-sheet-backdrop" class="yip-sheet-backdrop"></div>
     <div id="yip-detail-sheet" class="yip-bottom-sheet">
-        <div id="yip-detail-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; cursor: grab;"></div>
-        <h3 id="yip-detail-date" style="margin-bottom: 8px;"></h3>
-        <p id="yip-detail-desc" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
-        <div id="yip-detail-metrics" class="yip-detail-grid">
-            <!-- Detailed metrics generated dynamically -->
-        </div>
-        <div id="yip-detail-notes-section" class="yip-notes-section" style="display:none">
-            <label for="yip-detail-notes-input" data-i18n="config.yipNotesLabel">Personal notes</label>
-            <textarea id="yip-detail-notes-input" class="yip-notes-textarea" rows="3" maxlength="500" data-i18n-placeholder="config.yipNotesPlaceholder"></textarea>
-        </div>
-        <div id="yip-detail-moods-section" class="yip-moods-section" style="display:none">
-            <label data-i18n="config.yipMoodsLabel">Mood</label>
-            <div id="yip-moods-selector" class="yip-moods-selector">
-                <!-- Mood buttons generated dynamically -->
+        <div id="yip-detail-sheet-drag-handle" style="width: 40px; height: 5px; background: var(--grid-color); border-radius: 3px; margin: 0 auto 16px auto; flex-shrink: 0; cursor: grab;"></div>
+        <div class="yip-sheet-scroll-content" id="yip-detail-sheet-scroll-content">
+            <h3 id="yip-detail-date" style="margin-bottom: 8px;"></h3>
+            <p id="yip-detail-desc" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+            <div id="yip-detail-metrics" class="yip-detail-grid">
+                <!-- Detailed metrics generated dynamically -->
             </div>
-        </div>
-        <div id="yip-detail-conditions-section" class="yip-notes-section" style="display:none">
-            <label data-i18n="config.yipConditionsLabel">Conditions</label>
-            <div id="yip-conditions-selector" style="display:flex;gap:8px;margin-top:8px;">
-                <button id="yip-cold-toggle" class="yip-mood-btn" data-condition="cold" style="flex:1;--mood-color:#eab308;justify-content:center;">
-                    🤧 <span data-i18n="config.yipCold">Cold</span>
-                    <span class="material-symbols-outlined yip-mood-check">check</span>
-                </button>
-                <button id="yip-allergies-toggle" class="yip-mood-btn" data-condition="allergies" style="flex:1;--mood-color:#22c55e;justify-content:center;">
-                    🌿 <span data-i18n="config.yipAllergies">Allergies</span>
-                    <span class="material-symbols-outlined yip-mood-check">check</span>
-                </button>
+            <div id="yip-detail-notes-section" class="yip-notes-section" style="display:none">
+                <label for="yip-detail-notes-input" data-i18n="config.yipNotesLabel">Personal notes</label>
+                <textarea id="yip-detail-notes-input" class="yip-notes-textarea" rows="3" maxlength="500" data-i18n-placeholder="config.yipNotesPlaceholder"></textarea>
             </div>
-        </div>
-        <div class="yip-detail-actions">
-            <button id="yip-detail-save-btn" class="yip-save-btn" data-i18n="config.yipSaveAll">Save</button>
-            <button id="yip-detail-cancel-btn" class="yip-cancel-btn" data-i18n="config.cancel">Cancel</button>
-            <span id="yip-detail-saved-msg" class="yip-saved-feedback" style="display:none" data-i18n="config.yipSavedAll">✓ Saved</span>
+            <div id="yip-detail-moods-section" class="yip-moods-section" style="display:none">
+                <label data-i18n="config.yipMoodsLabel">Mood</label>
+                <div id="yip-moods-selector" class="yip-moods-selector">
+                    <!-- Mood buttons generated dynamically -->
+                </div>
+            </div>
+            <div id="yip-detail-conditions-section" class="yip-notes-section" style="display:none">
+                <label data-i18n="config.yipConditionsLabel">Conditions</label>
+                <div id="yip-conditions-selector" style="display:flex;gap:8px;margin-top:8px;">
+                    <button id="yip-cold-toggle" class="yip-mood-btn" data-condition="cold" style="flex:1;--mood-color:#eab308;justify-content:center;">
+                        🤧 <span data-i18n="config.yipCold">Cold</span>
+                        <span class="material-symbols-outlined yip-mood-check">check</span>
+                    </button>
+                    <button id="yip-allergies-toggle" class="yip-mood-btn" data-condition="allergies" style="flex:1;--mood-color:#22c55e;justify-content:center;">
+                        🌿 <span data-i18n="config.yipAllergies">Allergies</span>
+                        <span class="material-symbols-outlined yip-mood-check">check</span>
+                    </button>
+                </div>
+            </div>
+            <div class="yip-detail-actions">
+                <button id="yip-detail-save-btn" class="yip-save-btn" data-i18n="config.yipSaveAll">Save</button>
+                <button id="yip-detail-cancel-btn" class="yip-cancel-btn" data-i18n="config.cancel">Cancel</button>
+                <span id="yip-detail-saved-msg" class="yip-saved-feedback" style="display:none" data-i18n="config.yipSavedAll">✓ Saved</span>
+            </div>
         </div>
     </div>
 

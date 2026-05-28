@@ -73,6 +73,12 @@ Sistema de bottom sheets modales con swipe-to-dismiss, stacking z-index, y callb
 4. Scroll guard: si scrollElement tiene scrollTop > 0, no arrastra
 5. Backdrop click cierra sheet
 6. `_activeSheets` por backdropId: solo un sheet activo por backdrop
+7. **Fixed-handle pattern (estándar en todos los sheets):**
+   - El sheet tiene `overflow-y: hidden` y contiene solo el drag handle + un scroll wrapper
+   - El scroll wrapper (`.yip-sheet-scroll-content`) es un contenedor flex con `flex: 1; overflow-y: auto`
+   - `scrollElementId` debe apuntar al scroll wrapper, no al sheet
+   - Esto asegura que el drag handle siempre sea visible y no se desplace con el contenido
+   - El scroll guard lee `scrollTop` del scroll wrapper, no del sheet (cuyo `scrollTop` siempre es 0)
 
 ## Casos borde
 
@@ -81,6 +87,7 @@ Sistema de bottom sheets modales con swipe-to-dismiss, stacking z-index, y callb
 | `sheetId` no existe en DOM | Retorna función no-op, no lanza error |
 | `backdropId` no existe | Crea backdropId por defecto `{sheetId}-backdrop`, si no existe no lanza error |
 | `scrollElementId` no existe | Swipe-to-dismiss sin scroll guard |
+| `scrollElementId` existe pero sheet tiene `overflow-y: hidden` | Scroll guard usa `scrollTop` del scrollElement, no del sheet — el drag handle queda fijo arriba y no se desplaza con el contenido |
 | Llamar `closeBottomSheet` sin haber abierto | No lanza error, no modifica nada |
 | Múltiples sheets mismo backdropId | Solo un sheet activo por backdropId |
 | Pointer events no disponibles | Fallback a touch events |
@@ -93,9 +100,12 @@ Sistema de bottom sheets modales con swipe-to-dismiss, stacking z-index, y callb
 4. **Abrir y cerrar sheet:** `openBottomSheet('test')` + `closeBottomSheet('test')` sin errores
 5. **Swipe-to-dismiss:** Arrastre >100px cierra el sheet
 6. **Múltiples sheets mismo backdrop:** Solo un sheet activo por backdropId
+7. **Scroll guard con scroll wrapper:** Si el sheet tiene un scroll wrapper interno (`.yip-sheet-scroll-content`) y `scrollElementId` apunta a él, el swipe-to-dismiss solo funciona cuando el contenido está en la parte superior (`scrollTop === 0`)
+8. **Drag handle siempre visible:** En sheets con `overflow-y: hidden` y scroll wrapper, el drag handle no se desplaza con el contenido
 
 ## Historial de cambios
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
+| 2026-05-28 | Fixed-handle pattern estandarizado en todos los sheets + actualización de scrollElementId | SDD |
 | 2026-05-21 | Spec inicial | SDD |

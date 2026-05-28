@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.11.0a] - 2026-05-28
+### Enhancement
+- **YIP detail sheet: drag handle always visible + scroll reset on open**: The drag handle in the YIP day detail sheet no longer scrolls with content. Added `.yip-sheet-scroll-content` wrapper so the drag handle stays fixed at the top while content scrolls beneath it. `scrollTop` is reset to 0 when opening a new day, preventing scroll position leaks between days.
+- **Fixed-handle pattern generalized to all bottom sheets**: Applied the same drag-handle-fixed + scroll-wrapper pattern to AQI, Pollen, SPF, and Confirm modals (5 Pattern A sheets). All 10 bottom sheets now pass `scrollElementId` to `openBottomSheet()`, ensuring swipe-to-dismiss scroll guard works correctly with `overflow-y:hidden` sheets. Fixed `populateParamSheet()` to use `#yip-param-options-container` instead of creating a `.yip-bottom-sheet-body` child. All 376 unit tests + 25 E2E tests pass.
+
 ## [v1.11.0] - 2026-05-28
 ### New Feature
 - **Cold & allergy tracking per day in YIP**: Users can now mark whether they had a cold or allergies on any given day in the Year in Pixels grid. New "Health" category in the param sheet with "Cold" (yellow) and "Allergies" (green) as selectable grid parameters. The day detail bottom sheet now includes toggle buttons for "🤧 Cold" and "🌿 Allergies", persisted via `storageService.updateDayConditions()`. The unified save also saves health conditions.

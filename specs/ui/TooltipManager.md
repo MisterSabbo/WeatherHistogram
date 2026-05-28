@@ -8,7 +8,7 @@ Gestión de tooltips para desktop (hover) y bottom sheets para mobile (click) en
 ### Módulos internos
 | Módulo | Export usado | Para qué |
 |--------|-------------|----------|
-| `./BottomSheet.js` | `openBottomSheet` | modales métricas |
+| `./BottomSheet.js` | `openBottomSheet` | modales métricas con scrollElementId |
 
 ### DOM
 | Elemento | Tipo de acceso | Contexto |
@@ -59,7 +59,7 @@ Gestión de tooltips para desktop (hover) y bottom sheets para mobile (click) en
 ## Comportamiento
 
 1. Desktop (>=600px): hover en .info-icon y .location-group
-2. Mobile (<600px): click en .data-value → abre modal si tiene METRIC_MODALS mapping
+2. Mobile (<600px): click en .data-value → abre modal si tiene METRIC_MODALS mapping, con scrollElementId = `_sheetId.replace('-modal', '-sheet') + '-scroll-content'` (ej: aqi-modal → aqi-sheet-scroll-content)
 3. Location group: solo muestra tooltip si hay overflow (texto truncado)
 4. Global click en mobile cierra todos los tooltips
 5. Tooltip en mobile: position fixed, centrado horizontal, debajo del elemento
@@ -88,4 +88,5 @@ Gestión de tooltips para desktop (hover) y bottom sheets para mobile (click) en
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
+| 2026-05-28 | Añadido scrollElementId pattern a openBottomSheet en mobile click (naming: -modal → -sheet) | SDD |
 | 2026-05-21 | Spec inicial | SDD |

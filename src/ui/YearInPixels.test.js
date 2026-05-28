@@ -405,7 +405,7 @@ describe('YearInPixels', () => {
 
     it('llama window.openBottomSheet', () => {
       YIP.openYIPDetail(mockDayData, '15 Junio 2026')
-      expect(window.openBottomSheet).toHaveBeenCalledWith('yip-detail-sheet', 'yip-sheet-backdrop')
+      expect(window.openBottomSheet).toHaveBeenCalledWith('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content')
     })
 
     it('muestra Sin datos meteorológicos si data no tiene weather fields', () => {
