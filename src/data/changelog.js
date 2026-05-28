@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.2",
+    "changes": [
+      "Clickable no-data days in YIP grid: past days without weather data are now clickable, opening detail sheet with 'Sin datos meteorológicos' message. Notes/moods can still be saved on no-data days. StorageService creates history entry if day is missing. All 376 unit tests + 13 E2E tests pass."
+    ]
+  },
+  {
     "version": "1.10.1",
     "changes": [
       "Unified save/cancel in YIP detail sheet: replaced separate save/cancel for notes and moods with a single save/cancel footer. Added saveDayDetail() that persists both in parallel and auto-closes after 1s with '✓ Saved' feedback. Cleaner UX with fewer taps. All 370 unit tests + 13 E2E tests pass."

@@ -363,23 +363,30 @@ function renderYIPGrid(history, param) {
                 cell.classList.add('future');
             } else {
                 const val = yearGrid[m][day];
+                let dayData = yearFullData[m][day];
+
                 if (val !== null && val !== undefined) {
                     cell.style.backgroundColor = getColorForParam(param, val);
                     cell.classList.add('completed');
-                    const dayData = yearFullData[m][day];
-                    if (dayData && dayData.notes) {
-                        cell.classList.add('has-notes');
-                        cell.insertAdjacentHTML('beforeend', '<span class="yip-note-icon material-symbols-outlined">sticky_note_2</span>');
+                } else {
+                    cell.classList.add('past-no-data');
+                    if (!dayData) {
+                        dayData = { time: new Date(currentYear, m, day + 1).getTime() };
                     }
-                    if (dayData && dayData.moods && dayData.moods.length > 0) {
-                        cell.classList.add('has-mood');
-                        const moodEmoji = MOOD_EMOJI_MAP[dayData.moods[0]] || '';
-                        if (moodEmoji) {
-                            cell.insertAdjacentHTML('beforeend', `<span class="yip-mood-icon">${moodEmoji}</span>`);
-                        }
-                    }
-                    cell.onclick = () => openYIPDetail(dayData, `${day+1} ${monthNames[m]} ${currentYear}`);
                 }
+
+                if (dayData && dayData.notes) {
+                    cell.classList.add('has-notes');
+                    cell.insertAdjacentHTML('beforeend', '<span class="yip-note-icon material-symbols-outlined">sticky_note_2</span>');
+                }
+                if (dayData && dayData.moods && dayData.moods.length > 0) {
+                    cell.classList.add('has-mood');
+                    const moodEmoji = MOOD_EMOJI_MAP[dayData.moods[0]] || '';
+                    if (moodEmoji) {
+                        cell.insertAdjacentHTML('beforeend', `<span class="yip-mood-icon">${moodEmoji}</span>`);
+                    }
+                }
+                cell.onclick = () => openYIPDetail(dayData, `${day+1} ${monthNames[m]} ${currentYear}`);
             }
             monthGrid.appendChild(cell);
         }
@@ -392,23 +399,27 @@ function renderYIPGrid(history, param) {
 }
 
 function openYIPDetail(data, dateStr, locationName) {
-    if (!data) return;
+    const hasWeatherData = data && (data.tempMax !== undefined || data.precipTotal !== undefined);
+    const loc = locationName || selectedLocation;
 
     document.getElementById('yip-detail-date').textContent = dateStr;
     const desc = document.getElementById('yip-detail-desc');
-    desc.textContent = `T. Máx: ${data.tempMax !== undefined ? Math.round(data.tempMax) : '-'}°C | T. Mín: ${data.tempMin !== undefined ? Math.round(data.tempMin) : '-'}°C`;
+    if (hasWeatherData) {
+        desc.textContent = `T. Máx: ${data.tempMax !== undefined ? Math.round(data.tempMax) : '-'}°C | T. Mín: ${data.tempMin !== undefined ? Math.round(data.tempMin) : '-'}°C`;
+    } else {
+        desc.textContent = '';
+    }
 
     const notesSection = document.getElementById('yip-detail-notes-section');
     const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
-    const loc = locationName || selectedLocation;
 
     if (notesSection) notesSection.style.display = 'block';
-    if (notesInput) notesInput.value = data.notes || '';
+    if (notesInput) notesInput.value = data ? (data.notes || '') : '';
     if (notesInput) notesInput.placeholder = t('config.yipNotesPlaceholder', 'Write your notes...');
 
     const moodsSection = document.getElementById('yip-detail-moods-section');
     const moodsSelector = document.getElementById('yip-moods-selector');
-    const existingMoods = data.moods || [];
+    const existingMoods = data ? (data.moods || []) : [];
 
     if (moodsSection) moodsSection.style.display = 'block';
 
@@ -427,41 +438,45 @@ function openYIPDetail(data, dateStr, locationName) {
         });
     }
 
-    const details = data.pollenDetails || {};
-    const pollenLevel = getAggregatedPollenLevel(details);
-    const pollenTypeNames = { alder: 'Aliso', birch: 'Abedul', grass: 'Gramíneas', mugwort: 'Artemisa', olive: 'Olivo', ragweed: 'Ambrosía' };
-    const pollenSpeciesHtml = Object.keys(pollenTypeNames).map(type => {
-        const raw = details[type] || 0;
-        const level = getPollenLevelByType(type, raw);
-        return `<div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid var(--grid-color);">
-            <span>${pollenTypeNames[type]}</span>
-            <span>${raw} — Nv.${level}</span>
-        </div>`;
-    }).join('');
+    const metricsContainer = document.getElementById('yip-detail-metrics');
+    if (hasWeatherData) {
+        const details = data.pollenDetails || {};
+        const pollenLevel = getAggregatedPollenLevel(details);
+        const pollenTypeNames = { alder: 'Aliso', birch: 'Abedul', grass: 'Gramíneas', mugwort: 'Artemisa', olive: 'Olivo', ragweed: 'Ambrosía' };
+        const pollenSpeciesHtml = Object.keys(pollenTypeNames).map(type => {
+            const raw = details[type] || 0;
+            const level = getPollenLevelByType(type, raw);
+            return `<div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid var(--grid-color);">
+                <span>${pollenTypeNames[type]}</span>
+                <span>${raw} — Nv.${level}</span>
+            </div>`;
+        }).join('');
 
-    const metricsHtml = `
-        <div class="yip-detail-item">
-            <span class="yip-detail-label">Precipitación</span>
-            <span class="yip-detail-value">${data.precipTotal?.toFixed(1) || 0} mm</span>
-        </div>
-        <div class="yip-detail-item">
-            <span class="yip-detail-label">Viento / Rachas</span>
-            <span class="yip-detail-value">${Math.round(data.windMax || 0)} / ${Math.round(data.gustMax || 0)} km/h</span>
-        </div>
-        <div class="yip-detail-item">
-            <span class="yip-detail-label">Calidad Aire (AQI)</span>
-            <span class="yip-detail-value">${data.aqi || 0}</span>
-        </div>
-        <div class="yip-detail-item">
-            <span class="yip-detail-label">Polen (Máx)</span>
-            <span class="yip-detail-value">Nv.${pollenLevel}</span>
-        </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--grid-color);">
-            <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">Especies</div>
-            ${pollenSpeciesHtml}
-        </div>
-    `;
-    document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
+        metricsContainer.innerHTML = `
+            <div class="yip-detail-item">
+                <span class="yip-detail-label">Precipitación</span>
+                <span class="yip-detail-value">${data.precipTotal?.toFixed(1) || 0} mm</span>
+            </div>
+            <div class="yip-detail-item">
+                <span class="yip-detail-label">Viento / Rachas</span>
+                <span class="yip-detail-value">${Math.round(data.windMax || 0)} / ${Math.round(data.gustMax || 0)} km/h</span>
+            </div>
+            <div class="yip-detail-item">
+                <span class="yip-detail-label">Calidad Aire (AQI)</span>
+                <span class="yip-detail-value">${data.aqi || 0}</span>
+            </div>
+            <div class="yip-detail-item">
+                <span class="yip-detail-label">Polen (Máx)</span>
+                <span class="yip-detail-value">Nv.${pollenLevel}</span>
+            </div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--grid-color);">
+                <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">Especies</div>
+                ${pollenSpeciesHtml}
+            </div>
+        `;
+    } else {
+        metricsContainer.innerHTML = `<div class="yip-no-data-msg">${t('config.yipNoDataMeteo', 'Sin datos meteorológicos')}</div>`;
+    }
 
     if (window.openBottomSheet) {
         _closeDetailSheet = window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');

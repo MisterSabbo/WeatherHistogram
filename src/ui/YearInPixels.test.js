@@ -52,7 +52,8 @@ vi.mock('../utils/i18n.js', () => ({
       'pollenLevels.low': 'Bajo',
       'pollenLevels.moderate': 'Moderado',
       'pollenLevels.high': 'Alto',
-      'pollenLevels.veryHigh': 'Muy Alto'
+      'pollenLevels.veryHigh': 'Muy Alto',
+      'config.yipNoDataMeteo': 'Sin datos meteorológicos'
     }
     return map[key] || fallback || key
   }
@@ -288,6 +289,34 @@ describe('YearInPixels', () => {
       expect(cells.length).toBeGreaterThan(0)
     })
 
+    it('celda pasada sin datos tiene clase past-no-data', () => {
+      const today = new Date()
+      const mockData = {
+        daily: [{
+          time: `${today.getFullYear()}-01-01`,
+          tempMax: 25,
+          tempMin: 15
+        }]
+      }
+      YIP.renderYIPGrid(mockData, 'maxTemp')
+      const cells = document.querySelectorAll('.yip-day-cell.past-no-data')
+      expect(cells.length).toBeGreaterThan(0)
+    })
+
+    it('celda pasada sin datos tiene onclick', () => {
+      const today = new Date()
+      const mockData = {
+        daily: [{
+          time: `${today.getFullYear()}-01-01`,
+          tempMax: 25,
+          tempMin: 15
+        }]
+      }
+      YIP.renderYIPGrid(mockData, 'maxTemp')
+      const cell = document.querySelector('.yip-day-cell.past-no-data')
+      expect(typeof cell.onclick).toBe('function')
+    })
+
     it('celda completada tiene onclick', () => {
       const today = new Date()
       const mockData = {
@@ -372,6 +401,30 @@ describe('YearInPixels', () => {
     it('llama window.openBottomSheet', () => {
       YIP.openYIPDetail(mockDayData, '15 Junio 2026')
       expect(window.openBottomSheet).toHaveBeenCalledWith('yip-detail-sheet', 'yip-sheet-backdrop')
+    })
+
+    it('muestra Sin datos meteorológicos si data no tiene weather fields', () => {
+      YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
+      const metrics = document.getElementById('yip-detail-metrics')
+      expect(metrics.innerHTML).toContain('Sin datos meteorológicos')
+    })
+
+    it('descripción vacía si data no tiene weather fields', () => {
+      YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
+      const desc = document.getElementById('yip-detail-desc')
+      expect(desc.textContent).toBe('')
+    })
+
+    it('notes section visible para datos sin weather', () => {
+      YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
+      const section = document.getElementById('yip-detail-notes-section')
+      expect(section.style.display).toBe('block')
+    })
+
+    it('moods section visible para datos sin weather', () => {
+      YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
+      const section = document.getElementById('yip-detail-moods-section')
+      expect(section.style.display).toBe('block')
     })
   })
 

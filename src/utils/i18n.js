@@ -102,6 +102,7 @@ export const translations = {
             yipMoodsParam: "Estado de Ánimo",
             yipSaveAll: "Guardar",
             yipSavedAll: "✓ Guardado",
+            yipNoDataMeteo: "Sin datos meteorológicos",
             langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
         theme: {
@@ -346,6 +347,7 @@ export const translations = {
             yipMoodsParam: "Mood",
             yipSaveAll: "Save",
             yipSavedAll: "✓ Saved",
+            yipNoDataMeteo: "No weather data",
             langChangeConfirm: "Change language? The application will update."
         },
         theme: {

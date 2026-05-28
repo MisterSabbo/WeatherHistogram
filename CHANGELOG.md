@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.2] - 2026-05-28
+### Enhancement
+- **Clickable no-data days in YIP grid**: Past days without weather data are now clickable, opening the detail sheet with "Sin datos meteorológicos" message in the metrics area. Notes and moods can still be saved. No-data cells use `.past-no-data` class (opacity 0.5, cursor pointer). StorageService.updateDayNotes/updateDayMoods now create a new history entry for days without weather data. All 376 unit tests + 13 E2E tests pass.
+
 ## [v1.10.1] - 2026-05-27
 ### Enhancement
 - **Unified save/cancel in YIP detail sheet**: Replaced separate save/cancel button pairs for notes and moods with a single unified save/cancel footer in the Day Detail bottom sheet. Added `saveDayDetail()` function that persists notes and moods in parallel, auto-closes after 1s with "✓ Saved" confirmation. Removed per-section action bars and individual confirmations. Cleaner UX with fewer taps. All 370 unit tests + 13 E2E tests pass. No functional regression.

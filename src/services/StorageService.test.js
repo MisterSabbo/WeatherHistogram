@@ -118,11 +118,15 @@ describe('StorageService', () => {
     expect(service.updateDayMoods).toBeInstanceOf(Function);
   });
 
-  it('updateDayNotes returns false for non-existing day', async () => {
+  it('updateDayNotes creates entry for non-existing day', async () => {
     const service = new StorageService();
     await service.init();
+    const storeData = setupHistoryMock({ hourly: [], daily: [] });
     const result = await service.updateDayNotes('testLoc', 999999, 'test note');
-    expect(result).toBe(false);
+    expect(result).toBe(true);
+    expect(storeData.result.daily).toHaveLength(1);
+    expect(storeData.result.daily[0].time).toBe(999999);
+    expect(storeData.result.daily[0].notes).toBe('test note');
   });
 
   it('updateDayNotes updates notes and persists', async () => {
@@ -147,11 +151,15 @@ describe('StorageService', () => {
     expect(storeData.result.daily[0].notes).toBeUndefined();
   });
 
-  it('updateDayMoods returns false for non-existing day', async () => {
+  it('updateDayMoods creates entry for non-existing day', async () => {
     const service = new StorageService();
     await service.init();
+    const storeData = setupHistoryMock({ hourly: [], daily: [] });
     const result = await service.updateDayMoods('testLoc', 999999, ['happy']);
-    expect(result).toBe(false);
+    expect(result).toBe(true);
+    expect(storeData.result.daily).toHaveLength(1);
+    expect(storeData.result.daily[0].time).toBe(999999);
+    expect(storeData.result.daily[0].moods).toEqual(['happy']);
   });
 
   it('updateDayMoods updates moods and persists', async () => {

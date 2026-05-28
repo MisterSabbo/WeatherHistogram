@@ -100,39 +100,45 @@ export class StorageService {
     } catch {}
   }
 
-  async updateDayNotes(locationName, dayTimestamp, notes) {
-    try {
-      const history = await this.getHistory(locationName);
-      const day = history.daily.find(d => d.time === dayTimestamp);
-      if (!day) return false;
-      if (notes) {
-        day.notes = notes;
-      } else {
-        delete day.notes;
-      }
-      await this.setHistory(locationName, history);
-      return true;
-    } catch {
-      return false;
+    async updateDayNotes(locationName, dayTimestamp, notes) {
+        try {
+            const history = await this.getHistory(locationName);
+            let day = history.daily.find(d => d.time === dayTimestamp);
+            if (!day) {
+                day = { time: dayTimestamp };
+                history.daily.push(day);
+            }
+            if (notes) {
+                day.notes = notes;
+            } else {
+                delete day.notes;
+            }
+            await this.setHistory(locationName, history);
+            return true;
+        } catch {
+            return false;
+        }
     }
-  }
 
-  async updateDayMoods(locationName, dayTimestamp, moods) {
-    try {
-      const history = await this.getHistory(locationName);
-      const day = history.daily.find(d => d.time === dayTimestamp);
-      if (!day) return false;
-      if (moods && moods.length > 0) {
-        day.moods = moods;
-      } else {
-        delete day.moods;
-      }
-      await this.setHistory(locationName, history);
-      return true;
-    } catch {
-      return false;
+    async updateDayMoods(locationName, dayTimestamp, moods) {
+        try {
+            const history = await this.getHistory(locationName);
+            let day = history.daily.find(d => d.time === dayTimestamp);
+            if (!day) {
+                day = { time: dayTimestamp };
+                history.daily.push(day);
+            }
+            if (moods && moods.length > 0) {
+                day.moods = moods;
+            } else {
+                delete day.moods;
+            }
+            await this.setHistory(locationName, history);
+            return true;
+        } catch {
+            return false;
+        }
     }
-  }
 }
 
 export const storageService = new StorageService();
