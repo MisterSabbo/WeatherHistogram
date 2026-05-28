@@ -395,7 +395,8 @@ function renderYIPGrid(history, param) {
                 if (dotStates.length > 0) {
                     const dotContainer = document.createElement('div');
                     dotContainer.className = 'yip-dot-container';
-                    const visibleDots = dotStates.slice(0, 3);
+                    const dotLimit = dotStates.length > 3 ? 2 : 3;
+                    const visibleDots = dotStates.slice(0, dotLimit);
                     visibleDots.forEach(state => {
                         const dot = document.createElement('span');
                         dot.className = 'yip-condition-dot';
@@ -403,10 +404,10 @@ function renderYIPGrid(history, param) {
                         dotContainer.appendChild(dot);
                     });
                     if (dotStates.length > 3) {
-                        const ellipsis = document.createElement('span');
-                        ellipsis.className = 'yip-dot-ellipsis';
-                        ellipsis.textContent = '\u2026';
-                        dotContainer.appendChild(ellipsis);
+                        const badge = document.createElement('span');
+                        badge.className = 'yip-dot-badge';
+                        badge.textContent = `+${dotStates.length - 2}`;
+                        dotContainer.appendChild(badge);
                     }
                     cell.appendChild(dotContainer);
                 }

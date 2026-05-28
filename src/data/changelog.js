@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.11.0c",
+    "changes": [
+      "Badge +N en vez de elipsis en YIP: reemplazado '…' por badge numérico '+N' con fondo semitransparente oscuro y texto blanco en negrita para indicar estados no meteorológicos extra en las celdas del Year in Pixels. El badge muestra 2 dots + '+N' (ej. '+2', '+3') en vez de 3 dots + '+N', asegurando máximo 3 elementos por celda. Todas las pruebas unitarias y E2E pasan."
+    ]
+  },
+  {
     "version": "1.11.0b",
     "changes": [
       "Immediate visual feedback on YIP save: grid now re-renders immediately after saving, with a 1.5s highlight flash on the saved cell. New 'Clear' button in the detail sheet that empties all fields (notes, moods, cold, allergies). Error toast shown if save fails (sheet stays open for retry). Saving with empty data is equivalent to deleting the day's previous data. All unit + E2E tests pass."

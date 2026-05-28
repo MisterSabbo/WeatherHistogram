@@ -132,18 +132,22 @@
             border-color: rgba(0,0,0,0.25);
         }
 
-        [data-theme="light"] .yip-day-cell .yip-dot-ellipsis {
-            color: rgba(0,0,0,0.55);
-            text-shadow: none;
-        }
-
-        .yip-day-cell .yip-dot-ellipsis {
-            font-size: 6px;
-            line-height: 1;
+        .yip-day-cell .yip-dot-badge {
+            min-width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.5);
             color: #fff;
-            text-shadow: 0 0 2px rgba(0,0,0,0.8);
+            font-size: 7px;
+            font-weight: 700;
+            padding: 0 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
             pointer-events: none;
+            line-height: 1;
+            box-sizing: border-box;
         }
 
         .yip-day-cell:active, .yip-day-cell:hover {

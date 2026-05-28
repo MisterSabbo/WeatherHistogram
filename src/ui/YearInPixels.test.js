@@ -259,6 +259,31 @@ describe('YearInPixels', () => {
       expect(cell.querySelector('.yip-dot-container')).toBeNull()
     })
 
+    it('4+ estados muestra 2 dots + badge +N en vez de 3 dots + badge', () => {
+      const today = new Date()
+      const mockData = {
+        daily: [{
+          time: `${today.getFullYear()}-01-15`,
+          tempMax: 25,
+          tempMin: 15,
+          notes: 'nota',
+          moods: ['happy'],
+          cold: true,
+          allergies: true
+        }]
+      }
+      YIP.renderYIPGrid(mockData, 'maxTemp')
+      const dotContainer = document.querySelector('.yip-dot-container')
+      expect(dotContainer).toBeTruthy()
+      const dots = dotContainer.querySelectorAll('.yip-condition-dot')
+      expect(dots.length).toBe(2)
+      const badge = dotContainer.querySelector('.yip-dot-badge')
+      expect(badge).toBeTruthy()
+      expect(badge.textContent).toBe('+2')
+    })
+
+
+
     it('celda con param=mood se colorea con color del primer mood', () => {
       const today = new Date()
       const mockData = {

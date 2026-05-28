@@ -230,20 +230,20 @@ test.describe('YIP Cold & Allergy Tracking', () => {
     expect(count).toBeGreaterThan(0)
   })
 
-  test('cells with 4 states show 3 dots + ellipsis', async ({ page }) => {
+  test('cells with 4 states show 2 dots + badge +N', async ({ page }) => {
     await page.locator('#year-in-pixels-btn').click()
     await page.waitForTimeout(1000)
 
-    const hasEllipsis = await page.evaluate(() => {
+    const hasBadge = await page.evaluate(() => {
       const containers = document.querySelectorAll('.yip-dot-container')
       for (const c of containers) {
         const dots = c.querySelectorAll('.yip-condition-dot')
-        const ellipsis = c.querySelector('.yip-dot-ellipsis')
-        if (dots.length >= 3 && ellipsis) return true
+        const badge = c.querySelector('.yip-dot-badge')
+        if (dots.length === 2 && badge && badge.textContent === '+2') return true
       }
       return false
     })
-    expect(hasEllipsis).toBe(true)
+    expect(hasBadge).toBe(true)
   })
 
   test('dots remain visible after switching parameter', async ({ page }) => {
