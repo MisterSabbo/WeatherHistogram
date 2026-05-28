@@ -4,5 +4,15 @@
     "agent-rules/subagents.md",
     "agent-rules/memory.md",
     "agent-rules/pre-action-checklist.md"
-  ]
+  ],
+  "mcp": {
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true,
+      "environment": {
+        "MEMORY_FILE_PATH": "./memory.jsonl"
+      }
+    }
+  }
 }
