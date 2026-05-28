@@ -215,11 +215,11 @@ describe('YearInPixels', () => {
       <div id="yip-detail-notes-section" style="display:none">
         <label>Personal notes</label>
         <textarea id="yip-detail-notes-input"></textarea>
-        <div class="yip-notes-actions">
-          <button id="yip-notes-save-btn">Save</button>
-          <button id="yip-notes-cancel-btn">Cancel</button>
-        </div>
-        <span id="yip-notes-saved-msg" style="display:none">Saved</span>
+      </div>
+      <div class="yip-detail-actions">
+        <button id="yip-detail-save-btn">Save</button>
+        <button id="yip-detail-cancel-btn">Cancel</button>
+        <span id="yip-detail-saved-msg" style="display:none"></span>
       </div>
     `;
     const data = { time: 1000, tempMax: 25, notes: 'my personal note' };
@@ -238,11 +238,11 @@ describe('YearInPixels', () => {
       <div id="yip-detail-notes-section" style="display:none">
         <label>Personal notes</label>
         <textarea id="yip-detail-notes-input"></textarea>
-        <div class="yip-notes-actions">
-          <button id="yip-notes-save-btn">Save</button>
-          <button id="yip-notes-cancel-btn">Cancel</button>
-        </div>
-        <span id="yip-notes-saved-msg" style="display:none">Saved</span>
+      </div>
+      <div class="yip-detail-actions">
+        <button id="yip-detail-save-btn">Save</button>
+        <button id="yip-detail-cancel-btn">Cancel</button>
+        <span id="yip-detail-saved-msg" style="display:none"></span>
       </div>
     `;
     const data = { time: 1000, tempMax: 25 };
@@ -376,7 +376,12 @@ describe('YearInPixels', () => {
       <div id="yip-detail-desc"></div>
       <div id="yip-detail-metrics"></div>
       <div id="yip-detail-notes-section" style="display:none"><label>Notes</label><textarea id="yip-detail-notes-input"></textarea></div>
-      <div id="yip-detail-moods-section" style="display:none"><label>Mood</label><div id="yip-moods-selector"></div><div class="yip-moods-actions"><button id="yip-moods-save-btn">Save</button><button id="yip-moods-cancel-btn">Cancel</button></div><span id="yip-moods-saved-msg" style="display:none">Saved</span></div>
+      <div id="yip-detail-moods-section" style="display:none"><label>Mood</label><div id="yip-moods-selector"></div></div>
+      <div class="yip-detail-actions">
+        <button id="yip-detail-save-btn">Save</button>
+        <button id="yip-detail-cancel-btn">Cancel</button>
+        <span id="yip-detail-saved-msg" style="display:none"></span>
+      </div>
     `;
     const data = { time: 1000, tempMax: 25, moods: ['happy', 'tired'] };
     openYIPDetail(data, '1 Jan 2026', 'TestCity');
@@ -392,7 +397,12 @@ describe('YearInPixels', () => {
       <div id="yip-detail-desc"></div>
       <div id="yip-detail-metrics"></div>
       <div id="yip-detail-notes-section" style="display:none"><label>Notes</label><textarea id="yip-detail-notes-input"></textarea></div>
-      <div id="yip-detail-moods-section" style="display:none"><label>Mood</label><div id="yip-moods-selector"></div><div class="yip-moods-actions"><button id="yip-moods-save-btn">Save</button><button id="yip-moods-cancel-btn">Cancel</button></div><span id="yip-moods-saved-msg" style="display:none">Saved</span></div>
+      <div id="yip-detail-moods-section" style="display:none"><label>Mood</label><div id="yip-moods-selector"></div></div>
+      <div class="yip-detail-actions">
+        <button id="yip-detail-save-btn">Save</button>
+        <button id="yip-detail-cancel-btn">Cancel</button>
+        <span id="yip-detail-saved-msg" style="display:none"></span>
+      </div>
     `;
     const data = { time: 1000, tempMax: 25 };
     openYIPDetail(data, '1 Jan 2026', 'TestCity');

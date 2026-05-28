@@ -1376,7 +1376,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.10.0f</span>
+              <span id="app-version-label">v1.10.1</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1668,22 +1668,17 @@
         <div id="yip-detail-notes-section" class="yip-notes-section" style="display:none">
             <label for="yip-detail-notes-input" data-i18n="config.yipNotesLabel">Personal notes</label>
             <textarea id="yip-detail-notes-input" class="yip-notes-textarea" rows="3" maxlength="500" data-i18n-placeholder="config.yipNotesPlaceholder"></textarea>
-            <div class="yip-notes-actions">
-                <button id="yip-notes-save-btn" class="yip-notes-save-btn" data-i18n="config.yipNotesSave">Save note</button>
-                <button id="yip-notes-cancel-btn" class="yip-notes-cancel-btn" data-i18n="config.yipNotesCancel">Cancel</button>
-            </div>
-            <span id="yip-notes-saved-msg" class="yip-notes-saved-msg" style="display:none" data-i18n="config.yipNotesSaved">Note saved</span>
         </div>
         <div id="yip-detail-moods-section" class="yip-moods-section" style="display:none">
             <label data-i18n="config.yipMoodsLabel">Mood</label>
             <div id="yip-moods-selector" class="yip-moods-selector">
                 <!-- Mood buttons generated dynamically -->
             </div>
-            <div class="yip-moods-actions">
-                <button id="yip-moods-save-btn" class="yip-moods-save-btn" data-i18n="config.yipMoodsSave">Save mood</button>
-                <button id="yip-moods-cancel-btn" class="yip-moods-cancel-btn" data-i18n="config.cancel">Cancel</button>
-            </div>
-            <span id="yip-moods-saved-msg" class="yip-moods-saved-msg" style="display:none" data-i18n="config.yipMoodsSaved">Mood saved!</span>
+        </div>
+        <div class="yip-detail-actions">
+            <button id="yip-detail-save-btn" class="yip-save-btn" data-i18n="config.yipSaveAll">Save</button>
+            <button id="yip-detail-cancel-btn" class="yip-cancel-btn" data-i18n="config.cancel">Cancel</button>
+            <span id="yip-detail-saved-msg" class="yip-saved-feedback" style="display:none" data-i18n="config.yipSavedAll">✓ Saved</span>
         </div>
     </div>
 

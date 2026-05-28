@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.10.1",
+    "changes": [
+      "Unified save/cancel in YIP detail sheet: replaced separate save/cancel for notes and moods with a single save/cancel footer. Added saveDayDetail() that persists both in parallel and auto-closes after 1s with '✓ Saved' feedback. Cleaner UX with fewer taps. All 370 unit tests + 13 E2E tests pass."
+    ]
+  },
+  {
     "version": "1.10.0f",
     "changes": [
       "YIP grid: added day-of-week column headers (LUN/MAR/MIÉ/JUE/VIE/SÁB/DOM) above each month block and day number (1-31) centered at the top of each cell. Headers use i18n `days.short` keys aligned to Monday-start. Day number uses small font (8px) with `text-shadow` for readability over colored backgrounds. Zero functional regression."

@@ -23,6 +23,7 @@ const MOOD_EMOJI_MAP = {
 let selectedLocation = null;
 let selectedParam = 'maxTemp';
 let _closeSheet = null;
+let _closeDetailSheet = null;
 
 let _yipScrollInit = false;
 
@@ -399,41 +400,17 @@ function openYIPDetail(data, dateStr, locationName) {
 
     const notesSection = document.getElementById('yip-detail-notes-section');
     const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
-    const saveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-notes-save-btn'));
-    const cancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-notes-cancel-btn'));
-    const savedMsg = document.getElementById('yip-notes-saved-msg');
     const loc = locationName || selectedLocation;
 
     if (notesSection) notesSection.style.display = 'block';
     if (notesInput) notesInput.value = data.notes || '';
-    if (savedMsg) savedMsg.style.display = 'none';
-
-    if (saveBtn) {
-        saveBtn.textContent = t('config.yipNotesSave', 'Save note');
-        const newSave = /** @type {HTMLElement} */ (saveBtn.cloneNode(true));
-        saveBtn.parentNode.replaceChild(newSave, saveBtn);
-        newSave.onclick = () => saveDayNote(data, loc);
-    }
-    if (cancelBtn) {
-        cancelBtn.textContent = t('config.yipNotesCancel', 'Cancel');
-        const newCancel = /** @type {HTMLElement} */ (cancelBtn.cloneNode(true));
-        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-        newCancel.onclick = () => {
-            if (notesInput) notesInput.value = data.notes || '';
-            if (savedMsg) savedMsg.style.display = 'none';
-        };
-    }
     if (notesInput) notesInput.placeholder = t('config.yipNotesPlaceholder', 'Write your notes...');
 
     const moodsSection = document.getElementById('yip-detail-moods-section');
     const moodsSelector = document.getElementById('yip-moods-selector');
-    const moodsSaveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-moods-save-btn'));
-    const moodsCancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-moods-cancel-btn'));
-    const moodsSavedMsg = document.getElementById('yip-moods-saved-msg');
     const existingMoods = data.moods || [];
 
     if (moodsSection) moodsSection.style.display = 'block';
-    if (moodsSavedMsg) moodsSavedMsg.style.display = 'none';
 
     if (moodsSelector) {
         moodsSelector.innerHTML = '';
@@ -448,27 +425,6 @@ function openYIPDetail(data, dateStr, locationName) {
             });
             moodsSelector.appendChild(btn);
         });
-    }
-
-    if (moodsSaveBtn) {
-        moodsSaveBtn.textContent = t('config.yipMoodsSave', 'Save mood');
-        const newMoodsSave = /** @type {HTMLElement} */ (moodsSaveBtn.cloneNode(true));
-        moodsSaveBtn.parentNode.replaceChild(newMoodsSave, moodsSaveBtn);
-        newMoodsSave.onclick = () => saveDayMoods(data, loc);
-    }
-    if (moodsCancelBtn) {
-        moodsCancelBtn.textContent = t('config.cancel', 'Cancel');
-        const newMoodsCancel = /** @type {HTMLElement} */ (moodsCancelBtn.cloneNode(true));
-        moodsCancelBtn.parentNode.replaceChild(newMoodsCancel, moodsCancelBtn);
-        newMoodsCancel.onclick = () => {
-            if (moodsSelector) {
-                moodsSelector.querySelectorAll('.yip-mood-btn').forEach((btn) => {
-                    const b = /** @type {HTMLElement} */ (btn);
-                    b.classList.toggle('active', existingMoods.includes(b.dataset.mood));
-                });
-            }
-            if (moodsSavedMsg) moodsSavedMsg.style.display = 'none';
-        };
     }
 
     const details = data.pollenDetails || {};
@@ -507,7 +463,27 @@ function openYIPDetail(data, dateStr, locationName) {
     `;
     document.getElementById('yip-detail-metrics').innerHTML = metricsHtml;
 
-    if (window.openBottomSheet) window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
+    if (window.openBottomSheet) {
+        _closeDetailSheet = window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop');
+    }
+
+    const saveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-save-btn'));
+    const cancelBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-cancel-btn'));
+    const savedMsg = document.getElementById('yip-detail-saved-msg');
+    if (savedMsg) savedMsg.style.display = 'none';
+
+    if (saveBtn) {
+        const newSave = /** @type {HTMLElement} */ (saveBtn.cloneNode(true));
+        saveBtn.parentNode.replaceChild(newSave, saveBtn);
+        newSave.onclick = () => saveDayDetail(data, loc);
+    }
+    if (cancelBtn) {
+        const newCancel = /** @type {HTMLElement} */ (cancelBtn.cloneNode(true));
+        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+        newCancel.onclick = () => {
+            if (_closeDetailSheet) _closeDetailSheet();
+        };
+    }
 }
 
 async function saveDayNote(data, locationName) {
@@ -554,6 +530,44 @@ async function saveDayMoods(data, locationName) {
             if (moodsSavedMsg) moodsSavedMsg.style.display = 'none';
         }, 2000);
     }
+}
+
+async function saveDayDetail(data, locationName) {
+    const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
+    const moodsSelector = document.getElementById('yip-moods-selector');
+    const savedMsg = document.getElementById('yip-detail-saved-msg');
+    const loc = locationName || selectedLocation;
+
+    const noteValue = notesInput ? notesInput.value : '';
+
+    const selectedMoods = [];
+    if (moodsSelector) {
+        moodsSelector.querySelectorAll('.yip-mood-btn.active').forEach((btn) => {
+            const b = /** @type {HTMLElement} */ (btn);
+            selectedMoods.push(b.dataset.mood);
+        });
+    }
+
+    const [notesOk, moodsOk] = await Promise.all([
+        storageService.updateDayNotes(loc, data.time, noteValue),
+        storageService.updateDayMoods(loc, data.time, selectedMoods)
+    ]);
+
+    if (notesOk) {
+        data.notes = noteValue || undefined;
+    }
+    if (moodsOk) {
+        data.moods = selectedMoods.length > 0 ? selectedMoods : undefined;
+    }
+
+    if (savedMsg) {
+        savedMsg.textContent = t('config.yipSavedAll', '✓ Saved');
+        savedMsg.style.display = 'inline';
+    }
+
+    setTimeout(() => {
+        if (_closeDetailSheet) _closeDetailSheet();
+    }, 1000);
 }
 
 function getColorForParam(param, value) {
@@ -725,7 +739,7 @@ function updateYipScrollUI() {
     dotsContainer.innerHTML = html;
 }
 
-export { renderYIPGrid, saveDayNote, saveDayMoods, openYIPDetail, updateYipScrollUI };
+export { renderYIPGrid, saveDayNote, saveDayMoods, saveDayDetail, openYIPDetail, updateYipScrollUI };
 
 async function showConfirm(title, message) {
     return new Promise((resolve) => {

@@ -1,169 +1,245 @@
 # Spec: `src/ui/YearInPixels.js`
 
 ## Propósito
-Visualización anual tipo "Year in Pixels" con grid mensual de datos históricos: temperatura, precipitación, viento, AQI, polen, estado de ánimo.
+Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos históricos meteorológicos y de estado de ánimo, con detalle por día, edición de notas y moods.
 
 ## Dependencias
 
-### state
-| Propiedad | Acceso | Contexto |
-|-----------|--------|----------|
-| `state.theme` | read | no usado directamente |
+### DOM (elementos HTML esperados)
+| Elemento | Tipo de acceso | Contexto |
+|----------|---------------|----------|
+| `#year-in-pixels-btn` | getElementById + click | initYearInPixels |
+| `#yip-modal` | getElementById + style.display | initYearInPixels, close |
+| `#close-yip-modal-btn` | getElementById + click | initYearInPixels |
+| `#yip-location-chips` | getElementById | initYearInPixels, initYipLocationScroll, updateYipScrollUI |
+| `#yip-param-display` | getElementById + click | initYearInPixels, populateParamSheet |
+| `#yip-delete-loc-btn` | getElementById + click | initYearInPixels |
+| `#yip-grid-container` | getElementById | renderYIPGrid |
+| `#yip-legend` | getElementById | renderYIPGrid, renderLegend |
+| `#yip-param-sheet` | getElementById | populateParamSheet |
+| `#yip-detail-date` | getElementById textContent | openYIPDetail |
+| `#yip-detail-desc` | getElementById textContent | openYIPDetail |
+| `#yip-detail-metrics` | getElementById innerHTML | openYIPDetail |
+| `#yip-detail-notes-section` | getElementById style.display | openYIPDetail |
+| `#yip-detail-notes-input` | getElementById value | openYIPDetail, saveDayNote, saveDayDetail |
+| `#yip-detail-save-btn` | getElementById clone + onclick | openYIPDetail |
+| `#yip-detail-cancel-btn` | getElementById clone + onclick | openYIPDetail |
+| `#yip-detail-saved-msg` | getElementById style.display | openYIPDetail, saveDayDetail |
+| `#yip-detail-moods-section` | getElementById style.display | openYIPDetail |
+| `#yip-moods-selector` | getElementById innerHTML | openYIPDetail, saveDayMoods, saveDayDetail |
+| `#yip-detail-sheet` | openBottomSheet | openYIPDetail |
+| `#yip-sheet-backdrop` | openBottomSheet | openYIPDetail |
+| `#yip-location-dots` | getElementById innerHTML | updateYipScrollUI |
+| `#confirm-title` | getElementById textContent | showConfirm |
+| `#confirm-message` | getElementById textContent | showConfirm |
+| `#confirm-cancel-btn` | getElementById clone + onclick | showConfirm |
+| `#confirm-ok-btn` | getElementById clone + onclick | showConfirm |
+| `#confirm-modal` | openBottomSheet | showConfirm |
+| `#confirm-sheet-backdrop` | openBottomSheet | showConfirm |
+| `.yip-chip` | querySelectorAll | loadLocationData, updateYipScrollUI |
+| `.yip-day-cell` | createElement | renderYIPGrid |
+| `.yip-month-block` | createElement | renderYIPGrid |
 
 ### Módulos internos
 | Módulo | Export usado | Para qué |
 |--------|-------------|----------|
-| `../services/StorageService.js` | `storageService` | historial, persistir estados de ánimo (`updateDayMoods`) |
-| `../theme.js` | `getThemeColor` | colores |
-| `../utils/i18n.js` | `t` | traducción |
-| `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | polen |
+| `../services/StorageService.js` | `storageService` | getHistory, updateDayNotes, updateDayMoods, init, db, historyStoreName |
+| `../utils/i18n.js` | `t` | Traducción de textos |
+| `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | Niveles de polen |
+
+### Variables globales de módulo (no `state`)
+| Variable | Tipo | Inicial | Uso |
+|----------|------|---------|-----|
+| `cachedHistory` | `object\|null` | `null` | Almacena history cargada para re-render al cambiar param |
+| `selectedLocation` | `string\|null` | `null` | Ubicación activa seleccionada entre chips |
+| `selectedParam` | `string` | `'maxTemp'` | Parámetro activo (maxTemp, minTemp, precip, windMax, gustMax, aqi, pollen, pollen_*, mood) |
+| `_closeSheet` | `function\|undefined` | `undefined` | Callback para cerrar el param sheet |
+| `_closeDetailSheet` | `function\|undefined` | `undefined` | Callback para cerrar el detail sheet |
+| `_yipScrollInit` | `boolean` | `false` | Flag para inicializar scroll de chips una sola vez |
+| `_yipScrollListenersAttached` | `boolean` | `false` | Flag para evitar duplicar listeners de scroll |
 
 ### Constantes internas
 | Constante | Valor | Contexto |
 |-----------|-------|----------|
-| `MOODS` | Array de 6 objetos `{ id, emoji, labelKey, color }` | `saveDayMoods`, `renderYIPGrid`, `openYIPDetail` |
-| `MOOD_EMOJI_MAP` | Mapa de `id → emoji` | `renderYIPGrid` (icono en celda) |
+| `MOODS` | Array de 6 objetos `{ id, emoji, labelKey, color }` | saveDayMoods, renderYIPGrid, openYIPDetail, getColorForParam, renderLegend |
+| `MOOD_EMOJI_MAP` | Mapa de `id → emoji` | renderYIPGrid (icono emoji en celda) |
 
 ## API Pública
 
 ### `export function initYearInPixels(): void`
 
-**Descripción:** Inicializa el modal Year in Pixels.
+**Descripción:** Inicializa el modal Year in Pixels. Busca elementos DOM, registra event listeners para abrir modal desde `#year-in-pixels-btn`, cerrar desde `#close-yip-modal-btn` y click fuera del modal, borrar ubicación desde `#yip-delete-loc-btn`, y abrir selector de parámetro desde `#yip-param-display`. Al abrir modal, lista ubicaciones guardadas en IndexedDB como chips y carga datos de la primera/activa.
+
+**Metadatos:**
+- Mutates state: No (usa variables de módulo: `selectedLocation`, `_closeSheet`, `_yipScrollInit`)
+- Async: No
+
+### `export function renderYIPGrid(history: object|null, param: string): void`
+
+**Descripción:** Renderiza el grid anual (12 meses × 31 días) en `#yip-grid-container`. Asigna color a cada celda según el valor del parámetro. Muestra iconos de nota y mood si existen. Si no hay history, muestra mensaje "sin historial".
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
-| — | — | Sin parámetros |
+| `history` | `object\|null` | Objeto con array `daily[]` de datos históricos |
+| `param` | `string` | Identificador del parámetro a visualizar |
 
 **Metadatos:**
-- Mutates state: Sí (registra event listeners, modifica DOM)
+- Mutates state: No (modifica DOM directamente)
 - Async: No
 
-### Funciones privadas
-- `loadLocationData(locationName)` — carga historial y renderiza
-- `populateParamSheet()` — sheet selector de parámetro
-- `renderYIPGrid(history, param)` — renderiza grid anual
-- `openYIPDetail(data, dateStr, locationName?)` — detalle de día (tercer parámetro opcional, defaults a `selectedLocation`)
-- `saveDayNote(data, locationName)` — guarda nota del día vía `storageService.updateDayNotes`
-- `saveDayMoods(data, locationName)` — guarda estados de ánimo del día vía `storageService.updateDayMoods`
-- `getColorForParam(param, value)` — color según valor
-- `renderLegend(param, legendContainer)` — leyenda de colores
-- `updateYipScrollUI()` — renderiza dots de paginación 1:1 con chips de ubicación
-- `initYipLocationScroll()` — registra listeners de scroll, resize y MutationObserver para `updateYipScrollUI`
-- `showConfirm(title, message)` — confirm dialog
+### `export function saveDayNote(data: object, locationName: string): Promise<void>`
+
+**Descripción:** Lee `#yip-detail-notes-input`, llama `storageService.updateDayNotes(locationName, data.time, value)`. Si éxito, actualiza `data.notes` y muestra mensaje "guardado".
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `data` | `object` | Objeto del día (`data.time` usado como key) |
+| `locationName` | `string` | Nombre de la ubicación |
+
+**Metadatos:**
+- Mutates state: No (modifica DOM + objeto data en memoria)
+- Async: Sí (await storageService.updateDayNotes)
+
+### `export function saveDayMoods(data: object, locationName: string): Promise<void>`
+
+**Descripción:** Lee moods activos del DOM (`#yip-moods-selector .yip-mood-btn.active`), construye array de mood ids, llama `storageService.updateDayMoods(loc, data.time, selectedMoods)`. Si éxito, actualiza `data.moods` y muestra mensaje.
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `data` | `object` | Objeto del día |
+| `locationName` | `string` | Nombre de la ubicación |
+
+**Metadatos:**
+- Mutates state: No (modifica DOM + objeto data en memoria)
+- Async: Sí (await storageService.updateDayMoods)
+
+### `export function saveDayDetail(data: object, locationName: string): Promise<void>`
+
+**Descripción:** Función unificada que lee el textarea de notas (`#yip-detail-notes-input`) y los moods activos (`#yip-moods-selector .yip-mood-btn.active`), persiste ambos vía `storageService.updateDayNotes` + `storageService.updateDayMoods` en paralelo, muestra feedback "✓ Guardado" en `#yip-detail-saved-msg`, y cierra el detail sheet tras 1 segundo.
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `data` | `object` | Objeto del día (`data.time` usado como key) |
+| `locationName` | `string` | Nombre de la ubicación |
+
+**Metadatos:**
+- Mutates state: No (modifica DOM + objeto data en memoria + cierra sheet)
+- Async: Sí (await storageService.updateDayNotes + updateDayMoods)
+
+### `export function openYIPDetail(data: object, dateStr: string, locationName?: string): void`
+
+**Descripción:** Abre detail sheet para un día específico. Puebla fecha, descripción (temp max/min), métricas (precip, wind, AQI, polen), sección de notas (textarea), y selector de moods (multi-select toggle). Enlaza botón "Guardar" → `saveDayDetail` y "Cancelar" → cierre inmediato del sheet. Usa `window.openBottomSheet` para mostrar `#yip-detail-sheet`. Clona botones para eliminar listeners previos. Guarda `_closeDetailSheet` del `openBottomSheet` para cierre programático.
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `data` | `object` | Objeto del día con tempMax, tempMin, precipTotal, windMax, gustMax, aqi, pollenDetails, notes, moods |
+| `dateStr` | `string` | Fecha formateada (ej. "15 Enero 2026") |
+| `locationName?` | `string` | Opcional. Defaults a `selectedLocation` |
+
+**Metadatos:**
+- Mutates state: No (modifica DOM, llama window.openBottomSheet)
+- Async: No
+
+### `export function updateYipScrollUI(): void`
+
+**Descripción:** Actualiza `#yip-location-dots` con dots de paginación 1:1 con los chips de ubicación. El dot activo corresponde al chip más cercano al centro del viewport del contenedor. Solo muestra dots si hay overflow (scrollWidth > clientWidth).
+
+**Metadatos:**
+- Mutates state: No (modifica DOM)
+- Async: No
 
 ## Comportamiento
 
-1. Botón `#year-in-pixels-btn` abre modal con chips de ubicaciones guardadas
-2. Grid 12×31 con colores por parámetro (temp, precip, wind, AQI, polen, mood)
-3. Click en celda → detail sheet con métricas del día
-4. Param sheet con categorías agrupadas (incluye categoría "Estado de Ánimo" con parámetro `mood`)
-5. Delete location y delete month data con confirmación
-6. **Paginación por dots en chips de ubicación (`updateYipScrollUI`):**
-   - Los dots se renderizan **1:1 con el número de chips `.yip-chip`** dentro de `#yip-location-chips`
-   - Cada dot representa UNA ubicación guardada, no una página de scroll
-   - El dot activo corresponde al chip más cercano al centro del viewport del contenedor (determinado vía `getBoundingClientRect`)
-   - Los dots se muestran **solo si hay overflow** (scrollWidth > clientWidth). Si no hay overflow, los dots se ocultan.
-   - Se actualizan en evento `scroll` del contenedor, `resize` de ventana, y mediante `MutationObserver` en `#yip-location-chips`
-7. **Parámetro `mood`**: cuando `param === 'mood'`, las celdas se colorean con el color del primer mood del día (o gris si no hay moods). La leyenda muestra los 6 colores de mood.
-8. **Icono de mood en celda**: si `data.moods?.length > 0`, la celda muestra el emoji del primer mood como icono (similar al icono `sticky_note_2` para notas). Si hay tanto moods como notas, se muestran ambos iconos.
-9. **Detail sheet — selector de moods**:
-   - Layout: **Grid 2 columnas** (`grid-template-columns: 1fr 1fr`) con gap de 8px
-   - Cada botón `.yip-mood-btn`:
-     - Tiene estilo de píldora: `border-radius: 10px`, padding `10px 12px`, border `1.5px solid var(--grid-color)`
-     - JS le asigna `style.setProperty('--mood-color', mood.color)` con su color único
-     - Contiene: `emoji + texto + <span class="yip-mood-check material-symbols-outlined">check</span>`
-   - Estado **`.active`**:
-     - `background: var(--mood-color)`
-     - `color: #fff`
-     - `border-color: var(--mood-color)`
-     - El icono check aparece (`opacity: 1`), alineado a la derecha con `margin-left: auto`
-   - Botones de acción: `.yip-moods-save-btn` y `.yip-moods-cancel-btn` con estilo similar a la sección de notas
-   - Funcionalidad: multi-select toggle (clic marca/desmarca), Botón "Guardar" persiste vía `saveDayMoods`
-10. `saveDayMoods`: lee los moods seleccionados del DOM, construye array de mood ids activos, llama `storageService.updateDayMoods(locationName, data.time, moods)`. Si éxito, actualiza `data.moods` en memoria y muestra mensaje "guardado". Modalidad multi-select (pueden seleccionarse varios moods para un mismo día).
-11. **Cabeceras de día de la semana**: cada `.yip-month-block` contiene una fila `.yip-month-day-headers` con 7 celdas `.yip-month-day-header` usando los nombres cortos de `days.short` reordenados a start Monday (índices `[1,2,3,4,5,6,0]`). La fila usa el mismo grid de 7 columnas que `.yip-month-grid` para alineación perfecta. Las cabeceras son visualmente sutiles: font-size pequeño (~0.65rem), color `var(--text-secondary)`, sin interacción (pointer-events: none).
-12. **Número de día en cada celda**: cada `.yip-day-cell` contiene un `<span class="yip-day-number">` con el número de día (1-31), posicionado de forma absoluta centrado en la parte superior de la celda. Propiedades: font-size 8px, color `var(--text-secondary)`, `text-shadow` para legibilidad sobre fondos coloreados, `pointer-events: none`. Visible en todos los estados: future, past con datos, past sin datos. No solapa con icono de nota (top-right) ni con futuros dots (bottom).
+1. **Inicialización**: `initYearInPixels` es idempotente — si `#year-in-pixels-btn` no existe, retorna sin error
+2. **Apertura de modal**: Al hacer click en `#year-in-pixels-btn`, obtiene todas las keys de IndexedDB, renderiza chips de ubicación, y carga datos de la primera ubicación (o la seleccionada previamente)
+3. **Selección de ubicación**: Click en chip → selecciona ubicación, carga su history, re-renderiza grid
+4. **Grid mensual**: 12 bloques `.yip-month-block`, cada uno con cabeceras de día (Monday-start), celdas `.yip-day-cell` con color según valor del parámetro, número de día visible, y iconos de nota/mood si existen
+5. **Color por parámetro**: `getColorForParam` asigna colores según rangos definidos para cada tipo de parámetro (temp, precip, wind, AQI, pollen, mood)
+6. **Celdas future**: días posteriores al actual tienen clase `future` (opacidad reducida), sin color ni click
+7. **Click en celda**: abre detail sheet con métricas del día, notas editables, y selector multi-mood
+8. **Selector de parámetro**: `populateParamSheet` renderiza bottom sheet con categorías agrupadas (temp, precip, wind, AQI, pollen, mood). Al seleccionar, actualiza `selectedParam`, re-renderiza grid y cierra sheet
+9. **Borrar ubicación**: `#yip-delete-loc-btn` con confirmación → elimina key completa de IndexedDB
+10. **Borrar datos de mes**: botón delete en cada mes → filtra daily/hourly del mes y persiste
+11. **Paginación por dots (`updateYipScrollUI`)**: dots 1:1 con chips, dot activo = chip más visible cerca del centro, oculto si no hay overflow, actualizado en scroll/resize/MutationObserver
+12. **Detail sheet — notas**: textarea editable. Sin botón individual — la nota se guarda junto con los moods mediante el botón unificado
+13. **Detail sheet — moods**: grid 2 columnas de botones tipo píldora con multi-select toggle. Sin botón individual — se guarda junto con la nota
+14. **Detail sheet — guardar unificado**: botón "Guardar" clonado en `openYIPDetail` → llama `saveDayDetail`, que persiste nota + moods en paralelo vía `storageService.updateDayNotes` + `updateDayMoods`, muestra feedback "✓ Guardado" en `#yip-detail-saved-msg`, y cierra el sheet automáticamente tras 1 segundo
+15. **Detail sheet — cancelar unificado**: botón "Cancelar" clonado en `openYIPDetail` → cierra el sheet inmediatamente sin persistir cambios (usa `_closeDetailSheet`)
+16. **Confirmaciones**: `showConfirm` usa `window.openBottomSheet` para mostrar modal de confirmación, clonando botones OK/Cancel para eliminar listeners previos
 
 ## Casos borde
 
 | Entrada | Comportamiento esperado |
 |---------|------------------------|
-| `#year-in-pixels-btn` no existe | `initYearInPixels` no lanza error, no registra listener |
-| `storageService` sin historial | Muestra mensaje "sin historial" |
-| `history` vacío para ubicación | Grid sin celdas, no lanza error |
-| Parámetro inválido en `getColorForParam` | Retorna color por defecto (gris) |
-| Valor `null`/`undefined` en `getColorForParam` | Trata como 0 |
-| `showConfirm` con cancelación | No ejecuta acción destructiva |
-| Múltiples ubicaciones sin datos | Chips visibles pero grid vacío para cada una |
-| `openYIPDetail` con `data.notes` no vacío | Textarea se puebla con el contenido de `data.notes` |
-| `openYIPDetail` sin `data.notes` | Textarea vacío |
-| `saveDayNote` con texto | Llama `storageService.updateDayNotes`, muestra mensaje "guardado" |
-| `saveDayNote` con texto vacío | Llama `updateDayNotes` con string vacío (borra la key `notes`) |
-| Celda con `data.notes` existente | La celda tiene clase `has-notes` e icono `sticky_note_2` en esquina superior derecha |
-| Celda sin `data.notes` | Sin icono, sin clase `has-notes` |
-| Celda con `data.moods` no vacío | La celda muestra el emoji del primer mood como icono |
-| Celda sin `data.moods` | Sin icono de mood |
-| Celda con `data.moods` y `data.notes` | Ambos iconos visibles (mood emoji + sticky_note_2) |
-| `param === 'mood'` con `data.moods` existente | Celda coloreada con el color del primer mood |
-| `param === 'mood'` con `data.moods` vacío/ausente | Celda gris (color por defecto) |
-| `param === 'mood'` con `data.moods` multi-select | Solo el primer mood determina el color de celda |
-| `saveDayMoods` con un mood seleccionado | Persiste array con un elemento, mensaje confirmación |
-| `saveDayMoods` con ningún mood seleccionado | Persiste array vacío (elimina key moods) |
-| `saveDayMoods` sin datos del día | No persiste, retorna sin cambios |
-| Detail sheet mood toggles | Cada toggle es independiente, multi-select permitido |
-| Cabeceras de día renderizadas | Cada `.yip-month-block` tiene `.yip-month-day-headers` con 7 hijos `.yip-month-day-header` |
-| Alineación cabeceras-grid | `.yip-month-day-headers` usa mismo `grid-template-columns: repeat(7, 1fr)` que `.yip-month-grid` |
-| Reordenamiento días | `days.short` se recorren como `[1,2,3,4,5,6,0]` para start Monday |
-| Day number en celda | Cada `.yip-day-cell` contiene un `.yip-day-number` con el número de día (ej. `15`) |
-| Day number en celda future | Visible a pesar de `opacity: 0.3` de la celda (el número no hereda opacidad reducida) |
-| Day number en celda sin datos | Visible con `var(--text-secondary)` sobre `var(--card-bg)` |
-| Day number + nota coexistiendo | `.yip-day-number` (top-center) y `.yip-note-icon` (top-right) no solapan |
-| Day number en desktop 4-column | Las cabeceras y números aparecen en cada bloque mensual, no se pierden al cambiar a grid 4 columnas |
+| `#year-in-pixels-btn` no existe | `initYearInPixels` retorna sin error, no registra listeners |
+| `#yip-modal` no existe | `initYearInPixels` retorna sin error |
+| `history` es `null` o `history.daily` vacío | Muestra mensaje "Sin historial para mostrar" |
+| `history.daily` tiene datos de año anterior | Se filtran (solo año actual se renderiza) |
+| Parámetro inválido en `getColorForParam` | Retorna `var(--grid-color)` |
+| Valor `null`/`undefined` en `getColorForParam` | Se evalúa en condicionales (tratado como 0 o falsy) |
+| `param === 'mood'` sin moods en el día | Celda gris (`var(--grid-color)`) |
+| `param === 'mood'` con moods multi-select | Solo el primer mood determina color de celda |
+| `data.notes` undefined/null | Textarea vacío, sin icono en celda |
+| `data.moods` undefined/null | Sin icono emoji en celda |
+| `saveDayNote` con texto vacío | `storageService.updateDayNotes` llamado con string vacío |
+| `saveDayMoods` sin moods seleccionados | Array vacío persistido (elimina key moods) |
+| `openYIPDetail` con `data` null/undefined | Retorna sin hacer nada |
+| `populateParamSheet` sin `#yip-param-sheet` en DOM | Retorna sin hacer nada |
+| `updateYipScrollUI` sin `#yip-location-chips` o `#yip-location-dots` | Retorna sin hacer nada |
+| `updateYipScrollUI` con 0 chips | dotsContainer se vacía |
+| `updateYipScrollUI` sin overflow (scrollWidth <= clientWidth) | dotsContainer se vacía |
+| `showConfirm` cancelado | Resuelve `false`, no ejecuta acción destructiva |
+| `storageService.init()` falla | Error no capturado (propaga) |
+| `storageService.getHistory(locationName)` retorna null | `cachedHistory = null`, renderYIPGrid muestra "sin historial" |
+| Botón save/cancel clickeado múltiples veces | Clonación de nodos elimina listeners previos, evitando duplicados |
+| `saveDayDetail` con textarea vacío y sin moods | Persiste texto vacío con updateDayNotes y array vacío con updateDayMoods |
+| `saveDayDetail` con `#yip-detail-save-btn` o `#yip-detail-cancel-btn` ausentes | openYIPDetail skip bindings, no lanza error |
+| `_closeDetailSheet` undefined al hacer cancel | No lanza error (if guardado) |
+| `window.openBottomSheet` no definido | Fallback: `_closeSheet = undefined` o `resolve(confirm(message))` |
 
 ## Escenarios de test
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initYearInPixels` con botón presente, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Botón `#year-in-pixels-btn` ausente, no lanza error
-3. **Exporta las funciones esperadas:** `initYearInPixels`, `saveDayMoods` son funciones exportadas
-4. **Sin historial guardado:** `storageService` vacío, muestra mensaje sin error
-5. **Parámetro inválido en color:** `getColorForParam('invalid', value)` retorna gris
-6. **Valor null/undefined en color:** Trata como 0
-7. **openYIPDetail con data.notes:** textarea poblado con el contenido de la nota
-8. **openYIPDetail sin data.notes:** textarea vacío
-9. **saveDayNote con texto:** llama storageService.updateDayNotes, nota se guarda
-10. **saveDayNote con texto vacío:** storageService.updateDayNotes llamado con string vacío
-11. **renderYIPGrid con día que tiene notes:** celda contiene clase `has-notes` e icono `sticky_note_2`
-12. **renderYIPGrid con día sin notes:** celda no tiene icono ni clase `has-notes`
-13. **renderYIPGrid con param='mood' y día con moods:** celda coloreada con el color del primer mood
-14. **renderYIPGrid con param='mood' y día sin moods:** celda gris
-15. **renderYIPGrid con día que tiene moods:** celda muestra emoji del primer mood como icono
-16. **renderYIPGrid con día que tiene moods + notes:** celda muestra ambos iconos
-17. **openYIPDetail con data.moods:** mood toggles muestran los moods activos seleccionados
-18. **openYIPDetail sin data.moods:** mood toggles todos desmarcados
-19. **saveDayMoods con moods seleccionados:** llama storageService.updateDayMoods con array de ids, data.moods actualizado en memoria
-20. **saveDayMoods sin moods seleccionados:** llama storageService.updateDayMoods con array vacío, key moods eliminada de data
-21. **Param sheet incluye categoría mood:** `populateParamSheet` renderiza opción "Estado de Ánimo" con parámetro `mood`
-22. **getColorForParam('mood', ...):** retorna color según primer mood o gris por defecto
-23. **getColorForParam('mood', null/undefined):** retorna gris
-24. **renderLegend('mood', ...):** muestra 6 entradas de color con emoji/label de cada mood
-25. **`updateYipScrollUI` con 0 chips:** dotsContainer se vacía
-26. **`updateYipScrollUI` con N chips:** renderiza exactamente N dots (uno por chip)
-27. **`updateYipScrollUI` — dot activo:** el dot del chip más cercano al centro del viewport tiene clase `active`
-28. **`updateYipScrollUI` — sin overflow:** si `scrollWidth <= clientWidth`, el dotsContainer se vacía (no se renderizan dots)
-29. **`updateYipScrollUI` — scroll cambia dot activo:** al hacer scroll, el dot activo cambia al chip más cercano al centro
-30. **Cabeceras de día renderizadas por mes:** cada `.yip-month-block` contiene `.yip-month-day-headers` con 7 elementos
-31. **Cabeceras usan `days.short` reordenado (Monday-start):** el texto de las cabeceras es `[LUN,MAR,MIÉ,JUE,VIE,SÁB,DOM]` en español / `[MON,TUE,WED,THU,FRI,SAT,SUN]` en inglés
-32. **Day number visible en celda con datos:** la celda contiene `.yip-day-number` con el número del día
-33. **Day number visible en celda future:** la celda future contiene `.yip-day-number` a pesar de `opacity: 0.3`
-34. **Day number no solapa con icono de nota:** celda con notas y day number — ambos elementos existen en el DOM
+1. **initYearInPixels sin elementos DOM**: `#year-in-pixels-btn` ausente, no lanza error
+2. **initYearInPixels con elementos DOM**: elementos presentes, registra listeners sin error
+3. **Exporta todas las funciones**: `initYearInPixels`, `renderYIPGrid`, `saveDayNote`, `saveDayMoods`, `saveDayDetail`, `openYIPDetail`, `updateYipScrollUI` son funciones
+4. **renderYIPGrid con history null**: container muestra mensaje "Sin historial"
+5. **renderYIPGrid con history.daily vacío**: container muestra mensaje "Sin historial"
+6. **renderYIPGrid con datos del año actual**: grid tiene 12 month-blocks con celdas coloreadas
+7. **renderYIPGrid celda con notas**: celda tiene clase `has-notes` e icono `sticky_note_2`
+8. **renderYIPGrid celda sin notas**: celda sin clase `has-notes`, sin icono
+9. **renderYIPGrid celda con moods**: celda tiene clase `has-mood` y emoji del primer mood
+10. **renderYIPGrid celda sin moods**: celda sin clase `has-mood`, sin emoji
+11. **renderYIPGrid param='mood' con moods**: celda coloreada con color del primer mood
+12. **renderYIPGrid param='mood' sin moods**: celda gris (color por defecto)
+13. **renderYIPGrid celda future**: celda con clase `future`, sin color, sin onclick
+14. **renderYIPGrid celda con datos**: celda tiene onclick que abre detail
+15. **getColorForParam con parámetro inválido**: retorna `var(--grid-color)`
+16. **getColorForParam con mood**: retorna color del mood o gris si no existe
+17. **openYIPDetail con data.notes**: textarea poblado con contenido de la nota
+18. **openYIPDetail sin data.notes**: textarea vacío
+19. **openYIPDetail con data.moods**: mood toggles muestran moods activos
+20. **openYIPDetail sin data.moods**: todos los mood toggles desmarcados
+21. **openYIPDetail con data null**: retorna sin error, no modifica DOM
+22. **saveDayNote con texto**: llama `storageService.updateDayNotes` con el texto, muestra mensaje
+23. **saveDayNote con texto vacío**: llama `storageService.updateDayNotes` con string vacío
+24. **saveDayMoods con moods seleccionados**: llama `storageService.updateDayMoods` con array de ids
+25. **saveDayMoods sin moods seleccionados**: llama `storageService.updateDayMoods` con array vacío
+26. **saveDayDetail con nota y moods**: llama updateDayNotes + updateDayMoods en paralelo, muestra feedback, cierra sheet tras 1s
+27. **Param sheet incluye categoría mood**: `populateParamSheet` renderiza opción mood
+28. **renderLegend para cada tipo de parámetro**: renderiza steps correctos para temp, precip, wind, AQI, pollen, mood
+29. **updateYipScrollUI con 0 chips**: dotsContainer se vacía
+30. **updateYipScrollUI con N chips sin overflow**: dotsContainer se vacía
+31. **updateYipScrollUI con N chips con overflow**: renderiza N dots
+32. **updateYipScrollUI — dot activo cambia con scroll**: dot del chip más visible tiene clase `active`
+33. **Cabeceras de día por mes**: cada month-block tiene `.yip-month-day-headers` con 7 hijos
+34. **Cabeceras orden Monday-start**: `days.short` reordenado `[1,2,3,4,5,6,0]`
+35. **Day number visible en cada celda**: toda celda `.yip-day-cell` contiene `.yip-day-number`
+36. **initYipLocationScroll**: registra scroll, resize, MutationObserver solo una vez
+37. **showConfirm resuelve true/false**: OK → true, Cancel → false
+38. **showConfirm sin window.openBottomSheet**: fallback a `confirm()`
 
 ## Historial de cambios
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
-| 2026-05-21 | Añadido `saveDayNote`, `openYIPDetail` acepta tercer parámetro | SDD |
-| 2026-05-21 | Añadido icono visual en celdas con notas (`has-notes` class + `sticky_note_2`) | SDD |
-| 2026-05-21 | Añadido parámetro `mood` al YIP: grid coloreado por mood, icono emoji en celdas, selector multi-mood en detail sheet, función `saveDayMoods` | SDD |
-| 2026-05-21 | **Rediseño visual del mood selector**: grid 2 columnas, botones tipo píldora con `--mood-color`, check icon en estado activo, fondo de color cuando `.active` | SDD |
-| 2026-05-22 | **`updateYipScrollUI` bugfix**: dots ahora 1:1 con chips (no scroll-pages), ocultos sin overflow, dot activo por mayor proporción visible (con tiebreaker por centro). Añadido listener `resize`. Tests y spec actualizados. | SDD |
-| 2026-05-27 | Añadido cabeceras de día (`.yip-month-day-headers`) y número de día (`.yip-day-number`) en cada celda del grid YIP | SDD |
+| 2026-05-27 | Spec retro — mapeo completo del código actual (sin state/theme, con variables de módulo) | SDD |

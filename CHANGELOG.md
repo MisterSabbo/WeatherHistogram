@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.10.1] - 2026-05-27
+### Enhancement
+- **Unified save/cancel in YIP detail sheet**: Replaced separate save/cancel button pairs for notes and moods with a single unified save/cancel footer in the Day Detail bottom sheet. Added `saveDayDetail()` function that persists notes and moods in parallel, auto-closes after 1s with "✓ Saved" confirmation. Removed per-section action bars and individual confirmations. Cleaner UX with fewer taps. All 370 unit tests + 13 E2E tests pass. No functional regression.
+
 ## [v1.10.0f] - 2026-05-27
 ### Enhancement
 - **YIP grid day-of-week headers + day numbers**: Added column headers (LUN/MAR/MIÉ/JUE/VIE/SÁB/DOM) above each month block using i18n `days.short` keys with Monday-start alignment. Each cell now displays its day number (1-31) centered at the top in an 8px font with `text-shadow` for readability on colored backgrounds. Zero functional regression. All 337 unit tests + 13 E2E tests pass.

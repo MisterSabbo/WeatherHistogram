@@ -100,6 +100,8 @@ export const translations = {
             yipMoodsSave: "Guardar estado",
             yipMoodsSaved: "¡Estado guardado!",
             yipMoodsParam: "Estado de Ánimo",
+            yipSaveAll: "Guardar",
+            yipSavedAll: "✓ Guardado",
             langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
         theme: {
@@ -342,6 +344,8 @@ export const translations = {
             yipMoodsSave: "Save mood",
             yipMoodsSaved: "Mood saved!",
             yipMoodsParam: "Mood",
+            yipSaveAll: "Save",
+            yipSavedAll: "✓ Saved",
             langChangeConfirm: "Change language? The application will update."
         },
         theme: {
