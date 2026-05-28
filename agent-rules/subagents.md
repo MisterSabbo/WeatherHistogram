@@ -2,6 +2,16 @@
 
 Before responding, evaluate if a subagent (`explore`, `general`, `android-web-adaptor`, `ios-pwa-reviewer`, `mobile-first-reviewer`, `pwa-auditor`, `pwa-dual-mode-verifier`, `docs-writer`, `skill-creator`) is better suited. If uncertain, ask the user.
 
+### Skill Consideration
+
+Before responding, evaluate if a skill should be loaded. Key skills for common tasks:
+
+| If the user says... | Load skill |
+|---|---|
+| New feature, enhancement, bugfix, refactor, or any change request | `feature-ticket-creator` |
+| Create or edit a skill | `writing-skills` |
+| Spec-Driven Development | `sdd-orchestrator` |
+
 ### SDD Orchestration
 
 For Spec-Driven Development tasks, use the SDD orquestrator:
