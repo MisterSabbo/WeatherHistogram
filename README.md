@@ -30,6 +30,7 @@ WeatherHist is a high-performance, mobile-first weather application that visuali
 *   **Floating Present-Time Centering:** The "Now" re-centering button floats dynamically depending on which way the horizon scroll is lost.
 *   **Offline First & Network Strategy:** Service Worker-enabled caching system that prioritizes network fetches during active connections while making static payload accessible offline.
 *   **Dynamic Theming:** Supports both light and dark modes with seamless transitions, deep contrast shadows, and refined visual weighting.
+*   **Year in Pixels:** A personal health & weather correlation dashboard. View a color-coded 12-month grid where each day cell encodes a weather metric (temperature, precipitation, wind, AQI, pollen) or a health parameter (mood, cold, allergies). Click any cell to open a detail sheet with weather metrics, personal notes, mood selectors, and cold/allergy toggles — all persisted in IndexedDB. Semantic dot indicators at the bottom of each cell always show which non-weather states are present (notes, moods, cold, allergies).
 
 ## Tech Stack
 

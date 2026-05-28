@@ -2,6 +2,11 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.11.0] - 2026-05-28
+### New Feature
+- **Cold & allergy tracking per day in YIP**: Users can now mark whether they had a cold or allergies on any given day in the Year in Pixels grid. New "Health" category in the param sheet with "Cold" (yellow) and "Allergies" (green) as selectable grid parameters. The day detail bottom sheet now includes toggle buttons for "🤧 Cold" and "🌿 Allergies", persisted via `storageService.updateDayConditions()`. The unified save also saves health conditions.
+- **Dot indicator system**: Replaced the previous individual icons (`.yip-mood-icon` emoji, `.yip-note-icon` sticky_note_2) with a consistent dot indicator system. Each cell shows up to 3 semantic 4px dots at the bottom (blue=notes `#60a5fa`, yellow=mood `#fbbf24`, red=cold `#ef4444`, green=allergies `#22c55e`). If more than 3 states exist, the first 3 dots are shown followed by an ellipsis "…". Dot colors are fixed/semantic and do not change with theme. Dots are always visible regardless of the active parameter. All 376 unit tests + 13 E2E tests pass.
+
 ## [v1.10.2] - 2026-05-28
 ### Enhancement
 - **Clickable no-data days in YIP grid**: Past days without weather data are now clickable, opening the detail sheet with "Sin datos meteorológicos" message in the metrics area. Notes and moods can still be saved. No-data cells use `.past-no-data` class (opacity 0.5, cursor pointer). StorageService.updateDayNotes/updateDayMoods now create a new history entry for days without weather data. All 376 unit tests + 13 E2E tests pass.

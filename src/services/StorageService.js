@@ -139,6 +139,54 @@ export class StorageService {
             return false;
         }
     }
+
+    async updateDayConditions(locationName, dayTimestamp, conditions) {
+        try {
+            const history = await this.getHistory(locationName);
+            let day = history.daily.find(d => d.time === dayTimestamp);
+            if (!day) {
+                day = { time: dayTimestamp };
+                history.daily.push(day);
+            }
+            if (conditions.cold) {
+                day.cold = true;
+            } else {
+                delete day.cold;
+            }
+            if (conditions.allergies) {
+                day.allergies = true;
+            } else {
+                delete day.allergies;
+            }
+            await this.setHistory(locationName, history);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async updateDayData(locationName, dayTimestamp, fields) {
+        try {
+            const history = await this.getHistory(locationName);
+            let day = history.daily.find(d => d.time === dayTimestamp);
+            if (!day) {
+                day = { time: dayTimestamp };
+                history.daily.push(day);
+            }
+            Object.keys(fields).forEach((key) => {
+                const value = fields[key];
+                if (value === undefined) {
+                    delete day[key];
+                } else {
+                    day[key] = value;
+                }
+            });
+            await this.setHistory(locationName, history);
+            return true;
+        } catch {
+            return false;
+        }
+    }
 }
 
 export const storageService = new StorageService();

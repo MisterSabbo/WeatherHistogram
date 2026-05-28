@@ -285,7 +285,7 @@ describe('YearInPixels', () => {
     expect(data.notes).toBeUndefined();
   });
 
-  it('renderYIPGrid adds has-notes class and icon when day has notes', () => {
+  it('renderYIPGrid adds dot indicators when day has notes', () => {
     document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
@@ -295,11 +295,14 @@ describe('YearInPixels', () => {
     renderYIPGrid(history, 'maxTemp');
     const cell = document.querySelector('.yip-day-cell');
     expect(cell).not.toBeNull();
-    expect(cell.classList.contains('has-notes')).toBe(true);
-    expect(cell.innerHTML).toContain('sticky_note_2');
+    const dotContainer = cell.querySelector('.yip-dot-container');
+    expect(dotContainer).not.toBeNull();
+    const dots = dotContainer.querySelectorAll('.yip-condition-dot');
+    expect(dots.length).toBe(1);
+    expect(dots[0].style.backgroundColor).toBe('rgb(96, 165, 250)');
   });
 
-  it('renderYIPGrid does not add notes icon when day has no notes', () => {
+  it('renderYIPGrid does not add dot container when day has no states', () => {
     document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
@@ -309,8 +312,7 @@ describe('YearInPixels', () => {
     renderYIPGrid(history, 'maxTemp');
     const cell = document.querySelector('.yip-day-cell');
     expect(cell).not.toBeNull();
-    expect(cell.classList.contains('has-notes')).toBe(false);
-    expect(cell.innerHTML).not.toContain('sticky_note_2');
+    expect(cell.querySelector('.yip-dot-container')).toBeNull();
   });
 
   it('renderYIPGrid with param=mood colors cell by first mood', () => {
@@ -340,7 +342,7 @@ describe('YearInPixels', () => {
     expect(cell.classList.contains('completed')).toBe(false);
   });
 
-  it('renderYIPGrid shows mood emoji icon when day has moods', () => {
+  it('renderYIPGrid shows dot indicator when day has moods', () => {
     document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
@@ -350,11 +352,14 @@ describe('YearInPixels', () => {
     renderYIPGrid(history, 'maxTemp');
     const cell = document.querySelector('.yip-day-cell');
     expect(cell).not.toBeNull();
-    expect(cell.classList.contains('has-mood')).toBe(true);
-    expect(cell.innerHTML).toContain('yip-mood-icon');
+    const dotContainer = cell.querySelector('.yip-dot-container');
+    expect(dotContainer).not.toBeNull();
+    const dots = dotContainer.querySelectorAll('.yip-condition-dot');
+    expect(dots.length).toBe(1);
+    expect(dots[0].style.backgroundColor).toBe('rgb(251, 191, 36)');
   });
 
-  it('renderYIPGrid shows both mood icon and notes icon when both exist', () => {
+  it('renderYIPGrid shows multiple dot indicators when both notes and moods exist', () => {
     document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
@@ -362,12 +367,10 @@ describe('YearInPixels', () => {
       daily: [{ time: jan1, tempMax: 20, moods: ['happy'], notes: 'my note' }]
     };
     renderYIPGrid(history, 'maxTemp');
-    const cell = document.querySelector('.yip-day-cell');
-    expect(cell).not.toBeNull();
-    expect(cell.classList.contains('has-mood')).toBe(true);
-    expect(cell.classList.contains('has-notes')).toBe(true);
-    expect(cell.innerHTML).toContain('yip-mood-icon');
-    expect(cell.innerHTML).toContain('sticky_note_2');
+    const dotContainer = document.querySelector('.yip-dot-container');
+    expect(dotContainer).not.toBeNull();
+    const dots = dotContainer.querySelectorAll('.yip-condition-dot');
+    expect(dots.length).toBe(2);
   });
 
   it('openYIPDetail shows mood toggles when data has moods', () => {

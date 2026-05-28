@@ -39,6 +39,32 @@ Sin dependencias internas.
 
 **Descripción:** Actualiza los estados de ánimo de un día específico en el historial de una ubicación. Busca la entrada diaria donde `d.time === dayTimestamp`, asigna `d.moods = moods` (o elimina la key si `moods` es un array vacío), y persiste con `setHistory`. Retorna `true` si encontró el día y actualizó, `false` si no lo encontró.
 
+### `async updateDayConditions(locationName: string, dayTimestamp: number, conditions: Object): Promise<boolean>`
+
+**Descripción:** Actualiza los estados de salud (cold/allergies) de un día específico en el historial de una ubicación. Busca la entrada diaria donde `d.time === dayTimestamp`, asigna `d.cold = conditions.cold` (booleano) y `d.allergies = conditions.allergies` (booleano), y persiste con `setHistory`. Si `conditions.cold` es `false`, elimina la key `cold`. Si `conditions.allergies` es `false`, elimina la key `allergies`. Retorna `true` si éxito, `false` si error.
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `locationName` | `string` | Nombre de la ubicación |
+| `dayTimestamp` | `number` | Timestamp del día |
+| `conditions` | `Object` | `{ cold: boolean, allergies: boolean }` |
+
+**Metadatos:**
+- Async: Sí (await setHistory)
+
+### `async updateDayData(locationName: string, dayTimestamp: number, fields: Object): Promise<boolean>`
+
+**Descripción:** Batch update — persiste múltiples campos de un día en una sola operación de lectura+escritura, evitando race conditions. Cada key en `fields` se asigna como propiedad del día; si el valor es `undefined`, se elimina la key. Crea una nueva entrada si el día no existe.
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `locationName` | `string` | Nombre de la ubicación |
+| `dayTimestamp` | `number` | Timestamp del día |
+| `fields` | `Object` | `{ notes?, moods?, cold?, allergies?, ... }` |
+
+**Metadatos:**
+- Async: Sí (await getHistory + setHistory)
+
 ### `export const storageService: StorageService` (singleton)
 
 ## Comportamiento
@@ -65,6 +91,14 @@ Sin dependencias internas.
 | `updateDayMoods` con moods vacío | Elimina la key `moods` del objeto daily |
 | `updateDayMoods` con moods array | Asigna `d.moods = moods` y persiste |
 | `updateDayMoods` con moods null/undefined | Elimina la key `moods` del objeto daily |
+| `updateDayConditions` con cold=true, allergies=false | Asigna `d.cold = true`, elimina key `allergies`, persiste |
+| `updateDayConditions` con cold=false, allergies=true | Elimina key `cold`, asigna `d.allergies = true`, persiste |
+| `updateDayConditions` con cold=false, allergies=false | Elimina keys `cold` y `allergies`, persiste |
+| `updateDayConditions` sin datos del día (day no existe) | Crea nuevo día `{ time: dayTimestamp, cold: true, allergies: true }` |
+| `updateDayConditions` con día existente | Encuentra día, actualiza condiciones, persiste |
+| `updateDayData` con múltiples fields | Asigna todos en una sola escritura, sin race condition |
+| `updateDayData` con field=undefined | Elimina esa key del objeto daily |
+| `updateDayData` día inexistente | Crea nueva entrada `{ time: dayTimestamp, ...fields }` |
 
 ## Escenarios de test
 
@@ -83,6 +117,14 @@ Sin dependencias internas.
 13. **updateDayMoods día inexistente:** retorna `false`
 14. **updateDayMoods moods vacío:** elimina key y persiste
 15. **updateDayMoods API expuesta:** storageService tiene método `updateDayMoods`
+**updateDayConditions día existente:** encuentra el día, asigna cold=true/allergies=true, persiste, retorna `true`
+**updateDayConditions día inexistente:** retorna `false`
+**updateDayConditions cold=false, allergies=false:** elimina keys y persiste
+**updateDayConditions API expuesta:** storageService tiene método `updateDayConditions`
+**updateDayData día existente:** batch update — asigna todos los fields en una sola operación, persiste, retorna `true`
+**updateDayData día inexistente:** crea nuevo día, asigna fields, persiste, retorna `true`
+**updateDayData con field=undefined:** elimina esa key del día
+**updateDayData API expuesta:** storageService tiene método `updateDayData`
 
 ## Historial de cambios
 
@@ -91,3 +133,5 @@ Sin dependencias internas.
 | 2026-05-21 | Spec inicial | SDD |
 | 2026-05-21 | Añadido `updateDayNotes` para notas personales YIP | SDD |
 | 2026-05-21 | Añadido `updateDayMoods` para estados de ánimo YIP | SDD |
+| 2026-05-28 | Añadido `updateDayConditions` para cold/allergies tracking YIP | SDD |
+| 2026-05-28 | Añadido `updateDayData` batch method para evitar race conditions en saveDayDetail | SDD |

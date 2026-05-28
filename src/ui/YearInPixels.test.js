@@ -5,6 +5,7 @@ const mockStorageService = {
   getHistory: vi.fn(),
   updateDayNotes: vi.fn(),
   updateDayMoods: vi.fn(),
+  updateDayData: vi.fn(),
   db: null,
   historyStoreName: 'weatherHistory'
 }
@@ -185,7 +186,7 @@ describe('YearInPixels', () => {
       expect(blocks.length).toBe(12)
     })
 
-    it('celda con notas tiene clase has-notes e icono', () => {
+    it('celda con notas tiene dot indicator azul', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -197,12 +198,14 @@ describe('YearInPixels', () => {
       }
       YIP.renderYIPGrid(mockData, 'maxTemp')
       const cells = document.querySelectorAll('.yip-day-cell')
-      const cellWithNotes = Array.from(cells).find(c => c.classList.contains('has-notes'))
-      expect(cellWithNotes).toBeTruthy()
-      expect(cellWithNotes.innerHTML).toContain('sticky_note_2')
+      const cellWithDots = Array.from(cells).find(c => c.querySelector('.yip-dot-container'))
+      expect(cellWithDots).toBeTruthy()
+      const dots = cellWithDots.querySelectorAll('.yip-condition-dot')
+      expect(dots.length).toBe(1)
+      expect(dots[0].style.backgroundColor).toBe('rgb(96, 165, 250)')
     })
 
-    it('celda sin notas no tiene clase has-notes', () => {
+    it('celda sin notas no tiene dot container', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -213,10 +216,10 @@ describe('YearInPixels', () => {
       }
       YIP.renderYIPGrid(mockData, 'maxTemp')
       const cell = document.querySelector('.yip-day-cell.completed')
-      expect(cell.classList.contains('has-notes')).toBe(false)
+      expect(cell.querySelector('.yip-dot-container')).toBeNull()
     })
 
-    it('celda con moods tiene clase has-mood y emoji', () => {
+    it('celda con moods tiene dot indicator amarillo', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -227,12 +230,14 @@ describe('YearInPixels', () => {
         }]
       }
       YIP.renderYIPGrid(mockData, 'maxTemp')
-      const cell = document.querySelector('.yip-day-cell.has-mood')
-      expect(cell).toBeTruthy()
-      expect(cell.innerHTML).toContain('😊')
+      const dotContainer = document.querySelector('.yip-dot-container')
+      expect(dotContainer).toBeTruthy()
+      const dots = dotContainer.querySelectorAll('.yip-condition-dot')
+      expect(dots.length).toBe(1)
+      expect(dots[0].style.backgroundColor).toBe('rgb(251, 191, 36)')
     })
 
-    it('celda sin moods no tiene clase has-mood', () => {
+    it('celda sin moods no tiene dot container', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -243,7 +248,7 @@ describe('YearInPixels', () => {
       }
       YIP.renderYIPGrid(mockData, 'maxTemp')
       const cell = document.querySelector('.yip-day-cell.completed')
-      expect(cell.classList.contains('has-mood')).toBe(false)
+      expect(cell.querySelector('.yip-dot-container')).toBeNull()
     })
 
     it('celda con param=mood se colorea con color del primer mood', () => {

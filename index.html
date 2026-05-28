@@ -1376,7 +1376,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.10.2</span>
+              <span id="app-version-label">v1.11.0</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1673,6 +1673,19 @@
             <label data-i18n="config.yipMoodsLabel">Mood</label>
             <div id="yip-moods-selector" class="yip-moods-selector">
                 <!-- Mood buttons generated dynamically -->
+            </div>
+        </div>
+        <div id="yip-detail-conditions-section" class="yip-notes-section" style="display:none">
+            <label data-i18n="config.yipConditionsLabel">Conditions</label>
+            <div id="yip-conditions-selector" style="display:flex;gap:8px;margin-top:8px;">
+                <button id="yip-cold-toggle" class="yip-mood-btn" data-condition="cold" style="flex:1;--mood-color:#eab308;justify-content:center;">
+                    🤧 <span data-i18n="config.yipCold">Cold</span>
+                    <span class="material-symbols-outlined yip-mood-check">check</span>
+                </button>
+                <button id="yip-allergies-toggle" class="yip-mood-btn" data-condition="allergies" style="flex:1;--mood-color:#22c55e;justify-content:center;">
+                    🌿 <span data-i18n="config.yipAllergies">Allergies</span>
+                    <span class="material-symbols-outlined yip-mood-check">check</span>
+                </button>
             </div>
         </div>
         <div class="yip-detail-actions">

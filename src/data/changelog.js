@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.11.0",
+    "changes": [
+      "Cold & allergy tracking in YIP: Users can now mark whether they had a cold or allergies on any given day in the Year in Pixels grid. Two toggle buttons '🤧 Cold' and '🌿 Allergies' in the day detail sheet, persisted in IndexedDB via storageService.updateDayConditions(). New 'Health' category in param sheet with 'Cold' (yellow) and 'Allergies' (green) as selectable grid parameters. Dot indicator system replaces individual icons — each cell shows up to 3 semantic 4px dots at the bottom (blue=notes, yellow=mood, red=cold, green=allergies) with '…' ellipsis for 4+. Dots always visible regardless of active parameter. All 376 unit tests + 13 E2E tests pass."
+    ]
+  },
+  {
     "version": "1.10.2",
     "changes": [
       "Clickable no-data days in YIP grid: past days without weather data are now clickable, opening detail sheet with 'Sin datos meteorológicos' message. Notes/moods can still be saved on no-data days. StorageService creates history entry if day is missing. All 376 unit tests + 13 E2E tests pass."

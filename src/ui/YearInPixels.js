@@ -11,13 +11,11 @@ const MOODS = [
   { id: 'tired', emoji: '😴', labelKey: 'moods.tired', color: '#6b7280' }
 ];
 
-const MOOD_EMOJI_MAP = {
-  happy: '😊',
-  neutral: '😐',
-  sad: '😢',
-  angry: '😠',
-  anxious: '😰',
-  tired: '😴'
+const DOT_COLORS = {
+  notes: '#60a5fa',
+  mood: '#fbbf24',
+  cold: '#ef4444',
+  allergies: '#22c55e'
 };
 
 let selectedLocation = null;
@@ -165,6 +163,10 @@ function populateParamSheet() {
     ]},
     { key: 'mood', label: t('config.yipMoodsParam', 'Mood'), params: [
       { value: 'mood', label: t('config.yipMoodsParam', 'Mood') }
+    ]},
+    { key: 'health', label: t('config.yipCategoryHealth', 'Health'), params: [
+      { value: 'cold', label: t('config.yipCold', 'Cold') },
+      { value: 'allergies', label: t('config.yipAllergies', 'Allergies') }
     ]}
   ];
 
@@ -242,11 +244,15 @@ function renderYIPGrid(history, param) {
                 const type = param.replace('pollen_', '');
                 const raw = (d.pollenDetails && d.pollenDetails[type]) ? d.pollenDetails[type] : 0;
                 val = getPollenLevelByType(type, raw);
-            } else if (param === 'mood') {
+            } else             if (param === 'mood') {
                 if (d.moods && d.moods.length > 0) {
                     const moodDef = MOODS.find(m => m.id === d.moods[0]);
                     val = moodDef ? moodDef.id : null;
                 }
+            } else if (param === 'cold') {
+                val = d.cold ? true : false;
+            } else if (param === 'allergies') {
+                val = d.allergies ? true : false;
             }
 
             yearGrid[m][day] = val;
@@ -375,16 +381,29 @@ function renderYIPGrid(history, param) {
                     }
                 }
 
-                if (dayData && dayData.notes) {
-                    cell.classList.add('has-notes');
-                    cell.insertAdjacentHTML('beforeend', '<span class="yip-note-icon material-symbols-outlined">sticky_note_2</span>');
-                }
-                if (dayData && dayData.moods && dayData.moods.length > 0) {
-                    cell.classList.add('has-mood');
-                    const moodEmoji = MOOD_EMOJI_MAP[dayData.moods[0]] || '';
-                    if (moodEmoji) {
-                        cell.insertAdjacentHTML('beforeend', `<span class="yip-mood-icon">${moodEmoji}</span>`);
+                const dotStates = [];
+                if (dayData && dayData.notes) dotStates.push('notes');
+                if (dayData && dayData.moods && dayData.moods.length > 0) dotStates.push('mood');
+                if (dayData && dayData.cold) dotStates.push('cold');
+                if (dayData && dayData.allergies) dotStates.push('allergies');
+
+                if (dotStates.length > 0) {
+                    const dotContainer = document.createElement('div');
+                    dotContainer.className = 'yip-dot-container';
+                    const visibleDots = dotStates.slice(0, 3);
+                    visibleDots.forEach(state => {
+                        const dot = document.createElement('span');
+                        dot.className = 'yip-condition-dot';
+                        dot.style.backgroundColor = DOT_COLORS[state];
+                        dotContainer.appendChild(dot);
+                    });
+                    if (dotStates.length > 3) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.className = 'yip-dot-ellipsis';
+                        ellipsis.textContent = '\u2026';
+                        dotContainer.appendChild(ellipsis);
                     }
+                    cell.appendChild(dotContainer);
                 }
                 cell.onclick = () => openYIPDetail(dayData, `${day+1} ${monthNames[m]} ${currentYear}`);
             }
@@ -422,6 +441,32 @@ function openYIPDetail(data, dateStr, locationName) {
     const existingMoods = data ? (data.moods || []) : [];
 
     if (moodsSection) moodsSection.style.display = 'block';
+
+    const conditionsSection = document.getElementById('yip-detail-conditions-section');
+    const coldToggle = document.getElementById('yip-cold-toggle');
+    const allergiesToggle = document.getElementById('yip-allergies-toggle');
+
+    if (conditionsSection) conditionsSection.style.display = 'block';
+    if (coldToggle) {
+        if (data && data.cold) {
+            coldToggle.classList.add('active');
+        } else {
+            coldToggle.classList.remove('active');
+        }
+        coldToggle.onclick = () => {
+            coldToggle.classList.toggle('active');
+        };
+    }
+    if (allergiesToggle) {
+        if (data && data.allergies) {
+            allergiesToggle.classList.add('active');
+        } else {
+            allergiesToggle.classList.remove('active');
+        }
+        allergiesToggle.onclick = () => {
+            allergiesToggle.classList.toggle('active');
+        };
+    }
 
     if (moodsSelector) {
         moodsSelector.innerHTML = '';
@@ -551,6 +596,8 @@ async function saveDayDetail(data, locationName) {
     const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
     const moodsSelector = document.getElementById('yip-moods-selector');
     const savedMsg = document.getElementById('yip-detail-saved-msg');
+    const coldToggle = document.getElementById('yip-cold-toggle');
+    const allergiesToggle = document.getElementById('yip-allergies-toggle');
     const loc = locationName || selectedLocation;
 
     const noteValue = notesInput ? notesInput.value : '';
@@ -563,16 +610,23 @@ async function saveDayDetail(data, locationName) {
         });
     }
 
-    const [notesOk, moodsOk] = await Promise.all([
-        storageService.updateDayNotes(loc, data.time, noteValue),
-        storageService.updateDayMoods(loc, data.time, selectedMoods)
-    ]);
+    const conditions = {
+        cold: coldToggle ? coldToggle.classList.contains('active') : false,
+        allergies: allergiesToggle ? allergiesToggle.classList.contains('active') : false
+    };
 
-    if (notesOk) {
+    const ok = await storageService.updateDayData(loc, data.time, {
+        notes: noteValue || undefined,
+        moods: selectedMoods.length > 0 ? selectedMoods : undefined,
+        cold: conditions.cold || undefined,
+        allergies: conditions.allergies || undefined
+    });
+
+    if (ok) {
         data.notes = noteValue || undefined;
-    }
-    if (moodsOk) {
         data.moods = selectedMoods.length > 0 ? selectedMoods : undefined;
+        data.cold = conditions.cold || undefined;
+        data.allergies = conditions.allergies || undefined;
     }
 
     if (savedMsg) {
@@ -624,6 +678,10 @@ function getColorForParam(param, value) {
         const moodDef = MOODS.find(m => m.id === value);
         if (moodDef) return moodDef.color;
         return 'var(--grid-color)';
+    } else if (param === 'cold') {
+        return value ? '#eab308' : 'var(--grid-color)';
+    } else if (param === 'allergies') {
+        return value ? '#22c55e' : 'var(--grid-color)';
     }
     return 'var(--grid-color)';
 }
@@ -673,6 +731,16 @@ function renderLegend(param, legendContainer) {
             c: m.color,
             l: `${m.emoji} ${t(m.labelKey, m.id)}`
         }));
+    } else if (param === 'cold') {
+        steps = [
+            { c: '#eab308', l: `🤧 ${t('config.yipCold', 'Cold')}` },
+            { c: 'var(--grid-color)', l: t('config.yipNoDataMeteo', 'No') }
+        ];
+    } else if (param === 'allergies') {
+        steps = [
+            { c: '#22c55e', l: `🌿 ${t('config.yipAllergies', 'Allergies')}` },
+            { c: 'var(--grid-color)', l: t('config.yipNoDataMeteo', 'No') }
+        ];
     }
 
     steps.forEach(s => {
