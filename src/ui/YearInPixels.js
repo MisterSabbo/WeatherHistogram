@@ -23,6 +23,9 @@ let selectedLocation = null;
 let selectedParam = 'maxTemp';
 let _closeSheet = null;
 let _closeDetailSheet = null;
+let _closeYipModal = null;
+
+let _yipDragState = null;
 
 let _yipScrollInit = false;
 
@@ -57,9 +60,9 @@ export function initYearInPixels() {
               const tx = db.transaction([storageService.historyStoreName], 'readwrite');
               const store = tx.objectStore(storageService.historyStoreName);
               const req = store.delete(selectedLocation);
-              req.onsuccess = () => {
-                  modal.style.display = 'none';
-              };
+               req.onsuccess = () => {
+                   closeYipModal();
+               };
               req.onerror = (e) => {
                   console.error('Error deleting location historical data:', e);
               };
@@ -104,21 +107,122 @@ export function initYearInPixels() {
                  await loadLocationData(target);
              }
          }
-          modal.style.display = 'flex';
+          modal.classList.add('open');
+          const backdrop = document.getElementById('yip-modal-backdrop');
+          if (backdrop) backdrop.classList.add('open');
           if (!_yipScrollInit) { _yipScrollInit = true; initYipLocationScroll(); }
           requestAnimationFrame(updateYipScrollUI);
       };
    });
 
   closeBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
+      closeYipModal();
   });
 
-  modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-          modal.style.display = 'none';
-      }
+  const backdrop = document.getElementById('yip-modal-backdrop');
+  if (backdrop) {
+      backdrop.addEventListener('click', () => {
+          closeYipModal();
+      });
+  }
+
+  _closeYipModal = closeYipModal;
+
+  _initYipModalDrag();
+}
+
+function closeYipModal() {
+  const modal = document.getElementById('yip-modal');
+  const backdrop = document.getElementById('yip-modal-backdrop');
+  if (modal) modal.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  if (_yipDragState) {
+    _yipDragState = null;
+  }
+}
+
+function _initYipModalDrag() {
+  const handle = document.getElementById('yip-modal-drag-handle');
+  if (!handle) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  const threshold = 100;
+
+  function onStart(clientY) {
+    const modal = document.getElementById('yip-modal');
+    const scrollContent = document.getElementById('yip-modal-scroll-content');
+    if (!modal || !scrollContent) return;
+    if (!modal.classList.contains('open')) return;
+    if (scrollContent.scrollTop > 0) return;
+
+    _yipDragState = { startY: clientY, currentY: clientY, isDragging: true };
+    isDragging = true;
+    startY = clientY;
+    currentY = clientY;
+    modal.style.transition = 'none';
+  }
+
+  function onMove(clientY) {
+    if (!isDragging) return;
+    const modal = document.getElementById('yip-modal');
+    if (!modal) return;
+
+    currentY = clientY;
+    const delta = currentY - startY;
+    if (delta > 0) {
+      modal.style.transform = `translateY(${delta}px)`;
+    }
+  }
+
+  function onEnd() {
+    if (!isDragging) return;
+    const modal = document.getElementById('yip-modal');
+    if (!modal) return;
+
+    isDragging = false;
+    modal.style.transition = '';
+    const delta = currentY - startY;
+
+    if (delta > threshold) {
+      closeYipModal();
+    }
+    _yipDragState = null;
+  }
+
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    onStart(e.clientY);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerUp);
   });
+
+  function onPointerMove(e) {
+    onMove(e.clientY);
+  }
+
+  function onPointerUp() {
+    onEnd();
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
+  }
+
+  handle.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    onStart(touch.clientY);
+  }, { passive: true });
+
+  handle.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    onMove(touch.clientY);
+  }, { passive: true });
+
+  handle.addEventListener('touchend', () => {
+    onEnd();
+  }, { passive: true });
 }
 
 let cachedHistory = null;
@@ -892,7 +996,7 @@ function updateYipScrollUI() {
     dotsContainer.innerHTML = html;
 }
 
-export { renderYIPGrid, saveDayNote, saveDayMoods, saveDayDetail, openYIPDetail, updateYipScrollUI };
+export { renderYIPGrid, saveDayNote, saveDayMoods, saveDayDetail, openYIPDetail, updateYipScrollUI, closeYipModal };
 
 async function showConfirm(title, message) {
     return new Promise((resolve) => {

@@ -1,15 +1,193 @@
+/* --- YIP Responsive Modal --- */
+        .yip-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 6000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .yip-modal-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .yip-modal {
+            position: fixed;
+            z-index: 6001;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease;
+            will-change: transform;
+        }
+        @media (min-width: 768px) {
+            .yip-modal {
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.9);
+                opacity: 0;
+                max-width: 600px;
+                width: calc(100% - 40px);
+                max-height: 90vh;
+                border-radius: 12px;
+                border: 1px solid var(--grid-color);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                pointer-events: none;
+            }
+            .yip-modal.open {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        @media (max-width: 767px) {
+            .yip-modal {
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transform: translateY(100%);
+                height: 95dvh;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+                border: 1px solid var(--grid-color);
+                border-bottom: none;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+                touch-action: pan-y;
+                overscroll-behavior-y: contain;
+            }
+            .yip-modal.open {
+                transform: translateY(0);
+            }
+        }
+        .yip-modal-drag-handle {
+            width: 40px;
+            height: 5px;
+            background: var(--grid-color);
+            border-radius: 3px;
+            margin: 10px auto 0 auto;
+            flex-shrink: 0;
+            cursor: grab;
+            touch-action: none;
+        }
+        @media (min-width: 768px) {
+            .yip-modal-drag-handle {
+                display: none;
+            }
+        }
+        .yip-modal-scroll-content {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+        }
+        .yip-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--grid-color);
+        }
+        .yip-modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .yip-modal-close-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        .yip-modal-body {
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+        .yip-modal-fields {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .yip-modal-field {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .yip-field-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .yip-field-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .yip-location-chips {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            flex: 1;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            padding: 2px 0;
+        }
+        .yip-delete-loc-btn {
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--grid-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            height: 32px;
+            width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .yip-legend {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
 /* --- YIP Layout & Bottom Sheet --- */
         .yip-year-grid {
             display: flex;
             flex-direction: column;
             gap: 24px;
             padding-bottom: 32px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             scroll-snap-type: y mandatory;
-            max-height: 60vh;
         }
-
+ 
         @media (min-width: 768px) {
             .yip-year-grid {
                 display: grid;
@@ -35,13 +213,13 @@
         .yip-month-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            gap: 5px;
         }
-
+ 
         .yip-day-cell {
             aspect-ratio: 1 / 1;
-            min-width: 32px;
-            min-height: 32px;
+            min-width: 38px;
+            min-height: 38px;
             border-radius: 4px;
             background-color: var(--card-bg);
             border: 1px solid var(--grid-color);
@@ -79,7 +257,7 @@
         .yip-month-day-headers {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            gap: 5px;
             margin-bottom: 2px;
             margin-top: 4px;
         }

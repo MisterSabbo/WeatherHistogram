@@ -9,7 +9,10 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | Elemento | Tipo de acceso | Contexto |
 |----------|---------------|----------|
 | `#year-in-pixels-btn` | getElementById + click | initYearInPixels |
-| `#yip-modal` | getElementById + style.display | initYearInPixels, close |
+| `#yip-modal` | getElementById + classList.add/remove `.open` | initYearInPixels, close |
+| `#yip-modal-backdrop` | getElementById + classList.add/remove `.open` | initYearInPixels, close (backdrop click) |
+| `#yip-modal-drag-handle` | getElementById + pointer events | initYearInPixels (mobile swipe-to-dismiss) |
+| `#yip-modal-scroll-content` | getElementById scrollTop reset | initYearInPixels (scroll guard for drag) |
 | `#close-yip-modal-btn` | getElementById + click | initYearInPixels |
 | `#yip-location-chips` | getElementById | initYearInPixels, initYipLocationScroll, updateYipScrollUI |
 | `#yip-param-display` | getElementById + click | initYearInPixels, populateParamSheet |
@@ -64,6 +67,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 |---------|-------------|
 | `highlightYIPCell(time)` | Busca `.yip-day-cell[data-time="${time}"]` en el DOM, añade clase `.yip-highlight-flash` por 1.5s (animación CSS) |
 | `showErrorToast(message)` | Muestra `#yip-toast` con el mensaje, auto-dismiss tras 3s con fade out. Usa `_toastTimer` para evitar múltiples timers |
+| `closeYipModal()` | Cierra el YIP quitando clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. También cancela drag en curso si existe. Se llama desde botón ×, backdrop click, drag-to-dismiss y borrado de ubicación |
+| `_initYipModalDrag()` | Inicializa pointer events en `#yip-modal-drag-handle` para swipe-to-dismiss. Solo activo en mobile (<768px). Guard: si `#yip-modal-scroll-content.scrollTop > 0`, no arrastra. Umbral de cierre >100px |
 
 ### Variables globales de módulo (no `state`)
 | Variable | Tipo | Inicial | Uso |
@@ -75,6 +80,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `_closeDetailSheet` | `function\|undefined` | `undefined` | Callback para cerrar el detail sheet |
 | `_yipScrollInit` | `boolean` | `false` | Flag para inicializar scroll de chips una sola vez |
 | `_yipScrollListenersAttached` | `boolean` | `false` | Flag para evitar duplicar listeners de scroll |
+| `_closeYipModal` | `function\|null` | `null` | Callback para cerrar el YIP modal programáticamente (seteada en initYearInPixels) |
+| `_yipDragState` | `object\|null` | `null` | Estado interno del drag-to-dismiss: `{ startY, currentY, isDragging }` |
 | `cardBgColor` | `string` | computada en renderYIPGrid | Resolved `--card-bg` CSS variable, usada para adaptive text color en celdas sin datos |
 
 ### Constantes internas
@@ -94,10 +101,17 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 
 ### `export function initYearInPixels(): void`
 
-**Descripción:** Inicializa el modal Year in Pixels. Busca elementos DOM, registra event listeners para abrir modal desde `#year-in-pixels-btn`, cerrar desde `#close-yip-modal-btn` y click fuera del modal, borrar ubicación desde `#yip-delete-loc-btn`, y abrir selector de parámetro desde `#yip-param-display`. Al abrir modal, lista ubicaciones guardadas en IndexedDB como chips y carga datos de la primera/activa.
+**Descripción:** Inicializa el modal/bottom sheet responsive del Year in Pixels. Busca elementos DOM, registra event listeners para abrir desde `#year-in-pixels-btn`, cerrar desde `#close-yip-modal-btn`, click en backdrop y swipe-to-dismiss en drag handle (mobile). Borra ubicación desde `#yip-delete-loc-btn`, y abre selector de parámetro desde `#yip-param-display`.
+
+**Comportamiento responsive:**
+- **Desktop (≥768px)**: modal centrado con `transform: scale`, backdrop con fade. Cierre con botón × o click en backdrop.
+- **Mobile (<768px)**: bottom sheet que ocupa ≥95dvh con `transform: translateY(100%)` → `.open` → `translateY(0)`. Cierre con drag handle (pointer events, >100px cierra), backdrop click, o botón ×.
+- La visibilidad se controla mediante clase `.open` en `#yip-modal` y `#yip-modal-backdrop` (no `style.display`).
+
+Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de la primera/activa.
 
 **Metadatos:**
-- Mutates state: No (usa variables de módulo: `selectedLocation`, `_closeSheet`, `_yipScrollInit`)
+- Mutates state: No (usa variables de módulo: `selectedLocation`, `_closeSheet`, `_yipScrollInit`, `_closeYipModal`)
 - Async: No
 
 ### `export function renderYIPGrid(history: object|null, param: string): void`
@@ -178,7 +192,10 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 ## Comportamiento
 
 1. **Inicialización**: `initYearInPixels` es idempotente — si `#year-in-pixels-btn` no existe, retorna sin error
-2. **Apertura de modal**: Al hacer click en `#year-in-pixels-btn`, obtiene todas las keys de IndexedDB, renderiza chips de ubicación, y carga datos de la primera ubicación (o la seleccionada previamente)
+2. **Apertura responsive**: Al hacer click en `#year-in-pixels-btn`, obtiene todas las keys de IndexedDB, renderiza chips de ubicación, y carga datos de la primera ubicación (o la seleccionada previamente). Luego añade clase `.open` a `#yip-modal` y `#yip-modal-backdrop`. En desktop (≥768px) el modal aparece centrado con scale animation; en mobile (<768px) el panel se desliza desde abajo como bottom sheet ≥95dvh.
+3. **Drag-to-dismiss (mobile)**: `_initYipModalDrag()` registra pointer events en `#yip-modal-drag-handle`. Arrastre hacia abajo >100px cuando `scrollTop === 0` cierra el modal. Usa `pointerdown`/`pointermove`/`pointerup` con fallback touch. Misma lógica que `openBottomSheet()`.
+4. **Scroll guard (mobile)**: Si `#yip-modal-scroll-content` tiene `scrollTop > 0`, no se inicia el arrastre — el contenido scrolla normalmente. Esto evita el "scroll vs swipe" conflict.
+5. **Cierre unificado**: `closeYipModal()` quita clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. Se llama desde: botón ×, backdrop click, drag-to-dismiss, y borrado de ubicación.
 3. **Selección de ubicación**: Click en chip → selecciona ubicación, carga su history, re-renderiza grid
 4. **Grid mensual**: 12 bloques `.yip-month-block`, cada uno con cabeceras de día (Monday-start), celdas `.yip-day-cell` con color según valor del parámetro, número de día visible, y **dot indicator system** para estados no meteorológicos
 5. **Color por parámetro**: `getColorForParam` asigna colores según rangos definidos para cada tipo de parámetro (temp, precip, wind, AQI, pollen, mood, cold, allergies)
@@ -207,6 +224,12 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 |---------|------------------------|
 | `#year-in-pixels-btn` no existe | `initYearInPixels` retorna sin error, no registra listeners |
 | `#yip-modal` no existe | `initYearInPixels` retorna sin error |
+| Mobile (<768px) con drag >100px | Cierra modal (closeYipModal) |
+| Mobile con drag <100px | Sheet vuelve a posición inicial (translateY(0)) |
+| Mobile con scrollTop >0 en scroll-content | Drag no se inicia, contenido scrolla normalmente |
+| Resize de desktop a mobile con modal abierto | Comportamiento no cambia hasta cerrar/reabrir (no hay listener dinámico) |
+| Backdrop click en desktop | backdrop onclick → closeYipModal() |
+| Backdrop click en mobile | #yip-modal-backdrop.onclick → closeYipModal() |
 | `history` es `null` o `history.daily` vacío | Muestra mensaje "Sin historial para mostrar" |
 | `history.daily` tiene datos de año anterior | Se filtran (solo año actual se renderiza) |
 | Parámetro inválido en `getColorForParam` | Retorna `var(--grid-color)` |
@@ -349,3 +372,4 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | 2026-05-28 | Ticket 002: Dots más visibles — tamaño 4px→7px, añadido border 1.5px sólido (#fff dark / rgba(0,0,0,0.25) light) | SDD |
 | 2026-05-28 | Ticket 003: Badge +N en vez de elipsis para datos extra — reemplazado "…" por badge numérico con fondo semitransparente oscuro | SDD |
 | 2026-05-28 | Ticket 003b: Badge +N muestra 2 dots + badge en vez de 3 dots + badge — máximo 3 elementos por celda | SDD |
+| 2026-05-28 | Ticket 005: Convertir modal YIP en bottom sheet full-screen — responsive (desktop centered, mobile bottom sheet ≥95dvh), drag-to-dismiss, grid cell min-width 32→38px, gap 4→5px | SDD |

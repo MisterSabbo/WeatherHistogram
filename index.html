@@ -1382,7 +1382,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.11.0c</span>
+              <span id="app-version-label">v1.12.0</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1621,34 +1621,38 @@
     </div>
 
     <!-- Year In Pixels Modal -->
-    <div id="yip-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 6001; align-items: center; justify-content: center; padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;">
-      <div style="position: relative; background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 600px; max-height: 100%; display: flex; flex-direction: column; color: var(--text-primary); border: 1px solid var(--grid-color); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-        <button id="close-yip-modal-btn" style="position: absolute; top: 8px; right: 8px; background: var(--bg-color); border: 1px solid var(--grid-color); font-size: 20px; color: var(--text-primary); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-symbols-outlined" style="font-size: 18px">close</span></button>
-        <div style="padding: 20px 24px; border-bottom: 1px solid var(--grid-color); display: flex; align-items: center;">
-          <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+    <div id="yip-modal-backdrop" class="yip-modal-backdrop"></div>
+    <div id="yip-modal" class="yip-modal">
+      <div id="yip-modal-drag-handle" class="yip-modal-drag-handle"></div>
+      <div id="yip-modal-scroll-content" class="yip-modal-scroll-content">
+        <div class="yip-modal-header">
+          <h3 class="yip-modal-title">
             <span class="material-symbols-outlined" style="color: var(--accent-temp)">grid_view</span>
             <span data-i18n="config.yearInPixels">Año en Píxeles</span>
           </h3>
+          <button id="close-yip-modal-btn" class="yip-modal-close-btn">
+            <span class="material-symbols-outlined" style="font-size: 18px">close</span>
+          </button>
         </div>
-        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);" data-i18n="config.location">Ubicación</label>
-              <div style="display:flex;align-items:center;gap:6px;">
+        <div class="yip-modal-body">
+          <div class="yip-modal-fields">
+            <div class="yip-modal-field">
+              <label class="yip-field-label" data-i18n="config.location">Ubicación</label>
+              <div class="yip-field-row">
                 <div class="yip-chips-scroll-wrapper">
-                  <div id="yip-location-chips" style="display:flex;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px 0;">
+                  <div id="yip-location-chips" class="yip-location-chips">
                     <!-- Chips generated dynamically -->
                   </div>
                 </div>
-                <button id="yip-delete-loc-btn" style="flex-shrink:0;background:transparent;border:1px solid var(--grid-color);border-radius:8px;color:var(--text-secondary);cursor:pointer;height:32px;width:32px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Borrar datos de esta ubicación">
+                <button id="yip-delete-loc-btn" class="yip-delete-loc-btn" title="Borrar datos de esta ubicación">
                   <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
                 </button>
               </div>
               <div id="yip-location-dots" class="yip-dots-container"></div>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);" data-i18n="config.parameter">Parámetro</label>
-              <div id="yip-param-display" class="param-selector-trigger" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--grid-color);background:var(--bg-color);color:var(--text-primary);cursor:pointer;gap:8px;box-sizing:border-box;">
+            <div class="yip-modal-field">
+              <label class="yip-field-label" data-i18n="config.parameter">Parámetro</label>
+              <div id="yip-param-display" class="param-selector-trigger">
                 <span id="yip-param-display-label">Temperatura Máxima</span>
                 <span class="material-symbols-outlined" style="font-size:18px;color:var(--text-secondary);">expand_more</span>
               </div>
@@ -1657,7 +1661,7 @@
           <div id="yip-grid-container" class="yip-year-grid">
             <!-- Grid dynamically generated -->
           </div>
-          <div id="yip-legend" style="display: flex; gap: 8px; justify-content: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; align-items: center; flex-wrap: wrap;">
+          <div id="yip-legend" class="yip-legend">
             <!-- Legend dynamically generated -->
           </div>
         </div>

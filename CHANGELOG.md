@@ -2,6 +2,17 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.12.0] - 2026-05-29
+### Infrastructure
+- **Node.js 22 → 24 (Active LTS)**: Actualizado CI a Node 24 (`.github/workflows/ci.yml`). Añadido `.nvmrc` y `"engines": { "node": ">=22.12.0 <25.0.0" }` en `package.json`.
+- **Dependencias a latest**: Vite ^6.2.0 → ^8.0.0, @types/node ^25.9.0 → ^25.9.1, vitest ^4.1.6 → ^4.1.7.
+- **E2E snapshots regenerados**: 5 visual baselines actualizados para el nuevo entorno Node 24 + Vite 8.
+- Todos los tests (lint, typecheck, 394 unit, 29 E2E) pasan sin errores.
+
+## [v1.11.0d] - 2026-05-29
+### Enhancement
+- **YIP modal responsive: bottom sheet en móvil, modal centrado en escritorio**: El modal de Year in Pixels se adapta al viewport: en móvil (<768px) se convierte en un bottom sheet full-screen (≥95dvh) con animación de deslizamiento, drag handle para cerrar arrastrando hacia abajo (>100px), y backdrop click para cerrar. En escritorio (≥768px) se mantiene como modal centrado con animación de escala. Se ha separado el backdrop del modal para control de opacidad independiente. Celdas del grid: min-width 32→38px, gap 4→5px. El control de visibilidad ahora usa clases CSS en vez de style.display.
+
 ## [v1.11.0c] - 2026-05-28
 ### Enhancement
 - **Badge +N en vez de elipsis en YIP**: Reemplazado el "…" (ellipsis) por un badge numérico "+N" con fondo semitransparente oscuro y texto blanco en negrita cuando hay más de 3 estados no meteorológicos activos en una celda del Year in Pixels. El badge muestra 2 dots + "+N" (ej. "+2", "+3") en vez de 3 dots + "+N", asegurando máximo 3 elementos por celda. Todas las pruebas unitarias y E2E pasan.

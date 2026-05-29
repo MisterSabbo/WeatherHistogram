@@ -1,5 +1,19 @@
 export const changelogData = [
   {
+    "version": "1.12.0",
+    "changes": [
+      "Node.js 22 → 24 (Active LTS): CI actualizado a Node 24, añadido .nvmrc y engines en package.json.",
+      "Dependencias actualizadas: Vite 6→8, @types/node 25.9.0→25.9.1, vitest 4.1.6→4.1.7.",
+      "E2E visual snapshots regenerados para Node 24 + Vite 8. Todos los tests pasan."
+    ]
+  },
+  {
+    "version": "1.11.0d",
+    "changes": [
+      "YIP modal responsive: bottom sheet en móvil (<768px, ≥95dvh), modal centrado en escritorio con animación de escala. Drag-to-dismiss (>100px), backdrop separado, control por clases CSS en vez de style.display. Celdas grid: min-width 32→38px, gap 4→5px."
+    ]
+  },
+  {
     "version": "1.11.0c",
     "changes": [
       "Badge +N en vez de elipsis en YIP: reemplazado '…' por badge numérico '+N' con fondo semitransparente oscuro y texto blanco en negrita para indicar estados no meteorológicos extra en las celdas del Year in Pixels. El badge muestra 2 dots + '+N' (ej. '+2', '+3') en vez de 3 dots + '+N', asegurando máximo 3 elementos por celda. Todas las pruebas unitarias y E2E pasan."
