@@ -58,7 +58,6 @@
                 border-bottom: none;
                 box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
                 touch-action: pan-y;
-                overscroll-behavior-y: contain;
             }
             .yip-modal.open {
                 transform: translateY(0);
@@ -85,6 +84,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
+            overscroll-behavior-y: contain;
         }
         .yip-modal-header {
             display: flex;
@@ -92,6 +92,17 @@
             justify-content: space-between;
             padding: 20px 24px;
             border-bottom: 1px solid var(--grid-color);
+            flex-shrink: 0;
+            touch-action: none;
+        }
+        .yip-modal-fields-bar {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 0 24px 16px;
+            border-bottom: 1px solid var(--grid-color);
+            flex-shrink: 0;
+            touch-action: none;
         }
         .yip-modal-title {
             margin: 0;
@@ -114,13 +125,6 @@
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             flex-shrink: 0;
-        }
-        .yip-modal-body {
-            padding: 20px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            overflow-y: auto;
         }
         .yip-modal-fields {
             display: flex;
@@ -184,7 +188,7 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
-            padding-bottom: 32px;
+            padding: 0 24px 32px;
             scroll-snap-type: y mandatory;
         }
  

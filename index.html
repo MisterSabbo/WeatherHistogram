@@ -1382,7 +1382,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.12.0</span>
+              <span id="app-version-label">v1.13.0</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1624,46 +1624,44 @@
     <div id="yip-modal-backdrop" class="yip-modal-backdrop"></div>
     <div id="yip-modal" class="yip-modal">
       <div id="yip-modal-drag-handle" class="yip-modal-drag-handle"></div>
-      <div id="yip-modal-scroll-content" class="yip-modal-scroll-content">
-        <div class="yip-modal-header">
-          <h3 class="yip-modal-title">
-            <span class="material-symbols-outlined" style="color: var(--accent-temp)">grid_view</span>
-            <span data-i18n="config.yearInPixels">Año en Píxeles</span>
-          </h3>
-          <button id="close-yip-modal-btn" class="yip-modal-close-btn">
-            <span class="material-symbols-outlined" style="font-size: 18px">close</span>
-          </button>
+      <div class="yip-modal-header">
+        <h3 class="yip-modal-title">
+          <span class="material-symbols-outlined" style="color: var(--accent-temp)">grid_view</span>
+          <span data-i18n="config.yearInPixels">Año en Píxeles</span>
+        </h3>
+        <button id="close-yip-modal-btn" class="yip-modal-close-btn">
+          <span class="material-symbols-outlined" style="font-size: 18px">close</span>
+        </button>
+      </div>
+      <div class="yip-modal-fields-bar">
+        <div class="yip-modal-field">
+          <label class="yip-field-label" data-i18n="config.location">Ubicación</label>
+          <div class="yip-field-row">
+            <div class="yip-chips-scroll-wrapper">
+              <div id="yip-location-chips" class="yip-location-chips">
+                <!-- Chips generated dynamically -->
+              </div>
+            </div>
+            <button id="yip-delete-loc-btn" class="yip-delete-loc-btn" title="Borrar datos de esta ubicación">
+              <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+            </button>
+          </div>
+          <div id="yip-location-dots" class="yip-dots-container"></div>
         </div>
-        <div class="yip-modal-body">
-          <div class="yip-modal-fields">
-            <div class="yip-modal-field">
-              <label class="yip-field-label" data-i18n="config.location">Ubicación</label>
-              <div class="yip-field-row">
-                <div class="yip-chips-scroll-wrapper">
-                  <div id="yip-location-chips" class="yip-location-chips">
-                    <!-- Chips generated dynamically -->
-                  </div>
-                </div>
-                <button id="yip-delete-loc-btn" class="yip-delete-loc-btn" title="Borrar datos de esta ubicación">
-                  <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
-                </button>
-              </div>
-              <div id="yip-location-dots" class="yip-dots-container"></div>
-            </div>
-            <div class="yip-modal-field">
-              <label class="yip-field-label" data-i18n="config.parameter">Parámetro</label>
-              <div id="yip-param-display" class="param-selector-trigger">
-                <span id="yip-param-display-label">Temperatura Máxima</span>
-                <span class="material-symbols-outlined" style="font-size:18px;color:var(--text-secondary);">expand_more</span>
-              </div>
-            </div>
+        <div class="yip-modal-field">
+          <label class="yip-field-label" data-i18n="config.parameter">Parámetro</label>
+          <div id="yip-param-display" class="param-selector-trigger">
+            <span id="yip-param-display-label">Temperatura Máxima</span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--text-secondary);">expand_more</span>
           </div>
-          <div id="yip-grid-container" class="yip-year-grid">
-            <!-- Grid dynamically generated -->
-          </div>
-          <div id="yip-legend" class="yip-legend">
-            <!-- Legend dynamically generated -->
-          </div>
+        </div>
+      </div>
+      <div id="yip-modal-scroll-content" class="yip-modal-scroll-content">
+        <div id="yip-grid-container" class="yip-year-grid">
+          <!-- Grid dynamically generated -->
+        </div>
+        <div id="yip-legend" class="yip-legend">
+          <!-- Legend dynamically generated -->
         </div>
       </div>
     </div>

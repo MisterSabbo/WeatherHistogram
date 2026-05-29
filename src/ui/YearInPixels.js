@@ -134,7 +134,11 @@ export function initYearInPixels() {
 function closeYipModal() {
   const modal = document.getElementById('yip-modal');
   const backdrop = document.getElementById('yip-modal-backdrop');
-  if (modal) modal.classList.remove('open');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.style.transform = '';
+    modal.style.transition = '';
+  }
   if (backdrop) backdrop.classList.remove('open');
   if (_yipDragState) {
     _yipDragState = null;
@@ -142,18 +146,25 @@ function closeYipModal() {
 }
 
 function _initYipModalDrag() {
-  const handle = document.getElementById('yip-modal-drag-handle');
-  if (!handle) return;
+  const modal = document.getElementById('yip-modal');
+  const scrollContent = document.getElementById('yip-modal-scroll-content');
+  if (!modal || !scrollContent) return;
 
   let startY = 0;
   let currentY = 0;
   let isDragging = false;
   const threshold = 100;
 
+  function canDragFrom(target) {
+    if (target.closest('.yip-modal-drag-handle')) return true;
+    const header = target.closest('.yip-modal-header');
+    if (header && !target.closest('button')) return true;
+    const fieldsBar = target.closest('.yip-modal-fields-bar');
+    if (fieldsBar && !target.closest('button, input, select, textarea, .yip-chip, .yip-mood-btn')) return true;
+    return false;
+  }
+
   function onStart(clientY) {
-    const modal = document.getElementById('yip-modal');
-    const scrollContent = document.getElementById('yip-modal-scroll-content');
-    if (!modal || !scrollContent) return;
     if (!modal.classList.contains('open')) return;
     if (scrollContent.scrollTop > 0) return;
 
@@ -166,9 +177,6 @@ function _initYipModalDrag() {
 
   function onMove(clientY) {
     if (!isDragging) return;
-    const modal = document.getElementById('yip-modal');
-    if (!modal) return;
-
     currentY = clientY;
     const delta = currentY - startY;
     if (delta > 0) {
@@ -178,20 +186,19 @@ function _initYipModalDrag() {
 
   function onEnd() {
     if (!isDragging) return;
-    const modal = document.getElementById('yip-modal');
-    if (!modal) return;
-
     isDragging = false;
     modal.style.transition = '';
     const delta = currentY - startY;
-
     if (delta > threshold) {
       closeYipModal();
+    } else {
+      modal.style.transform = 'translateY(0)';
     }
     _yipDragState = null;
   }
 
-  handle.addEventListener('pointerdown', (e) => {
+  modal.addEventListener('pointerdown', (e) => {
+    if (!canDragFrom(e.target)) return;
     e.preventDefault();
     onStart(e.clientY);
     document.addEventListener('pointermove', onPointerMove);
@@ -210,17 +217,32 @@ function _initYipModalDrag() {
     document.removeEventListener('pointercancel', onPointerUp);
   }
 
-  handle.addEventListener('touchstart', (e) => {
+  scrollContent.addEventListener('touchstart', (e) => {
+    if (!modal.classList.contains('open')) return;
+    if (scrollContent.scrollTop > 0) return;
     const touch = e.touches[0];
     onStart(touch.clientY);
   }, { passive: true });
 
-  handle.addEventListener('touchmove', (e) => {
+  scrollContent.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
     const touch = e.touches[0];
-    onMove(touch.clientY);
+    const delta = touch.clientY - startY;
+    if (delta > 0) {
+      e.preventDefault();
+      onMove(touch.clientY);
+    } else {
+      isDragging = false;
+      modal.style.transition = '';
+      modal.style.transform = '';
+    }
+  }, { passive: false });
+
+  scrollContent.addEventListener('touchend', () => {
+    onEnd();
   }, { passive: true });
 
-  handle.addEventListener('touchend', () => {
+  scrollContent.addEventListener('touchcancel', () => {
     onEnd();
   }, { passive: true });
 }

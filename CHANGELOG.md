@@ -2,12 +2,19 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.13.0] - 2026-05-29
+### Enhancement
+- **YIP modal: cabecera y campos sticky al hacer scroll**: Reestructurado el DOM del modal para que `.yip-modal-header` y el nuevo `.yip-modal-fields-bar` (contiene campos de estado, toggle cold/allergies) estén fuera de `#yip-modal-scroll-content`, permaneciendo siempre visibles al hacer scroll vertical en el grid. Los horizontales (`padding`) se movieron de `.yip-modal-body` (eliminado) a `.yip-year-grid`. Snapshots visuales E2E regenerados.
+
 ## [v1.12.0] - 2026-05-29
 ### Infrastructure
 - **Node.js 22 → 24 (Active LTS)**: Actualizado CI a Node 24 (`.github/workflows/ci.yml`). Añadido `.nvmrc` y `"engines": { "node": ">=22.12.0 <25.0.0" }` en `package.json`.
 - **Dependencias a latest**: Vite ^6.2.0 → ^8.0.0, @types/node ^25.9.0 → ^25.9.1, vitest ^4.1.6 → ^4.1.7.
 - **E2E snapshots regenerados**: 5 visual baselines actualizados para el nuevo entorno Node 24 + Vite 8.
 - Todos los tests (lint, typecheck, 394 unit, 29 E2E) pasan sin errores.
+
+### Fixes
+- **PTR nativo de Chrome Android disparado al hacer scroll en YIP modal en móvil**: Movido `overscroll-behavior-y: contain` de `.yip-modal` (contenedor) a `.yip-modal-scroll-content` (elemento scrollable real). En Chrome Android, `overscroll-behavior` debe estar en el elemento que efectivamente scrollea, no en su contenedor padre. Esto evita que el native pull-to-refresh de Chrome se dispare al hacer scroll vertical en el contenido del YIP modal. El bug se manifestaba solo en el primer uso tras carga porque Chrome "aprendía" a contener el overscroll tras abrir el modal de settings (que sí tenía `contain` en su elemento scrollable correcto).
 
 ## [v1.11.0d] - 2026-05-29
 ### Enhancement

@@ -1,10 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.13.0",
+    "changes": [
+      "YIP modal: cabecera y campos sticky al hacer scroll — DOM reestructurado para que header y fields-bar estén fuera del scroll-content, siempre visibles durante scroll vertical en el grid. Snapshots E2E regenerados."
+    ]
+  },
+  {
     "version": "1.12.0",
     "changes": [
       "Node.js 22 → 24 (Active LTS): CI actualizado a Node 24, añadido .nvmrc y engines en package.json.",
       "Dependencias actualizadas: Vite 6→8, @types/node 25.9.0→25.9.1, vitest 4.1.6→4.1.7.",
-      "E2E visual snapshots regenerados para Node 24 + Vite 8. Todos los tests pasan."
+      "E2E visual snapshots regenerados para Node 24 + Vite 8. Todos los tests pasan.",
+      "PTR nativo de Chrome Android disparado al hacer scroll en YIP modal: movido overscroll-behavior-y: contain de .yip-modal a .yip-modal-scroll-content. En Chrome, overscroll-behavior debe estar en el elemento scrollable real, no en el contenedor."
     ]
   },
   {

@@ -11,7 +11,7 @@ const OVERLAY_SELECTOR = [
   '#map-location-modal[style*="display: flex"]',
   '#prompt-modal[style*="display: flex"]',
   '#changelog-modal.open',
-  '#yip-modal[style*="display: flex"]'
+  '#yip-modal.open'
 ].join(', ')
 
 function hasOverlayOpen() {
