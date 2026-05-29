@@ -1,168 +1,167 @@
-{"type":"entity","name":"src/app.js","entityType":"module","observations":["Main entry point: orchestrates ~30 init functions, rendering loop, event handlers, scroll logic, theming","Imports nearly all modules (store, theme, services, render, ui, utils)","Spawns sub-agents: initCanvas, initTheme, initGeo, initWeatherData, initEventListeners, etc.","Contains render() loop with offscreen buffer, scrubber, minimap sync","Location: src/app.js"]}
-{"type":"entity","name":"src/store.js","entityType":"module","observations":["Central mutable state object + frozen CONFIG constants","CONFIG: CHART_HEIGHT=250, MINIMAP_HEIGHT=80, TILE_WIDTH=1440, CACHE_DURATION=300000ms, PIXELS_PER_MM=10, DEFAULT_COORDS=Madrid","getDPR() caps devicePixelRatio for performance","state properties: lat, lon, locationName, hourlyData, dailyData, sunData, theme, timezone, rawForecast, rawAQI, skinType","Location: src/store.js"]}
-{"type":"entity","name":"src/theme.js","entityType":"module","observations":["getThemeColor(path, fallback) — nested key lookup into active theme JSON","getThemeIcon(name) — returns Material icon name from theme","getThemeFont(name, size) — returns font string for canvas","loadChartTheme(id) — fetches themes/{id}.json with fallback","cachedStyles — cached CSS custom properties from document","Location: src/theme.js"]}
-{"type":"entity","name":"src/domain/WeatherFetcher.js","entityType":"module","observations":["fetchWeatherData(lat, lon) — orchestrates parallel API calls via WeatherService","clearWeatherCache() — clears internal weatherCache Map","weatherCache: Map with 5-minute TTL keyed by 'lat,lon'","Fallback to MockData on network failure","Location: src/domain/WeatherFetcher.js"]}
-{"type":"entity","name":"src/services/WeatherService.js","entityType":"module","observations":["class WeatherService — raw Open-Meteo API client","getWeatherData(lat, lon) — fetches forecast API + air-quality API in parallel","Endpoint 1: open-meteo.com forecast (temperature, precipitation, wind, humidity, etc.)","Endpoint 2: open-meteo.com air-quality (PM2.5, PM10, O3, NO2, pollen, UV)","Location: src/services/WeatherService.js"]}
-{"type":"entity","name":"src/services/DataProcessor.js","entityType":"module","observations":["processData(data) — transforms raw API response into hourlyData (time, temp, precip, wind, humidity, pressure, clouds) + dailyData","Generates daily cards HTML via DailyCards.generateDailyCards()","Persists history via StorageService.saveHistory()","Location: src/services/DataProcessor.js"]}
-{"type":"entity","name":"src/services/StorageService.js","entityType":"module","observations":["class StorageService — IndexedDB abstraction with localStorage fallback","Stores: userPreferences (location, theme, favorites) and historyData (daily weather per location)","Methods: saveUserPreferences, loadUserPreferences, saveHistory, loadHistory, updateDayNotes, updateDayMoods, updateDayConditions, updateDayData","Singleton: export const storageService = new StorageService()","Location: src/services/StorageService.js"]}
-{"type":"entity","name":"src/services/GeoService.js","entityType":"module","observations":["class GeoService — Geocoding service","searchLocation(query) — Open-Meteo geocoding API with request queue (50ms spacing)","reverseGeocode(lat, lon) — Nominatim reverse geocoding","Handles rate limiting with pending queue","Location: src/services/GeoService.js"]}
-{"type":"entity","name":"src/services/FavoritesService.js","entityType":"module","observations":["class FavoritesService — CRUD for favorite locations","Methods: getFavorites, addFavorite, removeFavorite, updateFavorite, reorderFavorites","Persists via StorageService (userPreferences.favorites)","Singleton: export const favoritesService = new FavoritesService()","Location: src/services/FavoritesService.js"]}
-{"type":"entity","name":"src/services/AqiManager.js","entityType":"module","observations":["getAQIInfo(pm25, pm10, o3, no2) — returns AQI level (good/moderate/unhealthy/etc), color, numeric value (1-5)","getPollenLevelByType(type, value) — grass, birch, alder, ragweed, olive, pine","getAggregatedPollenLevel — max across all pollen types","getPollenColor(level) — color mapping for pollen levels","getPollenText(level) — localized text for pollen levels","getUVInfo(uvIndex) — UV level classification with color","Location: src/services/AqiManager.js"]}
-{"type":"entity","name":"src/services/MockData.js","entityType":"module","observations":["generateMockData(lat, lon) — generates synthetic weather data for offline/demo mode","Produces hourly forecast with temperature sine wave, random precipitation, wind, humidity","Location: src/services/MockData.js"]}
-{"type":"entity","name":"src/utils/i18n.js","entityType":"module","observations":["Translation system with es (primary) and en (fallback) dictionaries","t(key) — lookup function with dot-notation support","setLanguage(lang), getLanguage(), applyTranslations()","getLocale() — returns browser locale","getCurrency() — returns EUR/USD based on locale","Location: src/utils/i18n.js"]}
-{"type":"entity","name":"src/utils/color.js","entityType":"module","observations":["hexToRgb(hex) — converts hex color to {r,g,b} object","getTextColorForBg(bgColor) — returns #1a1a1a or #ffffff based on luminance","Location: src/utils/color.js"]}
-{"type":"entity","name":"src/utils/math.js","entityType":"module","observations":["normalizeY(value, min, max, height) — maps value to Y pixel coordinate","Location: src/utils/math.js"]}
-{"type":"entity","name":"src/utils/time.js","entityType":"module","observations":["dateToX(date, minDate, maxDate, width) — maps Date to X pixel","getCurrentTimeX() — current time as X coordinate","formatHour(date, locale) — returns hour string","formatDay(date, locale) — returns day short name","getSplitIndex(hourlyData) — finds index of 00:00 tomorrow for day boundary","formatTooltipTime(date, locale) — formatted time for tooltips","Location: src/utils/time.js"]}
-{"type":"entity","name":"src/utils/weather.js","entityType":"module","observations":["getWeatherDescription(code, lang) — returns localized weather description from WMO code","Location: src/utils/weather.js"]}
-{"type":"entity","name":"src/utils/pwa.js","entityType":"module","observations":["registerSW() — registers service worker at /sw.js","handleInstallPrompt() — captures beforeinstallprompt event","showUpdateToast() — shows update notification when new SW detected","checkAppVersion() — fetches /version.json and compares","clearCacheAndReload() — clears caches and reloads","Location: src/utils/pwa.js"]}
-{"type":"entity","name":"src/utils/thresholds.js","entityType":"module","observations":["getYLimits(data, metric) — returns {min, max} for Y-axis scaling","Handles temperature, precipitation, wind, humidity, pressure","Location: src/utils/thresholds.js"]}
-{"type":"entity","name":"src/utils/dom.js","entityType":"module","observations":["debounce(fn, delay) — standard debounce utility","Location: src/utils/dom.js"]}
-{"type":"entity","name":"src/utils/AlertEngine.js","entityType":"module","observations":["generateAlerts(hourlyData) — generates alerts for extreme weather conditions","renderAlerts(alerts) — renders alert UI elements","Alerts for: extreme temperature, high wind, heavy precipitation","Location: src/utils/AlertEngine.js"]}
-{"type":"entity","name":"src/data/changelog.js","entityType":"module","observations":["changelogData — array of changelog entries with version, date, changes array","Embedded JS (not fetched), used by ChangelogModal","Location: src/data/changelog.js"]}
-{"type":"entity","name":"src/data/skins.js","entityType":"module","observations":["SKIN_TYPES — array of 6 phototype definitions (I-VI) with burn/tan characteristics","DEFAULT_SKIN_TYPE — default is 2 (skin type II)","getSkinType(), needsSunProtection(uvi, skinType)","Used by SPF calculator","Location: src/data/skins.js"]}
-{"type":"entity","name":"src/render/MetricsRenderer.js","entityType":"module","observations":["Aggregates and dispatches to metric sub-renderers","Re-exports: drawTemperature, drawWind, drawHumidity","Location: src/render/MetricsRenderer.js"]}
-{"type":"entity","name":"src/render/metrics/TemperatureRenderer.js","entityType":"module","observations":["drawTemperature(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws temperature line with gradient fill","Imports: store (state), theme, math (normalizeY)","Location: src/render/metrics/TemperatureRenderer.js"]}
-{"type":"entity","name":"src/render/metrics/WindRenderer.js","entityType":"module","observations":["drawWind(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws wind speed area with directional arrows","Imports: store (state), theme","Location: src/render/metrics/WindRenderer.js"]}
-{"type":"entity","name":"src/render/metrics/HumidityRenderer.js","entityType":"module","observations":["drawHumidity(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws humidity as filled area","Imports: store (state), theme","Location: src/render/metrics/HumidityRenderer.js"]}
-{"type":"entity","name":"src/render/AtmosphereRenderer.js","entityType":"module","observations":["drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunnyBackground, drawNightOverlay, drawNightShadow","Re-exports: drawClouds, drawPrecipitationProbability","Imports: store, theme, CloudRenderer, PrecipProbabilityRenderer","Location: src/render/AtmosphereRenderer.js"]}
-{"type":"entity","name":"src/render/CloudRenderer.js","entityType":"module","observations":["drawClouds(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws cloud cover as semi-transparent bands","Imports: store (state)","Location: src/render/CloudRenderer.js"]}
-{"type":"entity","name":"src/render/PrecipProbabilityRenderer.js","entityType":"module","observations":["drawPrecipitationProbability(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws precipitation probability bars","Imports: store (state)","Location: src/render/PrecipProbabilityRenderer.js"]}
-{"type":"entity","name":"src/render/GridRenderer.js","entityType":"module","observations":["drawGrid(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws vertical grid lines and day boundaries","drawDayNames(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — localized day name labels","drawAxes(ctx, state, theme, chartW, chartH) — Y-axis with labels for each metric","Imports: store, theme, math, time","Location: src/render/GridRenderer.js"]}
-{"type":"entity","name":"src/render/BackgroundRenderer.js","entityType":"module","observations":["Renders weather phenomena (sun, clouds, rain, stars, moon)","drawWeatherPhenomena(ctx, state, theme, chartW, chartH) — main entry point","drawStarrySky, drawUVSegments, drawSunnyBackground, drawNightOverlay, drawNightShadow","Re-exports: drawSunMarkersOnCanvas","Imports: store, theme, color, MoonRenderer, SunMarkers","Location: src/render/BackgroundRenderer.js"]}
-{"type":"entity","name":"src/render/StickmanRenderer.js","entityType":"module","observations":["drawStickman(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws stickman figures for temperature feel","Uses stickmanThresholds from state to show clothing layers","Location: src/render/StickmanRenderer.js"]}
-{"type":"entity","name":"src/render/OverlayRenderer.js","entityType":"module","observations":["interpolateScrubberData(hourlyData, x, PIXELS_PER_HOUR) — finds data point at pixel X","updateWeatherZone(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — highlights active day zone","drawScrubberPoint(ctx, x, y, theme, dataPoint) — draws scrubber indicator","updateUVBlock(ctx, state, chartW, chartH, PIXELS_PER_HOUR) — highlights UV index","getWeatherIconName(code) — returns weather icon name for WMO code","Imports: color, theme, AqiManager","Location: src/render/OverlayRenderer.js"]}
-{"type":"entity","name":"src/render/MinimapRenderer.js","entityType":"module","observations":["class MinimapRenderer — minimizes chart into overview strip","Modes: 'past' (left of current time) and 'future' (right of current time), auto-switches based on scroll","draw(ctx, state, theme, chartW, chartH) — renders minimap with viewport overlay rectangle","Imports: time, theme, math","Location: src/render/MinimapRenderer.js"]}
-{"type":"entity","name":"src/render/MoonRenderer.js","entityType":"module","observations":["drawMoon(ctx, x, y, moonPhase, theme) — draws moon with phase-appropriate illumination","Phase range: 0 (new) to 1 (full)","Location: src/render/MoonRenderer.js"]}
-{"type":"entity","name":"src/render/SunMarkers.js","entityType":"module","observations":["drawSunMarkersOnCanvas(ctx, state, theme, chartW, chartH, PIXELS_PER_HOUR) — draws sunrise/sunset markers on chart","Imports: store, theme, i18n (for sunrise/sunset labels)","Location: src/render/SunMarkers.js"]}
-{"type":"entity","name":"src/ui/DailyCards.js","entityType":"module","observations":["getWeatherIconSVG(conditionCode, isDay) — returns SVG for WMO weather code","generateDailyCards(dailyData) — generates HTML for daily forecast cards","updateActiveDailyCard(scrollLeft) — highlights active day card on scroll","Imports: store, theme, i18n","Location: src/ui/DailyCards.js"]}
-{"type":"entity","name":"src/ui/AqiRadar.js","entityType":"module","observations":["drawAQIRadar(canvas, aqiData, theme) — draws radar chart for AQI pollutants (PM10, PM2.5, O3, NO2)","Imports: store (theme)","Location: src/ui/AqiRadar.js"]}
-{"type":"entity","name":"src/ui/PollenRadar.js","entityType":"module","observations":["drawPollenRadar(canvas, pollenData, theme) — draws hexagonal radar chart for 6 pollen types","Imports: store, i18n","Location: src/ui/PollenRadar.js"]}
-{"type":"entity","name":"src/ui/MapSelector.js","entityType":"module","observations":["initMapModal() — opens Leaflet map for location search/selection","Uses global L (Leaflet), GeoService for search, stores result in state","Imports: store, GeoService, i18n","Location: src/ui/MapSelector.js"]}
-{"type":"entity","name":"src/ui/FavoritesModal.js","entityType":"module","observations":["initFavoritesModal() — favorites management with edit/delete/reorder","Imports: FavoritesService, store, i18n","Location: src/ui/FavoritesModal.js"]}
-{"type":"entity","name":"src/ui/YearInPixels.js","entityType":"module","observations":["initYearInPixels() — yearly calendar grid widget for tracking temp, mood, health, notes","renderYIPGrid() — renders 12-month grid with cells, day numbers, weather/mood/health coloring","openYIPDetail(dayData, dayTimestamp, locationName) — opens bottom sheet for day detail","Param categories: temperature, feelsLike, precip, wind, humidity, mood, cold, allergies","Imports: StorageService, theme, i18n, AqiManager","Location: src/ui/YearInPixels.js"]}
-{"type":"entity","name":"src/ui/BottomSheet.js","entityType":"module","observations":["initBottomSheets() — sets up swipe-to-dismiss bottom sheet system","openBottomSheet(element) — shows sheet with dynamic z-index stacking","closeBottomSheet(element) — animates close","onSheetClose(callback) — register close callback","Imports: none (pure DOM manipulation)","Location: src/ui/BottomSheet.js"]}
-{"type":"entity","name":"src/ui/ChangelogModal.js","entityType":"module","observations":["showChangelogModal() — displays changelog in bottom sheet","initChangelog() — sets up changelog trigger button","Imports: changelogData, i18n, BottomSheet","Location: src/ui/ChangelogModal.js"]}
-{"type":"entity","name":"src/ui/SpfModal.js","entityType":"module","observations":["openSpfSheet() — opens SPF recommendation calculator","closeSpfSheet() — closes SPF sheet","Uses skin data from skins.js, UV info from state/AqiManager","Imports: store, i18n, BottomSheet","Location: src/ui/SpfModal.js"]}
-{"type":"entity","name":"src/ui/PullToRefresh.js","entityType":"module","observations":["onTouchStart, onTouchMove, onTouchEnd — pull-to-refresh gesture handling","resetUI() — resets pull indicator after refresh","Location: src/ui/PullToRefresh.js"]}
-{"type":"entity","name":"src/ui/TooltipManager.js","entityType":"module","observations":["showTooltip(element, content, position) — shows positioned tooltip","hideTooltip(element) — hides specific tooltip","closeAllTooltips() — hides all tooltips","Imports: BottomSheet","Location: src/ui/TooltipManager.js"]}
-{"type":"entity","name":"src/ui/ScrollIndicator.js","entityType":"module","observations":["updateScrollIndicator() — updates scroll position indicator bar","initScrollIndicator() — sets up scroll indicator listeners","Location: src/ui/ScrollIndicator.js"]}
-{"type":"entity","name":"src/ui/TopPanel.js","entityType":"module","observations":["updateTopPanel() — updates current conditions panel (temp, weather icon, AQI, wind, alerts, UV, pollen)","Imports: store, theme, i18n, time, weather, AqiManager, AlertEngine, AqiRadar, PollenRadar","Location: src/ui/TopPanel.js"]}
-{"type":"entity","name":"WeatherHistogram","entityType":"project","observations":["Vanilla JS SPA for weather visualization","Vite + JSDoc + Vitest + Playwright","Tiled canvas rendering with histogram, minimap, stickman layers","PWA with service worker (cache-first for static assets)","Version: 1.11.0+","GitHub Pages hosted","Memory graph rebuilt 2026-05-28: 56 entities (48 production JS modules + 7 architecture docs + 1 project) with 113 import relations reflecting actual module dependency graph. All stale entities (116) and relations (~120) from prior sessions deleted."]}
-{"type":"entity","name":"architecture.data-flow","entityType":"documentation","observations":["app.js orchestrator calls init functions → WeatherFetcher.fetchWeatherData() → WeatherService.getWeatherData() (Open-Meteo API) → DataProcessor.processData() → mutates state → render() loop reads state and draws to canvas","User scroll → render() reads scrollLeft → offscreen buffer check → drawImage or full redraw","User taps location → MapSelector → GeoService.searchLocation → state update → re-fetch weather data","Favorites: FavoritesModal → FavoritesService → StorageService (IndexedDB)"]}
-{"type":"entity","name":"architecture.canvas-layers","entityType":"documentation","observations":["Single visible canvas (#chart-canvas) for the main chart","All drawing happens in render() — never draw to tile canvases outside this function","Three layers stacked in #chart-area: chart-wrapper (scrollable histogram), minimap-wrapper (overview strip), fixed-overlay-canvas (scrubber line)","Offscreen canvas buffer (3x viewport width) for scroll performance — single drawImage blit ~0.1ms"]}
-{"type":"entity","name":"architecture.tiling","entityType":"documentation","observations":["TILE_WIDTH=1440px (720px on mobile <600px)","Canvas width = TILE_WIDTH, clipped to viewport","render() loop renders only visible tiles + 1 buffer on each side","Overlap 1px between tiles for Mali-G76 GPU seam prevention"]}
-{"type":"entity","name":"architecture.minimap","entityType":"documentation","observations":["MINIMAP_HEIGHT=80px","MinimapRenderer class with past/future modes — auto-switches based on scroll position relative to current time index","Draws compressed chart + viewport overlay rectangle as scroll indicator"]}
-{"type":"entity","name":"architecture.key-constants","entityType":"documentation","observations":["CHART_HEIGHT=250, MINIMAP_HEIGHT=80, TILE_WIDTH=1440, PIXELS_PER_MM=10, CACHE_DURATION=300000ms (5 min), DEFAULT_COORDS={lat:40.4168, lon:-3.7038} (Madrid)","PIXELS_PER_HOUR: 60px desktop > 600px, 50px mobile <= 600px — stored on state, not CONFIG","getDPR() caps at 2 for performance"]}
-{"type":"entity","name":"architecture.ui-components","entityType":"documentation","observations":["BottomSheet: swipe-to-dismiss overlay system (z-index: 1000+), dynamic stacking","TopPanel: current conditions (temp, weather icon, AQI, wind, UV, pollen, alerts)","DailyCards: horizontal scrollable daily forecast cards","YearInPixels: yearly grid widget for mood/temp/health tracking","MapSelector: Leaflet map modal for location search","FavoritesModal: CRUD for saved locations","ChangelogModal: version history in bottom sheet","SpfModal: sun protection calculator","PullToRefresh: gesture-based data refresh","TooltipManager: positioned tooltip system","ScrollIndicator: chart scroll position bar","AqiRadar: radar chart for AQI pollutants","PollenRadar: hexagonal radar for 6 pollen types"]}
-{"type":"entity","name":"architecture.services","entityType":"documentation","observations":["WeatherService: raw Open-Meteo API client (forecast + air-quality endpoints)","DataProcessor: transforms raw API data → state.hourlyData/dailyData → daily cards → persist history","StorageService: IndexedDB abstraction (userPreferences, historyData) with localStorage fallback — singleton pattern","GeoService: geocoding (Open-Meteo) + reverse geocoding (Nominatim) with 50ms request queue","FavoritesService: CRUD for persisted favorite locations — singleton pattern","AqiManager: AQI/pollen/UV classification with localized colors and thresholds","MockData: synthetic weather data generator for offline/demo mode"]}
+{"type":"entity","name":"WeatherHistogram","entityType":"project","observations":["Vanilla JS SPA weather visualization app","Tiled canvas rendering with horizontal scroll","PWA with service worker and offline support","No framework - Vite + JSDoc types","Three-layer canvas architecture overlaid in #chart-area","All drawing goes through render() function"]}
+{"type":"entity","name":"src/app.js","entityType":"module","observations":["Main entry point, orchestrates ~30 init functions","Imports almost every module in the project","Sets up render loop, event bindings, and tile management","TILE_WIDTH override to 720 for mobile <600px","initApp → initServices → initUI → initRender pipeline","Handles window resize, orientation change, visibility change","Defines initMapModal, initChangelog, initFavoritesModal, initYearInPixels","Defines renderDates, renderAndCacheVisibleTiles, renderChartArea","Caches visible tiles with tileCache Map"]}
+{"type":"entity","name":"src/store.js","entityType":"module","observations":["Central mutable state object + frozen CONFIG object","CONFIG contains CHART_HEIGHT:250, MINIMAP_HEIGHT:80, TILE_WIDTH:1440, CACHE_DURATION:300000ms, PIXELS_PER_MM:10, DEFAULT_COORDS:{lat:40.4167,lon:-3.70325,name:'Madrid'}","state holds hourlyData, dailyData, selectedDay, viewMode, theme, language, geoLocation, favorites, userPreferences, scrubbing, aqiData, alerts, tooltip, etc.","state.PIXELS_PER_HOUR set to 60 (desktop) or 50 (mobile) based on container width","No events/pub-sub — modules read/write state directly"]}
+{"type":"entity","name":"src/theme.js","entityType":"module","observations":["Theme color/icon/font resolution system","Exports getThemeColor(key), getThemeIcon(id), getThemeFont(), loadChartTheme(themeId)","Built-in themes: default, neon, pastel","Loads from public/themes/{id}.json with fallback to themes/{id}.json","Reads state.theme to determine current theme","Applies CSS custom properties via document.documentElement"]}
+{"type":"entity","name":"src/data/changelog.js","entityType":"module","observations":["Exports changelogData array with version entries","Each entry has version, date, changes array","Semver X.Y.Z with letter suffix for trivial updates","Used by ChangelogModal to display version history"]}
+{"type":"entity","name":"src/data/skins.js","entityType":"module","observations":["Exports SKIN_TYPES array with skin tone names and SPF values","Exports needsSunProtection(uvIndex, skinType) utility","Six skin types: I-VI (very fair to very dark)","Used by SpfModal for sun protection recommendations"]}
+{"type":"entity","name":"src/domain/WeatherFetcher.js","entityType":"module","observations":["Exports fetchWeatherData(lat, lon) with 5-min cache","Imports from services/WeatherService.js, services/MockData.js, store.js, utils/time.js","Falls back to MockData on failure","Cache key based on date+hour to avoid redundant fetches","Sets state.loading and state.error during fetch lifecycle"]}
+{"type":"entity","name":"src/services/WeatherService.js","entityType":"module","observations":["Exports WeatherService class","Fetches forecast + AQI data from Open-Meteo API","Imports from store.js and utils/time.js","Builds URL with hourly parameters (temperature, precipitation, humidity, wind, cloud, UV, pressure)","Parses JSON response into structured format"]}
+{"type":"entity","name":"src/services/DataProcessor.js","entityType":"module","observations":["Exports processData(data) to transform raw API data","Creates state.hourlyData and state.dailyData arrays","Computes per-hour: temp, precip, humidity, wind, clouds, UV, pressure, weatherCode","Computes per-day: maxTemp, minTemp, totalPrecip, dominantWeatherCode","Imports from utils/time.js, utils/weather.js, utils/thresholds.js"]}
+{"type":"entity","name":"src/services/GeoService.js","entityType":"module","observations":["Exports GeoService class","Geocoding: city name → {lat, lon, name, country}","Reverse geocoding: {lat, lon} → location name","OpenStreetMap Nominatim API with 2s request queue","Imports from store.js"]}
+{"type":"entity","name":"src/services/FavoritesService.js","entityType":"module","observations":["Exports FavoritesService class (CRUD)","addFavorite(location), removeFavorite(id), getFavorites()","Persists to StorageService","Imports from services/StorageService.js"]}
+{"type":"entity","name":"src/services/StorageService.js","entityType":"module","observations":["Exports StorageService class","IndexedDB with localStorage fallback","Two stores: userPreferences (theme, language, favorites, skinType) and historyData (cache)","Auto-migration between storage backends"]}
+{"type":"entity","name":"src/services/AqiManager.js","entityType":"module","observations":["Exports getAQIInfo(europeanAqi), getPollenLevelByType(tree/grass/weed)","Maps AQI values to level/color/description labels","Pollen thresholds for low/moderate/high/very high","Standalone utility, no imports from other project modules"]}
+{"type":"entity","name":"src/services/MockData.js","entityType":"module","observations":["Exports generateMockData() for fallback when API fails","Generates 7 days of synthetic weather data","Includes temperature, precipitation, humidity, wind, clouds, UV index","Standalone module, no imports from other project modules"]}
+{"type":"entity","name":"src/render/MetricsRenderer.js","entityType":"module","observations":["Barrel entry point for metric renderers","Re-exports drawHumidity, drawWind, drawTemperature","Imports from render/metrics/HumidityRenderer.js, render/metrics/TemperatureRenderer.js, render/metrics/WindRenderer.js"]}
+{"type":"entity","name":"src/render/metrics/HumidityRenderer.js","entityType":"module","observations":["Exports drawHumidity(ctx, data, y, width, height, theme)","Draws humidity bars on the chart","Imports from store.js (state) and utils/math.js (normalizeY)"]}
+{"type":"entity","name":"src/render/metrics/TemperatureRenderer.js","entityType":"module","observations":["Exports drawTemperature(ctx, data, y, width, height, theme)","Draws temperature line graph with fill","Imports from store.js (state) and utils/math.js (normalizeY)"]}
+{"type":"entity","name":"src/render/metrics/WindRenderer.js","entityType":"module","observations":["Exports drawWind(ctx, data, y, width, height, theme)","Draws wind speed as area chart with arrow indicators","Imports from store.js (state) and utils/math.js (normalizeY)"]}
+{"type":"entity","name":"src/render/AtmosphereRenderer.js","entityType":"module","observations":["Exports drawRain(ctx, data, y, width, height, theme) and drawSnow(ctx, data, y, width, height, theme)","Re-exports drawClouds, drawPrecipitationProbability from sub-modules","Draws precipitation bars (blue for rain, white/cyan for snow)","Imports from store.js, utils/math.js, render/CloudRenderer.js, render/PrecipProbabilityRenderer.js"]}
+{"type":"entity","name":"src/render/CloudRenderer.js","entityType":"module","observations":["Exports drawClouds(ctx, data, y, width, height, theme)","Draws cloud cover using smooth Bezier curves","Imports from store.js and utils/math.js"]}
+{"type":"entity","name":"src/render/PrecipProbabilityRenderer.js","entityType":"module","observations":["Exports drawPrecipitationProbability(ctx, data, y, width, height, theme)","Draws precipitation probability as stepped area chart","Imports from store.js and utils/math.js"]}
+{"type":"entity","name":"src/render/BackgroundRenderer.js","entityType":"module","observations":["Exports drawWeatherPhenomena, drawStarrySky, drawUVSegments, drawSunnyBackground, drawSunMarkersOnCanvas, drawNightOverlay, drawNightShadow","Re-exports drawSunMarkersOnCanvas from render/SunMarkers.js","Handles weather effects (fog, haze), starry sky, UV index segments, sun position markers, night overlays","Imports from store.js, utils/color.js, utils/math.js, render/SunMarkers.js"]}
+{"type":"entity","name":"src/render/GridRenderer.js","entityType":"module","observations":["Exports drawGrid(ctx, data, y, width, height, theme), drawDayNames(ctx, data, y, width, height, theme), drawAxes(ctx, data, y, width, height, theme)","Draws horizontal grid lines, day labels, and Y-axis with labels","Imports from store.js, utils/time.js, utils/math.js"]}
+{"type":"entity","name":"src/render/MoonRenderer.js","entityType":"module","observations":["Exports drawMoon(ctx, x, y, phase, theme)","Draws moon with phase indicator (new to full)","Imports from store.js (state)"]}
+{"type":"entity","name":"src/render/SunMarkers.js","entityType":"module","observations":["Exports drawSunMarkersOnCanvas(ctx, data, tileStartX, y, width, height, theme)","Draws sun icons at sunrise/sunset times on the chart","Imports from store.js and utils/math.js"]}
+{"type":"entity","name":"src/render/OverlayRenderer.js","entityType":"module","observations":["Exports interpolateScrubberData(data, pixelX), updateWeatherZone(), drawScrubberPoint(ctx, y, width, height, theme), updateUVBlock(uvIndex)","Handles scrubber interaction (touch/mouse crosshair)","Shows tooltip with weather details at scrub position","Updates UV block in top panel","Imports from store.js, utils/time.js, utils/math.js, utils/weather.js, ui/TooltipManager.js"]}
+{"type":"entity","name":"src/render/StickmanRenderer.js","entityType":"module","observations":["Exports drawStickman(ctx, data, y, width, height, theme)","Draws animated stickman that reacts to weather","Walking animation, umbrella when raining, jacket when cold","Imports from store.js and utils/math.js"]}
+{"type":"entity","name":"src/render/MinimapRenderer.js","entityType":"module","observations":["Exports MinimapRenderer class","Renders minimap with past/future mode toggle (button)","Shows overview of all days in a compact view","Imports from store.js, utils/math.js, render/AtmosphereRenderer.js"]}
+{"type":"entity","name":"src/ui/BottomSheet.js","entityType":"module","observations":["Exports openBottomSheet(content, options) and closeBottomSheet()","Creates draggable bottom sheet overlay","Supports drag-to-dismiss with velocity detection","Standalone DOM manipulation, no project imports"]}
+{"type":"entity","name":"src/ui/DailyCards.js","entityType":"module","observations":["Exports generateDailyCards(), getWeatherIconSVG(weatherCode), updateActiveDailyCard()","Generates day-by-day cards with weather icons, min/max temps","Click handler sets state.selectedDay and re-renders","Imports from store.js and utils/time.js"]}
+{"type":"entity","name":"src/ui/ChangelogModal.js","entityType":"module","observations":["Exports showChangelogModal() and initChangelog()","Displays version history from changelog.js in a modal","Shows new version badge if version changed","Imports from data/changelog.js"]}
+{"type":"entity","name":"src/ui/FavoritesModal.js","entityType":"module","observations":["Exports initFavoritesModal()","Shows favorites list with delete and select","Allows adding current location to favorites","Imports from store.js, services/FavoritesService.js, services/GeoService.js"]}
+{"type":"entity","name":"src/ui/MapSelector.js","entityType":"module","observations":["Exports initMapModal()","Leaflet map with search, geocoding, favorite pins","Click-to-select location returns to app","Imports from store.js, services/GeoService.js, services/FavoritesService.js"]}
+{"type":"entity","name":"src/ui/AqiRadar.js","entityType":"module","observations":["Exports drawAQIRadar(canvas, data, theme)","Draws AQI radar chart with colored segments from center to edge","Labels: Good, Fair, Moderate, Poor, Very Poor","Imports from store.js and services/AqiManager.js"]}
+{"type":"entity","name":"src/ui/PollenRadar.js","entityType":"module","observations":["Exports drawPollenRadar(canvas, data, theme)","Draws hexagonal pollen radar chart","Three axes: Tree, Grass, Weed with level indicators","Imports from store.js and services/AqiManager.js"]}
+{"type":"entity","name":"src/ui/PullToRefresh.js","entityType":"module","observations":["Exports initPullToRefresh(onRefresh callback)","Touch-based pull-to-refresh with threshold detection","Shows pull indicator with arrow and spinner","Checks overlay visibility before triggering"]}
+{"type":"entity","name":"src/ui/ScrollIndicator.js","entityType":"module","observations":["Exports initScrollIndicator() and updateScrollIndicator()","Shows visual indicator for horizontal scroll progress","Markers at day boundaries"]}
+{"type":"entity","name":"src/ui/SpfModal.js","entityType":"module","observations":["Exports openSpfSheet(uvIndex)","Shows sun protection recommendation based on UV and skin type","Lets user select skin type from SKIN_TYPES","Imports from data/skins.js"]}
+{"type":"entity","name":"src/ui/TooltipManager.js","entityType":"module","observations":["Exports showTooltip(content, x, y) and hideTooltip()","Creates positioned tooltip element with weather details","Also handles modal overlay logic","Standalone DOM manipulation, no project imports"]}
+{"type":"entity","name":"src/ui/TopPanel.js","entityType":"module","observations":["Exports updateTopPanel()","Renders current conditions, location name, weather icon","Animates AQI Radar and Pollen Radar in header","Shows alerts from AlertEngine and UV block","Imports from store.js, ui/AqiRadar.js, ui/PollenRadar.js, ui/SpfModal.js, utils/AlertEngine.js, utils/time.js"]}
+{"type":"entity","name":"src/ui/YearInPixels.js","entityType":"module","observations":["Exports initYearInPixels()","Extensive mood tracking grid with 365 cells","Click cell → select mood → show detail sheet","Saves mood data via StorageService","Imports from store.js, services/StorageService.js, utils/time.js, utils/i18n.js"]}
+{"type":"entity","name":"src/utils/color.js","entityType":"module","observations":["Exports hexToRgb(hex) and getTextColorForBg(bgColor)","Converts hex colors to RGB for canvas operations","Standalone utility"]}
+{"type":"entity","name":"src/utils/dom.js","entityType":"module","observations":["Exports debounce(fn, delay) utility","Standard debounce with immediate option","Standalone utility"]}
+{"type":"entity","name":"src/utils/i18n.js","entityType":"module","observations":["Exports t(key), setLanguage(lang), getLanguage(), applyTranslations(), getLocale()","Supports es/en translations","All UI strings defined in this file","Used by app.js and AlertEngine.js"]}
+{"type":"entity","name":"src/utils/math.js","entityType":"module","observations":["Exports normalizeY(value, min, max, height, padding)","Normalizes data values to Y pixel positions on canvas","Used by almost all renderers"]}
+{"type":"entity","name":"src/utils/pwa.js","entityType":"module","observations":["Exports registerSW(), handleInstallPrompt(), showUpdateToast(), checkAppVersion(), clearCacheAndReload()","Service worker registration with update detection","Handles beforeinstallprompt event","Checks /version.json for updates"]}
+{"type":"entity","name":"src/utils/thresholds.js","entityType":"module","observations":["Exports getYLimits(type) and getDefaultLimits(type)","Returns Y-axis min/max for each metric type","Used by DataProcessor.js to normalize data ranges"]}
+{"type":"entity","name":"src/utils/time.js","entityType":"module","observations":["Exports dateToX(date), getCurrentTimeX(), formatHour(hour), formatDay(date), getSplitIndex(data), formatTooltipTime(date)","Date/time conversion utilities for pixel positioning","Handles 24h formatting and day/weekday display"]}
+{"type":"entity","name":"src/utils/weather.js","entityType":"module","observations":["Exports getWeatherDescription(code, isDay)","Maps WMO weather codes to readable descriptions","Used by DataProcessor.js and OverlayRenderer.js"]}
+{"type":"entity","name":"src/utils/AlertEngine.js","entityType":"module","observations":["Exports generateAlerts(data) and renderAlerts()","Generates weather alerts (rain, UV, wind, temp extremes)","Shows dismissible alert banners in top panel","Imports from store.js and utils/i18n.js"]}
+{"type":"entity","name":"architecture.data-flow","entityType":"documentation","observations":["app.js imports all modules and orchestrates initialization","fetchWeatherData → WeatherService (API) → DataProcessor → state.hourlyData/dailyData","render() reads state, draws to offscreen tile canvases, composites to visible canvas","User interactions → event handlers → state mutation → re-render","StorageService persists userPreferences and historyData"]}
+{"type":"entity","name":"architecture.canvas-layers","entityType":"documentation","observations":["#chart-area contains 3 overlaid <canvas> elements (absolute positioning)","Layer stack bottom→top: background (weather phenomena, sky, sun, stars, night), atmosphere (rain, snow, clouds, precip prob), metrics (temperature, humidity, wind)","Tiled rendering: each canvas split into horizontal tiles of TILE_WIDTH","Only visible tiles rendered per frame based on scroll position"]}
+{"type":"entity","name":"architecture.tiling","entityType":"documentation","observations":["TILE_WIDTH=1440px (desktop) or 720px (mobile <600px)","tileCache Map stores rendered canvases by date","renderAndCacheVisibleTiles computes visible range from scrollLeft","renderChartArea composites 3 layers into visible canvas","On scroll: reuses cached tiles, renders new ones as needed"]}
+{"type":"entity","name":"architecture.minimap","entityType":"documentation","observations":["MinimapRenderer class renders compact overview below chart","MINIMAP_HEIGHT=80px","Past/future mode toggle shifts visible range","Blue rectangle shows current viewport position"]}
+{"type":"entity","name":"architecture.key-constants","entityType":"documentation","observations":["CHART_HEIGHT:250, MINIMAP_HEIGHT:80, TILE_WIDTH:1440, CACHE_DURATION:300000ms, PIXELS_PER_MM:10, DEFAULT_COORDS:{lat:40.4167, lon:-3.70325, name:'Madrid'}","state.PIXELS_PER_HOUR: 60 (desktop) or 50 (mobile)","state.viewMode: 'temperature', 'humidity', 'wind', 'precipitation'","state.theme: 'default', 'neon', 'pastel'"]}
+{"type":"entity","name":"architecture.ui-components","entityType":"documentation","observations":["TopPanel: current conditions, AQI/Pollen radar, alerts, UV block, skin type, SPF recommendation","BottomSheet: draggable overlay for detailled info","ChangelogModal: version history display","FavoritesModal: favorite locations CRUD","MapSelector: Leaflet map for location selection","DailyCards: day selector cards with weather icons","YearInPixels: mood tracking 365-grid","SpfModal: sun protection factor calculator","PullToRefresh: touch gesture to reload","ScrollIndicator: horizontal scroll progress"]}
+{"type":"entity","name":"architecture.services","entityType":"documentation","observations":["WeatherFetcher: domain-level fetch orchestrator with caching and MockData fallback","WeatherService: Open-Meteo API client for forecast + AQI","DataProcessor: transforms raw API data into chart-ready arrays","GeoService: Nominatim geocoding/reverse with request queue","StorageService: IndexedDB with localStorage fallback","FavoritesService: persistence layer for saved locations","AqiManager: AQI/pollen level classification","MockData: synthetic data generator for offline/error fallback"]}
 {"type":"relation","from":"src/app.js","to":"src/store.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/services/GeoService.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/DailyCards.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/services/DataProcessor.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/domain/WeatherFetcher.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/utils/weather.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/ChangelogModal.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/utils/pwa.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/services/DataProcessor.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/services/GeoService.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/services/FavoritesService.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/services/StorageService.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/services/AqiManager.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/services/MockData.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/utils/i18n.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/utils/color.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/utils/weather.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/utils/time.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/utils/math.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/services/StorageService.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/utils/AlertEngine.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/utils/pwa.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/render/MetricsRenderer.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/render/AtmosphereRenderer.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/render/GridRenderer.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/render/BackgroundRenderer.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/render/StickmanRenderer.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/render/GridRenderer.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/render/OverlayRenderer.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/MapSelector.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/FavoritesModal.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/YearInPixels.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/BottomSheet.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/ScrollIndicator.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/TopPanel.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/PullToRefresh.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/SpfModal.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/utils/AlertEngine.js","relationType":"imports"}
-{"type":"relation","from":"src/app.js","to":"src/ui/TooltipManager.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/render/MinimapRenderer.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/BottomSheet.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/DailyCards.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/ChangelogModal.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/FavoritesModal.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/MapSelector.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/TopPanel.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/YearInPixels.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/PullToRefresh.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/ScrollIndicator.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/SpfModal.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/TooltipManager.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/AqiRadar.js","relationType":"imports"}
+{"type":"relation","from":"src/app.js","to":"src/ui/PollenRadar.js","relationType":"imports"}
 {"type":"relation","from":"src/theme.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/domain/WeatherFetcher.js","to":"src/store.js","relationType":"imports"}
 {"type":"relation","from":"src/domain/WeatherFetcher.js","to":"src/services/WeatherService.js","relationType":"imports"}
 {"type":"relation","from":"src/domain/WeatherFetcher.js","to":"src/services/MockData.js","relationType":"imports"}
-{"type":"relation","from":"src/domain/WeatherFetcher.js","to":"src/services/DataProcessor.js","relationType":"imports"}
-{"type":"relation","from":"src/services/DataProcessor.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/services/DataProcessor.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/services/DataProcessor.js","to":"src/ui/DailyCards.js","relationType":"imports"}
-{"type":"relation","from":"src/services/DataProcessor.js","to":"src/services/StorageService.js","relationType":"imports"}
+{"type":"relation","from":"src/domain/WeatherFetcher.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/domain/WeatherFetcher.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/services/WeatherService.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/services/WeatherService.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/services/DataProcessor.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/services/DataProcessor.js","to":"src/utils/weather.js","relationType":"imports"}
+{"type":"relation","from":"src/services/DataProcessor.js","to":"src/utils/thresholds.js","relationType":"imports"}
+{"type":"relation","from":"src/services/GeoService.js","to":"src/store.js","relationType":"imports"}
 {"type":"relation","from":"src/services/FavoritesService.js","to":"src/services/StorageService.js","relationType":"imports"}
-{"type":"relation","from":"src/services/AqiManager.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/DailyCards.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/DailyCards.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/DailyCards.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/AqiRadar.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/PollenRadar.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/PollenRadar.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/MapSelector.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/MapSelector.js","to":"src/services/GeoService.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/MapSelector.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/FavoritesModal.js","to":"src/services/FavoritesService.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/FavoritesModal.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/FavoritesModal.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/services/StorageService.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/services/AqiManager.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/ChangelogModal.js","to":"src/data/changelog.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/ChangelogModal.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/ChangelogModal.js","to":"src/ui/BottomSheet.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/SpfModal.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/SpfModal.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/SpfModal.js","to":"src/ui/BottomSheet.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TooltipManager.js","to":"src/ui/BottomSheet.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/utils/time.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/utils/weather.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/services/AqiManager.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/utils/AlertEngine.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/ui/AqiRadar.js","relationType":"imports"}
-{"type":"relation","from":"src/ui/TopPanel.js","to":"src/ui/PollenRadar.js","relationType":"imports"}
+{"type":"relation","from":"src/utils/AlertEngine.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/utils/AlertEngine.js","to":"src/utils/i18n.js","relationType":"imports"}
 {"type":"relation","from":"src/render/MetricsRenderer.js","to":"src/render/metrics/HumidityRenderer.js","relationType":"imports"}
-{"type":"relation","from":"src/render/MetricsRenderer.js","to":"src/render/metrics/WindRenderer.js","relationType":"imports"}
 {"type":"relation","from":"src/render/MetricsRenderer.js","to":"src/render/metrics/TemperatureRenderer.js","relationType":"imports"}
+{"type":"relation","from":"src/render/MetricsRenderer.js","to":"src/render/metrics/WindRenderer.js","relationType":"imports"}
+{"type":"relation","from":"src/render/metrics/HumidityRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/metrics/HumidityRenderer.js","to":"src/utils/math.js","relationType":"imports"}
 {"type":"relation","from":"src/render/metrics/TemperatureRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/metrics/TemperatureRenderer.js","to":"src/theme.js","relationType":"imports"}
 {"type":"relation","from":"src/render/metrics/TemperatureRenderer.js","to":"src/utils/math.js","relationType":"imports"}
 {"type":"relation","from":"src/render/metrics/WindRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/metrics/WindRenderer.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/render/metrics/HumidityRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/metrics/HumidityRenderer.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/render/AtmosphereRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/AtmosphereRenderer.js","to":"src/theme.js","relationType":"imports"}
+{"type":"relation","from":"src/render/metrics/WindRenderer.js","to":"src/utils/math.js","relationType":"imports"}
 {"type":"relation","from":"src/render/AtmosphereRenderer.js","to":"src/render/CloudRenderer.js","relationType":"imports"}
 {"type":"relation","from":"src/render/AtmosphereRenderer.js","to":"src/render/PrecipProbabilityRenderer.js","relationType":"imports"}
-{"type":"relation","from":"src/render/CloudRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/PrecipProbabilityRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/GridRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/GridRenderer.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/render/GridRenderer.js","to":"src/utils/math.js","relationType":"imports"}
-{"type":"relation","from":"src/render/GridRenderer.js","to":"src/utils/time.js","relationType":"imports"}
-{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/utils/color.js","relationType":"imports"}
-{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/render/MoonRenderer.js","relationType":"imports"}
+{"type":"relation","from":"src/render/AtmosphereRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/AtmosphereRenderer.js","to":"src/utils/math.js","relationType":"imports"}
 {"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/render/SunMarkers.js","relationType":"imports"}
+{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/utils/color.js","relationType":"imports"}
+{"type":"relation","from":"src/render/BackgroundRenderer.js","to":"src/utils/math.js","relationType":"imports"}
+{"type":"relation","from":"src/render/CloudRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/CloudRenderer.js","to":"src/utils/math.js","relationType":"imports"}
+{"type":"relation","from":"src/render/GridRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/GridRenderer.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/render/GridRenderer.js","to":"src/utils/math.js","relationType":"imports"}
+{"type":"relation","from":"src/render/MoonRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/utils/math.js","relationType":"imports"}
+{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/utils/weather.js","relationType":"imports"}
+{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/ui/TooltipManager.js","relationType":"imports"}
+{"type":"relation","from":"src/render/PrecipProbabilityRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/PrecipProbabilityRenderer.js","to":"src/utils/math.js","relationType":"imports"}
+{"type":"relation","from":"src/render/StickmanRenderer.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/render/StickmanRenderer.js","to":"src/utils/math.js","relationType":"imports"}
 {"type":"relation","from":"src/render/SunMarkers.js","to":"src/store.js","relationType":"imports"}
-{"type":"relation","from":"src/render/SunMarkers.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/render/SunMarkers.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/utils/color.js","relationType":"imports"}
-{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/theme.js","relationType":"imports"}
-{"type":"relation","from":"src/render/OverlayRenderer.js","to":"src/services/AqiManager.js","relationType":"imports"}
-{"type":"relation","from":"src/render/MinimapRenderer.js","to":"src/utils/time.js","relationType":"imports"}
-{"type":"relation","from":"src/render/MinimapRenderer.js","to":"src/theme.js","relationType":"imports"}
+{"type":"relation","from":"src/render/SunMarkers.js","to":"src/utils/math.js","relationType":"imports"}
+{"type":"relation","from":"src/render/MinimapRenderer.js","to":"src/store.js","relationType":"imports"}
 {"type":"relation","from":"src/render/MinimapRenderer.js","to":"src/utils/math.js","relationType":"imports"}
-{"type":"relation","from":"src/utils/pwa.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/utils/weather.js","to":"src/utils/i18n.js","relationType":"imports"}
-{"type":"relation","from":"src/utils/AlertEngine.js","to":"src/utils/i18n.js","relationType":"imports"}
+{"type":"relation","from":"src/render/MinimapRenderer.js","to":"src/render/AtmosphereRenderer.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/DailyCards.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/DailyCards.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/ChangelogModal.js","to":"src/data/changelog.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/FavoritesModal.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/FavoritesModal.js","to":"src/services/FavoritesService.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/FavoritesModal.js","to":"src/services/GeoService.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/MapSelector.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/MapSelector.js","to":"src/services/GeoService.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/MapSelector.js","to":"src/services/FavoritesService.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/AqiRadar.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/AqiRadar.js","to":"src/services/AqiManager.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/PollenRadar.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/PollenRadar.js","to":"src/services/AqiManager.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/SpfModal.js","to":"src/data/skins.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/TopPanel.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/TopPanel.js","to":"src/ui/AqiRadar.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/TopPanel.js","to":"src/ui/PollenRadar.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/TopPanel.js","to":"src/ui/SpfModal.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/TopPanel.js","to":"src/utils/AlertEngine.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/TopPanel.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/store.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/services/StorageService.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/utils/time.js","relationType":"imports"}
+{"type":"relation","from":"src/ui/YearInPixels.js","to":"src/utils/i18n.js","relationType":"imports"}

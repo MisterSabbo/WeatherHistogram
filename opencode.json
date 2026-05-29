@@ -11,7 +11,7 @@
       "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
       "enabled": true,
       "environment": {
-        "MEMORY_FILE_PATH": "./memory.jsonl"
+        "MEMORY_FILE_PATH": "D:/Source/WeatherHistogram/memory.jsonl"
       }
     }
   }
