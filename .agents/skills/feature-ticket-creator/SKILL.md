@@ -9,7 +9,7 @@ description: Use when the user requests any change to the project — new featur
 
 When the user asks for a change — whether a new feature, a bugfix, a refactor, or any modification — **you must not start implementing anything until the requirements are fully detailed in a ticket**. This skill forces you to gather all necessary information by asking explicit questions, **never assuming** any detail about the user's intent, scope, design, or acceptance criteria.
 
-The output is a ticket file in `./feat-tickets/` following the exact format of `./feat-tickets/template.md`.
+The output is a ticket file in `./feat-tickets/` written ONLY in english following the exact format of `./feat-tickets/template.md`.
 
 ## When to Use
 
