@@ -2,6 +2,7 @@ import { storageService } from '../services/StorageService.js';
 import { t } from '../utils/i18n.js';
 import { getPollenLevelByType, getAggregatedPollenLevel } from '../services/AqiManager.js';
 import { getTextColorForBg } from '../utils/color.js';
+import { state } from '../store.js';
 
 const MOODS = [
   { id: 'happy', emoji: '😊', labelKey: 'moods.happy', color: '#fbbf24' },
@@ -28,6 +29,8 @@ let _closeYipModal = null;
 let _yipDragState = null;
 
 let _yipScrollInit = false;
+
+let _yipTheme = 'dark';
 
 export function initYearInPixels() {
   const openBtn = document.getElementById('year-in-pixels-btn');
@@ -390,6 +393,7 @@ function renderYIPGrid(history, param) {
     ];
 
     const cardBgColor = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim();
+    _yipTheme = state.theme;
 
     for (let m=0; m<12; m++) {
         const monthBlock = document.createElement('div');
@@ -847,7 +851,7 @@ function getColorForParam(param, value) {
     if (param === 'maxTemp' || param === 'minTemp' || param === 'apparentMax') {
         if (value < 0) return '#3b82f6';
         if (value < 10) return '#60a5fa';
-        if (value < 15) return '#93c5fd';
+        if (value < 15) return _yipTheme === 'light' ? '#60a5fa' : '#93c5fd';
         if (value < 20) return '#fde047';
         if (value < 25) return '#facc15';
         if (value < 30) return '#fb923c';
@@ -855,13 +859,13 @@ function getColorForParam(param, value) {
         return '#dc2626';
     } else if (param === 'precip') {
         if (value === 0) return 'var(--grid-color)';
-        if (value < 2) return '#bfdbfe';
+        if (value < 2) return _yipTheme === 'light' ? '#93c5fd' : '#bfdbfe';
         if (value < 5) return '#60a5fa';
         if (value < 15) return '#3b82f6';
         return '#1d4ed8';
     } else if (param === 'windMax' || param === 'gustMax') {
-        if (value < 10) return '#ccfbf1';
-        if (value < 20) return '#5eead4';
+        if (value < 10) return _yipTheme === 'light' ? '#5eead4' : '#ccfbf1';
+        if (value < 20) return _yipTheme === 'light' ? '#14b8a6' : '#5eead4';
         if (value < 40) return '#06b6d4';
         if (value < 60) return '#6366f1';
         return '#d946ef';
@@ -874,7 +878,7 @@ function getColorForParam(param, value) {
         return '#9f1239';
     } else if (param.startsWith('pollen')) {
         if (value === 0) return 'var(--grid-color)';
-        if (value === 1) return '#a3e635';
+        if (value === 1) return _yipTheme === 'light' ? '#65a30d' : '#a3e635';
         if (value === 2) return '#facc15';
         if (value === 3) return '#f97316';
         return '#dc2626';

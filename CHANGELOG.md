@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.13.1] - 2026-05-30
+### Enhancement
+- **Soporte de modo claro en Year In Pixels**: `getColorForParam()` ahora devuelve variantes de color 1-2 tonos más oscuras/saturadas en modo claro para los colores pastel con bajo contraste sobre fondo claro (#93c5fd → #60a5fa, #bfdbfe → #93c5fd, #ccfbf1 → #5eead4, #5eead4 → #14b8a6, #a3e635 → #65a30d). Se añadió cache `_yipTheme` (establecido en `renderYIPGrid`, leído en `getColorForParam`) para evitar leer `state.theme` 365+ veces por render. Nueva variable CSS `--yip-day-number-color` en `[data-theme="light"]`. Override de `.yip-dot-badge` en modo claro (fondo `rgba(0,0,0,0.2)`, texto `#1a1a1a`). Todas las pruebas pasan.
+
 ## [v1.13.0b] - 2026-05-30
 ### Fix
 - **Highlight YIP no visible por falta de `data-theme` en init**: El highlight de celda al guardar usaba selectores CSS `[data-theme="dark"] .yip-highlight-flash`, pero `data-theme` nunca se asignaba en `<html>` durante la inicialización — solo en `toggleTheme()` al cambiar manualmente el tema. Añadido `document.documentElement.setAttribute('data-theme', state.theme)` en `initTheme()` para que todos los selectores `[data-theme]` funcionen desde el arranque. El toast "✓ Guardado" se movió fuera del detail sheet (position fixed) para que no desaparezca con la animación de cierre. El highlight se difiere 350ms para ejecutarse tras la animación de cierre de la sheet (300ms). Todos los tests (lint, typecheck, 394 unit, 29 E2E) pasan.

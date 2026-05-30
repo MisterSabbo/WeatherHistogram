@@ -62,6 +62,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `../utils/i18n.js` | `t` | Traducción de textos |
 | `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | Niveles de polen |
 | `../utils/color.js` | `getTextColorForBg` | Color de texto adaptativo por luminancia del fondo |
+| `../store.js` | `state` | Estado global (se lee `state.theme` para variantes de color en light mode) |
 
 ### Funciones internas (no exportadas)
 | Función | Descripción |
@@ -84,6 +85,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `_closeYipModal` | `function\|null` | `null` | Callback para cerrar el YIP modal programáticamente (seteada en initYearInPixels) |
 | `_yipDragState` | `object\|null` | `null` | Estado interno del drag-to-dismiss: `{ startY, currentY, isDragging }` |
 | `cardBgColor` | `string` | computada en renderYIPGrid | Resolved `--card-bg` CSS variable, usada para adaptive text color en celdas sin datos |
+| `_yipTheme` | `string` | `'dark'` | Cache del tema activo (`state.theme`), establecido al inicio de `renderYIPGrid()`. Usado por `getColorForParam()` para devolver variantes de color adaptadas al modo claro. Se lee una vez por render (~365 accesos a state.theme evitados) |
 
 ### Constantes internas
 | Constante | Valor | Contexto |
@@ -199,7 +201,7 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 5. **Cierre unificado**: `closeYipModal()` quita clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. Se llama desde: botón ×, backdrop click, drag-to-dismiss, y borrado de ubicación.
 3. **Selección de ubicación**: Click en chip → selecciona ubicación, carga su history, re-renderiza grid
 4. **Grid mensual**: 12 bloques `.yip-month-block`, cada uno con cabeceras de día (Monday-start), celdas `.yip-day-cell` con color según valor del parámetro, número de día visible, y **dot indicator system** para estados no meteorológicos
-5. **Color por parámetro**: `getColorForParam` asigna colores según rangos definidos para cada tipo de parámetro (temp, precip, wind, AQI, pollen, mood, cold, allergies)
+5. **Color por parámetro**: `getColorForParam` asigna colores según rangos definidos para cada tipo de parámetro (temp, precip, wind, AQI, pollen, mood, cold, allergies). En modo claro (`state.theme === 'light'`), los colores pastel problemáticos (`#93c5fd`, `#bfdbfe`, `#ccfbf1`, `#5eead4`, `#a3e635`) se sustituyen por variantes 1-2 tonos más oscuras/saturadas para mantener contraste suficiente sobre fondo claro. El cache `_yipTheme` (establecido en `renderYIPGrid`) evita leer `state.theme` 365+ veces por render.
 6. **Celdas future**: días posteriores al actual tienen clase `future` (opacidad reducida), sin color ni click
 7. **Click en celda**: abre detail sheet con métricas del día, notas editables, selector multi-mood, y toggles de condiciones de salud (cold/allergies)
 8. **Selector de parámetro**: `populateParamSheet` renderiza bottom sheet con categorías agrupadas (temp, precip, wind, AQI, pollen, mood, health). Al seleccionar, actualiza `selectedParam`, re-renderiza grid y cierra sheet
@@ -287,6 +289,13 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 | Celda past-no-data en dark mode (--card-bg = `#313338`) | day-number color = `#ffffff` sobre fondo oscuro del card |
 | Celda past-no-data en light mode (--card-bg = `#ffffff`) | day-number color = `#1a1a1a` sobre fondo claro del card |
 | Celda future | day-number color basado en `--card-bg` (misma lógica que past-no-data) |
+| Modo claro — celda con temp 10-15° (#93c5fd) | `getColorForParam` retorna `#60a5fa` (variante más oscura) |
+| Modo claro — celda con precip <2mm (#bfdbfe) | `getColorForParam` retorna `#93c5fd` (variante más oscura) |
+| Modo claro — celda con wind <10 km/h (#ccfbf1) | `getColorForParam` retorna `#5eead4` (variante más oscura) |
+| Modo claro — celda con wind 10-20 km/h (#5eead4) | `getColorForParam` retorna `#14b8a6` (variante más oscura) |
+| Modo claro — celda con pollen level 1 (#a3e635) | `getColorForParam` retorna `#65a30d` (variante más oscura/saturada) |
+| Modo claro — dot badge sobre fondo claro | `background: rgba(0,0,0,0.2)`, `color: #1a1a1a` (CSS override) |
+| `_yipTheme` no establecido (getColorForParam llamado fuera de renderYIPGrid) | Usa valor por defecto `'dark'`, se comporta como modo oscuro (seguro) |
 
 ## Escenarios de test
 
@@ -378,3 +387,4 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 | 2026-05-28 | Ticket 003b: Badge +N muestra 2 dots + badge en vez de 3 dots + badge — máximo 3 elementos por celda | SDD |
 | 2026-05-28 | Ticket 005: Convertir modal YIP en bottom sheet full-screen — responsive (desktop centered, mobile bottom sheet ≥95dvh), drag-to-dismiss, grid cell min-width 32→38px, gap 4→5px | SDD |
 | 2026-05-30 | Ticket 004: Highlight más intenso (combinado box-shadow + scale + outline con `var(--accent-precip)`, 1s, light 0.5 / dark 0.3) + mini toast `#yip-saved-toast` en lugar de inline saved-msg | SDD |
+| 2026-05-30 | Ticket 006: Soporte de modo claro en YIP — `getColorForParam()` con variantes light para colores pastel (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), cache `_yipTheme` (establecido en renderYIPGrid, leído en getColorForParam), variable CSS `--yip-day-number-color` en `[data-theme="light"]`, override `.yip-dot-badge` en light mode | SDD |

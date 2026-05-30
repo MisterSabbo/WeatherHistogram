@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.13.1",
+    "changes": [
+      "Soporte de modo claro en YIP: getColorForParam() ahora devuelve variantes 1-2 tonos más oscuras/saturadas en modo claro para los 5 colores pastel problemáticos (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), con cache _yipTheme para evitar 365+ lecturas de state.theme por render. Añadida variable CSS --yip-day-number-color en [data-theme='light']. Override .yip-dot-badge en light mode (fondo más claro, texto oscuro). Todas las pruebas unitarias y E2E pasan."
+    ]
+  },
+  {
     "version": "1.13.0b",
     "changes": [
       "Fix: highlight YIP no visible por falta de data-theme en init — los selectores CSS [data-theme='dark'] nunca matcheaban porque data-theme solo se asignaba al toggle manual del tema. Añadido setAttribute en initTheme() para que todos los selectores [data-theme] funcionen desde el arranque. El toast '✓ Guardado' se movió fuera del detail sheet (position fixed) para no desaparecer con el cierre. El highlight se difiere 350ms para ejecutarse tras la animación de cierre (300ms). Todos los tests pasan."
