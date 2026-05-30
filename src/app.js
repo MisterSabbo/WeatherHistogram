@@ -366,6 +366,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
             }
 
             function initTheme() {
+                document.documentElement.setAttribute('data-theme', state.theme);
                 const settingsThemeToggle = /** @type {HTMLInputElement} */ (document.getElementById('settings-theme-toggle'));
                 if (settingsThemeToggle) {
                     settingsThemeToggle.checked = state.theme === 'dark';

@@ -2,6 +2,14 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.13.0b] - 2026-05-30
+### Fix
+- **Highlight YIP no visible por falta de `data-theme` en init**: El highlight de celda al guardar usaba selectores CSS `[data-theme="dark"] .yip-highlight-flash`, pero `data-theme` nunca se asignaba en `<html>` durante la inicialización — solo en `toggleTheme()` al cambiar manualmente el tema. Añadido `document.documentElement.setAttribute('data-theme', state.theme)` en `initTheme()` para que todos los selectores `[data-theme]` funcionen desde el arranque. El toast "✓ Guardado" se movió fuera del detail sheet (position fixed) para que no desaparezca con la animación de cierre. El highlight se difiere 350ms para ejecutarse tras la animación de cierre de la sheet (300ms). Todos los tests (lint, typecheck, 394 unit, 29 E2E) pasan.
+
+## [v1.13.0a] - 2026-05-30
+### Enhancement
+- **Highlight más intenso y mini toast al guardar en YIP**: El highlight al guardar datos en una celda del Year in Pixels ahora combina `box-shadow` pulsante con `transform: scale(1.15)` y outline semitransparente, usando `var(--accent-precip)` como color de acento. Duración reducida a 1s (antes 1.5s). Intensidad ajustada por tema: opacidad 0.5 en modo claro, 0.3 en modo oscuro. Aparece un mini toast animado "✓ Guardado" en la parte inferior del detail sheet con fade in/out que persiste 600ms antes de cerrar. Todas las pruebas unitarias y E2E pasan.
+
 ## [v1.13.0] - 2026-05-29
 ### Enhancement
 - **YIP modal: cabecera y campos sticky al hacer scroll**: Reestructurado el DOM del modal para que `.yip-modal-header` y el nuevo `.yip-modal-fields-bar` (contiene campos de estado, toggle cold/allergies) estén fuera de `#yip-modal-scroll-content`, permaneciendo siempre visibles al hacer scroll vertical en el grid. Los horizontales (`padding`) se movieron de `.yip-modal-body` (eliminado) a `.yip-year-grid`. Snapshots visuales E2E regenerados.

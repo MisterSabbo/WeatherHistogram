@@ -118,6 +118,7 @@ function setDefaultDom() {
       <button id="confirm-cancel-btn"></button>
       <button id="confirm-ok-btn"></button>
     </div>
+    <div id="yip-detail-saved-toast"></div>
   `
 }
 

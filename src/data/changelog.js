@@ -1,5 +1,17 @@
 export const changelogData = [
   {
+    "version": "1.13.0b",
+    "changes": [
+      "Fix: highlight YIP no visible por falta de data-theme en init — los selectores CSS [data-theme='dark'] nunca matcheaban porque data-theme solo se asignaba al toggle manual del tema. Añadido setAttribute en initTheme() para que todos los selectores [data-theme] funcionen desde el arranque. El toast '✓ Guardado' se movió fuera del detail sheet (position fixed) para no desaparecer con el cierre. El highlight se difiere 350ms para ejecutarse tras la animación de cierre (300ms). Todos los tests pasan."
+    ]
+  },
+  {
+    "version": "1.13.0a",
+    "changes": [
+      "Highlight más intenso y mini toast al guardar en YIP: el highlight combina box-shadow pulsante + transform: scale(1.15) + outline semitransparente usando var(--accent-precip). Duración 1s (antes 1.5s). Intensidad: opacidad 0.5 (claro) / 0.3 (oscuro). Mini toast animado '✓ Guardado' en parte inferior del detail sheet con fade in/out, 600ms antes de cerrar. Todas las pruebas pasan."
+    ]
+  },
+  {
     "version": "1.13.0",
     "changes": [
       "YIP modal: cabecera y campos sticky al hacer scroll — DOM reestructurado para que header y fields-bar estén fuera del scroll-content, siempre visibles durante scroll vertical en el grid. Snapshots E2E regenerados."

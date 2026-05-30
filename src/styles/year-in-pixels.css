@@ -638,14 +638,47 @@
         .yip-clear-btn:active {
             opacity: 0.7;
         }
-        @keyframes yip-highlight-flash {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-            50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        @keyframes yip-highlight-flash-light {
+            0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-precip) 0%, transparent); transform: scale(1); outline: 0px solid color-mix(in srgb, var(--accent-precip) 0%, transparent); outline-offset: 2px; }
+            25% { box-shadow: 0 0 12px 4px color-mix(in srgb, var(--accent-precip) 50%, transparent); transform: scale(1.08); outline: 2px solid color-mix(in srgb, var(--accent-precip) 50%, transparent); }
+            50% { box-shadow: 0 0 16px 6px color-mix(in srgb, var(--accent-precip) 50%, transparent); transform: scale(1.12); outline: 3px solid color-mix(in srgb, var(--accent-precip) 50%, transparent); }
+            100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-precip) 0%, transparent); transform: scale(1); outline: 0px solid color-mix(in srgb, var(--accent-precip) 0%, transparent); }
         }
-        .yip-highlight-flash {
-            animation: yip-highlight-flash 1.5s ease-out;
+        @keyframes yip-highlight-flash-dark {
+            0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-precip) 0%, transparent); transform: scale(1); outline: 0px solid color-mix(in srgb, var(--accent-precip) 0%, transparent); outline-offset: 2px; }
+            25% { box-shadow: 0 0 8px 3px color-mix(in srgb, var(--accent-precip) 30%, transparent); transform: scale(1.08); outline: 2px solid color-mix(in srgb, var(--accent-precip) 30%, transparent); }
+            50% { box-shadow: 0 0 12px 4px color-mix(in srgb, var(--accent-precip) 30%, transparent); transform: scale(1.12); outline: 3px solid color-mix(in srgb, var(--accent-precip) 30%, transparent); }
+            100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-precip) 0%, transparent); transform: scale(1); outline: 0px solid color-mix(in srgb, var(--accent-precip) 0%, transparent); }
         }
+        [data-theme="light"] .yip-highlight-flash {
+            animation: yip-highlight-flash-light 1s ease-out;
+        }
+        [data-theme="dark"] .yip-highlight-flash {
+            animation: yip-highlight-flash-dark 1s ease-out;
+        }
+        .yip-saved-toast {
+            position: fixed;
+            bottom: max(60px, calc(env(safe-area-inset-bottom) + 60px));
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            padding: 8px 24px;
+            background: var(--card-bg);
+            color: var(--accent-precip);
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 8px;
+            border: 1px solid var(--accent-precip);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: calc(var(--z-modal, 6000) + 100);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .yip-saved-toast.visible {
+            opacity: 1;
+        }
+
         .yip-toast {
             position: fixed;
             bottom: max(20px, env(safe-area-inset-bottom));

@@ -745,7 +745,6 @@ async function saveDayMoods(data, locationName) {
 async function saveDayDetail(data, locationName) {
     const notesInput = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('yip-detail-notes-input'));
     const moodsSelector = document.getElementById('yip-moods-selector');
-    const savedMsg = document.getElementById('yip-detail-saved-msg');
     const coldToggle = document.getElementById('yip-cold-toggle');
     const allergiesToggle = document.getElementById('yip-allergies-toggle');
     const loc = locationName || selectedLocation;
@@ -784,9 +783,6 @@ async function saveDayDetail(data, locationName) {
             }
 
             renderYIPGrid(cachedHistory, selectedParam);
-            if (cachedHistory) {
-                highlightYIPCell(data.time);
-            }
         } else {
             showErrorToast(t('config.yipSaveError', 'Error saving'));
             return;
@@ -797,14 +793,26 @@ async function saveDayDetail(data, locationName) {
         return;
     }
 
-    if (savedMsg) {
-        savedMsg.textContent = t('config.yipSavedAll', '✓ Saved');
-        savedMsg.style.display = 'inline';
-    }
-
-    requestAnimationFrame(() => {
+    const savedToast = document.getElementById('yip-detail-saved-toast');
+    if (savedToast) {
+        savedToast.textContent = t('config.yipSavedAll', '✓ Saved');
+        savedToast.classList.add('visible');
         if (_closeDetailSheet) _closeDetailSheet();
-    });
+
+        setTimeout(() => {
+            if (cachedHistory) {
+                highlightYIPCell(data.time);
+            }
+        }, 350);
+
+        setTimeout(() => {
+            savedToast.classList.remove('visible');
+        }, 1350);
+    } else {
+        requestAnimationFrame(() => {
+            if (_closeDetailSheet) _closeDetailSheet();
+        });
+    }
 }
 
 function highlightYIPCell(time) {
@@ -815,7 +823,7 @@ function highlightYIPCell(time) {
         cell.classList.add('yip-highlight-flash');
         setTimeout(() => {
             cell.classList.remove('yip-highlight-flash');
-        }, 1500);
+        }, 1000);
     }
 }
 

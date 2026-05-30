@@ -93,8 +93,8 @@ test.describe('YIP Cold & Allergy Tracking', () => {
 
     await page.locator('#yip-detail-save-btn').click()
     await page.waitForTimeout(500)
-    const savedMsg = page.locator('#yip-detail-saved-msg')
-    await expect(savedMsg).toBeVisible({ timeout: 3000 })
+    const savedToast = page.locator('#yip-detail-saved-toast')
+    await expect(savedToast).toBeVisible({ timeout: 3000 })
 
     // Close detail sheet via backdrop
     await page.evaluate(() => {
@@ -123,8 +123,8 @@ test.describe('YIP Cold & Allergy Tracking', () => {
 
     await page.locator('#yip-detail-save-btn').click()
     await page.waitForTimeout(500)
-    const savedMsg = page.locator('#yip-detail-saved-msg')
-    await expect(savedMsg).toBeVisible({ timeout: 3000 })
+    const savedToast = page.locator('#yip-detail-saved-toast')
+    await expect(savedToast).toBeVisible({ timeout: 3000 })
 
     await page.evaluate(() => {
       const backdrop = document.getElementById('yip-sheet-backdrop')
@@ -152,8 +152,8 @@ test.describe('YIP Cold & Allergy Tracking', () => {
 
     await page.locator('#yip-detail-save-btn').click()
     await page.waitForTimeout(500)
-    const savedMsg = page.locator('#yip-detail-saved-msg')
-    await expect(savedMsg).toBeVisible({ timeout: 3000 })
+    const savedToast = page.locator('#yip-detail-saved-toast')
+    await expect(savedToast).toBeVisible({ timeout: 3000 })
 
     await page.evaluate(() => {
       const backdrop = document.getElementById('yip-sheet-backdrop')
@@ -294,7 +294,7 @@ test.describe('YIP Cold & Allergy Tracking', () => {
     await page.locator('#yip-cold-toggle').click()
     await page.locator('#yip-detail-save-btn').click()
     await page.waitForTimeout(500)
-    await expect(page.locator('#yip-detail-saved-msg')).toBeVisible({ timeout: 3000 })
+    await expect(page.locator('#yip-detail-saved-toast')).toBeVisible({ timeout: 3000 })
 
     // Close sheet
     await page.evaluate(() => {
