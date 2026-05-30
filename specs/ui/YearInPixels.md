@@ -53,6 +53,11 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `.yip-dot-container` | createElement (inside cell) | renderYIPGrid |
 | `.yip-condition-dot` | createElement (inside cell) | renderYIPGrid |
 | `.yip-condition-dot` (CSS) | `width/height: 7px`, `border-radius: 50%`, `border: 1.5px solid #fff` (dark) / `rgba(0,0,0,0.25)` (light) | year-in-pixels.css |
+| `#yip-legend-content` | getElementById innerHTML | renderLegendTabs, renderLegend, renderStateTabContent |
+| `.yip-legend-footer` | Fixed bottom container (querySelector) | HTML structure — outside scroll area |
+| `.yip-legend-tabs` | Tab bar with pagination dots (querySelector) | HTML structure — below legend content |
+| `.yip-tab-label` | Clickable tab label | Tab switching (cell/state) |
+| `.yip-legend-dot` | Pagination dot (● active, ○ inactive) | Tab switch indicator |
 | `#yip-saved-toast` | getElementById style.display + textContent + classList | saveDayDetail, openYIPDetail |
 
 ### Módulos internos
@@ -68,6 +73,8 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | Función | Descripción |
 |---------|-------------|
 | `highlightYIPCell(time)` | Busca `.yip-day-cell[data-time="${time}"]` en el DOM, añade clase `.yip-highlight-flash` por 1s (animación CSS combinada: box-shadow + scale + outline con `var(--accent-precip)`, 1s). Light/dark mode: opacity 0.5 vs 0.3 |
+| `renderLegendTabs(param)` | Renderiza el contenido de la leyenda según `_activeLegendTab` ('cell' o 'state') en `#yip-legend-content`. Si tab='cell' delega en `renderLegend()`; si 'state' delega en `renderStateTabContent()`. Registra event listeners en `.yip-tab-label` y `.yip-legend-dot` (solo si no están ya registrados). Siempre sincroniza la clase `.active` de los dots |
+| `renderStateTabContent(container)` | Renderiza 4 dots de condición (notes=azul, mood=oro, cold=rojo, allergies=verde) con labels traducidos. Cada dot es un círculo de 7px con `border-radius: 50%` y el color de `DOT_COLORS` |
 | `showErrorToast(message)` | Muestra `#yip-toast` con el mensaje, auto-dismiss tras 3s con fade out. Usa `_toastTimer` para evitar múltiples timers |
 | `closeYipModal()` | Cierra el YIP quitando clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. También cancela drag en curso si existe. Se llama desde botón ×, backdrop click, drag-to-dismiss y borrado de ubicación |
 | `_initYipModalDrag()` | Inicializa pointer events en `#yip-modal-drag-handle` para swipe-to-dismiss. Solo activo en mobile (<768px). Guard: si `#yip-modal-scroll-content.scrollTop > 0`, no arrastra. Umbral de cierre >100px |
@@ -85,6 +92,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `_closeYipModal` | `function\|null` | `null` | Callback para cerrar el YIP modal programáticamente (seteada en initYearInPixels) |
 | `_yipDragState` | `object\|null` | `null` | Estado interno del drag-to-dismiss: `{ startY, currentY, isDragging }` |
 | `cardBgColor` | `string` | computada en renderYIPGrid | Resolved `--card-bg` CSS variable, usada para adaptive text color en celdas sin datos |
+| `_activeLegendTab` | `string` | `'cell'` | Tab activo de la leyenda fija. `'cell'` muestra la escala de colores del parámetro actual; `'state'` muestra los 4 dots de condición (notes, mood, cold, allergies). Se cambia al hacer click en `.yip-tab-label` o `.yip-legend-dot` |
 | `_yipTheme` | `string` | `'dark'` | Cache del tema activo (`state.theme`), establecido al inicio de `renderYIPGrid()`. Usado por `getColorForParam()` para devolver variantes de color adaptadas al modo claro. Se lee una vez por render (~365 accesos a state.theme evitados) |
 
 ### Constantes internas
@@ -92,7 +100,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 |-----------|-------|----------|
 | `MOODS` | Array de 6 objetos `{ id, emoji, labelKey, color }` | saveDayMoods, renderYIPGrid, openYIPDetail, getColorForParam, renderLegend |
 | `MOOD_EMOJI_MAP` | Mapa de `id → emoji` | renderYIPGrid (icono emoji en celda) |
-| `DOT_COLORS` | Mapa `{ notes: '#60a5fa', mood: '#fbbf24', cold: '#ef4444', allergies: '#22c55e' }` | renderYIPGrid (dots — tamaño 7px con border 1.5px) |
+| `DOT_COLORS` | Mapa `{ notes: '#60a5fa', mood: '#fbbf24', cold: '#ef4444', allergies: '#22c55e' }` | renderYIPGrid (dots — tamaño 7px con border 1.5px), renderStateTabContent |
 
 ### Nuevos parámetros
 | Parámetro | Color sí | Color no |
@@ -221,6 +229,16 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 19. **Grid coloring por cold/allergies**: Cuando `selectedParam === 'cold'`, las celdas se colorean `#eab308` (yellow) si `data.cold === true`, o `var(--grid-color)` si no. Cuando `selectedParam === 'allergies'`, se colorean `#22c55e` (green) si `data.allergies === true`, o `var(--grid-color)` si no. La leyenda muestra 2 pasos: sí/no
 20. **Popup de toggles en detail sheet**: `openYIPDetail` lee `data.cold` y `data.allergies`, aplica clase `active` a los botones correspondientes. `saveDayDetail` lee el estado de `#yip-cold-toggle.active` y `#yip-allergies-toggle.active`, construye objeto `conditions = { cold: boolean, allergies: boolean }`, y persiste vía `storageService.updateDayConditions`
 
+21. **Legend footer fijo**: La leyenda se ha movido fuera de `#yip-modal-scroll-content` a un contenedor `.yip-legend-footer` fijo en la parte inferior del modal. No scrolla con la cuadrícula. Contiene `#yip-legend-content` (contenido dinámico) y `.yip-legend-tabs` (barra de tabs con dots de paginación).
+
+22. **Dos tabs de leyenda**: `.yip-legend-tabs` contiene dos filas de dot + label: "Celda" (parámetro activo) y "Estado" (condiciones). El dot activo muestra ● con color accent y escala 1.4x (misma convención que `.yip-dot.active`). El dot inactivo muestra ○ en gris (`var(--grid-color)`). Click en el dot o el label cambia `_activeLegendTab` y re-renderiza `#yip-legend-content`.
+
+23. **Tab "Celda"**: Muestra la misma escala de colores que `renderLegend()` actual, basada en `selectedParam`. Se actualiza reactivamente al cambiar de parámetro (porque `renderYIPGrid` llama a `renderLegendTabs`).
+
+24. **Tab "Estado"**: Muestra 4 dots coloreados (7px círculos) con labels: Notes (azul #60a5fa), Mood (oro #fbbf24), Cold (rojo #ef4444), Allergies (verde #22c55e). Los dots usan el mismo estilo que `.yip-condition-dot` pero no tienen border (son standalone, no sobre fondo de celda).
+
+25. **Sincronización de dots en tabs**: `renderLegendTabs` siempre actualiza la clase `.active` en los dots `.yip-legend-dot` basado en `_activeLegendTab`. El dot del tab activo recibe clase `active` (● accent, scale 1.4x). El dot del tab inactivo no tiene clase `active` (○ gris, escala normal).
+
 ## Casos borde
 
 | Entrada | Comportamiento esperado |
@@ -296,6 +314,11 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 | Modo claro — celda con pollen level 1 (#a3e635) | `getColorForParam` retorna `#65a30d` (variante más oscura/saturada) |
 | Modo claro — dot badge sobre fondo claro | `background: rgba(0,0,0,0.2)`, `color: #1a1a1a` (CSS override) |
 | `_yipTheme` no establecido (getColorForParam llamado fuera de renderYIPGrid) | Usa valor por defecto `'dark'`, se comporta como modo oscuro (seguro) |
+| `#yip-legend-content` ausente | renderLegendTabs retorna sin error, no modifica DOM |
+| `.yip-legend-dot` / `.yip-tab-label` ausentes | renderLegendTabs renderiza contenido pero no registra tabs (fallback funcional) |
+| Click en tab activo | No hace nada (no cambia `_activeLegendTab`, no re-renderiza) |
+| Cambio de parámetro con tab "Estado" activo | Tab "Estado" permanece activo, su contenido no cambia (es independiente del parámetro) |
+| Cambio de parámetro con tab "Celda" activo | Tab "Celda" se re-renderiza con la nueva escala de colores |
 
 ## Escenarios de test
 
@@ -388,3 +411,17 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 | 2026-05-28 | Ticket 005: Convertir modal YIP en bottom sheet full-screen — responsive (desktop centered, mobile bottom sheet ≥95dvh), drag-to-dismiss, grid cell min-width 32→38px, gap 4→5px | SDD |
 | 2026-05-30 | Ticket 004: Highlight más intenso (combinado box-shadow + scale + outline con `var(--accent-precip)`, 1s, light 0.5 / dark 0.3) + mini toast `#yip-saved-toast` en lugar de inline saved-msg | SDD |
 | 2026-05-30 | Ticket 006: Soporte de modo claro en YIP — `getColorForParam()` con variantes light para colores pastel (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), cache `_yipTheme` (establecido en renderYIPGrid, leído en getColorForParam), variable CSS `--yip-day-number-color` en `[data-theme="light"]`, override `.yip-dot-badge` en light mode | SDD |
+| 2026-05-30 | Ticket 001: Leyenda fija con tabs Celda/Estado — HTML reestructurado, renderLegendTabs + renderStateTabContent, i18n, tests | SDD |
+
+## Test scenarios (new — Ticket 001)
+
+75. **renderYIPGrid renders legend inside fixed footer**: `#yip-legend-content` está fuera de `#yip-modal-scroll-content`, dentro de `.yip-legend-footer`
+76. **Cell tab active by default**: `_activeLegendTab` === `'cell'` tras renderYIPGrid
+77. **Cell tab shows parameter colors**: `#yip-legend-content` contiene steps de color para el parámetro actual
+78. **State tab shows 4 condition dots**: al hacer click en tab "Estado", `#yip-legend-content` contiene 4 dots coloreados: notes (azul), mood (oro), cold (rojo), allergies (verde)
+79. **State tab dot colors match DOT_COLORS**: cada dot tiene `background-color` igual al valor de `DOT_COLORS`
+80. **Tab switch updates active dot**: dot del tab activo tiene clase `.active`, dot inactivo no
+81. **Click on active tab is no-op**: `_activeLegendTab` no cambia al hacer click en tab ya activo
+82. **Param change re-renders cell tab**: tras cambiar parámetro, tab "Celda" muestra nueva escala
+83. **Param change does not affect state tab**: tab "Estado" mantiene su contenido tras cambio de parámetro
+84. **Legend footer does not scroll with grid**: `.yip-legend-footer` está fuera de `#yip-modal-scroll-content`

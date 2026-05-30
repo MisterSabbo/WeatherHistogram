@@ -31,6 +31,8 @@ let _yipDragState = null;
 let _yipScrollInit = false;
 
 let _yipTheme = 'dark';
+let _activeLegendTab = 'cell';
+let _legendTabListenersAttached = false;
 
 export function initYearInPixels() {
   const openBtn = document.getElementById('year-in-pixels-btn');
@@ -331,10 +333,8 @@ function populateParamSheet() {
 
 function renderYIPGrid(history, param) {
     const container = document.getElementById('yip-grid-container');
-    const legend = document.getElementById('yip-legend');
 
     container.innerHTML = '';
-    legend.innerHTML = '';
 
     if (!history || !history.daily || history.daily.length === 0) {
         container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary); padding: 20px;">Sin historial para mostrar. Usa la app diariamente para acumular datos.</div>';
@@ -550,7 +550,7 @@ function renderYIPGrid(history, param) {
         container.appendChild(monthBlock);
     }
 
-    renderLegend(param, legend);
+    renderLegendTabs(param);
 }
 
 function openYIPDetail(data, dateStr, locationName) {
@@ -956,6 +956,77 @@ function renderLegend(param, legendContainer) {
             <div style="display:flex; align-items:center; gap:4px;">
                 <div style="width:12px; height:12px; background:${s.c}; border-radius:2px;"></div>
                 <span>${s.l}</span>
+            </div>
+        `);
+    });
+}
+
+function renderLegendTabs(param) {
+    const content = document.getElementById('yip-legend-content');
+    if (!content) return;
+
+    content.innerHTML = '';
+
+    if (_activeLegendTab === 'cell') {
+        renderLegend(param, content);
+    } else if (_activeLegendTab === 'state') {
+        renderStateTabContent(content);
+    }
+
+    const dots = document.querySelectorAll('.yip-legend-dot');
+    const labels = document.querySelectorAll('.yip-tab-label');
+    dots.forEach((dot, i) => {
+        const label = /** @type {HTMLElement} */ (labels[i]);
+        if (label && label.dataset.tab === _activeLegendTab) {
+            dot.classList.add('active');
+        } else {
+            dot.classList.remove('active');
+        }
+    });
+
+    if (!_legendTabListenersAttached) {
+        _legendTabListenersAttached = true;
+        const tabsContainer = document.querySelector('.yip-legend-tabs');
+        if (!tabsContainer) return;
+
+        tabsContainer.addEventListener('click', (e) => {
+            const target = /** @type {HTMLElement} */ (e.target);
+            let tab = null;
+
+            if (target.classList.contains('yip-tab-label')) {
+                tab = target.dataset.tab;
+            } else if (target.classList.contains('yip-legend-dot')) {
+                const allDots = tabsContainer.querySelectorAll('.yip-legend-dot');
+                const allLabels = tabsContainer.querySelectorAll('.yip-tab-label');
+                const idx = Array.from(allDots).indexOf(target);
+                const matchedLabel = /** @type {HTMLElement} */ (allLabels[idx]);
+                if (matchedLabel) {
+                    tab = matchedLabel.dataset.tab;
+                }
+            }
+
+            if (tab && tab !== _activeLegendTab) {
+                _activeLegendTab = tab;
+                renderLegendTabs(selectedParam);
+            }
+        });
+    }
+}
+
+function renderStateTabContent(container) {
+    const items = [
+        { key: 'notes', label: t('config.legendNotes', 'Notes') },
+        { key: 'mood', label: t('config.legendMood', 'Mood') },
+        { key: 'cold', label: t('config.legendCold', 'Cold') },
+        { key: 'allergies', label: t('config.legendAllergies', 'Allergies') }
+    ];
+
+    items.forEach(item => {
+        const color = DOT_COLORS[item.key];
+        container.insertAdjacentHTML('beforeend', `
+            <div style="display:flex; align-items:center; gap:4px;">
+                <span class="yip-state-dot" style="background:${color};"></span>
+                <span>${item.label}</span>
             </div>
         `);
     });

@@ -90,7 +90,15 @@ function setDefaultDom() {
       <button id="close-yip-modal-btn"></button>
       <button id="yip-delete-loc-btn"></button>
       <div id="yip-grid-container"></div>
-      <div id="yip-legend"></div>
+      <div class="yip-legend-footer">
+        <div id="yip-legend-content" class="yip-legend-content"></div>
+        <div class="yip-legend-tabs">
+          <span class="yip-legend-dot active">&#x25CF;</span>
+          <span class="yip-tab-label" data-tab="cell">Celda</span>
+          <span class="yip-legend-dot">&#x25CB;</span>
+          <span class="yip-tab-label" data-tab="state">Estado</span>
+        </div>
+      </div>
       <div id="yip-location-dots"></div>
       <div id="yip-param-sheet"></div>
       <div id="yip-detail-date"></div>
@@ -550,21 +558,45 @@ describe('YearInPixels', () => {
     })
   })
 
-  describe('renderLegend', () => {
-    it('renderiza steps de leyenda según el parámetro', () => {
+  describe('renderLegendTabs', () => {
+    it('renders cell tab content by default', () => {
       const today = new Date()
       const mockData = { daily: [{ time: `${today.getFullYear()}-01-15`, tempMax: 20, tempMin: 10 }] }
       YIP.renderYIPGrid(mockData, 'maxTemp')
-      const legend = document.getElementById('yip-legend')
-      expect(legend.children.length).toBeGreaterThan(0)
+      const content = document.getElementById('yip-legend-content')
+      expect(content.children.length).toBeGreaterThan(0)
     })
 
-    it('renderiza 6 entradas para param mood', () => {
+    it('renders 6 entries for mood param in cell tab', () => {
       const today = new Date()
       const mockData = { daily: [{ time: `${today.getFullYear()}-01-15`, tempMax: 20, tempMin: 10 }] }
       YIP.renderYIPGrid(mockData, 'mood')
-      const legend = document.getElementById('yip-legend')
-      expect(legend.children.length).toBe(6)
+      const content = document.getElementById('yip-legend-content')
+      expect(content.children.length).toBe(6)
+    })
+
+    it('shows state tab content when clicking Estado label', () => {
+      const today = new Date()
+      const mockData = { daily: [{ time: `${today.getFullYear()}-01-15`, tempMax: 20, tempMin: 10 }] }
+      YIP.renderYIPGrid(mockData, 'maxTemp')
+      const stateLabel = document.querySelector('.yip-tab-label[data-tab="state"]')
+      stateLabel.click()
+      const content = document.getElementById('yip-legend-content')
+      expect(content.children.length).toBe(4)
+      const dots = content.querySelectorAll('.yip-state-dot')
+      expect(dots.length).toBe(4)
+    })
+
+    it('toggles dot active class on tab switch', () => {
+      const today = new Date()
+      const mockData = { daily: [{ time: `${today.getFullYear()}-01-15`, tempMax: 20, tempMin: 10 }] }
+      YIP.renderYIPGrid(mockData, 'maxTemp')
+      const dots = document.querySelectorAll('.yip-legend-dot')
+      expect(dots[0].classList.contains('active')).toBe(true)
+      expect(dots[1].classList.contains('active')).toBe(false)
+      document.querySelector('.yip-tab-label[data-tab="state"]').click()
+      expect(dots[0].classList.contains('active')).toBe(false)
+      expect(dots[1].classList.contains('active')).toBe(true)
     })
   })
 

@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.14.0] - 2026-05-30
+### Enhancement
+- **Fixed legend with Cell/State tabs in YIP modal**: The legend was moved outside the scroll area to become a fixed footer within the YIP modal, always visible without scrolling. Two tabs — "Cell" (parameter color scale) and "State" (condition dot colors) — are navigable via pagination dots (● active / ○ inactive) matching the existing `.yip-dot` style. The "State" tab shows the 4 semantic dot colors (notes=blue, mood=gold, cold=red, allergies=green) with translated labels. The "Cell" tab updates reactively when the parameter changes. Tab switching is idempotent (clicking the active tab is a no-op). All tests pass.
+
 ## [v1.13.1] - 2026-05-30
 ### Enhancement
 - **Soporte de modo claro en Year In Pixels**: `getColorForParam()` ahora devuelve variantes de color 1-2 tonos más oscuras/saturadas en modo claro para los colores pastel con bajo contraste sobre fondo claro (#93c5fd → #60a5fa, #bfdbfe → #93c5fd, #ccfbf1 → #5eead4, #5eead4 → #14b8a6, #a3e635 → #65a30d). Se añadió cache `_yipTheme` (establecido en `renderYIPGrid`, leído en `getColorForParam`) para evitar leer `state.theme` 365+ veces por render. Nueva variable CSS `--yip-day-number-color` en `[data-theme="light"]`. Override de `.yip-dot-badge` en modo claro (fondo `rgba(0,0,0,0.2)`, texto `#1a1a1a`). Todas las pruebas pasan.

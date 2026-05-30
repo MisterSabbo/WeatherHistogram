@@ -110,6 +110,12 @@ export const translations = {
             yipSavedAll: "✓ Guardado",
             yipSaveError: "Error al guardar",
             yipNoDataMeteo: "Sin datos meteorológicos",
+            legendTabCell: "Celda",
+            legendTabState: "Estado",
+            legendNotes: "Notas",
+            legendMood: "Ánimo",
+            legendCold: "Resfriado",
+            legendAllergies: "Alergias",
             langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
         },
         theme: {
@@ -362,6 +368,12 @@ export const translations = {
             yipSavedAll: "✓ Saved",
             yipSaveError: "Error saving",
             yipNoDataMeteo: "No weather data",
+            legendTabCell: "Cell",
+            legendTabState: "State",
+            legendNotes: "Notes",
+            legendMood: "Mood",
+            legendCold: "Cold",
+            legendAllergies: "Allergies",
             langChangeConfirm: "Change language? The application will update."
         },
         theme: {

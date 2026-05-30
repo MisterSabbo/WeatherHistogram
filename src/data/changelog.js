@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.14.0",
+    "changes": [
+      "Fixed legend with Cell/State tabs in YIP modal: legend moved outside scroll area as fixed footer with two tabs (Cell for parameter colors, State for condition dots) navigable via pagination dots (● active / ○ inactive). State tab shows 4 condition dots (notes=blue, mood=gold, cold=red, allergies=green). Cell tab updates reactively on param change. i18n strings for tab and condition labels. All tests pass."
+    ]
+  },
+  {
     "version": "1.13.1",
     "changes": [
       "Soporte de modo claro en YIP: getColorForParam() ahora devuelve variantes 1-2 tonos más oscuras/saturadas en modo claro para los 5 colores pastel problemáticos (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), con cache _yipTheme para evitar 365+ lecturas de state.theme por render. Añadida variable CSS --yip-day-number-color en [data-theme='light']. Override .yip-dot-badge en light mode (fondo más claro, texto oscuro). Todas las pruebas unitarias y E2E pasan."

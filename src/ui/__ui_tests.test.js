@@ -286,7 +286,7 @@ describe('YearInPixels', () => {
   });
 
   it('renderYIPGrid adds dot indicators when day has notes', () => {
-    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div class="yip-legend-footer"><div id="yip-legend-content" class="yip-legend-content"></div><div class="yip-legend-tabs"><span class="yip-legend-dot active">●</span><span class="yip-tab-label" data-tab="cell">Celda</span><span class="yip-legend-dot">○</span><span class="yip-tab-label" data-tab="state">Estado</span></div></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
     const history = {
@@ -303,7 +303,7 @@ describe('YearInPixels', () => {
   });
 
   it('renderYIPGrid does not add dot container when day has no states', () => {
-    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div class="yip-legend-footer"><div id="yip-legend-content" class="yip-legend-content"></div><div class="yip-legend-tabs"><span class="yip-legend-dot active">●</span><span class="yip-tab-label" data-tab="cell">Celda</span><span class="yip-legend-dot">○</span><span class="yip-tab-label" data-tab="state">Estado</span></div></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
     const history = {
@@ -316,7 +316,7 @@ describe('YearInPixels', () => {
   });
 
   it('renderYIPGrid with param=mood colors cell by first mood', () => {
-    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div class="yip-legend-footer"><div id="yip-legend-content" class="yip-legend-content"></div><div class="yip-legend-tabs"><span class="yip-legend-dot active">●</span><span class="yip-tab-label" data-tab="cell">Celda</span><span class="yip-legend-dot">○</span><span class="yip-tab-label" data-tab="state">Estado</span></div></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
     const history = {
@@ -330,7 +330,7 @@ describe('YearInPixels', () => {
   });
 
   it('renderYIPGrid with param=mood shows empty cell when no moods', () => {
-    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div class="yip-legend-footer"><div id="yip-legend-content" class="yip-legend-content"></div><div class="yip-legend-tabs"><span class="yip-legend-dot active">●</span><span class="yip-tab-label" data-tab="cell">Celda</span><span class="yip-legend-dot">○</span><span class="yip-tab-label" data-tab="state">Estado</span></div></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
     const history = {
@@ -343,7 +343,7 @@ describe('YearInPixels', () => {
   });
 
   it('renderYIPGrid shows dot indicator when day has moods', () => {
-    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div class="yip-legend-footer"><div id="yip-legend-content" class="yip-legend-content"></div><div class="yip-legend-tabs"><span class="yip-legend-dot active">●</span><span class="yip-tab-label" data-tab="cell">Celda</span><span class="yip-legend-dot">○</span><span class="yip-tab-label" data-tab="state">Estado</span></div></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
     const history = {
@@ -360,7 +360,7 @@ describe('YearInPixels', () => {
   });
 
   it('renderYIPGrid shows multiple dot indicators when both notes and moods exist', () => {
-    document.body.innerHTML = '<div id="yip-grid-container"></div><div id="yip-legend"></div>';
+    document.body.innerHTML = '<div id="yip-grid-container"></div><div class="yip-legend-footer"><div id="yip-legend-content" class="yip-legend-content"></div><div class="yip-legend-tabs"><span class="yip-legend-dot active">●</span><span class="yip-tab-label" data-tab="cell">Celda</span><span class="yip-legend-dot">○</span><span class="yip-tab-label" data-tab="state">Estado</span></div></div>';
     const currentYear = new Date().getFullYear();
     const jan1 = new Date(currentYear, 0, 1).getTime();
     const history = {

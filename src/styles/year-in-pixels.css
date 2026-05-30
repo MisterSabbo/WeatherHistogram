@@ -183,6 +183,70 @@
             flex-wrap: wrap;
         }
 
+        .yip-legend-footer {
+            flex-shrink: 0;
+            border-top: 1px solid var(--grid-color);
+            padding: 8px 24px 12px;
+            background: var(--card-bg);
+            position: relative;
+            z-index: 1;
+        }
+        .yip-legend-content {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            align-items: center;
+            flex-wrap: wrap;
+            min-height: 20px;
+        }
+        .yip-legend-content .yip-state-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .yip-legend-tabs {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0 0;
+        }
+        .yip-legend-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--grid-color);
+            transition: background 0.2s, transform 0.2s;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5px;
+            line-height: 1;
+            color: transparent;
+            cursor: pointer;
+            user-select: none;
+        }
+        .yip-legend-dot.active {
+            background: var(--accent-precip);
+            transform: scale(1.4);
+        }
+        .yip-tab-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0 6px;
+            user-select: none;
+            transition: color 0.2s;
+        }
+        .yip-tab-label:hover {
+            color: var(--text-primary);
+        }
+
 /* --- YIP Layout & Bottom Sheet --- */
         .yip-year-grid {
             display: flex;
