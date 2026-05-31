@@ -77,7 +77,7 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `renderStateTabContent(container)` | Renderiza 4 dots de condición (notes=azul, mood=oro, cold=rojo, allergies=verde) con labels traducidos. Cada dot es un círculo de 7px con `border-radius: 50%` y el color de `DOT_COLORS` |
 | `showErrorToast(message)` | Muestra `#yip-toast` con el mensaje, auto-dismiss tras 3s con fade out. Usa `_toastTimer` para evitar múltiples timers |
 | `closeYipModal()` | Cierra el YIP quitando clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. También cancela drag en curso si existe. Se llama desde botón ×, backdrop click, drag-to-dismiss y borrado de ubicación |
-| `_initYipModalDrag()` | Inicializa pointer events en `#yip-modal-drag-handle` para swipe-to-dismiss. Solo activo en mobile (<768px). Guard: si `#yip-modal-scroll-content.scrollTop > 0`, no arrastra. Umbral de cierre >100px |
+| `_initYipModalDrag()` | Inicializa pointer events en `#yip-modal-drag-handle` para swipe-to-dismiss. Solo activo en mobile (<768px). El arrastre puede iniciarse desde los elementos fijos del header (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) incluso cuando el contenido scrollable está scrolleado. Solo los toques dentro de `#yip-modal-scroll-content` respetan el guard de scroll (scrollTop > 0 bloquea el arrastre). Umbral de cierre >100px |
 
 ### Variables globales de módulo (no `state`)
 | Variable | Tipo | Inicial | Uso |
@@ -204,8 +204,8 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 
 1. **Inicialización**: `initYearInPixels` es idempotente — si `#year-in-pixels-btn` no existe, retorna sin error
 2. **Apertura responsive**: Al hacer click en `#year-in-pixels-btn`, obtiene todas las keys de IndexedDB, renderiza chips de ubicación, y carga datos de la primera ubicación (o la seleccionada previamente). Luego añade clase `.open` a `#yip-modal` y `#yip-modal-backdrop`. En desktop (≥768px) el modal aparece centrado con scale animation; en mobile (<768px) el panel se desliza desde abajo como bottom sheet ≥95dvh.
-3. **Drag-to-dismiss (mobile)**: `_initYipModalDrag()` registra pointer events en `#yip-modal-drag-handle`. Arrastre hacia abajo >100px cuando `scrollTop === 0` cierra el modal. Usa `pointerdown`/`pointermove`/`pointerup` con fallback touch. Misma lógica que `openBottomSheet()`.
-4. **Scroll guard (mobile)**: Si `#yip-modal-scroll-content` tiene `scrollTop > 0`, no se inicia el arrastre — el contenido scrolla normalmente. Esto evita el "scroll vs swipe" conflict.
+3. **Drag-to-dismiss (mobile)**: `_initYipModalDrag()` registra pointer events en `#yip-modal-drag-handle`. Arrastre hacia abajo >100px cierra el modal. Usa `pointerdown`/`pointermove`/`pointerup` con fallback touch. Misma lógica que `openBottomSheet()`. El arrastre puede iniciarse desde los elementos fijos del header (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) incluso cuando el contenido scrollable está scrolleado.
+4. **Scroll guard (mobile)**: Dentro de `#yip-modal-scroll-content`, si `scrollTop > 0` no se inicia el arrastre — el contenido scrolla normalmente. Esto evita el "scroll vs swipe" conflict. Los elementos fijos del header (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) tienen `touch-action: none` en CSS y pueden iniciar arrastre independientemente del scroll.
 5. **Cierre unificado**: `closeYipModal()` quita clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. Se llama desde: botón ×, backdrop click, drag-to-dismiss, y borrado de ubicación.
 3. **Selección de ubicación**: Click en chip → selecciona ubicación, carga su history, re-renderiza grid
 4. **Grid mensual**: 12 bloques `.yip-month-block`, cada uno con cabeceras de día (Monday-start), celdas `.yip-day-cell` con color según valor del parámetro, número de día visible, y **dot indicator system** para estados no meteorológicos
@@ -247,7 +247,7 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 | `#yip-modal` no existe | `initYearInPixels` retorna sin error |
 | Mobile (<768px) con drag >100px | Cierra modal (closeYipModal) |
 | Mobile con drag <100px | Sheet vuelve a posición inicial (translateY(0)) |
-| Mobile con scrollTop >0 en scroll-content | Drag no se inicia, contenido scrolla normalmente |
+| Mobile con scrollTop >0 en scroll-content | Drag no se inicia desde scrollContent, contenido scrolla. Drag desde header elements (drag handle, header, fields bar) sí funciona |
 | Resize de desktop a mobile con modal abierto | Comportamiento no cambia hasta cerrar/reabrir (no hay listener dinámico) |
 | Backdrop click en desktop | backdrop onclick → closeYipModal() |
 | Backdrop click en mobile | #yip-modal-backdrop.onclick → closeYipModal() |
@@ -412,6 +412,7 @@ Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de l
 | 2026-05-30 | Ticket 004: Highlight más intenso (combinado box-shadow + scale + outline con `var(--accent-precip)`, 1s, light 0.5 / dark 0.3) + mini toast `#yip-saved-toast` en lugar de inline saved-msg | SDD |
 | 2026-05-30 | Ticket 006: Soporte de modo claro en YIP — `getColorForParam()` con variantes light para colores pastel (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), cache `_yipTheme` (establecido en renderYIPGrid, leído en getColorForParam), variable CSS `--yip-day-number-color` en `[data-theme="light"]`, override `.yip-dot-badge` en light mode | SDD |
 | 2026-05-30 | Ticket 001: Leyenda fija con tabs Celda/Estado — HTML reestructurado, renderLegendTabs + renderStateTabContent, i18n, tests | SDD |
+| 2026-05-31 | Fix: Drag-to-dismiss desde header elements funciona incluso con scrollContent scrolleado — eliminado guard universal en onStart(), canDragFrom() + touchstart guard ya protegen cada call site | SDD |
 
 ## Test scenarios (new — Ticket 001)
 

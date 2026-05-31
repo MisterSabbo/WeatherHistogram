@@ -85,6 +85,8 @@
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             overscroll-behavior-y: contain;
+            scroll-snap-type: y mandatory;
+            scroll-snap-stop: always;
         }
         .yip-modal-header {
             display: flex;
@@ -253,15 +255,16 @@
             flex-direction: column;
             gap: 24px;
             padding: 0 24px 32px;
-            scroll-snap-type: y mandatory;
         }
- 
+  
         @media (min-width: 768px) {
+            .yip-modal-scroll-content {
+                scroll-snap-type: none;
+            }
             .yip-year-grid {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
                 gap: 16px;
-                scroll-snap-type: none;
             }
         }
 

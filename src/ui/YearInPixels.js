@@ -171,7 +171,6 @@ function _initYipModalDrag() {
 
   function onStart(clientY) {
     if (!modal.classList.contains('open')) return;
-    if (scrollContent.scrollTop > 0) return;
 
     _yipDragState = { startY: clientY, currentY: clientY, isDragging: true };
     isDragging = true;

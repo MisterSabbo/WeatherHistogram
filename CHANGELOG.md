@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.14.1] - 2026-05-31
+### Fix
+- **YIP scroll snapping a meses en móvil**: El `scroll-snap-type: y mandatory` estaba aplicado en `.yip-year-grid` (contenido interno) en lugar de en el contenedor scroll (`.yip-modal-scroll-content`). Movido al contenedor correcto y añadido `scroll-snap-stop: always` para que el scroll vertical del YIP se detenga en cada mes en lugar de ser continuo, facilitando la navegación en móvil.
+
 ## [v1.14.0] - 2026-05-30
 ### Enhancement
 - **Fixed legend with Cell/State tabs in YIP modal**: The legend was moved outside the scroll area to become a fixed footer within the YIP modal, always visible without scrolling. Two tabs — "Cell" (parameter color scale) and "State" (condition dot colors) — are navigable via pagination dots (● active / ○ inactive) matching the existing `.yip-dot` style. The "State" tab shows the 4 semantic dot colors (notes=blue, mood=gold, cold=red, allergies=green) with translated labels. The "Cell" tab updates reactively when the parameter changes. Tab switching is idempotent (clicking the active tab is a no-op). All tests pass.

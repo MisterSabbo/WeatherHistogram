@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.14.1",
+    "changes": [
+      "YIP scroll snapping a meses en móvil: scroll-snap-type movido de .yip-year-grid (contenido interno) a .yip-modal-scroll-content (contenedor scroll real) y añadido scroll-snap-stop: always para que el scroll vertical se detenga en cada mes en lugar de ser continuo, facilitando la navegación móvil."
+    ]
+  },
+  {
     "version": "1.14.0",
     "changes": [
       "Fixed legend with Cell/State tabs in YIP modal: legend moved outside scroll area as fixed footer with two tabs (Cell for parameter colors, State for condition dots) navigable via pagination dots (● active / ○ inactive). State tab shows 4 condition dots (notes=blue, mood=gold, cold=red, allergies=green). Cell tab updates reactively on param change. i18n strings for tab and condition labels. All tests pass."
