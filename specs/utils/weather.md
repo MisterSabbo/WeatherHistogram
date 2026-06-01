@@ -1,52 +1,52 @@
-# Spec: `src/utils/weather.js`
+﻿# Spec: `src/utils/weather.js`
 
-## Propósito
-Función simple que traduce códigos WMO a descripciones textuales del tiempo.
+## Purpose
+Simple function that translates WMO codes to textual weather descriptions.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `./i18n.js` | `t` | Traducir código WMO |
+| `./i18n.js` | `t` | Translate WMO code |
 
-## API Pública
+## Public API
 
 ### `export function getWeatherDescription(code: number): string`
 
-**Descripción:** Retorna la descripción textual para un código WMO de Open-Meteo.
+**Description:** Returns the textual description for an Open-Meteo WMO code.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `code` | `number` | Código WMO (0-99) |
+| `code` | `number` | WMO code (0-99) |
 
-**Retorno:** `string`
+**Return:** `string`
 
 **Mutates state:** No
 
 **Async:** No
 
-## Comportamiento
+## Behavior
 
-1. Busca `t('weatherCodes.' + code)` 
-2. Si no encuentra, retorna `t('weatherCodes.unknown')`
+1. Looks up `t('weatherCodes.' + code)` 
+2. If not found, returns `t('weatherCodes.unknown')`
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `code = 0` | `t('weatherCodes.0')` → `'Despejado'` / `'Clear'` |
-| `code = 999` (inexistente) | `t('weatherCodes.999')` → retorna `'weatherCodes.999'`, luego fallback a `t('weatherCodes.unknown')` |
+| `code = 0` | `t('weatherCodes.0')` => `'Clear'` |
+| `code = 999` (non-existent) | `t('weatherCodes.999')` => returns `'weatherCodes.999'`, then fallback to `t('weatherCodes.unknown')` |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Código conocido:** `getWeatherDescription(0)` retorna traducción de "Despejado"/"Clear"
-2. **Código desconocido:** `getWeatherDescription(999)` retorna traducción de "Desconocido"/"Unknown"
-3. **Código null/undefined:** `t('weatherCodes.' + null)` = `t('weatherCodes.null')` → fallback a unknown
+1. **Known code:** `getWeatherDescription(0)` returns translation of "Clear"
+2. **Unknown code:** `getWeatherDescription(999)` returns translation of "Unknown"
+3. **Null/undefined code:** `t('weatherCodes.' + null)` = `t('weatherCodes.null')` => fallback to unknown
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

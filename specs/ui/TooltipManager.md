@@ -1,92 +1,92 @@
-# Spec: `src/ui/TooltipManager.js`
+﻿# Spec: `src/ui/TooltipManager.js`
 
-## Propósito
-Gestión de tooltips para desktop (hover) y bottom sheets para mobile (click) en métricas y ubicación.
+## Purpose
+Tooltip management for desktop (hover) and bottom sheets for mobile (click) on metrics and location.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `./BottomSheet.js` | `openBottomSheet` | modales métricas con scrollElementId |
+| `./BottomSheet.js` | `openBottomSheet` | metric modals with scrollElementId |
 
 ### DOM
-| Elemento | Tipo de acceso | Contexto |
+| Element | Access type | Context |
 |----------|---------------|----------|
 | `.info-icon` | querySelectorAll | hover/click |
 | `.location-group` | querySelectorAll | hover/click |
-| `.data-value` | querySelectorAll | click mobile |
-| `.custom-tooltip` | querySelectorAll | mostrar/ocultar |
+| `.data-value` | querySelectorAll | mobile click |
+| `.custom-tooltip` | querySelectorAll | show/hide |
 
-## API Pública
+## Public API
 
 ### `export function showTooltip(el: HTMLElement): void`
 
-**Descripción:** Muestra tooltip, centrado en mobile.
+**Description:** Shows tooltip, centered on mobile.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `el` | `HTMLElement` | Elemento que activa el tooltip |
+| `el` | `HTMLElement` | Element that triggers the tooltip |
 
-**Metadatos:**
-- Mutates state: Sí (modifica display/posición de tooltip)
+**Metadata:**
+- Mutates state: Yes (modifies tooltip display/position)
 - Async: No
 
 ### `export function hideTooltip(el: HTMLElement): void`
 
-**Descripción:** Oculta tooltip.
+**Description:** Hides tooltip.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `el` | `HTMLElement` | Elemento cuyo tooltip ocultar |
+| `el` | `HTMLElement` | Element whose tooltip to hide |
 
-**Metadatos:**
-- Mutates state: Sí (modifica display de tooltip)
+**Metadata:**
+- Mutates state: Yes (modifies tooltip display)
 - Async: No
 
 ### `export function initTooltipManager(): void`
 
-**Descripción:** Inicializa eventos hover (desktop) y click (mobile) para tooltips.
+**Description:** Initializes hover (desktop) and click (mobile) events for tooltips.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| — | — | Sin parámetros |
+| — | — | No parameters |
 
-**Metadatos:**
-- Mutates state: Sí (registra event listeners)
+**Metadata:**
+- Mutates state: Yes (registers event listeners)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Desktop (>=600px): hover en .info-icon y .location-group
-2. Mobile (<600px): click en .data-value → abre modal si tiene METRIC_MODALS mapping, con scrollElementId = `_sheetId.replace('-modal', '-sheet') + '-scroll-content'` (ej: aqi-modal → aqi-sheet-scroll-content)
-3. Location group: solo muestra tooltip si hay overflow (texto truncado)
-4. Global click en mobile cierra todos los tooltips
-5. Tooltip en mobile: position fixed, centrado horizontal, debajo del elemento
+1. Desktop (>=600px): hover on .info-icon and .location-group
+2. Mobile (<600px): click on .data-value → opens modal if it has METRIC_MODALS mapping, with scrollElementId = `_sheetId.replace('-modal', '-sheet') + '-scroll-content'` (e.g., aqi-modal → aqi-sheet-scroll-content)
+3. Location group: only shows tooltip if there is overflow (truncated text)
+4. Global click on mobile closes all tooltips
+5. Tooltip on mobile: position fixed, horizontally centered, below the element
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `el = null` / `undefined` | `showTooltip` / `hideTooltip` no lanzan error |
-| `.info-icon` / `.location-group` no existen | `initTooltipManager` no registra eventos para esos selectores |
-| Elemento sin `.custom-tooltip` asociado | `showTooltip` no encuentra tooltip, no lanza error |
-| Desktop (>600px) con click táctil | Comportamiento hover, ignora click |
-| Location sin overflow (texto no truncado) | No muestra tooltip |
-| Mobile global click cierra tooltip que no existe | No lanza error |
+| `el = null` / `undefined` | `showTooltip` / `hideTooltip` do not throw |
+| `.info-icon` / `.location-group` do not exist | `initTooltipManager` does not register events for those selectors |
+| Element without `.custom-tooltip` associated | `showTooltip` does not find tooltip, does not throw |
+| Desktop (>600px) with touch click | Hover behavior, ignores click |
+| Location without overflow (non-truncated text) | Does not show tooltip |
+| Mobile global click closes non-existent tooltip | Does not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initTooltipManager` con elementos DOM, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Selectores sin elementos, no lanza error
-3. **Exporta las funciones esperadas:** `initTooltipManager`, `showTooltip`, `hideTooltip` son funciones
-4. **Tooltip con elemento null:** `showTooltip(null)` no lanza error
-5. **Desktop hover:** `window.innerWidth >= 600`, hover en info-icon
-6. **Mobile click:** `window.innerWidth < 600`, click en data-value
+1. **Initializes without errors with DOM elements present:** `initTooltipManager` with DOM elements, does not throw
+2. **Does not throw if DOM elements are missing:** Selectors without elements, does not throw
+3. **Exports expected functions:** `initTooltipManager`, `showTooltip`, `hideTooltip` are functions
+4. **Tooltip with null element:** `showTooltip(null)` does not throw
+5. **Desktop hover:** `window.innerWidth >= 600`, hover on info-icon
+6. **Mobile click:** `window.innerWidth < 600`, click on data-value
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-28 | Añadido scrollElementId pattern a openBottomSheet en mobile click (naming: -modal → -sheet) | SDD |
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-28 | Added scrollElementId pattern to openBottomSheet in mobile click (naming: -modal → -sheet) | SDD |
+| 2026-05-21 | Initial spec | SDD |

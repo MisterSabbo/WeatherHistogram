@@ -1,17 +1,17 @@
-# Spec: `src/utils/pwa.js`
+﻿# Spec: `src/utils/pwa.js`
 
-## Propósito
-Módulo PWA: registro de Service Worker, manejo del prompt de instalación, detección de nuevas versiones, limpieza de caché y recarga.
+## Purpose
+PWA module: Service Worker registration, install prompt handling, new version detection, cache cleanup and reload.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `./i18n.js` | `t` | Textos de notificaciones |
+| `./i18n.js` | `t` | Notification texts |
 
 ### DOM
-| Elemento | Tipo de acceso | Contexto |
+| Element | Access type | Context |
 |----------|---------------|----------|
 | `#pwa-install-btn` | getElementById / style | showInstallButton |
 | `.controls-right` | querySelector | showInstallButton |
@@ -22,56 +22,56 @@ Módulo PWA: registro de Service Worker, manejo del prompt de instalación, dete
 | `./sw.js` | navigator.serviceWorker.register | registerSW |
 | `./version.json` | fetch | checkAppVersion |
 
-## API Pública
+## Public API
 
 ### `export function registerSW(): { onUpdate: ?Function }`
 
-**Descripción:** Registra el Service Worker (`sw.js`). Emite `onUpdate` cuando un nuevo SW se instala y está esperando.
+**Description:** Registers the Service Worker (`sw.js`). Emits `onUpdate` when a new SW is installed and waiting.
 
 ### `export function handleInstallPrompt(): void`
 
-**Descripción:** Escucha `beforeinstallprompt` y `appinstalled`. Muestra botón de instalación en la UI.
+**Description:** Listens for `beforeinstallprompt` and `appinstalled`. Shows install button in the UI.
 
 ### `export function showUpdateToast(onCheckVersion: Function): void`
 
-**Descripción:** Muestra un toast de notificación de nueva versión disponible con botón para ver novedades.
+**Description:** Shows a new version notification toast with a button to view what's new.
 
 ### `export async function checkAppVersion(onNewVersion: Function): void`
 
-**Descripción:** Fetch a `version.json` y compara con la versión local en localStorage. Emite `onNewVersion` si hay diferencia.
+**Description:** Fetches `version.json` and compares with the local version in localStorage. Emits `onNewVersion` if different.
 
 ### `export async function clearCacheAndReload(): void`
 
-**Descripción:** Limpia todas las caches del Service Worker, desregistra SWs, y recarga la página con un flag para evitar doble recarga.
+**Description:** Clears all Service Worker caches, unregisters SWs, and reloads the page with a flag to prevent double reload.
 
-## Comportamiento
+## Behavior
 
-1. `registerSW`: registro lazy on `window.load`; detecta `updatefound` → `statechange` → `installed` + controller exists
-2. `controllerchange` recarga la ventana a menos que `_isClearingCache` o `_skipSwReload` estén activos
-3. `handleInstallPrompt`: previene comportamiento default del `beforeinstallprompt` y muestra botón custom en `.controls-right`
-4. `showUpdateToast`: no muestra el toast si el changelog modal ya está abierto
-5. `clearCacheAndReload`: flag `_isClearingCache` previene ejecución doble; envía `skipWaiting` al SW activo; setea `_skipSwReload` en sessionStorage
+1. `registerSW`: lazy registration on `window.load`; detects `updatefound` => `statechange` => `installed` + controller exists
+2. `controllerchange` reloads the window unless `_isClearingCache` or `_skipSwReload` are active
+3. `handleInstallPrompt`: prevents default behavior of `beforeinstallprompt` and shows custom button in `.controls-right`
+4. `showUpdateToast`: does not show the toast if the changelog modal is already open
+5. `clearCacheAndReload`: flag `_isClearingCache` prevents double execution; sends `skipWaiting` to active SW; sets `_skipSwReload` in sessionStorage
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| SW no soportado | `registerSW` retorna handlers sin registrar nada |
-| `beforeinstallprompt` no se dispara | No hay botón de instalación |
-| `version.json` no accesible | `checkAppVersion` captura error, no hace nada |
-| `clearCacheAndReload` llamado dos veces | Segunda llamada no ejecuta nada (flag `_isClearingCache`) |
-| Changelog modal abierto | `showUpdateToast` retorna sin mostrar |
+| SW not supported | `registerSW` returns handlers without registering |
+| `beforeinstallprompt` not fired | No install button |
+| `version.json` not accessible | `checkAppVersion` catches error, does nothing |
+| `clearCacheAndReload` called twice | Second call does nothing (flag `_isClearingCache`) |
+| Changelog modal open | `showUpdateToast` returns without showing |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **registerSW fallback:** Sin soporte SW, retorna handlers vacío
-2. **handleInstallPrompt:** Escucha eventos y muestra botón
-3. **clearCacheAndReload flag:** Segunda llamada no ejecuta
-4. **checkAppVersion error:** Fetch falla, captura error silenciosamente
-5. **showUpdateToast con modal abierto:** No muestra nada
+1. **registerSW fallback:** Without SW support, returns empty handler
+2. **handleInstallPrompt:** Listens to events and shows button
+3. **clearCacheAndReload flag:** Second call does not execute
+4. **checkAppVersion error:** Fetch fails, silently catches error
+5. **showUpdateToast with modal open:** Shows nothing
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

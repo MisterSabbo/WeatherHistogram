@@ -1,57 +1,57 @@
-# Spec: `src/utils/math.js`
+﻿# Spec: `src/utils/math.js`
 
-## Propósito
-Función matemática para normalizar valores al sistema de coordenadas del canvas del histograma.
+## Purpose
+Mathematical function for normalizing values to the histogram canvas coordinate system.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export function normalizeY(val: number, min: number, max: number, height: number): number`
 
-**Descripción:** Mapea un valor `val` dentro del rango `[min, max]` a una coordenada Y en píxeles dentro de la altura `height`, con un padding del 10% en cada extremo y ocupando el 80% central.
+**Description:** Maps a value `val` within the range `[min, max]` to a Y coordinate in pixels within `height`, with 10% padding on each end and occupying the central 80%.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `val` | `number` | Valor a normalizar |
-| `min` | `number` | Valor mínimo del rango |
-| `max` | `number` | Valor máximo del rango |
-| `height` | `number` | Altura total en píxeles |
+| `val` | `number` | Value to normalize |
+| `min` | `number` | Range minimum |
+| `max` | `number` | Range maximum |
+| `height` | `number` | Total height in pixels |
 
-**Retorno:** `number` — coordenada Y (0 = arriba)
+**Return:** `number` — Y coordinate (0 = top)
 
 **Mutates state:** No
 
 **Async:** No
 
-## Comportamiento
+## Behavior
 
-1. Calcula `norm = (val - min) / (max - min)`
+1. Calculates `norm = (val - min) / (max - min)`
 2. `result = height - (norm * height * 0.8) - (height * 0.1)`
-3. `min` y `max` no se validan; si `min === max`, división por cero produce Infinity/NaN
+3. `min` and `max` are not validated; if `min === max`, division by zero produces Infinity/NaN
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `val = min` | Retorna `height * 0.9` (abajo con padding) |
-| `val = max` | Retorna `height * 0.1` (arriba con padding) |
-| `val` fuera de rango | Coordenada fuera del rango [0.1*height, 0.9*height] |
-| `min === max` | División por cero → NaN |
+| `val = min` | Returns `height * 0.9` (bottom with padding) |
+| `val = max` | Returns `height * 0.1` (top with padding) |
+| `val` out of range | Coordinate outside range [0.1*height, 0.9*height] |
+| `min === max` | Division by zero => NaN |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Valor mínimo:** `normalizeY(0, 0, 100, 200)` = 180
-2. **Valor máximo:** `normalizeY(100, 0, 100, 200)` = 20
-3. **Valor intermedio:** `normalizeY(50, 0, 100, 200)` = 100
-4. **Valor fuera de rango (por debajo):** `normalizeY(-50, 0, 100, 200)` = 260
-5. **Valor fuera de rango (por encima):** `normalizeY(150, 0, 100, 200)` = -60
+1. **Minimum value:** `normalizeY(0, 0, 100, 200)` = 180
+2. **Maximum value:** `normalizeY(100, 0, 100, 200)` = 20
+3. **Intermediate value:** `normalizeY(50, 0, 100, 200)` = 100
+4. **Value out of range (below):** `normalizeY(-50, 0, 100, 200)` = 260
+5. **Value out of range (above):** `normalizeY(150, 0, 100, 200)` = -60
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

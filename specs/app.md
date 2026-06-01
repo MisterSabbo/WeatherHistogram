@@ -1,164 +1,164 @@
-# Spec: `src/app.js`
+﻿# Spec: `src/app.js`
 
-## Propósito
-Orquestador principal de la aplicación. Inicializa ~28 funciones, maneja renderizado (tiled canvas), eventos de scroll/drag, resize, y carga inicial de datos.
+## Purpose
+Main application orchestrator. Initializes ~28 functions, handles rendering (tiled canvas), scroll/drag events, resize, and initial data loading.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.*` | read/write | toda la app |
+| `state.*` | read/write | entire app |
 
 ### CONFIG
-| Constante | Contexto |
+| Constant | Context |
 |-----------|----------|
 | `CONFIG.CHART_HEIGHT` | render |
 | `CONFIG.MINIMAP_HEIGHT` | minimap |
 | `CONFIG.DEFAULT_COORDS` | geolocation fallback |
 | `CONFIG.CACHE_DURATION` | fetch |
 
-### Módulos internos
-Prácticamente todos los módulos del proyecto son importados.
+### Internal modules
+Virtually all project modules are imported.
 
 ## Mali-G76 GPU Driver Bug (Redmi Note 10S)
 
-### Causa raíz (descubrimiento v1.10.0e)
+### Root cause (discovery v1.10.0e)
 
-El chipset Mali-G76 del Redmi Note 10S tiene un bug en el pipeline de **GPU compositing de múltiples canvases 2D**. Cuando el navegador intenta componer varios elementos `<canvas>` 2D adyacentes usando la GPU (hardware-accelerated compositing), el driver del Mali-G76 produce artefactos visuales:
+The Mali-G76 chipset in the Redmi Note 10S has a bug in the **GPU compositing pipeline for multiple 2D canvases**. When the browser attempts to compose several adjacent 2D `<canvas>` elements using the GPU (hardware-accelerated compositing), the Mali-G76 driver produces visual artifacts:
 
-- **Líneas de costura verticales** entre canvases tiles (1px gap sub-pixel)
-- **Capas translúcidas opacas**: nubes y sombras nocturnas se renderizan como bloques sólidos
-- **Línea de temperatura cortada** en límites de canvas (escalones)
-- **Iconos climáticos truncados** en bordes de tile
-- **Patrón alternante**: canvas sí / canvas no
+- **Vertical seam lines** between canvas tiles (1px sub-pixel gap)
+- **Opaque translucent layers**: clouds and night shadows render as solid blocks
+- **Clipped temperature line** at canvas boundaries (steps)
+- **Truncated weather icons** at tile edges
+- **Alternating pattern**: canvas yes / canvas no
 
-### Intentos de fix previos (incorrectos)
+### Previous fix attempts (incorrect)
 
-| Versión | Hipótesis | Solución | Resultado |
+| Version | Hypothesis | Solution | Result |
 |---------|-----------|----------|-----------|
-| v1.10.0c | Alpha compositing | `destination-out` + `source-over` en `drawTile()`, canvas sin alpha | Falló |
-| v1.10.0d | CSS 3D layers | CSS 3D props solo en overlay, overlap 1px, `translateZ(0)` en wrapper | Falló — la causa raíz REAL es el driver GPU |
+| v1.10.0c | Alpha compositing | `destination-out` + `source-over` in `drawTile()`, canvas without alpha | Failed |
+| v1.10.0d | CSS 3D layers | CSS 3D props only on overlay, overlap 1px, `translateZ(0)` on wrapper | Failed — the REAL root cause is the GPU driver |
 
-Ambos intentos asumían problemas de configuración (alpha channel, CSS 3D layers) cuando el bug real está en el **driver de GPU del dispositivo**: el Mali-G76 no compone correctamente múltiples canvases 2D por hardware.
+Both attempts assumed configuration issues (alpha channel, CSS 3D layers) when the actual bug is in the **device's GPU driver**: the Mali-G76 does not correctly compose multiple 2D canvases by hardware.
 
-### Solución implementada (v1.10.0e)
+### Implemented solution (v1.10.0e)
 
-1. **Software rendering forzado**: Todos los tile canvases se crean con `canvas.getContext('2d', { willReadFrequently: true })`. Esta opción indica al navegador que el canvas será leído con frecuencia, lo que fuerza el renderizado por CPU (software rendering) en lugar de usar la GPU. En navegadores que no soporten el hint, se usa el fallback `canvas.getContext('2d')`.
+1. **Forced software rendering**: All tile canvases are created with `canvas.getContext('2d', { willReadFrequently: true })`. This option tells the browser the canvas will be read frequently, forcing CPU rendering instead of GPU. In browsers that don't support the hint, the fallback `canvas.getContext('2d')` is used.
 
-2. **CSS `image-rendering: auto`**: Los tile canvases usan `image-rendering: auto` en lugar de `pixelated`, ya que el renderizado por CPU maneja correctamente el suavizado de imágenes.
+2. **CSS `image-rendering: auto`**: Tile canvases use `image-rendering: auto` instead of `pixelated`, since CPU rendering correctly handles image smoothing.
 
-3. **Snap scroll a entero**: Se añade un bloque de snap-to-integer-position al finalizar el scroll (`scrollend`, `mouseup`, `touchend`) para prevenir que posiciones sub-pixel causen artefactos en la composición de tiles durante el scroll suave.
+3. **Snap scroll to integer**: A snap-to-integer-position block is added when scroll ends (`scrollend`, `mouseup`, `touchend`) to prevent sub-pixel positions from causing artifacts in tile composition during smooth scrolling.
 
-4. **Revertir overlap 1px**: Se elimina el overlap de 1px entre tiles (introducido en v1.10.0d) porque ya no es necesario — el software rendering elimina la causa raíz. Los tiles vuelven a `TILE_WIDTH` exacto.
+4. **Revert 1px overlap**: The 1px overlap between tiles (introduced in v1.10.0d) is removed because it is no longer necessary — software rendering eliminates the root cause. Tiles return to exact `TILE_WIDTH`.
 
-### Contexto de canvas
+### Canvas context
 
-- **Tile canvases** (creados en `handleResize`): `canvas.getContext('2d', { willReadFrequently: true })` con fallback a `canvas.getContext('2d')`. Sin `{ alpha: true }`. Renderizado por CPU.
-- **Limpieza de tile canvas** (en `drawTile`): solo `ctx.clearRect(0, 0, w, h);`.
-- **`minimapCanvas` y `fixedOverlayCanvas`** (en `initCanvas`): usan `{ alpha: true }` porque overlays necesitan transparencia.
-- **`#canvas-wrapper > canvas`**: ya no necesita `will-change: auto` o `backface-visibility` específicos, pero se mantienen como defensa pasiva.
+- **Tile canvases** (created in `handleResize`): `canvas.getContext('2d', { willReadFrequently: true })` with fallback to `canvas.getContext('2d')`. Without `{ alpha: true }`. CPU rendering.
+- **Tile canvas clearing** (in `drawTile`): only `ctx.clearRect(0, 0, w, h);`.
+- **`minimapCanvas` and `fixedOverlayCanvas`** (in `initCanvas`): use `{ alpha: true }` because overlays need transparency.
+- **`#canvas-wrapper > canvas`**: no longer needs specific `will-change: auto` or `backface-visibility`, but they are kept as passive defense.
 
-## API Pública
+## Public API
 
-Sin exports públicos; el módulo se ejecuta al importarse.
+No public exports; the module executes on import.
 
-### Funciones internas principales
+### Main internal functions
 
-| Función | Descripción | Mutates state | Async |
+| Function | Description | Mutates state | Async |
 |---------|-------------|:---:|:---:|
-| `init()` | Async principal que ejecuta todas las inicializaciones | Sí | Sí |
-| `useMyLocation(force?)` | Carga ubicación guardada o geolocalización | Sí | Sí |
-| `loadWeather()` | Fetch + render | Sí | Sí |
-| `render()` | Dibuja tiles visibles + minimap + top panel + overlay | Sí | No |
-| `drawTile(tile)` | Dibuja un tile individual | No | No |
-| `drawFixedOverlay()` | Dibuja scrubber overlay, labels, now button | Sí | No |
-| `handleResize()` | Redimensiona todo | Sí | No |
-| `centerOnCurrentTime(behavior?)` | Scroll al momento actual | Sí | No |
-| `toggleTheme()` | Cambia tema dark/light | Sí | No |
-| `updateLocationUI()` | Actualiza DOM de ubicación | Sí | No |
-| `updateNowButtonPosition()` | Posiciona botón flotante "now" | Sí | No |
-| `showError(msg)` | Muestra error en DOM | Sí | No |
+| `init()` | Main async that executes all initializations | Yes | Yes |
+| `useMyLocation(force?)` | Loads saved location or geolocation | Yes | Yes |
+| `loadWeather()` | Fetch + render | Yes | Yes |
+| `render()` | Draws visible tiles + minimap + top panel + overlay | Yes | No |
+| `drawTile(tile)` | Draws an individual tile | No | No |
+| `drawFixedOverlay()` | Draws scrubber overlay, labels, now button | Yes | No |
+| `handleResize()` | Resizes everything | Yes | No |
+| `centerOnCurrentTime(behavior?)` | Scrolls to current time | Yes | No |
+| `toggleTheme()` | Toggles dark/light theme | Yes | No |
+| `updateLocationUI()` | Updates location DOM | Yes | No |
+| `updateNowButtonPosition()` | Positions floating "now" button | Yes | No |
+| `showError(msg)` | Shows error in DOM | Yes | No |
 
-### Funciones init hijas (~28)
+### Child init functions (~28)
 
-| Función | Mutates state | Async |
+| Function | Mutates state | Async |
 |---------|:---:|:---:|
-| `initStorage()` | Sí | Sí |
+| `initStorage()` | Yes | Yes |
 | `initPwaDetection()` | No | No |
-| `initNetworkStatus()` | Sí | No |
-| `initPullToRefresh()` | Sí | No |
-| `initTouchPrevention()` | Sí | No |
-| `initSpfModal()` | Sí | No |
-| `initPollenAqiIcons()` | Sí | No |
-| `initCanvas()` | Sí | No |
-| `initModals()` | Sí | No |
-| `initLocationButton()` | Sí | No |
-| `initUvBlock()` | Sí | No |
-| `initLocationTooltip()` | Sí | No |
-| `initAlertsContainer()` | Sí | No |
-| `initTheme()` | Sí | No |
-| `initCollapsibleSections()` | Sí | No |
-| `initNowButton()` | Sí | No |
-| `initInfoModal()` | Sí | No |
-| `initLanguage()` | Sí | No |
-| `initThemeSelector()` | Sí | No |
-| `initStickmanSliders()` | Sí | No |
-| `initSkinCards()` | Sí | No |
-| `initForceRefresh()` | Sí | No |
-| `initClearData()` | Sí | No |
-| `initLoadingTimeout()` | Sí | No |
-| `initViewMode()` | Sí | No |
-| `initMinimapEvents()` | Sí | No |
-| `initScrollEvents()` | Sí | No |
-| `initScrollIndicator()` | Sí | No |
-| `startPulseLoop()` | Sí | No |
+| `initNetworkStatus()` | Yes | No |
+| `initPullToRefresh()` | Yes | No |
+| `initTouchPrevention()` | Yes | No |
+| `initSpfModal()` | Yes | No |
+| `initPollenAqiIcons()` | Yes | No |
+| `initCanvas()` | Yes | No |
+| `initModals()` | Yes | No |
+| `initLocationButton()` | Yes | No |
+| `initUvBlock()` | Yes | No |
+| `initLocationTooltip()` | Yes | No |
+| `initAlertsContainer()` | Yes | No |
+| `initTheme()` | Yes | No |
+| `initCollapsibleSections()` | Yes | No |
+| `initNowButton()` | Yes | No |
+| `initInfoModal()` | Yes | No |
+| `initLanguage()` | Yes | No |
+| `initThemeSelector()` | Yes | No |
+| `initStickmanSliders()` | Yes | No |
+| `initSkinCards()` | Yes | No |
+| `initForceRefresh()` | Yes | No |
+| `initClearData()` | Yes | No |
+| `initLoadingTimeout()` | Yes | No |
+| `initViewMode()` | Yes | No |
+| `initMinimapEvents()` | Yes | No |
+| `initScrollEvents()` | Yes | No |
+| `initScrollIndicator()` | Yes | No |
+| `startPulseLoop()` | Yes | No |
 
-## Comportamiento
+## Behavior
 
-1. Inicialización secuencial en `DOMContentLoaded`
-2. Renderizado por tiles con buffer de 1 tile a cada lado
-3. Scroll render vía requestAnimationFrame
-4. Scrubber overlay con interpolación subpixel y detección de colisión de labels
-5. Resize responsive: cambia PIXELS_PER_HOUR y TILE_WIDTH según viewport
-6. **Tile canvases con willReadFrequently**: `handleResize()` crea contextos con `{ willReadFrequently: true }` para forzar renderizado por CPU en GPUs problemáticas (Mali-G76). Fallback a `getContext('2d')` sin opciones si el hint no es soportado.
-7. **Tile width exacto (sin overlap)**: Cada tile se crea con `TILE_WIDTH` exacto (sin `+1`). El overlap 1px fue revertido porque la solución real (software rendering) elimina la causa raíz.
-8. **Snap scroll a entero**: Al finalizar scroll (`scrollend`, `mouseup`, `touchend`) se redondea `scrollLeft` a entero para prevenir artefactos sub-pixel en composición de tiles.
-9. **drawTile sin destination-out**: Solo `clearRect()` para limpiar canvas.
+1. Sequential initialization on `DOMContentLoaded`
+2. Tile rendering with 1 tile buffer on each side
+3. Scroll render via requestAnimationFrame
+4. Scrubber overlay with subpixel interpolation and label collision detection
+5. Responsive resize: changes PIXELS_PER_HOUR and TILE_WIDTH according to viewport
+6. **Tile canvases with willReadFrequently**: `handleResize()` creates contexts with `{ willReadFrequently: true }` to force CPU rendering on problematic GPUs (Mali-G76). Fallback to `getContext('2d')` without options if the hint is not supported.
+7. **Exact tile width (no overlap)**: Each tile is created with exact `TILE_WIDTH` (without `+1`). The 1px overlap was reverted because the real solution (software rendering) eliminates the root cause.
+8. **Snap scroll to integer**: When scroll ends (`scrollend`, `mouseup`, `touchend`) `scrollLeft` is rounded to integer to prevent sub-pixel artifacts in tile composition.
+9. **drawTile without destination-out**: Only `clearRect()` to clear canvas.
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| Fetch falla (network error) | `loadWeather` captura error, muestra `showError`, `isFetching=false` |
-| `state.hourlyData` vacío al renderizar | `render()` no dibuja nada, retorna sin error |
-| Datos incompletos (sin `sunData`, sin `dailyData`) | Graceful degradation: algunas secciones no se renderizan |
-| `window.innerWidth` < 600 | `handleResize` cambia `PIXELS_PER_HOUR` a 50 y `TILE_WIDTH` a 720 |
-| `devicePixelRatio` no definido | Fallback a 1 en cálculos de DPR |
-| `init()` llamado antes de `DOMContentLoaded` | Listeners pueden no attacharse (no controlado) |
-| Resize durante renderizado en curso | `handleResize` interrumpe y recrea tiles |
-| Scroll muy rápido | Render throttle via `requestAnimationFrame`, frames se saltan |
-| Múltiples clicks en "now" | `centerOnCurrentTime` se ejecuta múltiples veces (no hay debounce) |
-| GPU Mali-G76 con composición de múltiples canvases | `getContext('2d', { willReadFrequently: true })` fuerza renderizado por CPU; no depende de CSS. Tiles sin overlap (exact TILE_WIDTH). Snap scroll a entero para evitar artefactos sub-pixel |
-| Canvas con alpha en resize | `handleResize` crea contextos sin alpha para evitar artefactos en tiles alternos |
+| Fetch fails (network error) | `loadWeather` catches error, shows `showError`, `isFetching=false` |
+| `state.hourlyData` empty on render | `render()` draws nothing, returns without error |
+| Incomplete data (no `sunData`, no `dailyData`) | Graceful degradation: some sections are not rendered |
+| `window.innerWidth` < 600 | `handleResize` changes `PIXELS_PER_HOUR` to 50 and `TILE_WIDTH` to 720 |
+| `devicePixelRatio` undefined | Fallback to 1 in DPR calculations |
+| `init()` called before `DOMContentLoaded` | Listeners may not attach (not controlled) |
+| Resize during ongoing render | `handleResize` interrupts and recreates tiles |
+| Very fast scroll | Render throttle via `requestAnimationFrame`, frames are skipped |
+| Multiple clicks on "now" | `centerOnCurrentTime` executes multiple times (no debounce) |
+| Mali-G76 GPU with multiple canvas composition | `getContext('2d', { willReadFrequently: true })` forces CPU rendering; does not depend on CSS. Tiles without overlap (exact TILE_WIDTH). Snap scroll to integer to avoid sub-pixel artifacts |
+| Canvas with alpha on resize | `handleResize` creates contexts without alpha to avoid artifacts on alternating tiles |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** `render()` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, `render()` retorna sin error
-3. **No lanza con DOMContentLoaded:** `init()` se ejecuta sin errores
-4. **Fetch falla:** `loadWeather` captura error, `isFetching = false`
-5. **Resize responsive:** `window.innerWidth < 600` cambia PIXELS_PER_HOUR y TILE_WIDTH
-6. **Scroll rápido:** Render throttle via requestAnimationFrame sin errores
-7. **Canvas clearing simple:** `drawTile()` aplica solo `clearRect(0, 0, w, h)` sin `destination-out`, sin lanzar error
-8. **Canvas con willReadFrequently en resize:** `handleResize()` pasa `{ willReadFrequently: true }` a `getContext('2d')`; si no soportado, fallback a `getContext('2d')` sin opciones
-9. **Tile width exacto en handleResize:** `canvas.width = TILE_WIDTH * state.dpr`, `canvas.style.width = TILE_WIDTH + 'px'`, y `canvasWrapper.style.width = totalWidth + 'px'` (sin +1, revertido overlap)
+1. **Does not throw with mock data:** `render()` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, `render()` returns without error
+3. **Does not throw with DOMContentLoaded:** `init()` executes without errors
+4. **Fetch fails:** `loadWeather` catches error, `isFetching = false`
+5. **Responsive resize:** `window.innerWidth < 600` changes PIXELS_PER_HOUR and TILE_WIDTH
+6. **Fast scroll:** Render throttle via requestAnimationFrame without errors
+7. **Simple canvas clearing:** `drawTile()` applies only `clearRect(0, 0, w, h)` without `destination-out`, does not throw
+8. **Canvas with willReadFrequently on resize:** `handleResize()` passes `{ willReadFrequently: true }` to `getContext('2d')`; if not supported, fallback to `getContext('2d')` without options
+9. **Exact tile width in handleResize:** `canvas.width = TILE_WIDTH * state.dpr`, `canvas.style.width = TILE_WIDTH + 'px'`, and `canvasWrapper.style.width = totalWidth + 'px'` (without +1, overlap reverted)
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
-| 2026-05-27 | Bugfix Mali-G76 v1: limpieza robusta canvas, remove alpha en tile canvases, reset compositing | SDD |
-| 2026-05-27 | Bugfix Mali-G76 v2 (spec-update): corrige causa raíz real — GPU layer composition. CSS 3D props solo en fixed-overlay-canvas, tile canvases con overlap 1px, revert destination-out. | SDD |
-| 2026-05-27 | Bugfix Mali-G76 v3 (spec-update): corrige causa raíz REAL — driver GPU Mali-G76. Software rendering via `willReadFrequently: true`. Revert overlap 1px. Snap scroll a entero. image-rendering: auto. Los fixes previos v1.10.0c (destination-out) y v1.10.0d (CSS 3D layers) se marcan como superseded. | SDD |
+| 2026-05-21 | Initial spec | SDD |
+| 2026-05-27 | Bugfix Mali-G76 v1: robust canvas cleaning, remove alpha in tile canvases, reset compositing | SDD |
+| 2026-05-27 | Bugfix Mali-G76 v2 (spec-update): fixes real root cause — GPU layer composition. CSS 3D props only on fixed-overlay-canvas, tile canvases with 1px overlap, revert destination-out. | SDD |
+| 2026-05-27 | Bugfix Mali-G76 v3 (spec-update): fixes REAL root cause — Mali-G76 GPU driver. Software rendering via `willReadFrequently: true`. Revert 1px overlap. Snap scroll to integer. image-rendering: auto. Previous fixes v1.10.0c (destination-out) and v1.10.0d (CSS 3D layers) are marked as superseded. | SDD |

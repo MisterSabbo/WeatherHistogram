@@ -1,78 +1,78 @@
-# Spec: `src/ui/TopPanel.js`
+﻿# Spec: `src/ui/TopPanel.js`
 
-## Propósito
-Actualiza el panel superior con datos meteorológicos interpolados según la posición del scroll: temperatura, viento, AQI, polen, precipitación, nubes, hora, alertas.
+## Purpose
+Updates the top panel with interpolated weather data based on scroll position: temperature, wind, AQI, pollen, precipitation, clouds, time, alerts.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.hourlyData` | read | interpolación |
-| `state.timezone` | read | formato hora |
-| `state.theme` | read | colores |
+| `state.hourlyData` | read | interpolation |
+| `state.timezone` | read | time format |
+| `state.theme` | read | colors |
 | `state.stickmanThresholds` | read | wind threshold |
-| `state.skinType` | read | no directo |
+| `state.skinType` | read | not direct |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
-| `../theme.js` | `getThemeIcon` | iconos |
-| `../utils/i18n.js` | `t`, `getLocale` | traducción |
-| `../utils/time.js` | `formatTooltipTime` | hora |
-| `../utils/weather.js` | `getWeatherDescription` | descripción |
-| `../services/AqiManager.js` | `getAQIInfo`, `getPollenText`, `getAggregatedPollenLevel`, `getPollenColor` | AQI/polen |
-| `../utils/AlertEngine.js` | `generateAlerts`, `renderAlerts` | alertas |
-| `./AqiRadar.js` | `drawAQIRadar` | radar AQI |
-| `./PollenRadar.js` | `drawPollenRadar` | radar polen |
+| `../store.js` | `state` | access |
+| `../theme.js` | `getThemeIcon` | icons |
+| `../utils/i18n.js` | `t`, `getLocale` | translation |
+| `../utils/time.js` | `formatTooltipTime` | time |
+| `../utils/weather.js` | `getWeatherDescription` | description |
+| `../services/AqiManager.js` | `getAQIInfo`, `getPollenText`, `getAggregatedPollenLevel`, `getPollenColor` | AQI/pollen |
+| `../utils/AlertEngine.js` | `generateAlerts`, `renderAlerts` | alerts |
+| `./AqiRadar.js` | `drawAQIRadar` | AQI radar |
+| `./PollenRadar.js` | `drawPollenRadar` | pollen radar |
 
-## API Pública
+## Public API
 
 ### `export function updateTopPanel(options: { scrollContainer: HTMLElement, PIXELS_PER_HOUR: number }): void`
 
-**Descripción:** Actualiza el DOM del top panel con datos interpolados según scrollLeft + 60.
+**Description:** Updates the top panel DOM with interpolated data based on scrollLeft + 60.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `options` | `Object` | Opciones de configuración |
-| `options.scrollContainer` | `HTMLElement` | Contenedor con scroll horizontal |
-| `options.PIXELS_PER_HOUR` | `number` | Píxeles por hora para cálculo de índice |
+| `options` | `Object` | Configuration options |
+| `options.scrollContainer` | `HTMLElement` | Container with horizontal scroll |
+| `options.PIXELS_PER_HOUR` | `number` | Pixels per hour for index calculation |
 
-**Metadatos:**
-- Mutates state: Sí (actualiza DOM del top panel)
+**Metadata:**
+- Mutates state: Yes (updates top panel DOM)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Interpola datos entre hourlyData[index] y [index+1] según progreso
-2. Actualiza: temp, apparent, wind (con color por temp), AQI (texto + icono + radar), polen (texto + icono + radar), precip, precipProb, clouds, hora (con isToday), alertas, weather summary, location tooltip
-3. Skip si el estado actual es igual al anterior (JSON.stringify comparison)
-4. requestAnimationFrame para AQI/Pollen radar draw
+1. Interpolates data between hourlyData[index] and [index+1] based on progress
+2. Updates: temp, apparent, wind (with color by temp), AQI (text + icon + radar), pollen (text + icon + radar), precip, precipProb, clouds, time (with isToday), alerts, weather summary, location tooltip
+3. Skip if current state equals previous state (JSON.stringify comparison)
+4. requestAnimationFrame for AQI/Pollen radar draw
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `state.hourlyData` vacío | No interpola, retorna sin modificar DOM |
-| `scrollContainer = null` / `undefined` | No lanza error |
-| `PIXELS_PER_HOUR = 0` | Cálculo de índice inválido, no lanza error |
-| Elementos DOM del panel ausentes | `document.getElementById` retorna `null`, `innerHTML` falla silenciosamente |
-| `state` igual que llamada anterior | Skip por `JSON.stringify` comparison |
-| Interpolación entre mismo índice | Valores iguales sin interpolación |
-| AQI/Pollen radar sin canvas | `drawAQIRadar` / `drawPollenRadar` no lanzan error |
+| `state.hourlyData` empty | Does not interpolate, returns without modifying DOM |
+| `scrollContainer = null` / `undefined` | Does not throw |
+| `PIXELS_PER_HOUR = 0` | Invalid index calculation, does not throw |
+| Panel DOM elements absent | `document.getElementById` returns `null`, `innerHTML` fails silently |
+| `state` same as previous call | Skip by `JSON.stringify` comparison |
+| Interpolation between same index | Equal values without interpolation |
+| AQI/Pollen radar without canvas | `drawAQIRadar` / `drawPollenRadar` do not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con opciones válidas:** `updateTopPanel` con opciones mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **Exporta las funciones esperadas:** `updateTopPanel` es función
-4. **ScrollContainer null:** `scrollContainer = null`, no lanza error
-5. **Misma posición que anterior:** Skip por JSON.stringify comparison
-6. **Elementos DOM ausentes:** `document.getElementById` retorna null para algunos elementos
+1. **Initializes without errors with valid options:** `updateTopPanel` with mock options, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Exports expected functions:** `updateTopPanel` is a function
+4. **Null ScrollContainer:** `scrollContainer = null`, does not throw
+5. **Same position as previous:** Skip by JSON.stringify comparison
+6. **Missing DOM elements:** `document.getElementById` returns null for some elements
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

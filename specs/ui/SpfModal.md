@@ -1,91 +1,91 @@
-# Spec: `src/ui/SpfModal.js`
+﻿# Spec: `src/ui/SpfModal.js`
 
-## Propósito
-Modal SPF que muestra riesgo UV, tiempo hasta quemadura y recomendación de protector solar según fototipo.
+## Purpose
+SPF modal showing UV risk, time until burn and sunscreen recommendation according to skin type.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.skinType` | read | cálculo tiempo quemadura |
+| `state.skinType` | read | burn time calculation |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
-| `../utils/i18n.js` | `t` | traducción |
+| `../store.js` | `state` | access |
+| `../utils/i18n.js` | `t` | translation |
 | `./BottomSheet.js` | `openBottomSheet`, `closeBottomSheet`, `onSheetClose` | modal |
 
-## API Pública
+## Public API
 
 ### `export function closeSpfSheet(): void`
 
-**Descripción:** Cierra el modal SPF.
+**Description:** Closes the SPF modal.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| — | — | Sin parámetros |
+| — | — | No parameters |
 
-**Metadatos:**
-- Mutates state: Sí (cierra bottom sheet)
+**Metadata:**
+- Mutates state: Yes (closes bottom sheet)
 - Async: No
 
 ### `export function openSpfSheet(): void`
 
-**Descripción:** Abre modal con datos UV actuales desde `#spf-info-container.dataset.uv`.
+**Description:** Opens modal with current UV data from `#spf-info-container.dataset.uv`.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| — | — | Sin parámetros (lee DOM y `state.skinType`) |
+| — | — | No parameters (reads DOM and `state.skinType`) |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
 ### `export function initSpfModal(): void`
 
-**Descripción:** Inicializa eventos del modal SPF.
+**Description:** Initializes SPF modal events.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| — | — | Sin parámetros |
+| — | — | No parameters |
 
-**Metadatos:**
-- Mutates state: Sí (registra event listeners)
+**Metadata:**
+- Mutates state: Yes (registers event listeners)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Lee UV de `#spf-info-container.dataset.uv`
-2. Riesgo: <3 bajo, 3-5 moderado, 6-7 alto, 8-10 muy alto, 11+ extremo
-3. Tiempo hasta quemadura: `SKIN_BASE_MINS[skinType-1] / uv`
-4. SPF recomendado: UV≥8 → 50+, UV≥6 → 50, UV≥3 → 30+, UV>0 + skin≤2 → 15
-5. `openSpfSheet` abre bottom sheet 'spf-modal' con `scrollElementId='spf-sheet-scroll-content'`
-6. `initSpfModal`: attach click a `#spf-info-container` y `#spf-settings-btn`
+1. Reads UV from `#spf-info-container.dataset.uv`
+2. Risk: <3 low, 3-5 moderate, 6-7 high, 8-10 very high, 11+ extreme
+3. Time until burn: `SKIN_BASE_MINS[skinType-1] / uv`
+4. Recommended SPF: UV≥8 → 50+, UV≥6 → 50, UV≥3 → 30+, UV>0 + skin≤2 → 15
+5. `openSpfSheet` opens bottom sheet 'spf-modal' with `scrollElementId='spf-sheet-scroll-content'`
+6. `initSpfModal`: attaches click to `#spf-info-container` and `#spf-settings-btn`
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `#spf-info-container` sin dataset.uv | `openSpfSheet` lee `undefined`, cálculos NaN, no lanza error |
-| `state.skinType` fuera de rango (< 1 o > 6) | `SKIN_BASE_MINS[skinType-1]` es `undefined`, no lanza error |
-| Elementos DOM SPF no existen | `openSpfSheet`/`closeSpfSheet` no lanzan error |
-| UV = 0 | Riesgo "Bajo", tiempo hasta quemadura = Infinity, SPF no recomendado |
-| `#spf-settings-btn` no existe | `initSpfModal` no lanza error, registro parcial de eventos |
+| `#spf-info-container` without dataset.uv | `openSpfSheet` reads `undefined`, calculations NaN, does not throw |
+| `state.skinType` out of range (< 1 or > 6) | `SKIN_BASE_MINS[skinType-1]` is `undefined`, does not throw |
+| SPF DOM elements do not exist | `openSpfSheet`/`closeSpfSheet` do not throw |
+| UV = 0 | Risk "Low", time until burn = Infinity, SPF not recommended |
+| `#spf-settings-btn` does not exist | `initSpfModal` does not throw, partial event registration |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initSpfModal` con elementos DOM, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Elementos SPF ausentes, no lanza error
-3. **Exporta las funciones esperadas:** `initSpfModal`, `openSpfSheet`, `closeSpfSheet` son funciones
-4. **UV = 0:** Riesgo "Bajo", tiempo hasta quemadura Infinity
-5. **SkinType fuera de rango:** < 1 o > 6, no lanza error
-6. **Sin dataset.uv:** `#spf-info-container` sin atributo uv, cálculos NaN seguros
+1. **Initializes without errors with DOM elements present:** `initSpfModal` with DOM elements, does not throw
+2. **Does not throw if DOM elements are missing:** SPF elements absent, does not throw
+3. **Exports expected functions:** `initSpfModal`, `openSpfSheet`, `closeSpfSheet` are functions
+4. **UV = 0:** Risk "Low", time until burn Infinity
+5. **SkinType out of range:** < 1 or > 6, does not throw
+6. **Without dataset.uv:** `#spf-info-container` without uv attribute, NaN-safe calculations
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-28 | Añadido scrollElementId a openSpfSheet (spf-sheet-scroll-content) para fixed-handle pattern | SDD |
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-28 | Added scrollElementId to openSpfSheet (spf-sheet-scroll-content) for fixed-handle pattern | SDD |
+| 2026-05-21 | Initial spec | SDD |

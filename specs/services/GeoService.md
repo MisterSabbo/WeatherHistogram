@@ -1,55 +1,55 @@
-# Spec: `src/services/GeoService.js`
+﻿# Spec: `src/services/GeoService.js`
 
-## Propósito
-Geocoding y reverse geocoding usando Open-Meteo y Nominatim. Incluye queue con rate limiting para reverse geocoding.
+## Purpose
+Geocoding and reverse geocoding using Open-Meteo and Nominatim. Includes queue with rate limiting for reverse geocoding.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export class GeoService`
 
 ### `async searchLocation(query: string, count?: number): Promise<Array>`
 
-**Descripción:** Busca ubicaciones por nombre usando Open-Meteo geocoding API.
+**Description:** Searches locations by name using Open-Meteo geocoding API.
 
 ### `async reverseGeocode(lat: number, lon: number): Promise<string>`
 
-**Descripción:** Reverse geocode usando Nominatim con queue y rate limiting (2s entre llamadas).
+**Description:** Reverse geocode using Nominatim with queue and rate limiting (2s between calls).
 
 ### `export const geoService: GeoService` (singleton)
 
-## Comportamiento
+## Behavior
 
-1. `searchLocation`: fetch a `geocoding-api.open-meteo.com/v1/search`
-2. `reverseGeocode`: queue con rate limiting de 2 segundos
-3. Solo mantiene la petición más reciente en la queue (descarta anteriores con reject)
-4. `reverseGeocode` construye nombre desde `data.address` (city/town/village, county, state, country)
-5. Si no hay address, retorna "Ubicación actual"
+1. `searchLocation`: fetch from `geocoding-api.open-meteo.com/v1/search`
+2. `reverseGeocode`: queue with 2-second rate limiting
+3. Only keeps the most recent request in the queue (discards previous with reject)
+4. `reverseGeocode` builds name from `data.address` (city/town/village, county, state, country)
+5. If no address, returns "Current location"
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| API no responde | Error propagado |
-| Llamadas spameadas a reverseGeocode | Solo la última se procesa, anteriores se cancelan |
-| address sin city/town/village | Usa county como primer componente |
-| address vacío | Retorna "Ubicación actual" |
-| query vacío | API puede retornar error |
+| API does not respond | Error propagated |
+| Spammed calls to reverseGeocode | Only the last one is processed, previous ones are cancelled |
+| address without city/town/village | Uses county as first component |
+| Empty address | Returns "Current location" |
+| Empty query | API may return error |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **searchLocation con query:** retorna array de resultados
-2. **searchLocation error:** fetch falla → lanza error
-3. **reverseGeocode:** retorna nombre construido
-4. **Queue rate limiting:** espera 2s entre llamadas
-5. **Queue cancellation:** llamada spameada cancela anterior
-6. **Singleton:** geoService es instancia única
+1. **searchLocation with query:** returns array of results
+2. **searchLocation error:** fetch fails → throws error
+3. **reverseGeocode:** returns constructed name
+4. **Queue rate limiting:** waits 2s between calls
+5. **Queue cancellation:** spammed call cancels previous
+6. **Singleton:** geoService is a unique instance
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

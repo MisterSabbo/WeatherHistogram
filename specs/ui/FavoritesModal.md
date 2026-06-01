@@ -1,60 +1,60 @@
-# Spec: `src/ui/FavoritesModal.js`
+﻿# Spec: `src/ui/FavoritesModal.js`
 
-## Propósito
-Modal de gestión de ubicaciones favoritas con lista, edición de alias, reordenación y eliminación.
+## Purpose
+Favorite locations management modal with list, alias editing, reordering and deletion.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../services/FavoritesService.js` | `favoritesService` | datos |
-| `../store.js` | `state` | no usado directamente (vía callbacks) |
-| `../utils/i18n.js` | `t` | traducción |
+| `../services/FavoritesService.js` | `favoritesService` | data |
+| `../store.js` | `state` | not used directly (via callbacks) |
+| `../utils/i18n.js` | `t` | translation |
 
-## API Pública
+## Public API
 
 ### `export function initFavoritesModal(onSelect: Function): void`
 
-**Descripción:** Inicializa el modal de favoritos.
+**Description:** Initializes the favorites modal.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `onSelect` | `Function` | Callback `(lat, lon, name)` al seleccionar ubicación |
+| `onSelect` | `Function` | Callback `(lat, lon, name)` when selecting a location |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Botón `#map-favorites-btn` abre modal con lista de favoritos
-2. Modo edición: renombrar alias (prompt modal), eliminar (confirmación), reordenar (↑↓)
-3. Modo no edición: click en favorito → `onSelect(lat, lon, originName)`
-4. `renderFavorites()` async: carga desde service, construye cards DOM
-5. Prompt modal clona botones para evitar listeners duplicados
+1. Button `#map-favorites-btn` opens modal with favorites list
+2. Edit mode: rename alias (prompt modal), delete (confirmation), reorder (↑↓)
+3. Non-edit mode: click on favorite → `onSelect(lat, lon, originName)`
+4. `renderFavorites()` async: loads from service, builds DOM cards
+5. Prompt modal clones buttons to avoid duplicate listeners
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| Botón `#map-favorites-btn` no existe | No lanza error, no registra listener |
-| `favoritesService.load()` retorna `null` / `undefined` | Muestra mensaje "no hay favoritos" |
-| `onSelect` no es función | No lanza error, ignora callback |
-| Lista de favoritos vacía (`[]`) | Muestra mensaje vacío |
-| Editar alias con valor vacío | No actualiza, mantiene alias anterior |
+| Button `#map-favorites-btn` does not exist | Does not throw, does not register listener |
+| `favoritesService.load()` returns `null` / `undefined` | Shows "no favorites" message |
+| `onSelect` is not a function | Does not throw, ignores callback |
+| Empty favorites list (`[]`) | Shows empty message |
+| Edit alias with empty value | Does not update, keeps previous alias |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initFavoritesModal` con botón presente, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Botón `#map-favorites-btn` ausente, no lanza error
-3. **Exporta las funciones esperadas:** `initFavoritesModal` es función
-4. **Lista vacía de favoritos:** `favoritesService.load()` retorna `[]`, muestra mensaje vacío
-5. **Selección de favorito:** Click en favorito llama `onSelect(lat, lon, name)`
-6. **Edición de alias:** Valor vacío mantiene alias anterior
+1. **Initializes without errors with DOM elements present:** `initFavoritesModal` with button present, does not throw
+2. **Does not throw if DOM elements are missing:** Button `#map-favorites-btn` absent, does not throw
+3. **Exports expected functions:** `initFavoritesModal` is a function
+4. **Empty favorites list:** `favoritesService.load()` returns `[]`, shows empty message
+5. **Favorite selection:** Click on favorite calls `onSelect(lat, lon, name)`
+6. **Alias editing:** Empty value keeps previous alias
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

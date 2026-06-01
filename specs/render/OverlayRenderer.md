@@ -1,96 +1,96 @@
-# Spec: `src/render/OverlayRenderer.js`
+﻿# Spec: `src/render/OverlayRenderer.js`
 
-## Propósito
-Renderiza la capa de overlay fija: scrubber, tooltips de datos, actualización de weather zone (stickman, SPF, AQI, polen).
+## Purpose
+Renders the fixed overlay layer: scrubber, data tooltips, weather zone updates (stickman, SPF, AQI, pollen).
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | updateUVBlock |
-| `state.theme` | read | colores |
+| `state.theme` | read | colors |
 | `state.stickmanThresholds` | read | updateWeatherZone |
 | `state.skinType` | read | updateWeatherZone |
 | `state.labelRects` | read/write | drawScrubberPoint |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../utils/color.js` | `hexToRgb` | convertir colores |
-| `../theme.js` | `getThemeColor`, `getThemeIcon`, `getThemeFont` | colores/iconos |
-| `../services/AqiManager.js` | `getAggregatedPollenLevel`, `getPollenColor` | polen |
+| `../utils/color.js` | `hexToRgb` | convert colors |
+| `../theme.js` | `getThemeColor`, `getThemeIcon`, `getThemeFont` | colors/icons |
+| `../services/AqiManager.js` | `getAggregatedPollenLevel`, `getPollenColor` | pollen |
 
-## API Pública
+## Public API
 
 ### `export function interpolateScrubberData(d1: Object, d2: Object, progress: number): Object`
 
-**Descripción:** Interpolación cúbica hermitte para temp, apparent, clouds, precipProb.
+**Description:** Cubic hermite interpolation for temp, apparent, clouds, precipProb.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `d1` | `Object` | Dato anterior |
-| `d2` | `Object` | Dato siguiente |
-| `progress` | `number` | Progreso entre 0 y 1 |
+| `d1` | `Object` | Previous data point |
+| `d2` | `Object` | Next data point |
+| `progress` | `number` | Progress between 0 and 1 |
 
-**Metadatos:** Mutates state: No, Async: No
+**Metadata:** Mutates state: No, Async: No
 
 ### `export function getWeatherIconName(weatherCode: number): string`
 
-**Descripción:** Convierte código WMO a nombre de icono Material.
+**Description:** Converts WMO code to Material icon name.
 
-**Metadatos:** Mutates state: No, Async: No
+**Metadata:** Mutates state: No, Async: No
 
 ### `export function updateWeatherZone(currentData: Object, state: Object, deps: Object): void`
 
-**Descripción:** Actualiza DOM: icono, stickman, AQI, polen, SPF, risk icons.
+**Description:** Updates DOM: icon, stickman, AQI, pollen, SPF, risk icons.
 
-**Metadatos:** Mutates state: Sí (actualiza DOM), Async: No
+**Metadata:** Mutates state: Yes (updates DOM), Async: No
 
 ### `export function drawScrubberPoint(fixedOverlayCtx: CanvasRenderingContext2D, y: number, color: string, value: string, unit: string, options: Object): void`
 
-**Descripción:** Dibuja punto + label en overlay con detección de colisión.
+**Description:** Draws point + label on overlay with collision detection.
 
-**Metadatos:** Mutates state: Sí (state.labelRects), Async: No
+**Metadata:** Mutates state: Yes (state.labelRects), Async: No
 
 ### `export function updateUVBlock(d1: Object, index: number, fixedOverlayCanvas: HTMLCanvasElement, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Actualiza bloque UV en DOM.
+**Description:** Updates UV block in DOM.
 
-**Metadatos:** Mutates state: Sí (actualiza DOM), Async: No
+**Metadata:** Mutates state: Yes (updates DOM), Async: No
 
-## Comportamiento
+## Behavior
 
-1. `interpolateScrubberData`: cubic bezier para nubes y precipProb, linear para temp
+1. `interpolateScrubberData`: cubic bezier for clouds and precipProb, linear for temp
 2. `getWeatherIconName`: clear_day (default), cloud (1-3), foggy (45/48), rainy (51-67/80-82), ac_unit (71-77/85/86), thunderstorm (95+)
-3. `updateWeatherZone`: actualiza DOM icono, stickman, AQI/polen/SPF warning icons, risk icons row
-4. `drawScrubberPoint`: detecta colisión con otros labels, reposiciona con hasta 20 intentos
-5. `updateUVBlock`: DOM div posicionado absolutamente sobre el canvas
+3. `updateWeatherZone`: updates DOM icon, stickman, AQI/pollen/SPF warning icons, risk icons row
+4. `drawScrubberPoint`: detects collision with other labels, repositions with up to 20 attempts
+5. `updateUVBlock`: DOM div absolutely positioned over canvas
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` en `drawScrubberPoint` | No lanza error |
-| `d1 = d2` (mismo punto) | `interpolateScrubberData` retorna `d1` (progreso 0) |
-| `progress < 0` / `> 1` | Interpola fuera de rango, no clamped |
-| `weatherCode = -1` | `getWeatherIconName` retorna `'clear_day'` (default) |
-| `state.hourlyData` con 1 solo punto | `updateUVBlock` funciona con índice 0 |
-| Colisión de labels con 20+ intentos | Label se dibuja en última posición intentada |
-| `updateWeatherZone` sin elementos DOM | No lanza error |
-| `fixedOverlayCtx` sin `measureText` | `drawScrubberPoint` falla en colisión |
+| `ctx = null` / `undefined` in `drawScrubberPoint` | Does not throw |
+| `d1 = d2` (same point) | `interpolateScrubberData` returns `d1` (progress 0) |
+| `progress < 0` / `> 1` | Interpolates out of range, not clamped |
+| `weatherCode = -1` | `getWeatherIconName` returns `'clear_day'` (default) |
+| `state.hourlyData` with only 1 point | `updateUVBlock` works with index 0 |
+| Label collision with 20+ attempts | Label drawn at last attempted position |
+| `updateWeatherZone` without DOM elements | Does not throw |
+| `fixedOverlayCtx` without `measureText` | `drawScrubberPoint` fails on collision |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama funciones con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo en `drawScrubberPoint`, no lanza error
-4. **Interpolación scrubber:** `interpolateScrubberData(d1, d2, 0.5)` retorna valores interpolados
-5. **Nombre de icono WMO:** `getWeatherIconName(0)` → `'clear_day'`, `getWeatherIconName(95)` → `'thunderstorm'`
-6. **Colisión de labels:** Labels se reposicionan hasta 20 intentos
+1. **Does not throw with mock data:** Calls functions with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context in `drawScrubberPoint`, does not throw
+4. **Scrubber interpolation:** `interpolateScrubberData(d1, d2, 0.5)` returns interpolated values
+5. **WMO icon name:** `getWeatherIconName(0)` → `'clear_day'`, `getWeatherIconName(95)` → `'thunderstorm'`
+6. **Label collision:** Labels repositioned up to 20 attempts
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

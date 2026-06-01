@@ -1,46 +1,46 @@
-# Spec: `src/services/MockData.js`
+﻿# Spec: `src/services/MockData.js`
 
-## Propósito
-Genera datos meteorológicos simulados para pruebas offline o cuando la API falla.
+## Purpose
+Generates simulated weather data for offline testing or when the API fails.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export function generateMockData(pastDays: number, forecastDays: number): { forecastData: Object, aqiData: Object }`
 
-**Descripción:** Genera datos mock completos (forecast + AQI) con estructura compatible con Open-Meteo.
+**Description:** Generates complete mock data (forecast + AQI) with structure compatible with Open-Meteo.
 
-## Comportamiento
+## Behavior
 
-1. Genera `totalHours = (pastDays + forecastDays) * 24` horas de datos
-2. Temperatura: sinusoidal (20 ± 10°C) con periodo de 24h
-3. Precipitación: ~20% de probabilidad con valor aleatorio 0-5mm
-4. Nubes: aleatorio 0-100%
-5. Viento: aleatorio 0-10 km/h, ráfagas 0-15 km/h
-6. AQI: aleatorio 0-50
-7. Datos diarios: sunrise 6:00, sunset 18:00
+1. Generates `totalHours = (pastDays + forecastDays) * 24` hours of data
+2. Temperature: sinusoidal (20 ± 10°C) with 24h period
+3. Precipitation: ~20% probability with random value 0-5mm
+4. Clouds: random 0-100%
+5. Wind: random 0-10 km/h, gusts 0-15 km/h
+6. AQI: random 0-50
+7. Daily data: sunrise 6:00, sunset 18:00
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `pastDays=0` | Solo genera forecastDays |
-| `pastDays=7, forecastDays=7` | 336 horas de datos |
-| Datos AQI todos 0 | Polen siempre 0 |
+| `pastDays=0` | Only generates forecastDays |
+| `pastDays=7, forecastDays=7` | 336 hours of data |
+| All AQI data 0 | Pollen always 0 |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Estructura:** retorna objeto con `forecastData` y `aqiData`
-2. **Cantidad de horas:** `(pastDays + forecastDays) * 24`
-3. **Campos requeridos:** forecast tiene hourly con temperature_2m, etc.
-4. **AQI tiene hourly con us_aqi:** campo presente
-5. **Daily data:** contiene sunrise/sunset
+1. **Structure:** returns object with `forecastData` and `aqiData`
+2. **Number of hours:** `(pastDays + forecastDays) * 24`
+3. **Required fields:** forecast has hourly with temperature_2m, etc.
+4. **AQI has hourly with us_aqi:** field present
+5. **Daily data:** contains sunrise/sunset
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

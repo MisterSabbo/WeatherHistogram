@@ -1,73 +1,73 @@
-# Spec: `src/ui/ChangelogModal.js`
+﻿# Spec: `src/ui/ChangelogModal.js`
 
-## Propósito
-Modal de changelog con timeline visual, detalle expandible, y animaciones de entrada.
+## Purpose
+Changelog modal with visual timeline, expandable detail, and entrance animations.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../data/changelog.js` | `changelogData` | datos |
-| `../utils/i18n.js` | `t` | traducción |
+| `../data/changelog.js` | `changelogData` | data |
+| `../utils/i18n.js` | `t` | translation |
 | `./BottomSheet.js` | `openBottomSheet` | modal |
 
-## API Pública
+## Public API
 
 ### `export function showChangelogModal(version?: string, onUpdate?: Function): void`
 
-**Descripción:** Abre changelog con o sin versión específica.
+**Description:** Opens changelog with or without specific version.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `version?` | `string` | Versión específica a mostrar (si se omite, muestra todos) |
-| `onUpdate?` | `Function` | Callback al hacer clic en "actualizar" |
+| `version?` | `string` | Specific version to show (if omitted, shows all) |
+| `onUpdate?` | `Function` | Callback on "update" click |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
 ### `export function initChangelog(onBeforeOpen?: Function): void`
 
-**Descripción:** Inicializa link de apertura del changelog.
+**Description:** Initializes changelog open link.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `onBeforeOpen?` | `Function` | Callback antes de abrir el modal |
+| `onBeforeOpen?` | `Function` | Callback before opening the modal |
 
-**Metadatos:**
-- Mutates state: Sí (registra event listener)
+**Metadata:**
+- Mutates state: Yes (registers event listener)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Timeline vertical con markers circulares (major = azul, patch = gris)
-2. Animación fadeInUp escalonada por índice
-3. Click en item → `openChangelogDetail` → bottom sheet con lista completa de cambios
-4. Si hay versión específica, muestra update button
-5. `initChangelog` attach click al link `#open-changelog-link` con guard against doble click
+1. Vertical timeline with circular markers (major = blue, patch = gray)
+2. Staggered fadeInUp animation by index
+3. Click on item → `openChangelogDetail` → bottom sheet with full change list
+4. If specific version is present, shows update button
+5. `initChangelog` attaches click to `#open-changelog-link` with guard against double click
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `version` vacío / `undefined` | Muestra timeline completo sin versión destacada |
-| `onBeforeOpen` no es función | No lanza error, ignora callback |
-| Elemento `#open-changelog-link` no existe | `initChangelog` no lanza error, no registra listener |
-| `changelogData` vacío | Muestra timeline sin items |
-| Doble clic en link | Guard contra doble registro de eventos |
+| `version` empty / `undefined` | Shows full timeline without highlighted version |
+| `onBeforeOpen` is not a function | Does not throw, ignores callback |
+| Element `#open-changelog-link` does not exist | `initChangelog` does not throw, does not register listener |
+| `changelogData` empty | Shows timeline without items |
+| Double click on link | Guard against double event registration |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initChangelog` con link presente, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Link `#open-changelog-link` ausente, no lanza error
-3. **Exporta las funciones esperadas:** `showChangelogModal`, `initChangelog` son funciones
-4. **Modal con versión específica:** `showChangelogModal('1.0.0')` abre con versión destacada
-5. **Modal sin versión:** `showChangelogModal()` muestra timeline completo
-6. **Doble clic en link:** Guard contra doble registro de eventos
+1. **Initializes without errors with DOM elements present:** `initChangelog` with link present, does not throw
+2. **Does not throw if DOM elements are missing:** Link `#open-changelog-link` absent, does not throw
+3. **Exports expected functions:** `showChangelogModal`, `initChangelog` are functions
+4. **Modal with specific version:** `showChangelogModal('1.0.0')` opens with highlighted version
+5. **Modal without version:** `showChangelogModal()` shows full timeline
+6. **Double click on link:** Guard against double event registration
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

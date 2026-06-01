@@ -1,54 +1,54 @@
-# Spec: `src/data/skins.js`
+﻿# Spec: `src/data/skins.js`
 
-## Propósito
-Datos de fototipos de piel (Fitzpatrick) y función para determinar si se necesita protección solar.
+## Purpose
+Fitzpatrick skin phototype data and function to determine if sun protection is needed.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export const SKIN_TYPES: Array<{ id: number, labelKey: string, uvThreshold: number }>`
 
-**Descripción:** Los 6 fototipos Fitzpatrick con su umbral UV a partir del cual necesitan protección.
+**Description:** The 6 Fitzpatrick phototypes with their UV threshold from which they need protection.
 
 ### `export const DEFAULT_SKIN_TYPE: number` (= 2)
 
 ### `export function getSkinType(id: number): { id: number, labelKey: string, uvThreshold: number }`
 
-**Descripción:** Busca un fototipo por ID. Retorna tipo II (índice 1) como fallback.
+**Description:** Looks up a phototype by ID. Returns type II (index 1) as fallback.
 
 ### `export function needsSunProtection(skinType: number, uvIndex: number): boolean`
 
-**Descripción:** Determina si un fototipo necesita protección solar dado el índice UV.
+**Description:** Determines if a phototype needs sun protection given the UV index.
 
-## Comportamiento
+## Behavior
 
 1. `SKIN_TYPES`: I=threshold 1, II=2, III=3, IV=4, V=5, VI=6
-2. `getSkinType`: si no encuentra, retorna `SKIN_TYPES[1]` (tipo II)
+2. `getSkinType`: if not found, returns `SKIN_TYPES[1]` (type II)
 3. `needsSunProtection`: `uvIndex > 0 && skin.uvThreshold <= uvIndex`
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `getSkinType(0)` (no existe) | Retorna tipo II |
-| `getSkinType(7)` (fuera de rango) | Retorna tipo II |
+| `getSkinType(0)` (does not exist) | Returns type II |
+| `getSkinType(7)` (out of range) | Returns type II |
 | `needsSunProtection(2, 0)` | false (UV=0) |
-| `needsSunProtection(1, 1)` | true (I necesita con UV≥1) |
+| `needsSunProtection(1, 1)` | true (I needs with UV≥1) |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **getSkinType existente:** ID 1 retorna tipo I con threshold 1
-2. **getSkinType inexistente:** ID 0 retorna tipo II
-3. **Protección necesaria:** Skin II con UV 3 → true
-4. **Protección no necesaria:** Skin II con UV 1 → false
-5. **UV cero:** Siempre false
+1. **Existing getSkinType:** ID 1 returns type I with threshold 1
+2. **Non-existent getSkinType:** ID 0 returns type II
+3. **Protection needed:** Skin II with UV 3 → true
+4. **Protection not needed:** Skin II with UV 1 → false
+5. **UV zero:** Always false
 6. **Default:** DEFAULT_SKIN_TYPE = 2
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

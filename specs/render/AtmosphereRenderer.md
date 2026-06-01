@@ -1,79 +1,79 @@
-# Spec: `src/render/AtmosphereRenderer.js`
+﻿# Spec: `src/render/AtmosphereRenderer.js`
 
-## Propósito
-Renderiza precipitación (lluvia, nieve, tormenta) en el canvas del histograma. Re-exporta CloudRenderer y PrecipProbabilityRenderer.
+## Purpose
+Renders precipitation (rain, snow, storm) on the histogram canvas. Re-exports CloudRenderer and PrecipProbabilityRenderer.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | drawPrecipitation |
-| `state.theme` | read | colores |
+| `state.theme` | read | colors |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
-| `../theme.js` | `getThemeColor` | colores |
+| `../store.js` | `state` | access |
+| `../theme.js` | `getThemeColor` | colors |
 | `./CloudRenderer.js` | `drawClouds` | re-export |
 | `./PrecipProbabilityRenderer.js` | `drawPrecipitationProbability` | re-export |
 
-## API Pública
+## Public API
 
 ### `export function drawPrecipitation(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number, PIXELS_PER_MM: number): void`
 
-**Descripción:** Dibuja barras de precipitación con iconos según tipo (lluvia, nieve, tormenta).
+**Description:** Draws precipitation bars with icons according to type (rain, snow, storm).
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `styles` | `Object` | Estilos del tema |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
-| `PIXELS_PER_MM` | `number` | Píxeles por mm de precipitación |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `styles` | `Object` | Theme styles |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
+| `PIXELS_PER_MM` | `number` | Pixels per mm of precipitation |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-**Sub-funciones privadas:**
-- `drawRain(ctx, x, bw, barY, strokeColor, idx)` — gotas de agua
-- `drawSnow(ctx, x, bw, barY)` — copos de nieve
-- `drawThunder(ctx, x, bw, barY)` — rayos
+**Private sub-functions:**
+- `drawRain(ctx, x, bw, barY, strokeColor, idx)` — raindrops
+- `drawSnow(ctx, x, bw, barY)` — snowflakes
+- `drawThunder(ctx, x, bw, barY)` — lightning bolts
 
-## Comportamiento
+## Behavior
 
-1. Barra con gradiente vertical semitransparente
-2. Alto de barra = `d.precip * PIXELS_PER_MM` (máx 90% del alto)
-3. Códigos nieve: [71,73,75,77,85,86]; tormenta: [95,96,99]
-4. Si barra excede altura máxima, dibuja zigzag indicador de overflow
-5. Gradiente usa color base con mezcla al 40% de opacidad
+1. Semi-transparent vertical gradient bar
+2. Bar height = `d.precip * PIXELS_PER_MM` (max 90% of height)
+3. Snow codes: [71,73,75,77,85,86]; storm: [95,96,99]
+4. If bar exceeds max height, draws zigzag overflow indicator
+5. Gradient uses base color with 40% opacity blend
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error (no hay try-catch, pero draw no se ejecuta) |
-| `state.hourlyData` vacío | No dibuja nada, retorna sin error |
-| `PIXELS_PER_MM = 0` | Barra con altura 0, no dibuja nada |
-| `viewX` / `viewW` negativos | Dibuja fuera del viewport, no lanza error |
-| `d.precip = 0` | No dibuja barra para esa hora |
-| Código weatherCode no reconocido | Trata como lluvia por defecto |
+| `ctx = null` / `undefined` | Does not throw (no try-catch, but draw does not execute) |
+| `state.hourlyData` empty | Draws nothing, returns without error |
+| `PIXELS_PER_MM = 0` | Bar with height 0, draws nothing |
+| `viewX` / `viewW` negative | Draws outside viewport, does not throw |
+| `d.precip = 0` | Does not draw bar for that hour |
+| Unrecognized weatherCode | Treats as rain by default |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawPrecipitation` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Códigos de nieve:** WeatherCode [71,73,75,77,85,86] dibuja copos de nieve
-5. **Códigos de tormenta:** WeatherCode [95,96,99] dibuja rayos
-6. **Overflow de barra:** Precipitación que excede altura máxima dibuja zigzag
+1. **Does not throw with mock data:** Calls `drawPrecipitation` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **Snow codes:** WeatherCode [71,73,75,77,85,86] draws snowflakes
+5. **Storm codes:** WeatherCode [95,96,99] draws lightning bolts
+6. **Bar overflow:** Precipitation exceeding max height draws zigzag
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

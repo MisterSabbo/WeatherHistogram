@@ -1,67 +1,67 @@
-# Spec: `src/ui/PollenRadar.js`
+﻿# Spec: `src/ui/PollenRadar.js`
 
-## Propósito
-Dibuja un radar de polen (gráfico radial hexagonal con 6 especies) en un canvas.
+## Purpose
+Draws a pollen radar (hexagonal radial chart with 6 species) on a canvas.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.theme` | read | sombra |
+| `state.theme` | read | shadow |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
-| `../utils/i18n.js` | `t` | nombres de especies |
+| `../store.js` | `state` | access |
+| `../utils/i18n.js` | `t` | species names |
 
-## API Pública
+## Public API
 
 ### `export function drawPollenRadar(data: Object, targetId?: string, detailsId?: string): void`
 
-**Descripción:** Dibuja radar de polen hexagonal con 6 especies.
+**Description:** Draws hexagonal pollen radar with 6 species.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `Object` | Datos con `pollenDetails: { alder, birch, grass, mugwort, olive, ragweed }` |
-| `targetId?` | `string` | ID del canvas (default `'pollen-radar'`) |
-| `detailsId?` | `string` | ID del elemento de detalles (default `'pollen-details'`) |
+| `data` | `Object` | Data with `pollenDetails: { alder, birch, grass, mugwort, olive, ragweed }` |
+| `targetId?` | `string` | Canvas ID (default `'pollen-radar'`) |
+| `detailsId?` | `string` | Details element ID (default `'pollen-details'`) |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. 6 ejes hexagonales (alder, birch, grass, mugwort, olive, ragweed)
-2. 3 hexágonos concéntricos de referencia
-3. Área de datos amarilla semitransparente
-4. Etiquetas con sombra, ajuste de Y para evitar solapamiento
-5. Detalles en elemento HTML aparte
+1. 6 hexagonal axes (alder, birch, grass, mugwort, olive, ragweed)
+2. 3 concentric reference hexagons
+3. Semi-transparent yellow data area
+4. Labels with shadow, Y adjustment to avoid overlap
+5. Details in separate HTML element
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `data = null` / `undefined` | No lanza error, retorna sin dibujar |
-| `targetId` no existe en DOM | No lanza error, retorna sin dibujar |
-| `pollenDetails` con valores 0 | Dibuja polígono en centro (todos normalizados a 0) |
-| `pollenDetails` con valores negativos | Trata como 0, no lanza error |
-| Canvas 2D context no disponible | No lanza error, retorna sin dibujar |
-| Etiquetas solapadas | Ajuste de Y para evitar colisiones |
+| `data = null` / `undefined` | Does not throw, returns without drawing |
+| `targetId` does not exist in DOM | Does not throw, returns without drawing |
+| `pollenDetails` with values 0 | Draws polygon at center (all normalized to 0) |
+| `pollenDetails` with negative values | Treats as 0, does not throw |
+| Canvas 2D context not available | Does not throw, returns without drawing |
+| Overlapping labels | Y adjustment to avoid collisions |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con datos válidos:** `drawPollenRadar` con datos mock, no lanza error
-2. **No lanza con data = null/undefined:** Datos nulos, no lanza error
-3. **Exporta las funciones esperadas:** `drawPollenRadar` es función
-4. **Canvas no existe:** `targetId` no existe en DOM, retorna sin error
-5. **Valores de polen a 0:** Polígono dibujado en centro
-6. **Valores negativos:** Tratados como 0, no lanza error
+1. **Initializes without errors with valid data:** `drawPollenRadar` with mock data, does not throw
+2. **Does not throw with data = null/undefined:** Null data, does not throw
+3. **Exports expected functions:** `drawPollenRadar` is a function
+4. **Canvas does not exist:** `targetId` does not exist in DOM, returns without error
+5. **Pollen values at 0:** Polygon drawn at center
+6. **Negative values:** Treated as 0, does not throw
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

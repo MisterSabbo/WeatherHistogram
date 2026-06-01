@@ -1,34 +1,34 @@
-# Spec: `src/services/FavoritesService.js`
+﻿# Spec: `src/services/FavoritesService.js`
 
-## Propósito
-Servicio para gestionar ubicaciones favoritas con persistencia en IndexedDB vía StorageService.
+## Purpose
+Service for managing favorite locations with persistence in IndexedDB via StorageService.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `./StorageService.js` | `storageService` | persistencia |
+| `./StorageService.js` | `storageService` | persistence |
 
-## API Pública
+## Public API
 
 ### `export class FavoritesService`
 
 ### `new FavoritesService(): FavoritesService`
 
-**Descripción:** Inicializa con caché vacía.
+**Description:** Initializes with empty cache.
 
 ### `async load(): Promise<Array>`
 
-**Descripción:** Carga favoritos desde storage.
+**Description:** Loads favorites from storage.
 
 ### `async save(): Promise<void>`
 
-**Descripción:** Persiste caché a storage.
+**Description:** Persists cache to storage.
 
 ### `async add(lat, lon, originalName): Promise<void>`
 
-**Descripción:** Añade favorito si no existe ya (por coordenadas con tolerancia 0.001).
+**Description:** Adds a favorite if it does not already exist (by coordinates with 0.001 tolerance).
 
 ### `async remove(index): Promise<void>`
 
@@ -40,33 +40,33 @@ Servicio para gestionar ubicaciones favoritas con persistencia en IndexedDB vía
 
 ### `export const favoritesService: FavoritesService` (singleton)
 
-## Comportamiento
+## Behavior
 
-1. `load`/`save` se llaman internamente en cada operación mutante
-2. `add` verifica duplicados con tolerancia 0.001 en lat/lon
-3. `reorder` no hace nada si newIndex fuera de rango
-4. `clear` vacía la caché y persiste
+1. `load`/`save` are called internally on each mutating operation
+2. `add` checks for duplicates with 0.001 latitude/longitude tolerance
+3. `reorder` does nothing if newIndex is out of range
+4. `clear` empties cache and persists
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `add` con ubicación existente | No duplica |
-| `remove` con índice inválido | splice con índice inválido → error o nada |
-| `reorder` con índices fuera de rango | No hace nada |
-| Storage falla | Error propagado al caller |
+| `add` with existing location | Does not duplicate |
+| `remove` with invalid index | splice with invalid index → error or nothing |
+| `reorder` with out of range indices | Does nothing |
+| Storage fails | Error propagated to caller |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Add nuevo favorito:** se añade y persiste
-2. **Add duplicado:** no se añade
-3. **Remove:** elimina y persiste
-4. **Reorder:** cambia orden y persiste
-5. **Clear:** vacía lista y persiste
-6. **Singleton:** favoritesService es instancia única
+1. **Add new favorite:** added and persisted
+2. **Add duplicate:** not added
+3. **Remove:** deletes and persists
+4. **Reorder:** changes order and persists
+5. **Clear:** empties list and persists
+6. **Singleton:** favoritesService is a unique instance
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

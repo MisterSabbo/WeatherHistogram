@@ -146,7 +146,7 @@ describe('YearInPixels', () => {
   })
 
   describe('exports', () => {
-    it('exporta todas las funciones esperadas', () => {
+    it('exports all expected functions', () => {
       expect(typeof YIP.initYearInPixels).toBe('function')
       expect(typeof YIP.renderYIPGrid).toBe('function')
       expect(typeof YIP.saveDayNote).toBe('function')
@@ -158,17 +158,17 @@ describe('YearInPixels', () => {
   })
 
   describe('initYearInPixels', () => {
-    it('no lanza error si #year-in-pixels-btn no existe', () => {
+    it('does not throw if #year-in-pixels-btn does not exist', () => {
       document.getElementById('year-in-pixels-btn').remove()
       expect(() => YIP.initYearInPixels()).not.toThrow()
     })
 
-    it('no lanza error si #yip-modal no existe', () => {
+    it('does not throw if #yip-modal does not exist', () => {
       document.getElementById('yip-modal').remove()
       expect(() => YIP.initYearInPixels()).not.toThrow()
     })
 
-    it('registra listeners cuando los elementos existen', () => {
+    it('registers listeners when elements exist', () => {
       const btn = document.getElementById('year-in-pixels-btn')
       const spy = vi.spyOn(btn, 'addEventListener')
       YIP.initYearInPixels()
@@ -177,19 +177,19 @@ describe('YearInPixels', () => {
   })
 
   describe('renderYIPGrid', () => {
-    it('muestra mensaje si history es null', () => {
+    it('shows message if history is null', () => {
       YIP.renderYIPGrid(null, 'maxTemp')
       const container = document.getElementById('yip-grid-container')
       expect(container.innerHTML).toContain('Sin historial')
     })
 
-    it('muestra mensaje si history.daily está vacío', () => {
+    it('shows message if history.daily is empty', () => {
       YIP.renderYIPGrid({ daily: [] }, 'maxTemp')
       const container = document.getElementById('yip-grid-container')
       expect(container.innerHTML).toContain('Sin historial')
     })
 
-    it('renderiza 12 month-blocks con datos del año actual', () => {
+    it('renders 12 month-blocks with current year data', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -203,7 +203,7 @@ describe('YearInPixels', () => {
       expect(blocks.length).toBe(12)
     })
 
-    it('celda con notas tiene dot indicator azul', () => {
+    it('cell with notes has blue dot indicator', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -222,7 +222,7 @@ describe('YearInPixels', () => {
       expect(dots[0].style.backgroundColor).toBe('rgb(96, 165, 250)')
     })
 
-    it('celda sin notas no tiene dot container', () => {
+    it('cell without notes has no dot container', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -236,7 +236,7 @@ describe('YearInPixels', () => {
       expect(cell.querySelector('.yip-dot-container')).toBeNull()
     })
 
-    it('celda con moods tiene dot indicator amarillo', () => {
+    it('cell with moods has yellow dot indicator', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -254,7 +254,7 @@ describe('YearInPixels', () => {
       expect(dots[0].style.backgroundColor).toBe('rgb(251, 191, 36)')
     })
 
-    it('celda sin moods no tiene dot container', () => {
+    it('cell without moods has no dot container', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -268,7 +268,7 @@ describe('YearInPixels', () => {
       expect(cell.querySelector('.yip-dot-container')).toBeNull()
     })
 
-    it('4+ estados muestra 2 dots + badge +N en vez de 3 dots + badge', () => {
+    it('4+ states shows 2 dots + badge +N instead of 3 dots + badge', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -293,7 +293,7 @@ describe('YearInPixels', () => {
 
 
 
-    it('celda con param=mood se colorea con color del primer mood', () => {
+    it('cell with param=mood is colored with first mood color', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -308,7 +308,7 @@ describe('YearInPixels', () => {
       expect(cell.style.backgroundColor).toBeTruthy()
     })
 
-    it('celda con param=mood sin moods es gris', () => {
+    it('cell with param=mood without moods is gray', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -322,7 +322,7 @@ describe('YearInPixels', () => {
       expect(cell).toBeFalsy()
     })
 
-    it('celda future tiene clase future', () => {
+    it('future cell has future class', () => {
       const nextYear = new Date().getFullYear() + 1
       const mockData = {
         daily: [{
@@ -336,7 +336,7 @@ describe('YearInPixels', () => {
       expect(cells.length).toBeGreaterThan(0)
     })
 
-    it('celda pasada sin datos tiene clase past-no-data', () => {
+    it('past cell without data has past-no-data class', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -350,7 +350,7 @@ describe('YearInPixels', () => {
       expect(cells.length).toBeGreaterThan(0)
     })
 
-    it('celda pasada sin datos tiene onclick', () => {
+    it('past cell without data has onclick', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -364,7 +364,7 @@ describe('YearInPixels', () => {
       expect(typeof cell.onclick).toBe('function')
     })
 
-    it('celda completada tiene onclick', () => {
+    it('completed cell has onclick', () => {
       const today = new Date()
       const mockData = {
         daily: [{
@@ -378,7 +378,7 @@ describe('YearInPixels', () => {
       expect(typeof cell.onclick).toBe('function')
     })
 
-    it('tiene cabeceras de día en cada month-block', () => {
+    it('has day headers in each month-block', () => {
       const today = new Date()
       const mockData = { daily: [{ time: `${today.getFullYear()}-01-15`, tempMax: 20, tempMin: 10 }] }
       YIP.renderYIPGrid(mockData, 'maxTemp')
@@ -389,7 +389,7 @@ describe('YearInPixels', () => {
       })
     })
 
-    it('cada celda tiene day number', () => {
+    it('each cell has day number', () => {
       const today = new Date()
       const mockData = { daily: [{ time: `${today.getFullYear()}-01-15`, tempMax: 20, tempMin: 10 }] }
       YIP.renderYIPGrid(mockData, 'maxTemp')
@@ -415,60 +415,60 @@ describe('YearInPixels', () => {
       moods: ['happy', 'neutral']
     }
 
-    it('puebla textarea con data.notes', () => {
+    it('populates textarea with data.notes', () => {
       YIP.openYIPDetail(mockDayData, '15 Junio 2026')
       const input = document.getElementById('yip-detail-notes-input')
       expect(input.value).toBe('Buena nota de prueba')
     })
 
-    it('textarea vacío si data.notes es undefined', () => {
+    it('textarea empty if data.notes is undefined', () => {
       const { notes: _notes, ...noNotes } = mockDayData
       YIP.openYIPDetail(noNotes, '15 Junio 2026')
       const input = document.getElementById('yip-detail-notes-input')
       expect(input.value).toBe('')
     })
 
-    it('marca moods activos en el selector', () => {
+    it('marks active moods in selector', () => {
       YIP.openYIPDetail(mockDayData, '15 Junio 2026')
       const activeBtns = document.querySelectorAll('.yip-mood-btn.active')
       expect(activeBtns.length).toBe(2)
     })
 
-    it('no marca moods si data.moods es undefined', () => {
+    it('does not mark moods if data.moods is undefined', () => {
       const { moods: _moods, ...noMoods } = mockDayData
       YIP.openYIPDetail(noMoods, '15 Junio 2026')
       const activeBtns = document.querySelectorAll('.yip-mood-btn.active')
       expect(activeBtns.length).toBe(0)
     })
 
-    it('retorna sin error si data es null', () => {
+    it('returns without error if data is null', () => {
       expect(() => YIP.openYIPDetail(null, '15 Junio 2026')).not.toThrow()
     })
 
-    it('llama window.openBottomSheet', () => {
+    it('calls window.openBottomSheet', () => {
       YIP.openYIPDetail(mockDayData, '15 Junio 2026')
       expect(window.openBottomSheet).toHaveBeenCalledWith('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content')
     })
 
-    it('muestra Sin datos meteorológicos si data no tiene weather fields', () => {
+    it('shows Sin datos meteorológicos if data has no weather fields', () => {
       YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
       const metrics = document.getElementById('yip-detail-metrics')
       expect(metrics.innerHTML).toContain('Sin datos meteorológicos')
     })
 
-    it('descripción vacía si data no tiene weather fields', () => {
+    it('empty description if data has no weather fields', () => {
       YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
       const desc = document.getElementById('yip-detail-desc')
       expect(desc.textContent).toBe('')
     })
 
-    it('notes section visible para datos sin weather', () => {
+    it('notes section visible for data without weather', () => {
       YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
       const section = document.getElementById('yip-detail-notes-section')
       expect(section.style.display).toBe('block')
     })
 
-    it('moods section visible para datos sin weather', () => {
+    it('moods section visible for data without weather', () => {
       YIP.openYIPDetail({ time: '2026-06-15' }, '15 Junio 2026')
       const section = document.getElementById('yip-detail-moods-section')
       expect(section.style.display).toBe('block')
@@ -482,19 +482,19 @@ describe('YearInPixels', () => {
       mockStorageService.updateDayNotes.mockResolvedValue(true)
     })
 
-    it('llama storageService.updateDayNotes con el texto', async () => {
+    it('calls storageService.updateDayNotes with text', async () => {
       document.getElementById('yip-detail-notes-input').value = 'Nota de prueba'
       await YIP.saveDayNote(mockDayData, 'Madrid')
       expect(mockStorageService.updateDayNotes).toHaveBeenCalledWith('Madrid', '2026-06-15', 'Nota de prueba')
     })
 
-    it('llama storageService.updateDayNotes con string vacío', async () => {
+    it('calls storageService.updateDayNotes with empty string', async () => {
       document.getElementById('yip-detail-notes-input').value = ''
       await YIP.saveDayNote(mockDayData, 'Madrid')
       expect(mockStorageService.updateDayNotes).toHaveBeenCalledWith('Madrid', '2026-06-15', '')
     })
 
-    it('llama storageService.updateDayNotes incluso sin UI legacy', async () => {
+    it('calls storageService.updateDayNotes even without legacy UI', async () => {
       document.getElementById('yip-detail-notes-input').value = 'Nota legacy'
       await YIP.saveDayNote(mockDayData, 'Madrid')
       expect(mockStorageService.updateDayNotes).toHaveBeenCalledWith('Madrid', '2026-06-15', 'Nota legacy')
@@ -508,7 +508,7 @@ describe('YearInPixels', () => {
       mockStorageService.updateDayMoods.mockResolvedValue(true)
     })
 
-    it('llama storageService.updateDayMoods con array de ids activos', async () => {
+    it('calls storageService.updateDayMoods with active ids array', async () => {
       document.getElementById('yip-moods-selector').innerHTML = `
         <button class="yip-mood-btn active" data-mood="happy"></button>
         <button class="yip-mood-btn" data-mood="sad"></button>
@@ -518,7 +518,7 @@ describe('YearInPixels', () => {
       expect(mockStorageService.updateDayMoods).toHaveBeenCalledWith('Madrid', '2026-06-15', ['happy', 'tired'])
     })
 
-    it('llama storageService.updateDayMoods con array vacío si no hay activos', async () => {
+    it('calls storageService.updateDayMoods with empty array if none active', async () => {
       document.getElementById('yip-moods-selector').innerHTML = `
         <button class="yip-mood-btn" data-mood="happy"></button>
         <button class="yip-mood-btn" data-mood="sad"></button>
@@ -529,14 +529,14 @@ describe('YearInPixels', () => {
   })
 
   describe('updateYipScrollUI', () => {
-    it('vacia dotsContainer si hay 0 chips', () => {
+    it('clears dotsContainer if there are 0 chips', () => {
       document.getElementById('yip-location-chips').innerHTML = ''
       YIP.updateYipScrollUI()
       const dots = document.getElementById('yip-location-dots')
       expect(dots.innerHTML).toBe('')
     })
 
-    it('vacia dotsContainer si no hay overflow', () => {
+    it('clears dotsContainer if no overflow', () => {
       const chips = document.getElementById('yip-location-chips')
       Object.defineProperty(chips, 'scrollWidth', { value: 100, configurable: true })
       Object.defineProperty(chips, 'clientWidth', { value: 200, configurable: true })
@@ -546,7 +546,7 @@ describe('YearInPixels', () => {
       expect(dots.innerHTML).toBe('')
     })
 
-    it('renderiza dots si hay overflow', () => {
+    it('renders dots if there is overflow', () => {
       const chips = document.getElementById('yip-location-chips')
       Object.defineProperty(chips, 'scrollWidth', { value: 300, configurable: true })
       Object.defineProperty(chips, 'clientWidth', { value: 200, configurable: true })
@@ -613,7 +613,7 @@ describe('YearInPixels', () => {
       document.getElementById('yip-allergies-toggle').classList.add('active')
     })
 
-    it('llama storageService.updateDayData con los campos actualizados', async () => {
+    it('calls storageService.updateDayData with updated fields', async () => {
       await YIP.saveDayDetail(mockDayData, 'Madrid')
       expect(mockStorageService.updateDayData).toHaveBeenCalledWith('Madrid', '2026-06-15', {
         notes: 'Updated note',
@@ -623,7 +623,7 @@ describe('YearInPixels', () => {
       })
     })
 
-    it('llama updateDayData con undefined si todos los campos están vacíos (Clear+Save)', async () => {
+    it('calls updateDayData with undefined if all fields are empty (Clear+Save)', async () => {
       document.getElementById('yip-detail-notes-input').value = ''
       document.getElementById('yip-moods-selector').innerHTML = '<button class="yip-mood-btn" data-mood="sad"></button>'
       document.getElementById('yip-cold-toggle').classList.remove('active')
@@ -637,7 +637,7 @@ describe('YearInPixels', () => {
       })
     })
 
-    it('re-renderiza grid tras guardado exitoso (cambia el DOM del container)', async () => {
+    it('re-renders grid after successful save (changes container DOM)', async () => {
       const history = { daily: [{ ...mockDayData }] }
       YIP.renderYIPGrid(history, 'maxTemp')
       const container = document.getElementById('yip-grid-container')
@@ -647,7 +647,7 @@ describe('YearInPixels', () => {
       expect(container.innerHTML).not.toBe(initialHTML)
     })
 
-    it('actualiza data en memoria tras éxito', async () => {
+    it('updates data in memory after success', async () => {
       await YIP.saveDayDetail(mockDayData, 'Madrid')
       expect(mockDayData.notes).toBe('Updated note')
       expect(mockDayData.moods).toEqual(['sad'])
@@ -655,7 +655,7 @@ describe('YearInPixels', () => {
       expect(mockDayData.allergies).toBe(true)
     })
 
-    it('muestra toast de error si updateDayData falla', async () => {
+    it('shows error toast if updateDayData fails', async () => {
       mockStorageService.updateDayData.mockResolvedValue(false)
       const toastEl = document.getElementById('yip-toast')
       await YIP.saveDayDetail(mockDayData, 'Madrid')
@@ -663,7 +663,7 @@ describe('YearInPixels', () => {
       expect(toastEl.textContent).toBe('Error al guardar')
     })
 
-    it('muestra toast de error si updateDayData lanza excepción', async () => {
+    it('shows error toast if updateDayData throws exception', async () => {
       mockStorageService.updateDayData.mockRejectedValue(new Error('DB error'))
       const toastEl = document.getElementById('yip-toast')
       await YIP.saveDayDetail(mockDayData, 'Madrid')
@@ -671,7 +671,7 @@ describe('YearInPixels', () => {
       expect(toastEl.textContent).toBe('Error al guardar')
     })
 
-    it('celdas renderizadas tienen data-time attribute', () => {
+    it('rendered cells have data-time attribute', () => {
       const today = new Date()
       const mockData = {
         daily: [{ time: `${today.getFullYear()}-01-15T00:00:00`, tempMax: 25, tempMin: 15 }]
@@ -683,7 +683,7 @@ describe('YearInPixels', () => {
   })
 
   describe('clear button', () => {
-    it('clear button existe en el DOM', () => {
+    it('clear button exists in the DOM', () => {
       const clearBtn = document.getElementById('yip-detail-clear-btn')
       expect(clearBtn).toBeTruthy()
     })

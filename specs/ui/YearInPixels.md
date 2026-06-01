@@ -1,12 +1,12 @@
-# Spec: `src/ui/YearInPixels.js`
+﻿# Spec: `src/ui/YearInPixels.js`
 
-## Propósito
-Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos históricos meteorológicos, estado de ánimo, y condiciones de salud (resfriado/alergias), con detalle por día, edición de notas, moods y condiciones. Incluye animación de highlight tras guardar y mini toast de confirmación.
+## Purpose
+Annual "Year in Pixels" visualization with monthly grid (12×31) of historical weather data, moods, and health conditions (cold/allergies), with day detail, notes, moods and conditions editing. Includes save highlight animation and mini confirmation toast.
 
-## Dependencias
+## Dependencies
 
-### DOM (elementos HTML esperados)
-| Elemento | Tipo de acceso | Contexto |
+### DOM (expected HTML elements)
+| Element | Access type | Context |
 |----------|---------------|----------|
 | `#year-in-pixels-btn` | getElementById + click | initYearInPixels |
 | `#yip-modal` | getElementById + classList.add/remove `.open` | initYearInPixels, close |
@@ -60,369 +60,287 @@ Visualización anual tipo "Year in Pixels" con grid mensual (12×31) de datos hi
 | `.yip-legend-dot` | Pagination dot (● active, ○ inactive) | Tab switch indicator |
 | `#yip-saved-toast` | getElementById style.display + textContent + classList | saveDayDetail, openYIPDetail |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
 | `../services/StorageService.js` | `storageService` | getHistory, updateDayNotes, updateDayMoods, init, db, historyStoreName |
-| `../utils/i18n.js` | `t` | Traducción de textos |
-| `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | Niveles de polen |
-| `../utils/color.js` | `getTextColorForBg` | Color de texto adaptativo por luminancia del fondo |
-| `../store.js` | `state` | Estado global (se lee `state.theme` para variantes de color en light mode) |
+| `../utils/i18n.js` | `t` | Text translation |
+| `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | Pollen levels |
+| `../utils/color.js` | `getTextColorForBg` | Adaptive text color by background luminance |
+| `../store.js` | `state` | Global state (reads `state.theme` for light mode color variants) |
 
-### Funciones internas (no exportadas)
-| Función | Descripción |
+### Internal functions (not exported)
+| Function | Description |
 |---------|-------------|
-| `highlightYIPCell(time)` | Busca `.yip-day-cell[data-time="${time}"]` en el DOM, añade clase `.yip-highlight-flash` por 1s (animación CSS combinada: box-shadow + scale + outline con `var(--accent-precip)`, 1s). Light/dark mode: opacity 0.5 vs 0.3 |
-| `renderLegendTabs(param)` | Renderiza el contenido de la leyenda según `_activeLegendTab` ('cell' o 'state') en `#yip-legend-content`. Si tab='cell' delega en `renderLegend()`; si 'state' delega en `renderStateTabContent()`. Registra event listeners en `.yip-tab-label` y `.yip-legend-dot` (solo si no están ya registrados). Siempre sincroniza la clase `.active` de los dots |
-| `renderStateTabContent(container)` | Renderiza 4 dots de condición (notes=azul, mood=oro, cold=rojo, allergies=verde) con labels traducidos. Cada dot es un círculo de 7px con `border-radius: 50%` y el color de `DOT_COLORS` |
-| `showErrorToast(message)` | Muestra `#yip-toast` con el mensaje, auto-dismiss tras 3s con fade out. Usa `_toastTimer` para evitar múltiples timers |
-| `closeYipModal()` | Cierra el YIP quitando clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. También cancela drag en curso si existe. Se llama desde botón ×, backdrop click, drag-to-dismiss y borrado de ubicación |
-| `_initYipModalDrag()` | Inicializa pointer events en `#yip-modal-drag-handle` para swipe-to-dismiss. Solo activo en mobile (<768px). El arrastre puede iniciarse desde los elementos fijos del header (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) incluso cuando el contenido scrollable está scrolleado. Solo los toques dentro de `#yip-modal-scroll-content` respetan el guard de scroll (scrollTop > 0 bloquea el arrastre). Umbral de cierre >100px |
+| `highlightYIPCell(time)` | Finds `.yip-day-cell[data-time="${time}"]` in the DOM, adds `.yip-highlight-flash` class for 1s (combined CSS animation: box-shadow + scale + outline with `var(--accent-precip)`, 1s). Light/dark mode: opacity 0.5 vs 0.3 |
+| `renderLegendTabs(param)` | Renders legend content according to `_activeLegendTab` ('cell' or 'state') in `#yip-legend-content`. If tab='cell' delegates to `renderLegend()`; if 'state' delegates to `renderStateTabContent()`. Registers event listeners on `.yip-tab-label` and `.yip-legend-dot` (only if not already registered). Always syncs `.active` class on dots |
+| `renderStateTabContent(container)` | Renders 4 condition dots (notes=blue, mood=gold, cold=red, allergies=green) with translated labels. Each dot is a 7px circle with `border-radius: 50%` and the color from `DOT_COLORS` |
+| `showErrorToast(message)` | Shows `#yip-toast` with the message, auto-dismiss after 3s with fade out. Uses `_toastTimer` to avoid multiple timers |
+| `closeYipModal()` | Closes YIP by removing `.open` class from `#yip-modal` and `#yip-modal-backdrop`. Also cancels ongoing drag if exists. Called from × button, backdrop click, drag-to-dismiss and location deletion |
+| `_initYipModalDrag()` | Initializes pointer events on `#yip-modal-drag-handle` for swipe-to-dismiss. Only active on mobile (<768px). Drag can start from fixed header elements (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) even when scrollable content is scrolled. Only touches inside `#yip-modal-scroll-content` respect the scroll guard (scrollTop > 0 blocks drag). Close threshold >100px |
 
-### Variables globales de módulo (no `state`)
-| Variable | Tipo | Inicial | Uso |
+### Module global variables (not `state`)
+| Variable | Type | Initial | Usage |
 |----------|------|---------|-----|
-| `cachedHistory` | `object\|null` | `null` | Almacena history cargada para re-render al cambiar param |
-| `selectedLocation` | `string\|null` | `null` | Ubicación activa seleccionada entre chips |
-| `selectedParam` | `string` | `'maxTemp'` | Parámetro activo (maxTemp, minTemp, precip, windMax, gustMax, aqi, pollen, pollen_*, mood, cold, allergies) |
-| `_closeSheet` | `function\|undefined` | `undefined` | Callback para cerrar el param sheet |
-| `_closeDetailSheet` | `function\|undefined` | `undefined` | Callback para cerrar el detail sheet |
-| `_yipScrollInit` | `boolean` | `false` | Flag para inicializar scroll de chips una sola vez |
-| `_yipScrollListenersAttached` | `boolean` | `false` | Flag para evitar duplicar listeners de scroll |
-| `_closeYipModal` | `function\|null` | `null` | Callback para cerrar el YIP modal programáticamente (seteada en initYearInPixels) |
-| `_yipDragState` | `object\|null` | `null` | Estado interno del drag-to-dismiss: `{ startY, currentY, isDragging }` |
-| `cardBgColor` | `string` | computada en renderYIPGrid | Resolved `--card-bg` CSS variable, usada para adaptive text color en celdas sin datos |
-| `_activeLegendTab` | `string` | `'cell'` | Tab activo de la leyenda fija. `'cell'` muestra la escala de colores del parámetro actual; `'state'` muestra los 4 dots de condición (notes, mood, cold, allergies). Se cambia al hacer click en `.yip-tab-label` o `.yip-legend-dot` |
-| `_yipTheme` | `string` | `'dark'` | Cache del tema activo (`state.theme`), establecido al inicio de `renderYIPGrid()`. Usado por `getColorForParam()` para devolver variantes de color adaptadas al modo claro. Se lee una vez por render (~365 accesos a state.theme evitados) |
+| `cachedHistory` | `object\|null` | `null` | Stores loaded history for re-render when changing param |
+| `selectedLocation` | `string\|null` | `null` | Active location selected among chips |
+| `selectedParam` | `string` | `'maxTemp'` | Active parameter (maxTemp, minTemp, precip, windMax, gustMax, aqi, pollen, pollen_*, mood, cold, allergies) |
+| `_closeSheet` | `function\|undefined` | `undefined` | Callback to close param sheet |
+| `_closeDetailSheet` | `function\|undefined` | `undefined` | Callback to close detail sheet |
+| `_yipScrollInit` | `boolean` | `false` | Flag to initialize chip scrolling once |
+| `_yipScrollListenersAttached` | `boolean` | `false` | Flag to avoid duplicating scroll listeners |
+| `_closeYipModal` | `function\|null` | `null` | Callback to close YIP modal programmatically (set in initYearInPixels) |
+| `_yipDragState` | `object\|null` | `null` | Internal drag-to-dismiss state: `{ startY, currentY, isDragging }` |
+| `cardBgColor` | `string` | computed in renderYIPGrid | Resolved `--card-bg` CSS variable, used for adaptive text color in cells without data |
+| `_activeLegendTab` | `string` | `'cell'` | Active legend tab. `'cell'` shows the color scale of the current parameter; `'state'` shows the 4 condition dots (notes, mood, cold, allergies). Changed by clicking `.yip-tab-label` or `.yip-legend-dot` |
+| `_yipTheme` | `string` | `'dark'` | Cache of active theme (`state.theme`), set at the start of `renderYIPGrid()`. Used by `getColorForParam()` to return light-mode adapted color variants. Read once per render (~365 state.theme accesses avoided) |
 
-### Constantes internas
-| Constante | Valor | Contexto |
+### Internal constants
+| Constant | Value | Context |
 |-----------|-------|----------|
-| `MOODS` | Array de 6 objetos `{ id, emoji, labelKey, color }` | saveDayMoods, renderYIPGrid, openYIPDetail, getColorForParam, renderLegend |
-| `MOOD_EMOJI_MAP` | Mapa de `id → emoji` | renderYIPGrid (icono emoji en celda) |
-| `DOT_COLORS` | Mapa `{ notes: '#60a5fa', mood: '#fbbf24', cold: '#ef4444', allergies: '#22c55e' }` | renderYIPGrid (dots — tamaño 7px con border 1.5px), renderStateTabContent |
+| `MOODS` | Array of 6 objects `{ id, emoji, labelKey, color }` | saveDayMoods, renderYIPGrid, openYIPDetail, getColorForParam, renderLegend |
+| `MOOD_EMOJI_MAP` | Map of `id → emoji` | renderYIPGrid (emoji icon in cell) |
+| `DOT_COLORS` | Map `{ notes: '"'"'#60a5fa'"'"', mood: '"'"'#fbbf24'"'"', cold: '"'"'#ef4444'"'"', allergies: '"'"'#22c55e'"'"' }` | renderYIPGrid (dots — size 7px with border 1.5px), renderStateTabContent |
 
-### Nuevos parámetros
-| Parámetro | Color sí | Color no |
+### New parameters
+| Parameter | Color yes | Color no |
 |-----------|----------|----------|
 | `cold` | `#eab308` (yellow) | `var(--grid-color)` |
 | `allergies` | `#22c55e` (green) | `var(--grid-color)` |
 
-## API Pública
+## Public API
 
 ### `export function initYearInPixels(): void`
 
-**Descripción:** Inicializa el modal/bottom sheet responsive del Year in Pixels. Busca elementos DOM, registra event listeners para abrir desde `#year-in-pixels-btn`, cerrar desde `#close-yip-modal-btn`, click en backdrop y swipe-to-dismiss en drag handle (mobile). Borra ubicación desde `#yip-delete-loc-btn`, y abre selector de parámetro desde `#yip-param-display`.
+**Description:** Initializes the responsive Year in Pixels modal/bottom sheet. Looks up DOM elements, registers event listeners to open from `#year-in-pixels-btn`, close from `#close-yip-modal-btn`, backdrop click and swipe-to-dismiss on drag handle (mobile). Deletes location from `#yip-delete-loc-btn`, and opens parameter selector from `#yip-param-display`.
 
-**Comportamiento responsive:**
-- **Desktop (≥768px)**: modal centrado con `transform: scale`, backdrop con fade. Cierre con botón × o click en backdrop.
-- **Mobile (<768px)**: bottom sheet que ocupa ≥95dvh con `transform: translateY(100%)` → `.open` → `translateY(0)`. Cierre con drag handle (pointer events, >100px cierra), backdrop click, o botón ×.
-- La visibilidad se controla mediante clase `.open` en `#yip-modal` y `#yip-modal-backdrop` (no `style.display`).
+**Responsive behavior:**
+- **Desktop (≥768px)**: centered modal with `transform: scale`, backdrop with fade. Close with × button or backdrop click.
+- **Mobile (<768px)**: bottom sheet occupying ≥95dvh with `transform: translateY(100%)` → `.open` → `translateY(0)`. Close with drag handle (pointer events, >100px closes), backdrop click, or × button.
+- Visibility is controlled via `.open` class on `#yip-modal` and `#yip-modal-backdrop` (not `style.display`).
 
-Al abrir, lista ubicaciones guardadas en IndexedDB como chips y carga datos de la primera/activa.
+On open, lists saved locations from IndexedDB as chips and loads data from the first/active one.
 
-**Metadatos:**
-- Mutates state: No (usa variables de módulo: `selectedLocation`, `_closeSheet`, `_yipScrollInit`, `_closeYipModal`)
+**Metadata:**
+- Mutates state: No (uses module variables: `selectedLocation`, `_closeSheet`, `_yipScrollInit`, `_closeYipModal`)
 - Async: No
 
 ### `export function renderYIPGrid(history: object|null, param: string): void`
 
-**Descripción:** Renderiza el grid anual (12 meses × 31 días) en `#yip-grid-container`. Asigna color a cada celda según el valor del parámetro. Aplica color de texto adaptativo a `.yip-day-number` basado en la luminancia del fondo de celda: para celdas con datos usa el color asignado por `getColorForParam`; para celdas sin datos (past-no-data, future) usa `--card-bg` resuelto. El color de texto se calcula con `getTextColorForBg` (luminancia ponderada, retorna `#1a1a1a` si fondo claro, `#ffffff` si fondo oscuro). Muestra iconos de nota y mood si existen. Si no hay history, muestra mensaje "sin historial".
+**Description:** Renders the annual grid (12 months × 31 days) in `#yip-grid-container`. Assigns color to each cell according to parameter value. Applies adaptive text color to `.yip-day-number` based on cell background luminance: for cells with data uses the color assigned by `getColorForParam`; for cells without data (past-no-data, future) uses resolved `--card-bg`. Text color is calculated with `getTextColorForBg` (weighted luminance, returns `#1a1a1a` if light background, `#ffffff` if dark background). Shows note and mood icons if they exist. If no history, shows "no history" message.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `history` | `object\|null` | Objeto con array `daily[]` de datos históricos |
-| `param` | `string` | Identificador del parámetro a visualizar |
+| `history` | `object\|null` | Object with `daily[]` array of historical data |
+| `param` | `string` | Parameter identifier to visualize |
 
-**Metadatos:**
-- Mutates state: No (modifica DOM directamente)
+**Metadata:**
+- Mutates state: No (modifies DOM directly)
 - Async: No
 
 ### `export function saveDayNote(data: object, locationName: string): Promise<void>`
 
-**Descripción:** Lee `#yip-detail-notes-input`, llama `storageService.updateDayNotes(locationName, data.time, value)`. Si éxito, actualiza `data.notes` y muestra mensaje "guardado".
+**Description:** Reads `#yip-detail-notes-input`, calls `storageService.updateDayNotes(locationName, data.time, value)`. On success, updates `data.notes` and shows "saved" message.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `object` | Objeto del día (`data.time` usado como key) |
-| `locationName` | `string` | Nombre de la ubicación |
+| `data` | `object` | Day object (`data.time` used as key) |
+| `locationName` | `string` | Location name |
 
-**Metadatos:**
-- Mutates state: No (modifica DOM + objeto data en memoria)
-- Async: Sí (await storageService.updateDayNotes)
+**Metadata:**
+- Mutates state: No (modifies DOM + data object in memory)
+- Async: Yes (await storageService.updateDayNotes)
 
 ### `export function saveDayMoods(data: object, locationName: string): Promise<void>`
 
-**Descripción:** Lee moods activos del DOM (`#yip-moods-selector .yip-mood-btn.active`), construye array de mood ids, llama `storageService.updateDayMoods(loc, data.time, selectedMoods)`. Si éxito, actualiza `data.moods` y muestra mensaje.
+**Description:** Reads active moods from DOM (`#yip-moods-selector .yip-mood-btn.active`), builds mood ids array, calls `storageService.updateDayMoods(loc, data.time, selectedMoods)`. On success, updates `data.moods` and shows message.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `object` | Objeto del día |
-| `locationName` | `string` | Nombre de la ubicación |
+| `data` | `object` | Day object |
+| `locationName` | `string` | Location name |
 
-**Metadatos:**
-- Mutates state: No (modifica DOM + objeto data en memoria)
-- Async: Sí (await storageService.updateDayMoods)
+**Metadata:**
+- Mutates state: No (modifies DOM + data object in memory)
+- Async: Yes (await storageService.updateDayMoods)
 
 ### `export function saveDayDetail(data: object, locationName: string): Promise<void>`
 
-**Descripción:** Función unificada que lee el textarea de notas (`#yip-detail-notes-input`), los moods activos (`#yip-moods-selector .yip-mood-btn.active`), y las condiciones de salud (`#yip-cold-toggle.active`, `#yip-allergies-toggle.active`), persiste todo en una sola operación vía `storageService.updateDayData()` para evitar race conditions. Si éxito: actualiza `data` en memoria (incluye push a `cachedHistory.daily` si `data.time` no existe — caso past-no-data), re-renderiza el grid vía `renderYIPGrid(cachedHistory, selectedParam)`, aplica highlight flash (clase `.yip-highlight-flash` 1s) en la celda guardada con efecto combinado (box-shadow + scale + outline), muestra mini toast "✓ Guardado" en `#yip-saved-toast` con fade in/out (2s auto-dismiss), y cierra el detail sheet con un breve retardo (siguiente frame vía `requestAnimationFrame`). Si falla (ok=false o excepción): muestra error toast en `#yip-toast` con `t('config.yipSaveError')` y no cierra el sheet (permite reintentar).
+**Description:** Unified function that reads the notes textarea (`#yip-detail-notes-input`), active moods (`#yip-moods-selector .yip-mood-btn.active`), and health conditions (`#yip-cold-toggle.active`, `#yip-allergies-toggle.active`), persists everything in a single operation via `storageService.updateDayData()` to avoid race conditions. On success: updates `data` in memory (includes push to `cachedHistory.daily` if `data.time` does not exist — past-no-data case), re-renders grid via `renderYIPGrid(cachedHistory, selectedParam)`, applies highlight flash (`.yip-highlight-flash` class 1s) on the saved cell with combined effect (box-shadow + scale + outline), shows mini toast "✓ Saved" in `#yip-saved-toast` with fade in/out (2s auto-dismiss), and closes the detail sheet with a brief delay (next frame via `requestAnimationFrame`). If fails (ok=false or exception): shows error toast in `#yip-toast` with `t('"'"'config.yipSaveError'"'"')` and does not close the sheet (allows retry).
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `object` | Objeto del día (`data.time` usado como key) |
-| `locationName` | `string` | Nombre de la ubicación |
+| `data` | `object` | Day object (`data.time` used as key) |
+| `locationName` | `string` | Location name |
 
-**Metadatos:**
-- Mutates state: No (modifica DOM + objeto data en memoria + cierra sheet)
-- Async: Sí (await storageService.updateDayData)
+**Metadata:**
+- Mutates state: No (modifies DOM + data object in memory + closes sheet)
+- Async: Yes (await storageService.updateDayData)
 
 ### `export function openYIPDetail(data: object, dateStr: string, locationName?: string): void`
 
-**Descripción:** Abre detail sheet para un día específico. Resetea `scrollTop` del sheet a 0 para que el contenido siempre aparezca al inicio. Puebla fecha, descripción (temp max/min), métricas (precip, wind, AQI, polen), sección de notas (textarea), selector de moods (multi-select toggle), y sección de condiciones de salud (botones toggle "Cold" y "Allergies"). Enlaza botón "Guardar" → `saveDayDetail`, botón "Clear" → vacía notes textarea, desactiva todos los moods y toggles cold/allergies (sin cerrar sheet), y "Cancelar" → cierre inmediato del sheet. Usa `window.openBottomSheet` para mostrar `#yip-detail-sheet`. Clona botones para eliminar listeners previos. Guarda `_closeDetailSheet` del `openBottomSheet` para cierre programático.
+**Description:** Opens detail sheet for a specific day. Resets sheet `scrollTop` to 0 so content always appears at the top. Populates date, description (temp max/min), metrics (precip, wind, AQI, pollen), notes section (textarea), mood selector (multi-select toggle), and health conditions section ("Cold" and "Allergies" toggle buttons). Binds "Save" button → `saveDayDetail`, "Clear" button → empties notes textarea, deactivates all moods and cold/allergies toggles (without closing sheet), and "Cancel" → immediate sheet close. Uses `window.openBottomSheet` to show `#yip-detail-sheet`. Clones buttons to remove previous listeners. Stores `_closeDetailSheet` from `openBottomSheet` for programmatic close.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `object` | Objeto del día con tempMax, tempMin, precipTotal, windMax, gustMax, aqi, pollenDetails, notes, moods |
-| `dateStr` | `string` | Fecha formateada (ej. "15 Enero 2026") |
-| `locationName?` | `string` | Opcional. Defaults a `selectedLocation` |
+| `data` | `object` | Day object with tempMax, tempMin, precipTotal, windMax, gustMax, aqi, pollenDetails, notes, moods |
+| `dateStr` | `string` | Formatted date (e.g. "15 January 2026") |
+| `locationName?` | `string` | Optional. Defaults to `selectedLocation` |
 
-**Metadatos:**
-- Mutates state: No (modifica DOM, llama window.openBottomSheet)
+**Metadata:**
+- Mutates state: No (modifies DOM, calls window.openBottomSheet)
 - Async: No
-- Scroll: Resetea `scrollTop = 0` en `#yip-detail-sheet` al inicio
+- Scroll: Resets `scrollTop = 0` on `#yip-detail-sheet` at start
 
 ### `export function updateYipScrollUI(): void`
 
-**Descripción:** Actualiza `#yip-location-dots` con dots de paginación 1:1 con los chips de ubicación. El dot activo corresponde al chip más cercano al centro del viewport del contenedor. Solo muestra dots si hay overflow (scrollWidth > clientWidth).
+**Description:** Updates `#yip-location-dots` with pagination dots 1:1 with location chips. The active dot corresponds to the chip closest to the center of the container viewport. Only shows dots if there is overflow (scrollWidth > clientWidth).
 
-**Metadatos:**
-- Mutates state: No (modifica DOM)
+**Metadata:**
+- Mutates state: No (modifies DOM)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. **Inicialización**: `initYearInPixels` es idempotente — si `#year-in-pixels-btn` no existe, retorna sin error
-2. **Apertura responsive**: Al hacer click en `#year-in-pixels-btn`, obtiene todas las keys de IndexedDB, renderiza chips de ubicación, y carga datos de la primera ubicación (o la seleccionada previamente). Luego añade clase `.open` a `#yip-modal` y `#yip-modal-backdrop`. En desktop (≥768px) el modal aparece centrado con scale animation; en mobile (<768px) el panel se desliza desde abajo como bottom sheet ≥95dvh.
-3. **Drag-to-dismiss (mobile)**: `_initYipModalDrag()` registra pointer events en `#yip-modal-drag-handle`. Arrastre hacia abajo >100px cierra el modal. Usa `pointerdown`/`pointermove`/`pointerup` con fallback touch. Misma lógica que `openBottomSheet()`. El arrastre puede iniciarse desde los elementos fijos del header (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) incluso cuando el contenido scrollable está scrolleado.
-4. **Scroll guard (mobile)**: Dentro de `#yip-modal-scroll-content`, si `scrollTop > 0` no se inicia el arrastre — el contenido scrolla normalmente. Esto evita el "scroll vs swipe" conflict. Los elementos fijos del header (`.yip-modal-drag-handle`, `.yip-modal-header`, `.yip-modal-fields-bar`) tienen `touch-action: none` en CSS y pueden iniciar arrastre independientemente del scroll.
-5. **Cierre unificado**: `closeYipModal()` quita clase `.open` de `#yip-modal` y `#yip-modal-backdrop`. Se llama desde: botón ×, backdrop click, drag-to-dismiss, y borrado de ubicación.
-3. **Selección de ubicación**: Click en chip → selecciona ubicación, carga su history, re-renderiza grid
-4. **Grid mensual**: 12 bloques `.yip-month-block`, cada uno con cabeceras de día (Monday-start), celdas `.yip-day-cell` con color según valor del parámetro, número de día visible, y **dot indicator system** para estados no meteorológicos
-5. **Color por parámetro**: `getColorForParam` asigna colores según rangos definidos para cada tipo de parámetro (temp, precip, wind, AQI, pollen, mood, cold, allergies). En modo claro (`state.theme === 'light'`), los colores pastel problemáticos (`#93c5fd`, `#bfdbfe`, `#ccfbf1`, `#5eead4`, `#a3e635`) se sustituyen por variantes 1-2 tonos más oscuras/saturadas para mantener contraste suficiente sobre fondo claro. El cache `_yipTheme` (establecido en `renderYIPGrid`) evita leer `state.theme` 365+ veces por render.
-6. **Celdas future**: días posteriores al actual tienen clase `future` (opacidad reducida), sin color ni click
-7. **Click en celda**: abre detail sheet con métricas del día, notas editables, selector multi-mood, y toggles de condiciones de salud (cold/allergies)
-8. **Selector de parámetro**: `populateParamSheet` renderiza bottom sheet con categorías agrupadas (temp, precip, wind, AQI, pollen, mood, health). Al seleccionar, actualiza `selectedParam`, re-renderiza grid y cierra sheet
-9. **Borrar ubicación**: `#yip-delete-loc-btn` con confirmación → elimina key completa de IndexedDB
-10. **Borrar datos de mes**: botón delete en cada mes → filtra daily/hourly del mes y persiste
-11. **Paginación por dots (`updateYipScrollUI`)**: dots 1:1 con chips, dot activo = chip más visible cerca del centro, oculto si no hay overflow, actualizado en scroll/resize/MutationObserver
-12. **Detail sheet — notas**: textarea editable. Sin botón individual — la nota se guarda junto con los moods y condiciones mediante el botón unificado
-13. **Detail sheet — moods**: grid 2 columnas de botones tipo píldora con multi-select toggle. Sin botón individual — se guarda junto con nota y condiciones
-14. **Detail sheet — condiciones de salud**: dos botones toggle "🤧 Cold" y "🌿 Allergies" en sección `#yip-detail-conditions-section`. Al hacer click, toggle clase `active`. Los botones se poblan desde `data.cold` y `data.allergies`. Sin botón individual — se guarda junto con nota y moods
-15. **Detail sheet — guardar unificado**: botón "Guardar" clonado en `openYIPDetail` → llama `saveDayDetail`, que persiste nota + moods + conditions vía `storageService.updateDayData()`. Si éxito: actualiza `data` en memoria, añade `data` a `cachedHistory.daily` si no existe (past-no-data), re-renderiza el grid con `renderYIPGrid(cachedHistory, selectedParam)`, aplica highlight flash en la celda (clase `.yip-highlight-flash` durante 1s con efecto combinado de box-shadow + scale + outline usando `var(--accent-precip)`), muestra mini toast "✓ Guardado" en `#yip-saved-toast` con fade in/out (2s auto-dismiss), y cierra el sheet automáticamente (siguiente frame). Si falla: muestra toast de error en `#yip-toast` con `t('config.yipSaveError')` y no cierra el sheet (permite reintentar)
-16. **Detail sheet — cancelar unificado**: botón "Cancelar" clonado en `openYIPDetail` → cierra el sheet inmediatamente sin persistir cambios (usa `_closeDetailSheet`)
-17. **Detail sheet — Clear button**: botón "Clear" clonado en `openYIPDetail` → vacía `#yip-detail-notes-input.value`, desactiva todos los `.yip-mood-btn.active`, desactiva `.yip-cold-toggle.active` y `.yip-allergies-toggle.active`. No cierra el sheet. No persiste cambios automáticamente. Guardar tras Clear con todos los campos vacíos persiste `undefined` en todos los campos (equivale a borrar los datos del día)
-18. **Highlight flash**: `saveDayDetail` exitoso → `highlightYIPCell(data.time)` busca `.yip-day-cell[data-time="${data.time}"]` en el DOM re-renderizado y aplica clase `.yip-highlight-flash` por 1s (animación CSS combinada: `@keyframes yip-highlight-flash` con box-shadow + `transform: scale(1.15)` + outline usando `var(--accent-precip)` como color). Intensidad variable: opacity 0.5 en modo claro, 0.3 en modo oscuro. La clase se remueve automáticamente al completar la animación
-19. **Error toast**: `saveDayDetail` falla (ok=false o excepción) → `showErrorToast(t('config.yipSaveError'))` muestra `#yip-toast` con estilo destructivo (borde rojo), auto-dismiss tras 3s con fade out. El sheet permanece abierto para que el usuario reintente
-20. **Confirmaciones**: `showConfirm` usa `window.openBottomSheet` para mostrar modal de confirmación, clonando botones OK/Cancel para eliminar listeners previos
-18. **Dot indicator system**: Cada `.yip-day-cell` con estado no meteorológico (has-notes, has-mood, cold, allergies) muestra micro-dots (7px círculos con border 1.5px sólido) al fondo de la celda, debajo del day number. Colores fijos/semánticos: notes=#60a5fa (azul), mood=#fbbf24 (amarillo), cold=#ef4444 (rojo), allergies=#22c55e (verde). El border del dot es blanco (`#fff`) en modo oscuro y semitransparente (`rgba(0,0,0,0.25)`) en modo claro, para separar visualmente el dot del fondo de celda. Máximo 3 elementos visibles: si hay 1-3 estados se muestran dots únicamente (hasta 3); si hay 4+ estados se muestran 2 dots + badge "+N" (ej. "+2", "+3") con fondo semitransparente oscuro y texto blanco en negrita. Los dots reemplazan los iconos individuales antiguos (.yip-mood-icon, .yip-note-icon). Los dots son siempre visibles independientemente del parámetro activo
-19. **Grid coloring por cold/allergies**: Cuando `selectedParam === 'cold'`, las celdas se colorean `#eab308` (yellow) si `data.cold === true`, o `var(--grid-color)` si no. Cuando `selectedParam === 'allergies'`, se colorean `#22c55e` (green) si `data.allergies === true`, o `var(--grid-color)` si no. La leyenda muestra 2 pasos: sí/no
-20. **Popup de toggles en detail sheet**: `openYIPDetail` lee `data.cold` y `data.allergies`, aplica clase `active` a los botones correspondientes. `saveDayDetail` lee el estado de `#yip-cold-toggle.active` y `#yip-allergies-toggle.active`, construye objeto `conditions = { cold: boolean, allergies: boolean }`, y persiste vía `storageService.updateDayConditions`
+1. **Initialization**: initYearInPixels is idempotent — if #year-in-pixels-btn does not exist, returns without error
+2. **Responsive opening**: On click of #year-in-pixels-btn, gets all IndexedDB keys, renders location chips, and loads data from the first location (or previously selected). Then adds .open class to #yip-modal and #yip-modal-backdrop. On desktop (≥768px) the modal appears centered with scale animation; on mobile (<768px) the panel slides up from below as a ≥95dvh bottom sheet.
+3. **Drag-to-dismiss (mobile)**: _initYipModalDrag() registers pointer events on #yip-modal-drag-handle. Drag down >100px closes the modal. Uses pointerdown/pointermove/pointerup with touch fallback. Same logic as openBottomSheet(). Drag can start from fixed header elements (.yip-modal-drag-handle, .yip-modal-header, .yip-modal-fields-bar) even when scrollable content is scrolled.
+4. **Scroll guard (mobile)**: Inside #yip-modal-scroll-content, if scrollTop > 0 the drag is not initiated — content scrolls normally. This avoids the "scroll vs swipe" conflict. Fixed header elements (.yip-modal-drag-handle, .yip-modal-header, .yip-modal-fields-bar) have 	ouch-action: none in CSS and can initiate drag regardless of scroll.
+5. **Unified close**: closeYipModal() removes .open class from #yip-modal and #yip-modal-backdrop. Called from: × button, backdrop click, drag-to-dismiss, and location deletion.
+6. **Location selection**: Click on chip → selects location, loads its history, re-renders grid
+7. **Monthly grid**: 12 blocks .yip-month-block, each with day headers (Monday-start), cells .yip-day-cell with color according to parameter value, visible day number, and **dot indicator system** for non-weather states
+8. **Color by parameter**: getColorForParam assigns colors according to ranges defined for each parameter type (temp, precip, wind, AQI, pollen, mood, cold, allergies). In light mode (state.theme === 'light'), problematic pastel colors are replaced with 1-2 tone darker/saturated variants to maintain sufficient contrast on light background. The _yipTheme cache (set in enderYIPGrid) avoids reading state.theme 365+ times per render.
+9. **Future cells**: days after the current day have uture class (reduced opacity), no color or click
+10. **Cell click**: opens detail sheet with day metrics, editable notes, multi-mood selector, and health condition toggles (cold/allergies)
+11. **Parameter selector**: populateParamSheet renders bottom sheet with grouped categories (temp, precip, wind, AQI, pollen, mood, health). On selection, updates selectedParam, re-renders grid and closes sheet
+12. **Delete location**: #yip-delete-loc-btn with confirmation → removes entire key from IndexedDB
+13. **Delete month data**: delete button on each month → filters month daily/hourly and persists
+14. **Dot pagination (updateYipScrollUI)**: dots 1:1 with chips, active dot = most visible chip near center, hidden if no overflow, updated on scroll/resize/MutationObserver
+15. **Detail sheet — notes**: editable textarea. No individual button — the note is saved together with moods and conditions via the unified button
+16. **Detail sheet — moods**: 2-column grid of pill-type buttons with multi-select toggle. No individual button — saved together with note and conditions
+17. **Detail sheet — health conditions**: two toggle buttons with emoji in #yip-detail-conditions-section. On click, toggle ctive class. Buttons populated from data.cold and data.allergies. No individual button — saved together with note and moods
+18. **Detail sheet — unified save**: Cloned "Save" button in openYIPDetail → calls saveDayDetail, which persists note + moods + conditions via storageService.updateDayData(). On success: updates data in memory, adds data to cachedHistory.daily if not present (past-no-data), re-renders grid with enderYIPGrid(cachedHistory, selectedParam), applies highlight flash on cell (.yip-highlight-flash class for 1s with combined box-shadow + scale + outline effect using ar(--accent-precip)), shows mini toast in #yip-saved-toast with fade in/out (2s auto-dismiss), and closes sheet automatically (next frame). If fails: shows error toast in #yip-toast and does not close sheet (allows retry)
+19. **Detail sheet — unified cancel**: Cloned "Cancel" button in openYIPDetail → immediately closes sheet without persisting changes (uses _closeDetailSheet)
+20. **Detail sheet — Clear button**: Cloned "Clear" button in openYIPDetail → empties #yip-detail-notes-input.value, deactivates all .yip-mood-btn.active, deactivates .yip-cold-toggle.active and .yip-allergies-toggle.active. Does not close sheet. Does not auto-persist. Save after Clear with all fields empty persists undefined in all fields (equivalent to deleting the day data)
+21. **Highlight flash**: Successful saveDayDetail → highlightYIPCell(data.time) looks for cell in the re-rendered DOM and applies .yip-highlight-flash class for 1s (combined CSS animation with box-shadow + scale + outline). Variable intensity: opacity 0.5 in light mode, 0.3 in dark mode. The class is automatically removed when the animation completes
+22. **Error toast**: saveDayDetail fails (ok=false or exception) → shows #yip-toast with destructive style, auto-dismiss after 3s with fade out. Sheet remains open for user to retry
+23. **Confirmations**: showConfirm uses window.openBottomSheet to show confirmation modal, cloning OK/Cancel buttons to remove previous listeners
+24. **Dot indicator system**: Each .yip-day-cell with non-weather state shows micro-dots (7px circles with 1.5px solid border) at the bottom of the cell, below the day number. Fixed/semantic colors: notes=blue, mood=yellow, cold=red, allergies=green. Dot border is white in dark mode and semi-transparent in light mode. Maximum 3 visible elements: if 1-3 states dots only; if 4+ states, 2 dots + badge. Dots replace old individual icons. Always visible regardless of active parameter
+25. **Grid coloring for cold/allergies**: When selectedParam === 'cold', cells colored yellow if data.cold === true, or default color if not. When selectedParam === 'allergies', cells colored green if data.allergies === true, or default color if not. Legend shows 2 steps: yes/no
+26. **Toggle popup in detail sheet**: openYIPDetail reads data.cold and data.allergies, applies ctive class to corresponding buttons. saveDayDetail reads toggle states and persists conditions
+27. **Fixed legend footer**: The legend has been moved outside #yip-modal-scroll-content to a .yip-legend-footer container fixed at the bottom of the modal. Does not scroll with the grid. Contains dynamic content and tab bar.
+28. **Two legend tabs**: .yip-legend-tabs contains two rows: "Cell" (active parameter) and "State" (conditions). Active dot shows with accent color and 1.4x scale. Inactive dot shows in gray.
+29. **"Cell" tab**: Shows the same color scale as enderLegend(), based on selectedParam.
+30. **"State" tab**: Shows 4 colored dots with labels: Notes (blue), Mood (gold), Cold (red), Allergies (green).
+31. **Dot synchronization in tabs**: enderLegendTabs always updates the .active class on dots based on _activeLegendTab.
 
-21. **Legend footer fijo**: La leyenda se ha movido fuera de `#yip-modal-scroll-content` a un contenedor `.yip-legend-footer` fijo en la parte inferior del modal. No scrolla con la cuadrícula. Contiene `#yip-legend-content` (contenido dinámico) y `.yip-legend-tabs` (barra de tabs con dots de paginación).
+## Edge Cases
 
-22. **Dos tabs de leyenda**: `.yip-legend-tabs` contiene dos filas de dot + label: "Celda" (parámetro activo) y "Estado" (condiciones). El dot activo muestra ● con color accent y escala 1.4x (misma convención que `.yip-dot.active`). El dot inactivo muestra ○ en gris (`var(--grid-color)`). Click en el dot o el label cambia `_activeLegendTab` y re-renderiza `#yip-legend-content`.
-
-23. **Tab "Celda"**: Muestra la misma escala de colores que `renderLegend()` actual, basada en `selectedParam`. Se actualiza reactivamente al cambiar de parámetro (porque `renderYIPGrid` llama a `renderLegendTabs`).
-
-24. **Tab "Estado"**: Muestra 4 dots coloreados (7px círculos) con labels: Notes (azul #60a5fa), Mood (oro #fbbf24), Cold (rojo #ef4444), Allergies (verde #22c55e). Los dots usan el mismo estilo que `.yip-condition-dot` pero no tienen border (son standalone, no sobre fondo de celda).
-
-25. **Sincronización de dots en tabs**: `renderLegendTabs` siempre actualiza la clase `.active` en los dots `.yip-legend-dot` basado en `_activeLegendTab`. El dot del tab activo recibe clase `active` (● accent, scale 1.4x). El dot del tab inactivo no tiene clase `active` (○ gris, escala normal).
-
-## Casos borde
-
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `#year-in-pixels-btn` no existe | `initYearInPixels` retorna sin error, no registra listeners |
-| `#yip-modal` no existe | `initYearInPixels` retorna sin error |
-| Mobile (<768px) con drag >100px | Cierra modal (closeYipModal) |
-| Mobile con drag <100px | Sheet vuelve a posición inicial (translateY(0)) |
-| Mobile con scrollTop >0 en scroll-content | Drag no se inicia desde scrollContent, contenido scrolla. Drag desde header elements (drag handle, header, fields bar) sí funciona |
-| Resize de desktop a mobile con modal abierto | Comportamiento no cambia hasta cerrar/reabrir (no hay listener dinámico) |
-| Backdrop click en desktop | backdrop onclick → closeYipModal() |
-| Backdrop click en mobile | #yip-modal-backdrop.onclick → closeYipModal() |
-| `history` es `null` o `history.daily` vacío | Muestra mensaje "Sin historial para mostrar" |
-| `history.daily` tiene datos de año anterior | Se filtran (solo año actual se renderiza) |
-| Parámetro inválido en `getColorForParam` | Retorna `var(--grid-color)` |
-| Valor `null`/`undefined` en `getColorForParam` | Se evalúa en condicionales (tratado como 0 o falsy) |
-| `param === 'mood'` sin moods en el día | Celda gris (`var(--grid-color)`) |
-| `param === 'mood'` con moods multi-select | Solo el primer mood determina color de celda |
-| `data.notes` undefined/null | Textarea vacío, sin dot azul en celda |
-| `data.moods` undefined/null | Sin dot amarillo en celda |
-| `data.cold` undefined/null | Cold toggle sin clase `active`, sin dot rojo en celda |
-| `data.allergies` undefined/null | Allergies toggle sin clase `active`, sin dot verde en celda |
-| `data.cold === true` | Cold toggle con clase `active`, dot rojo visible en celda |
-| `data.allergies === true` | Allergies toggle con clase `active`, dot verde visible en celda |
-| 4+ estados no meteorológicos activos | Solo primeros 2 dots + badge "+N" (ej. "+2" para 4 estados) |
-| Dot en modo claro sobre fondo claro (ej. dot azul #60a5fa sobre celda #bfdbfe) | Border semitransparente `rgba(0,0,0,0.25)` separa visualmente el dot del fondo |
-| Dot en modo oscuro sobre fondo oscuro | Border blanco `#fff` separa visualmente el dot del fondo |
-| 0 estados no meteorológicos | Sin dots, sin yip-dot-container |
-| `saveDayNote` con texto vacío | `storageService.updateDayNotes` llamado con string vacío |
-| `saveDayMoods` sin moods seleccionados | Array vacío persistido (elimina key moods) |
-| `openYIPDetail` con `data` null/undefined | Retorna sin hacer nada |
-| `openYIPDetail` después de scroll en otro día | `sheet.scrollTop` se resetea a 0 al abrir |
-| Drag handle con contenido corto (sin scroll) | Drag handle visible, swipe-to-dismiss funciona |
-| Drag handle con contenido largo (scroll) | Drag handle fijo arriba, contenido scrolla debajo |
-| `param === 'cold'` con cold=true en día | Celda amarilla (#eab308) |
-| `param === 'cold'` sin cold | Celda gris (var(--grid-color)) |
-| `param === 'allergies'` con allergies=true | Celda verde (#22c55e) |
-| `param === 'allergies'` sin allergies | Celda gris (var(--grid-color)) |
-| `populateParamSheet` sin `#yip-param-sheet` en DOM | Retorna sin hacer nada |
-| `updateYipScrollUI` sin `#yip-location-chips` o `#yip-location-dots` | Retorna sin hacer nada |
-| `updateYipScrollUI` con 0 chips | dotsContainer se vacía |
-| `updateYipScrollUI` sin overflow (scrollWidth <= clientWidth) | dotsContainer se vacía |
-| `showConfirm` cancelado | Resuelve `false`, no ejecuta acción destructiva |
-| `storageService.init()` falla | Error no capturado (propaga) |
-| `storageService.getHistory(locationName)` retorna null | `cachedHistory = null`, renderYIPGrid muestra "sin historial" |
-| Botón save/cancel clickeado múltiples veces | Clonación de nodos elimina listeners previos, evitando duplicados |
-| `saveDayDetail` con textarea vacío y sin moods | Persiste notes:undefined, moods:undefined (equivale a borrar datos previos) |
-| `saveDayDetail` con `#yip-detail-save-btn` o `#yip-detail-cancel-btn` ausentes | openYIPDetail skip bindings, no lanza error |
-| `saveDayDetail` exitoso sin `cachedHistory` | No lanza error, skip grid re-render |
-| `saveDayDetail` ok=false | Muestra toast error, no cierra sheet |
-| `saveDayDetail` con excepción | Captura error, muestra toast error, no cierra sheet |
-| Clear button con datos existentes | Vacía form sin guardar, sheet permanece abierto |
-| Clear button + Save (todos campos vacíos) | updateDayData con todos undefined (borra datos del día) |
-| `highlightYIPCell` sin celda en DOM | No lanza error (querySelector retorna null) |
-| `#yip-saved-toast` no existe en DOM | saveDayDetail no muestra mini toast, cierra sheet igualmente |
-| `#yip-saved-toast` sin animación CSS definida | Aparece/desaparece sin fade (fallback funcional) |
-| `yip-toast` no existe en DOM | showErrorToast retorna sin error |
-| `data.time` como string o número | dataset.time se guarda como string (coerción automática) |
-| `_closeDetailSheet` undefined al hacer cancel | No lanza error (if guardado) |
-| Mini toast timer overlap (guardar múltiples veces rápido) | Timer previo se limpia, nuevo toast reemplaza |
-| `saveDayDetail` con `data.time` no existente en `cachedHistory.daily` (past-no-data synthetic) | Se añade `data` a `cachedHistory.daily` tras `updateDayData` exitoso, re-render incluye la celda |
-| `saveDayDetail` con `cachedHistory` null/undefined | No lanza error (skip re-render y push), close vía requestAnimationFrame |
-| `window.openBottomSheet` no definido | Fallback: `_closeSheet = undefined` o `resolve(confirm(message))` |
-| Celda completed con fondo claro (ej. `#fde047`, `#bfdbfe`) | day-number color = `#1a1a1a` (texto oscuro sobre fondo claro) |
-| Celda completed con fondo oscuro (ej. `#1d4ed8`, `#dc2626`) | day-number color = `#ffffff` (texto claro sobre fondo oscuro) |
-| Celda past-no-data en dark mode (--card-bg = `#313338`) | day-number color = `#ffffff` sobre fondo oscuro del card |
-| Celda past-no-data en light mode (--card-bg = `#ffffff`) | day-number color = `#1a1a1a` sobre fondo claro del card |
-| Celda future | day-number color basado en `--card-bg` (misma lógica que past-no-data) |
-| Modo claro — celda con temp 10-15° (#93c5fd) | `getColorForParam` retorna `#60a5fa` (variante más oscura) |
-| Modo claro — celda con precip <2mm (#bfdbfe) | `getColorForParam` retorna `#93c5fd` (variante más oscura) |
-| Modo claro — celda con wind <10 km/h (#ccfbf1) | `getColorForParam` retorna `#5eead4` (variante más oscura) |
-| Modo claro — celda con wind 10-20 km/h (#5eead4) | `getColorForParam` retorna `#14b8a6` (variante más oscura) |
-| Modo claro — celda con pollen level 1 (#a3e635) | `getColorForParam` retorna `#65a30d` (variante más oscura/saturada) |
-| Modo claro — dot badge sobre fondo claro | `background: rgba(0,0,0,0.2)`, `color: #1a1a1a` (CSS override) |
-| `_yipTheme` no establecido (getColorForParam llamado fuera de renderYIPGrid) | Usa valor por defecto `'dark'`, se comporta como modo oscuro (seguro) |
-| `#yip-legend-content` ausente | renderLegendTabs retorna sin error, no modifica DOM |
-| `.yip-legend-dot` / `.yip-tab-label` ausentes | renderLegendTabs renderiza contenido pero no registra tabs (fallback funcional) |
-| Click en tab activo | No hace nada (no cambia `_activeLegendTab`, no re-renderiza) |
-| Cambio de parámetro con tab "Estado" activo | Tab "Estado" permanece activo, su contenido no cambia (es independiente del parámetro) |
-| Cambio de parámetro con tab "Celda" activo | Tab "Celda" se re-renderiza con la nueva escala de colores |
+| #year-in-pixels-btn does not exist | initYearInPixels returns without error, no listeners |
+| #yip-modal does not exist | initYearInPixels returns without error |
+| Mobile (<768px) with drag >100px | Closes modal (closeYipModal) |
+| Mobile with drag <100px | Sheet returns to initial position |
+| Mobile with scrollTop >0 in scroll-content | Drag not initiated from scrollContent, content scrolls. Header elements drag works |
+| Backdrop click | Closes modal via onclick |
+| history is 
+ull or empty | Shows "No history to display" message |
+| history.daily has data from previous year | Filtered (only current year rendered) |
+| Invalid parameter in getColorForParam | Returns ar(--grid-color) |
+| 
+ull/undefined value in getColorForParam | Evaluated in conditionals (treated as 0 or falsy) |
+| param === 'mood' without moods | Gray cell |
+| data.notes undefined/null | Empty textarea, no blue dot |
+| data.moods undefined/null | No yellow dot |
+| data.cold undefined/null | Cold toggle without active, no red dot |
+| data.allergies undefined/null | Allergies toggle without active, no green dot |
+| 4+ non-weather states active | 2 dots + badge |
+| Dot in light mode on light background | Semi-transparent border separates dot from background |
+| Dot in dark mode on dark background | White border separates dot from background |
+| 0 non-weather states | No dots, no yip-dot-container |
+| saveDayNote with empty text | storageService.updateDayNotes called with empty string |
+| saveDayMoods without moods | Empty array persisted (removes moods key) |
+| openYIPDetail with null data | Returns without doing anything |
+| Drag handle with short/long content | Works correctly, handle fixed at top |
+| param === 'cold' with cold=true | Yellow cell |
+| param === 'cold' without cold | Gray cell |
+| param === 'allergies' with allergies=true | Green cell |
+| param === 'allergies' without allergies | Gray cell |
+| populateParamSheet without sheet DOM | Returns without doing anything |
+| updateYipScrollUI without chips/dots | Returns without doing anything |
+| showConfirm cancelled | Resolves false, no destructive action |
+| saveDayDetail with empty fields | Persists all undefined (deletes day data) |
+| saveDayDetail ok=false | Shows error toast, sheet stays open |
+| saveDayDetail with exception | Catches error, shows toast, sheet stays open |
+| Clear button with existing data | Empties form without saving |
+| highlightYIPCell without cell in DOM | Does not throw |
+| Save/cancel clicked multiple times | Node cloning prevents duplicate listeners |
+| Light mode cell with light background | Dark text for contrast |
+| Light mode cell with dark background | Light text for contrast |
+| Past-no-data cell | Day-number color based on card background |
+| Future cell | Day-number color based on card background |
+| _yipTheme not set | Uses default dark mode (safe) |
+| Click on active tab | No-op |
+| Param change with "State" tab active | State tab stays, content unchanged |
+| Param change with "Cell" tab active | Cell tab re-renders with new scale |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **initYearInPixels sin elementos DOM**: `#year-in-pixels-btn` ausente, no lanza error
-2. **initYearInPixels con elementos DOM**: elementos presentes, registra listeners sin error
-3. **Exporta todas las funciones**: `initYearInPixels`, `renderYIPGrid`, `saveDayNote`, `saveDayMoods`, `saveDayDetail`, `openYIPDetail`, `updateYipScrollUI` son funciones
-4. **renderYIPGrid con history null**: container muestra mensaje "Sin historial"
-5. **renderYIPGrid con history.daily vacío**: container muestra mensaje "Sin historial"
-6. **renderYIPGrid con datos del año actual**: grid tiene 12 month-blocks con celdas coloreadas
-7. **renderYIPGrid celda con notas**: celda tiene clase `has-notes` e icono `sticky_note_2`
-8. **renderYIPGrid celda sin notas**: celda sin clase `has-notes`, sin icono
-9. **renderYIPGrid celda con moods**: celda tiene clase `has-mood` y emoji del primer mood
-10. **renderYIPGrid celda sin moods**: celda sin clase `has-mood`, sin emoji
-11. **renderYIPGrid param='mood' con moods**: celda coloreada con color del primer mood
-12. **renderYIPGrid param='mood' sin moods**: celda gris (color por defecto)
-13. **renderYIPGrid celda future**: celda con clase `future`, sin color, sin onclick
-14. **renderYIPGrid celda con datos**: celda tiene onclick que abre detail
-15. **getColorForParam con parámetro inválido**: retorna `var(--grid-color)`
-16. **getColorForParam con mood**: retorna color del mood o gris si no existe
-17. **openYIPDetail con data.notes**: textarea poblado con contenido de la nota
-18. **openYIPDetail sin data.notes**: textarea vacío
-19. **openYIPDetail con data.moods**: mood toggles muestran moods activos
-20. **openYIPDetail sin data.moods**: todos los mood toggles desmarcados
-21. **openYIPDetail resetea scrollTop a 0**: abre sheet, scrollTop debe ser 0
-22. **openYIPDetail con data null**: retorna sin error, no modifica DOM
-22. **saveDayNote con texto**: llama `storageService.updateDayNotes` con el texto, muestra mensaje
-23. **saveDayNote con texto vacío**: llama `storageService.updateDayNotes` con string vacío
-24. **saveDayMoods con moods seleccionados**: llama `storageService.updateDayMoods` con array de ids
-25. **saveDayMoods sin moods seleccionados**: llama `storageService.updateDayMoods` con array vacío
-26. **saveDayDetail con nota y moods**: llama updateDayData con todos los campos, muestra mini toast "✓ Guardado" en `#yip-saved-toast` con fade in/out (2s auto-dismiss), re-renderiza grid, aplica highlight flash 1s con efecto combinado, cierra sheet (requestAnimationFrame)
-27. **Param sheet incluye categoría mood**: `populateParamSheet` renderiza opción mood
-28. **renderLegend para cada tipo de parámetro**: renderiza steps correctos para temp, precip, wind, AQI, pollen, mood
-29. **updateYipScrollUI con 0 chips**: dotsContainer se vacía
-30. **updateYipScrollUI con N chips sin overflow**: dotsContainer se vacía
-31. **updateYipScrollUI con N chips con overflow**: renderiza N dots
-32. **updateYipScrollUI — dot activo cambia con scroll**: dot del chip más visible tiene clase `active`
-33. **Cabeceras de día por mes**: cada month-block tiene `.yip-month-day-headers` con 7 hijos
-34. **Cabeceras orden Monday-start**: `days.short` reordenado `[1,2,3,4,5,6,0]`
-35. **Day number visible en cada celda**: toda celda `.yip-day-cell` contiene `.yip-day-number`
-36. **initYipLocationScroll**: registra scroll, resize, MutationObserver solo una vez
-37. **showConfirm resuelve true/false**: OK → true, Cancel → false
-38. **showConfirm sin window.openBottomSheet**: fallback a `confirm()`
-39. **Param sheet incluye categoría Health**: `populateParamSheet` renderiza opciones cold y allergies bajo categoría health
-40. **renderYIPGrid param='cold' con día cold**: celda amarilla #eab308
-41. **renderYIPGrid param='cold' sin cold**: celda gris var(--grid-color)
-42. **renderYIPGrid param='allergies' con allergies**: celda verde #22c55e
-43. **renderYIPGrid param='allergies' sin allergies**: celda gris var(--grid-color)
-44. **renderYIPGrid dot system — 1 estado**: 1 dot del color correspondiente
-45. **renderYIPGrid dot system — 3 estados**: 3 dots, uno por cada color
-46. **renderYIPGrid dot system — 4+ estados**: primeros 2 dots + badge "+N" con clase `.yip-dot-badge` y texto `+2`, `+3`, etc.
-47. **renderYIPGrid dot system — sin estados**: sin dots, sin yip-dot-container
-48. **renderYIPGrid dot system — colores fijos**: notes=#60a5fa, mood=#fbbf24, cold=#ef4444, allergies=#22c55e
-49. **renderYIPGrid dot system — no hay iconos antiguos**: sin .yip-mood-icon ni .yip-note-icon
-50. **openYIPDetail con data.cold=true**: cold toggle tiene clase active
-51. **openYIPDetail sin data.cold**: cold toggle sin active
-52. **openYIPDetail con data.allergies=true**: allergies toggle tiene clase active
-53. **openYIPDetail sin data.allergies**: allergies toggle sin active
-54. **saveDayDetail persiste conditions**: llama storageService.updateDayConditions con { cold, allergies }
-55. **saveDayDetail con cold y allergies activos**: conditions = { cold: true, allergies: true }
-56. **saveDayDetail sin cold ni allergies**: conditions = { cold: false, allergies: false }
-57. **renderLegend para cold**: 2 pasos: color amarillo + "Sí" / gris + "No"
-58. **renderLegend para allergies**: 2 pasos: color verde + "Sí" / gris + "No"
-59. **saveDayDetail re-renderiza grid tras éxito**: renderYIPGrid llamado después de updateDayData exitoso
-60. **saveDayDetail highlight flash en celda**: celda con data.time correspondiente recibe clase yip-highlight-flash durante 1s con efecto combinado box-shadow + scale + outline usando var(--accent-precip)
-61. **saveDayDetail con ok=false**: toast visible con mensaje de error, sheet no se cierra
-62. **saveDayDetail con excepción**: toast visible con mensaje de error, sheet no se cierra
-63. **Clear button vacía textarea**: notesInput.value = '' tras click
-64. **Clear button desactiva moods**: todos .yip-mood-btn.active pierden clase active
-65. **Clear button desactiva cold/allergies**: toggles pierden clase active
-66. **Celda renderizada con data-time attribute**: .yip-day-cell tiene dataset.time igual al time del dayData
-67. **saveDayDetail past-no-data (synthetic dayData)**: push data a cachedHistory.daily sí no existe tras update exitoso, re-render incluye celda
-68. **saveDayDetail past-no-data highlight**: highlightYIPCell encuentra celda en DOM tras re-render porque cachedHistory ya contiene el día
-69. **renderYIPGrid celda completed con fondo claro**: `.yip-day-number` color = `#1a1a1a` (getTextColorForBg retorna oscuro)
-70. **renderYIPGrid celda completed con fondo oscuro**: `.yip-day-number` color = `#ffffff` (getTextColorForBg retorna claro)
-71. **renderYIPGrid celda past-no-data/future**: `.yip-day-number` color basado en `--card-bg` resuelto
+1. **initYearInPixels without DOM elements**: Does not throw
+2. **initYearInPixels with DOM elements**: Registers listeners without error
+3. **Exports all functions**: All expected functions are exported
+4. **renderYIPGrid with null history**: Shows "No history" message
+5. **renderYIPGrid with empty data**: Shows "No history" message
+6. **renderYIPGrid with current year data**: Grid has 12 month-blocks with colored cells
+7. **renderYIPGrid cell with notes**: Cell has notes class and icon
+8. **renderYIPGrid cell without notes**: No notes class or icon
+9. **renderYIPGrid cell with moods**: Cell has mood class and emoji
+10. **renderYIPGrid cell without moods**: No mood class or emoji
+11. **renderYIPGrid param='mood' with moods**: Colored with first mood color
+12. **renderYIPGrid param='mood' without moods**: Gray cell
+13. **renderYIPGrid future cell**: Future class, no color, no onclick
+14. **renderYIPGrid cell with data**: Has onclick that opens detail
+15. **getColorForParam with invalid param**: Returns default color
+16. **openYIPDetail with null data**: Returns without error
+17. **openYIPDetail resets scrollTop to 0**: Sheet opens with scrollTop=0
+18. **saveDayDetail with note and moods**: Persists via updateDayData, shows toast, re-renders, applies flash, closes sheet
+19. **saveDayDetail with ok=false**: Error toast visible, sheet not closed
+20. **saveDayDetail with exception**: Error toast visible, sheet not closed
+21. **Clear button empties form**: Textarea cleared, moods/conditions deactivated
+22. **Celda renderizada con data-time**: Cell has dataset.time attribute
+23. **renderYIPGrid dot system**: Correct dots shown based on states
+24. **Legend footer does not scroll with grid**: Footer outside scroll content
+25. **Tab switch updates active dot**: Active tab dot has active class
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-27 | Spec retro — mapeo completo del código actual (sin state/theme, con variables de módulo) | SDD |
-| 2026-05-28 | Añadidas condiciones de salud (cold/allergies), dot indicator system, categoría Health en param sheet, toggles en detail sheet | SDD |
-| 2026-05-28 | Fix alineación botones (box-sizing), cierre sheet inmediato (requestAnimationFrame), push past-no-data a cachedHistory tras save | SDD |
-| 2026-05-28 | Drag handle fijo con scroll wrapper + scrollTop reset al abrir detail sheet | SDD |
-| 2026-05-28 | Inmediato visual feedback en save: re-render grid, highlight flash, error toast, Clear button | SDD |
-| 2026-05-28 | Ticket 001: Aumentar tamaño y contraste de números de día — font-size 8→11px, weight 500→700, color adaptativo por luminancia, eliminado text-shadow | SDD |
-| 2026-05-28 | Ticket 002: Dots más visibles — tamaño 4px→7px, añadido border 1.5px sólido (#fff dark / rgba(0,0,0,0.25) light) | SDD |
-| 2026-05-28 | Ticket 003: Badge +N en vez de elipsis para datos extra — reemplazado "…" por badge numérico con fondo semitransparente oscuro | SDD |
-| 2026-05-28 | Ticket 003b: Badge +N muestra 2 dots + badge en vez de 3 dots + badge — máximo 3 elementos por celda | SDD |
-| 2026-05-28 | Ticket 005: Convertir modal YIP en bottom sheet full-screen — responsive (desktop centered, mobile bottom sheet ≥95dvh), drag-to-dismiss, grid cell min-width 32→38px, gap 4→5px | SDD |
-| 2026-05-30 | Ticket 004: Highlight más intenso (combinado box-shadow + scale + outline con `var(--accent-precip)`, 1s, light 0.5 / dark 0.3) + mini toast `#yip-saved-toast` en lugar de inline saved-msg | SDD |
-| 2026-05-30 | Ticket 006: Soporte de modo claro en YIP — `getColorForParam()` con variantes light para colores pastel (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), cache `_yipTheme` (establecido en renderYIPGrid, leído en getColorForParam), variable CSS `--yip-day-number-color` en `[data-theme="light"]`, override `.yip-dot-badge` en light mode | SDD |
-| 2026-05-30 | Ticket 001: Leyenda fija con tabs Celda/Estado — HTML reestructurado, renderLegendTabs + renderStateTabContent, i18n, tests | SDD |
-| 2026-05-31 | Fix: Drag-to-dismiss desde header elements funciona incluso con scrollContent scrolleado — eliminado guard universal en onStart(), canDragFrom() + touchstart guard ya protegen cada call site | SDD |
+| 2026-05-27 | Spec retro — complete mapping of current code (without state/theme, with module variables) | SDD |
+| 2026-05-28 | Added health conditions (cold/allergies), dot indicator system, Health category in param sheet, toggles in detail sheet | SDD |
+| 2026-05-28 | Fix button alignment (box-sizing), immediate sheet close (requestAnimationFrame), push past-no-data to cachedHistory after save | SDD |
+| 2026-05-28 | Fixed drag handle with scroll wrapper + scrollTop reset on detail sheet open | SDD |
+| 2026-05-28 | Immediate visual feedback on save: re-render grid, highlight flash, error toast, Clear button | SDD |
+| 2026-05-28 | Ticket 001: Increase day number size and contrast | SDD |
+| 2026-05-28 | Ticket 002: More visible dots | SDD |
+| 2026-05-28 | Ticket 003: +N badge instead of ellipsis for extra data | SDD |
+| 2026-05-28 | Ticket 003b: +N badge shows 2 dots + badge instead of 3 | SDD |
+| 2026-05-28 | Ticket 005: Convert YIP modal to full-screen bottom sheet | SDD |
+| 2026-05-30 | Ticket 004: More intense highlight + mini toast | SDD |
+| 2026-05-30 | Ticket 006: Light mode support in YIP | SDD |
+| 2026-05-30 | Ticket 001: Fixed legend with Cell/State tabs | SDD |
+| 2026-05-31 | Fix: Drag-to-dismiss from header elements works even with scrolled content | SDD |
 
 ## Test scenarios (new — Ticket 001)
 
-75. **renderYIPGrid renders legend inside fixed footer**: `#yip-legend-content` está fuera de `#yip-modal-scroll-content`, dentro de `.yip-legend-footer`
-76. **Cell tab active by default**: `_activeLegendTab` === `'cell'` tras renderYIPGrid
-77. **Cell tab shows parameter colors**: `#yip-legend-content` contiene steps de color para el parámetro actual
-78. **State tab shows 4 condition dots**: al hacer click en tab "Estado", `#yip-legend-content` contiene 4 dots coloreados: notes (azul), mood (oro), cold (rojo), allergies (verde)
-79. **State tab dot colors match DOT_COLORS**: cada dot tiene `background-color` igual al valor de `DOT_COLORS`
-80. **Tab switch updates active dot**: dot del tab activo tiene clase `.active`, dot inactivo no
-81. **Click on active tab is no-op**: `_activeLegendTab` no cambia al hacer click en tab ya activo
-82. **Param change re-renders cell tab**: tras cambiar parámetro, tab "Celda" muestra nueva escala
-83. **Param change does not affect state tab**: tab "Estado" mantiene su contenido tras cambio de parámetro
-84. **Legend footer does not scroll with grid**: `.yip-legend-footer` está fuera de `#yip-modal-scroll-content`
+75. **renderYIPGrid renders legend inside fixed footer**: Legend outside scroll content
+76. **Cell tab active by default**: _activeLegendTab === 'cell' after render
+77. **Cell tab shows parameter colors**: Legend contains parameter color steps
+78. **State tab shows 4 condition dots**: State tab shows colored dots
+79. **State tab dot colors match DOT_COLORS**: Each dot has correct color
+80. **Tab switch updates active dot**: Active dot has class, inactive does not
+81. **Click on active tab is no-op**: No change on already active tab
+82. **Param change re-renders cell tab**: Cell tab updates with new scale
+83. **Param change does not affect state tab**: State tab content unchanged
+84. **Legend footer does not scroll with grid**: Footer is outside scroll content

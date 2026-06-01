@@ -1,79 +1,79 @@
-# Spec: `src/domain/WeatherFetcher.js`
+﻿# Spec: `src/domain/WeatherFetcher.js`
 
-## Propósito
-Orquestador de fetching de datos meteorológicos con caché en memoria, fallback a datos mock y manejo de errores.
+## Purpose
+Weather data fetching orchestrator with in-memory cache, fallback to mock data and error handling.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso (R/W) | Contexto |
+| Property | Access (R/W) | Context |
 |-----------|-------------|----------|
 | `state.lat` | read | fetchWeatherData |
 | `state.lon` | read | fetchWeatherData |
-| `state.isFetching` | read/write | guard contra fetch duplicado |
-| `state.rawForecast` | write | cachear datos |
-| `state.rawAQI` | write | cachear datos |
-| `state.locationName` | write | añadir '*' si falla API |
+| `state.isFetching` | read/write | guard against duplicate fetch |
+| `state.rawForecast` | write | cache data |
+| `state.rawAQI` | write | cache data |
+| `state.locationName` | write | add '*' if API fails |
 
 ### CONFIG
-| Constante | Contexto |
+| Constant | Context |
 |-----------|----------|
-| `CONFIG.CACHE_DURATION` | duración de caché (5 min) |
+| `CONFIG.CACHE_DURATION` | cache duration (5 min) |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state`, `CONFIG` | acceso |
+| `../store.js` | `state`, `CONFIG` | access |
 | `../services/WeatherService.js` | `weatherService` | fetch |
 | `../services/MockData.js` | `generateMockData` | fallback |
-| `../services/DataProcessor.js` | `processData` | procesar datos |
+| `../services/DataProcessor.js` | `processData` | process data |
 
-## API Pública
+## Public API
 
 ### `export function clearWeatherCache(): void`
 
-**Descripción:** Limpia la caché en memoria.
+**Description:** Clears the in-memory cache.
 
 ### `export async function fetchWeatherData(pastDays: number, forecastDays: number, callbacks: Object): Promise<void>`
 
-**Descripción:** Fetch con caché, fallback a datos expirados, fallback a mock data.
+**Description:** Fetch with cache, fallback to expired data, fallback to mock data.
 
 **Callbacks:**
-- `onResize` — para redimensionar
-- `onUpdateLocationUI` — para actualizar UI de ubicación
-- `onCenterOnCurrentTime` — para centrar en tiempo actual
+- `onResize` — for resizing
+- `onUpdateLocationUI` — for updating location UI
+- `onCenterOnCurrentTime` — for centering on current time
 
-## Comportamiento
+## Behavior
 
-1. Caché por clave `lat,lon,pastDays,forecastDays` con duración CACHE_DURATION
-2. Si hay caché válida, la usa y retorna
-3. Si `state.isFetching` true, no hace nada (guarda contra doble fetch)
-4. Timeout de 15s con AbortController
-5. Si API falla pero hay caché (expirada), usa datos expirados y marca ubicación con '*'
-6. Si API falla y no hay caché, genera mock data
-7. Siempre ejecuta `processData` y `onResize` al final
+1. Cache by key `lat,lon,pastDays,forecastDays` with CACHE_DURATION duration
+2. If valid cache exists, use it and return
+3. If `state.isFetching` is true, do nothing (guard against double fetch)
+4. 15s timeout with AbortController
+5. If API fails but cache exists (expired), use expired data and mark location with '*'
+6. If API fails and no cache, generate mock data
+7. Always executes `processData` and `onResize` at the end
 
-## Casos borde
+## Edge Cases
 
-| Condición | Comportamiento esperado |
+| Condition | Expected behavior |
 |-----------|------------------------|
-| Caché válida | Usa caché, no hace fetch |
-| `isFetching = true` | No inicia nuevo fetch |
-| API timeout (15s) | Aborta fetch, usa fallback |
-| API falla + caché expirada | Usa caché expirada, marca ubicación con '*' |
-| API falla + sin caché | Genera mock data, ubicación = "Ninguna" |
+| Valid cache | Uses cache, does not fetch |
+| `isFetching = true` | Does not start new fetch |
+| API timeout (15s) | Aborts fetch, uses fallback |
+| API fails + expired cache | Uses expired cache, marks location with '*' |
+| API fails + no cache | Generates mock data, location = "None" |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Caché hit:** retorna datos cacheados sin fetch
-2. **Caché miss:** hace fetch real
-3. **Fetch duplicado:** isFetching previene segundo fetch
-4. **API falla + caché:** usa datos expirados
-5. **API falla + sin caché:** genera mock data
-6. **clearWeatherCache:** vacía el Map
+1. **Cache hit:** returns cached data without fetch
+2. **Cache miss:** performs real fetch
+3. **Duplicate fetch:** isFetching prevents second fetch
+4. **API fails + cache:** uses expired data
+5. **API fails + no cache:** generates mock data
+6. **clearWeatherCache:** empties the Map
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

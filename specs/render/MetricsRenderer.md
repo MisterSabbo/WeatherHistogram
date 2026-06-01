@@ -1,45 +1,45 @@
-# Spec: `src/render/MetricsRenderer.js`
+﻿# Spec: `src/render/MetricsRenderer.js`
 
-## Propósito
-Barrel re-export para los renderers de métricas (humedad, viento, temperatura).
+## Purpose
+Barrel re-export for metric renderers (humidity, wind, temperature).
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
 | `./metrics/HumidityRenderer.js` | `drawHumidity` | re-export |
 | `./metrics/WindRenderer.js` | `drawWind` | re-export |
 | `./metrics/TemperatureRenderer.js` | `drawTemperature` | re-export |
 
-## API Pública
+## Public API
 
 ### `export { drawHumidity, drawWind, drawTemperature }`
 
-**Descripción:** Barrel re-export de renderers de métricas.
+**Description:** Barrel re-export of metric renderers.
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Módulo barrel: re-exporta `drawHumidity`, `drawWind`, `drawTemperature` desde los módulos de metrics/.
-2. No tiene lógica propia; todos los exports son delegados.
+1. Barrel module: re-exports `drawHumidity`, `drawWind`, `drawTemperature` from metrics/ modules.
+2. Has no logic of its own; all exports are delegated.
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Exports correctos:** drawHumidity, drawWind, drawTemperature son funciones
+1. **Correct exports:** drawHumidity, drawWind, drawTemperature are functions
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| Módulo importado sin llamar | No lanza error, exports son funciones |
-| Cualquier export es `undefined` | Falla al intentar llamar (no controlado aquí) |
+| Module imported without calling | Does not throw, exports are functions |
+| Any export is `undefined` | Fails when trying to call (not controlled here) |
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

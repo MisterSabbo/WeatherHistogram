@@ -1,71 +1,71 @@
-# Spec: `src/render/metrics/WindRenderer.js`
+﻿# Spec: `src/render/metrics/WindRenderer.js`
 
-## Propósito
-Renderiza indicadores de dirección de viento en el canvas del histograma.
+## Purpose
+Renders wind direction indicators on the histogram canvas.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | drawWind |
-| `state.theme` | read | colores |
+| `state.theme` | read | colors |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../../store.js` | `state` | acceso |
-| `../../theme.js` | `getThemeColor`, `getThemeIcon` | colores e íconos |
+| `../../store.js` | `state` | access |
+| `../../theme.js` | `getThemeColor`, `getThemeIcon` | colors and icons |
 
-## API Pública
+## Public API
 
 ### `export function drawWind(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja flechas de dirección de viento cada 3 horas con color según temperatura.
+**Description:** Draws wind direction arrows every 3 hours with color based on temperature.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `styles` | `Object` | Estilos del tema |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `styles` | `Object` | Theme styles |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Renderiza cada 3 horas (localHour % 3 === 0)
-2. Flecha rotada según `d.windDir + 180` grados
-3. Color del viento según temperatura: <10°C → azul, >28°C → rojo
-4. Si viento >40 km/h con temp entre 10-28°C → color fuerte
-5. Usa icono del tema si existe, si no dibuja flecha con path
+1. Renders every 3 hours (localHour % 3 === 0)
+2. Arrow rotated according to `d.windDir + 180` degrees
+3. Wind color based on temperature: <10°C → blue, >28°C → red
+4. If wind >40 km/h with temp between 10-28°C → strong color
+5. Uses theme icon if exists, otherwise draws arrow with path
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error |
-| `state.hourlyData` vacío | No dibuja nada |
-| `windDir = undefined` en punto | Rotación con NaN, no lanza error |
-| `d.temp = undefined` | Color por defecto (no azul/rojo) |
-| `viewX` / `viewW` negativos | No dibuja nada visible |
-| `styles` sin icono de viento | Dibuja path por defecto (flecha simple) |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` empty | Draws nothing |
+| `windDir = undefined` at point | Rotation with NaN, does not throw |
+| `d.temp = undefined` | Default color (not blue/red) |
+| `viewX` / `viewW` negative | Draws nothing visible |
+| `styles` without wind icon | Draws default path (simple arrow) |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawWind` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Rotación de flecha:** `windDir = 90` rota la flecha correctamente
-5. **Color por temperatura:** `temp < 10°C` → azul, `temp > 28°C` → rojo
-6. **Intervalo de 3 horas:** Solo dibuja en `localHour % 3 === 0`
+1. **Does not throw with mock data:** Calls `drawWind` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **Arrow rotation:** `windDir = 90` rotates arrow correctly
+5. **Color by temperature:** `temp < 10°C` → blue, `temp > 28°C` → red
+6. **3-hour interval:** Only draws at `localHour % 3 === 0`
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

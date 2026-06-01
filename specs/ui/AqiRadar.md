@@ -1,63 +1,63 @@
-# Spec: `src/ui/AqiRadar.js`
+﻿# Spec: `src/ui/AqiRadar.js`
 
-## Propósito
-Dibuja un radar de calidad del aire (gráfico radial con 4 contaminantes) en un canvas.
+## Purpose
+Draws an air quality radar (radial chart with 4 pollutants) on a canvas.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.theme` | read | sombra de etiquetas |
+| `state.theme` | read | label shadow |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
+| `../store.js` | `state` | access |
 
-## API Pública
+## Public API
 
 ### `export function drawAQIRadar(data, targetId?, detailsId?): void`
 
-**Descripción:** Dibuja radar con PM10, PM2.5, O3, NO2.
+**Description:** Draws radar with PM10, PM2.5, O3, NO2.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `Object` | Datos con `aqiDetails: { pm10, pm2_5, ozone, nitrogen_dioxide }` |
-| `targetId?` | `string` | ID del canvas donde dibujar (default `'aqi-radar'`) |
-| `detailsId?` | `string` | ID del elemento de detalles (default `'aqi-details'`) |
+| `data` | `Object` | Data with `aqiDetails: { pm10, pm2_5, ozone, nitrogen_dioxide }` |
+| `targetId?` | `string` | Canvas ID to draw on (default `'aqi-radar'`) |
+| `detailsId?` | `string` | Details element ID (default `'aqi-details'`) |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. 4 ejes en diamante/cuadrado
-2. 3 círculos concéntricos de referencia
-3. Área de datos roja semitransparente
-4. Etiquetas con sombra según tema
-5. Detalles en elemento HTML aparte
+1. 4 axes in diamond/square shape
+2. 3 concentric reference circles
+3. Semi-transparent red data area
+4. Labels with shadow based on theme
+5. Details in separate HTML element
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Canvas no existe:** no lanza error
-2. **Sin aqiDetails:** retorna sin dibujar
-3. **Cuatro ejes:** PM10, PM2.5, O3, NO2
-4. **Área de datos:** polígono de valores normalizados
+1. **Canvas does not exist:** does not throw
+2. **Without aqiDetails:** returns without drawing
+3. **Four axes:** PM10, PM2.5, O3, NO2
+4. **Data area:** polygon of normalized values
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `data = null` / `undefined` | No lanza error, retorna sin dibujar |
-| `targetId` no existe en DOM | No lanza error, retorna sin dibujar |
-| `aqiDetails` con valores 0 | Dibuja polígono en centro (todos normalizados a 0) |
-| `aqiDetails` con valores negativos | Trata como 0, no lanza error |
-| Canvas 2D context no disponible (`null`) | No lanza error, retorna sin dibujar |
+| `data = null` / `undefined` | Does not throw, returns without drawing |
+| `targetId` does not exist in DOM | Does not throw, returns without drawing |
+| `aqiDetails` with values 0 | Draws polygon at center (all normalized to 0) |
+| `aqiDetails` with negative values | Treats as 0, does not throw |
+| Canvas 2D context not available (`null`) | Does not throw, returns without drawing |
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

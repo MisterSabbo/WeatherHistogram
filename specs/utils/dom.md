@@ -1,53 +1,53 @@
-# Spec: `src/utils/dom.js`
+﻿# Spec: `src/utils/dom.js`
 
-## Propósito
-Utilidades de DOM. Actualmente expone solo un `debounce` para limitar la frecuencia de ejecución de funciones.
+## Purpose
+DOM utilities. Currently exposes only a `debounce` to limit function execution frequency.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas ni de estado/DOM.
+No internal or state/DOM dependencies.
 
-## API Pública
+## Public API
 
 ### `export function debounce(fn: Function, delay?: number): Function`
 
-**Descripción:** Crea una versión "debounced" de la función `fn` que retrasa su ejecución hasta que hayan pasado `delay` ms desde la última invocación.
+**Description:** Creates a "debounced" version of `fn` that delays its execution until `delay` ms have passed since the last invocation.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `fn` | `Function` | Función a debouncear |
-| `delay` | `number` | Milisegundos de espera (default: 150) |
+| `fn` | `Function` | Function to debounce |
+| `delay` | `number` | Wait milliseconds (default: 150) |
 
-**Retorno:** `Function` función wrapper que agrupa llamadas
+**Return:** `Function` wrapper function that batches calls
 
 **Mutates state:** No
 
 **Async:** No
 
-## Comportamiento
+## Behavior
 
-1. Cada llamada a la función retornada reinicia el timer
-2. La función original se ejecuta con el `this` y los argumentos de la última llamada
-3. Si no se provee `delay`, usa 150ms
+1. Each call to the returned function resets the timer
+2. The original function executes with the `this` and arguments of the last call
+3. If no `delay` is provided, uses 150ms
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| Llamadas consecutivas rápidas | Solo se ejecuta la última después del delay |
-| `delay = 0` | Se ejecuta en el siguiente tick (setTimeout 0) |
-| Sin argumentos extra | La función interna se llama sin argumentos |
+| Fast consecutive calls | Only the last one executes after the delay |
+| `delay = 0` | Executes on the next tick (setTimeout 0) |
+| No extra arguments | The inner function is called without arguments |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Debounce básico:** llamada rápida 3 veces, solo se ejecuta 1 vez tras el delay
-2. **Delay personalizado:** delay=500, espera 500ms antes de ejecutar
-3. **Contexto this:** el `this` del llamante se preserva
-4. **Argumentos:** los argumentos de la última llamada se pasan a fn
+1. **Basic debounce:** 3 rapid calls, only executes 1 time after delay
+2. **Custom delay:** delay=500, waits 500ms before executing
+3. **Context this:** caller `this` is preserved
+4. **Arguments:** last call arguments are passed to fn
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

@@ -1,34 +1,34 @@
-# Spec: `src/utils/color.js`
+﻿# Spec: `src/utils/color.js`
 
-## Propósito
-Convierte strings de color (hex, rgb, rgba) a objetos `{ r, g, b }` con valores decimales.
+## Purpose
+Converts color strings (hex, rgb, rgba) to `{ r, g, b }` objects with decimal values.
 
-## Dependencias
+## Dependencies
 
 ### state
-Ninguna.
+None.
 
 ### CONFIG
-Ninguna.
+None.
 
 ### DOM
-Ninguno.
+None.
 
-### Módulos internos
-Ninguno.
+### Internal modules
+None.
 
-## API Pública
+## Public API
 
 ### `export function hexToRgb(hex: string): { r: number, g: number, b: number }`
 
-**Descripción:** Convierte un string de color (hex con/sin #, shorthand 3 dígitos, rgb/rgba) a un objeto con componentes rojo, verde y azul en decimal (0-255). Para entradas inválidas retorna `{ r: 0, g: 0, b: 0 }`.
+**Description:** Converts a color string (hex with/without #, 3-digit shorthand, rgb/rgba) to an object with red, green and blue components in decimal (0-255). For invalid inputs returns `{ r: 0, g: 0, b: 0 }`.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `hex` | `string` | String de color en formato hex (`#ff0000`, `ff0000`, `#f00`), rgb(`255,0,0`) o rgba(`255,0,0,0.5`) |
+| `hex` | `string` | Color string in hex format (`#ff0000`, `ff0000`, `#f00`), rgb(`255,0,0`) or rgba(`255,0,0,0.5`) |
 
-**Retorno:** `{ r: number, g: number, b: number }` — valores enteros entre 0-255.
+**Return:** `{ r: number, g: number, b: number }` — integer values between 0-255.
 
 **Mutates state:** No
 
@@ -38,14 +38,14 @@ Ninguno.
 
 ### `export function getTextColorForBg(bgColor: string): string`
 
-**Descripción:** Dado un color de fondo (hex, rgb, rgba), calcula la luminancia relativa del color usando la fórmula ponderada `0.299*R + 0.587*G + 0.114*B` y retorna el color de texto con mejor contraste: `#1a1a1a` (oscuro) para fondos claros (luminancia > 0.5) o `#ffffff` (blanco) para fondos oscuros (luminancia ≤ 0.5). Útil para adaptive text color en grids de Year in Pixels.
+**Description:** Given a background color (hex, rgb, rgba), calculates the relative luminance using the weighted formula `0.299*R + 0.587*G + 0.114*B` and returns the text color with best contrast: `#1a1a1a` (dark) for light backgrounds (luminance > 0.5) or `#ffffff` (white) for dark backgrounds (luminance ≤ 0.5). Useful for adaptive text color in Year in Pixels grids.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `bgColor` | `string` | Color de fondo en hex (`#ffffff`, `fff`), rgb o rgba |
+| `bgColor` | `string` | Background color in hex (`#ffffff`, `fff`), rgb or rgba |
 
-**Retorno:** `string` — `'#1a1a1a'` o `'#ffffff'` según la luminancia del fondo.
+**Return:** `string` — `'#1a1a1a'` or `'#ffffff'` based on background luminance.
 
 **Mutates state:** No
 
@@ -53,50 +53,50 @@ Ninguno.
 
 ---
 
-## Comportamiento
+## Behavior
 
-1. **Non-string input:** Si `hex` no es un string, retorna `{ r: 0, g: 0, b: 0 }`.
-2. **Formato rgba/rgb:** Si el string empieza con `rgba` o `rgb`, extrae los 3 primeros números mediante regex y los asigna a r, g, b.
-3. **Formato hex con #:** Elimina el `#` y parsea los pares hexadecimales.
-4. **Formato hex sin #:** Parsea directamente los pares hexadecimales.
-5. **Shorthand 3 dígitos:** Detecta patrón de 1 dígito por componente y expande cada dígito (ej: `#f00` → `r = 0xff` = 255).
-6. **Formato 6 dígitos:** Parsea pares de 2 dígitos hexadecimales normalmente.
-7. **Input inválido:** Si ningún formato coincide, retorna `{ r: 0, g: 0, b: 0 }`.
+1. **Non-string input:** If `hex` is not a string, returns `{ r: 0, g: 0, b: 0 }`.
+2. **rgba/rgb format:** If the string starts with `rgba` or `rgb`, extracts the first 3 numbers via regex and assigns to r, g, b.
+3. **Hex format with #:** Removes the `#` and parses hex pairs.
+4. **Hex format without #:** Parses hex pairs directly.
+5. **3-digit shorthand:** Detects 1-digit per component pattern and expands each digit (e.g. `#f00` → `r = 0xff` = 255).
+6. **6-digit format:** Parses 2-digit hex pairs normally.
+7. **Invalid input:** If no format matches, returns `{ r: 0, g: 0, b: 0 }`.
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `null` | Retorna `{ r: 0, g: 0, b: 0 }` |
-| `123` (número) | Retorna `{ r: 0, g: 0, b: 0 }` |
-| `''` (string vacío) | Retorna `{ r: 0, g: 0, b: 0 }` |
-| `'xyz'` (inválido) | Retorna `{ r: 0, g: 0, b: 0 }` |
-| `'#f00'` (shorthand) | Retorna `{ r: 255, g: 0, b: 0 }` |
-| `'ff0000'` (sin #) | Retorna `{ r: 255, g: 0, b: 0 }` |
-| `'rgba(100, 150, 200, 0.5)'` | Retorna `{ r: 100, g: 150, b: 200 }` |
-| `'rgb(100, 150, 200)'` | Retorna `{ r: 100, g: 150, b: 200 }` |
+| `null` | Returns `{ r: 0, g: 0, b: 0 }` |
+| `123` (number) | Returns `{ r: 0, g: 0, b: 0 }` |
+| `''` (empty string) | Returns `{ r: 0, g: 0, b: 0 }` |
+| `'xyz'` (invalid) | Returns `{ r: 0, g: 0, b: 0 }` |
+| `'#f00'` (shorthand) | Returns `{ r: 255, g: 0, b: 0 }` |
+| `'ff0000'` (without #) | Returns `{ r: 255, g: 0, b: 0 }` |
+| `'rgba(100, 150, 200, 0.5)'` | Returns `{ r: 100, g: 150, b: 200 }` |
+| `'rgb(100, 150, 200)'` | Returns `{ r: 100, g: 150, b: 200 }` |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Hex completo con #:** Input `'#ff0000'` → output `{ r: 255, g: 0, b: 0 }`
-2. **Shorthand 3 dígitos:** Input `'#f00'` → output `{ r: 255, g: 0, b: 0 }`
-3. **Sin prefijo #:** Input `'ff0000'` → output `{ r: 255, g: 0, b: 0 }`
-4. **Color verde:** Input `'#00ff00'` → output `{ r: 0, g: 255, b: 0 }`
-5. **Color azul:** Input `'#0000ff'` → output `{ r: 0, g: 0, b: 255 }`
-6. **String rgba:** Input `'rgba(100, 150, 200, 0.5)'` → output `{ r: 100, g: 150, b: 200 }`
-7. **String rgb:** Input `'rgb(100, 150, 200)'` → output `{ r: 100, g: 150, b: 200 }`
-8. **Input inválido:** Input `'not-a-color'` → output `{ r: 0, g: 0, b: 0 }`
-9. **Input no-string:** Input `123` (number) → output `{ r: 0, g: 0, b: 0 }`
-10. **Input null:** Input `null` → output `{ r: 0, g: 0, b: 0 }`
-11. **String vacío:** Input `''` → output `{ r: 0, g: 0, b: 0 }`
-12. **getTextColorForBg fondo blanco:** Input `'#ffffff'` → output `'#1a1a1a'`
-13. **getTextColorForBg fondo negro:** Input `'#000000'` → output `'#ffffff'`
-14. **getTextColorForBg con rgb:** Input `'rgb(255, 255, 255)'` → output `'#1a1a1a'`
+1. **Full hex with #:** Input `'#ff0000'` → output `{ r: 255, g: 0, b: 0 }`
+2. **3-digit shorthand:** Input `'#f00'` → output `{ r: 255, g: 0, b: 0 }`
+3. **Without # prefix:** Input `'ff0000'` → output `{ r: 255, g: 0, b: 0 }`
+4. **Green color:** Input `'#00ff00'` → output `{ r: 0, g: 255, b: 0 }`
+5. **Blue color:** Input `'#0000ff'` → output `{ r: 0, g: 0, b: 255 }`
+6. **rgba string:** Input `'rgba(100, 150, 200, 0.5)'` → output `{ r: 100, g: 150, b: 200 }`
+7. **rgb string:** Input `'rgb(100, 150, 200)'` → output `{ r: 100, g: 150, b: 200 }`
+8. **Invalid input:** Input `'not-a-color'` → output `{ r: 0, g: 0, b: 0 }`
+9. **Non-string input:** Input `123` (number) → output `{ r: 0, g: 0, b: 0 }`
+10. **Null input:** Input `null` → output `{ r: 0, g: 0, b: 0 }`
+11. **Empty string:** Input `''` → output `{ r: 0, g: 0, b: 0 }`
+12. **getTextColorForBg white background:** Input `'#ffffff'` → output `'#1a1a1a'`
+13. **getTextColorForBg black background:** Input `'#000000'` → output `'#ffffff'`
+14. **getTextColorForBg with rgb:** Input `'rgb(255, 255, 255)'` → output `'#1a1a1a'`
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial (retro) | SDD |
-| 2026-05-21 | Fix: `startsWith('rgba')` → `startsWith('rgb')` para soportar formato `rgb(...)` sin alpha | SDD |
-| 2026-05-28 | Ticket 001: Añadida `getTextColorForBg` para adaptive text color en YIP | SDD |
+| 2026-05-21 | Initial spec (retro) | SDD |
+| 2026-05-21 | Fix: `startsWith('rgba')` → `startsWith('rgb')` to support `rgb(...)` format without alpha | SDD |
+| 2026-05-28 | Ticket 001: Added `getTextColorForBg` for adaptive text color in YIP | SDD |

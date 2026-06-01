@@ -1,67 +1,67 @@
-# Spec: `src/ui/PullToRefresh.js`
+﻿# Spec: `src/ui/PullToRefresh.js`
 
-## Propósito
-Implementa pull-to-refresh táctil con indicador visual, rotación de icono y detección de overlays abiertos.
+## Purpose
+Implements touch pull-to-refresh with visual indicator, icon rotation and detection of open overlays.
 
-## Dependencias
+## Dependencies
 
 ### DOM
-| Elemento | Tipo de acceso | Contexto |
+| Element | Access type | Context |
 |----------|---------------|----------|
-| `#ptr-icon` | getElementById | rotación |
-| `#ptr-indicator` | getElementById | animación |
+| `#ptr-icon` | getElementById | rotation |
+| `#ptr-indicator` | getElementById | animation |
 | `#app-wrapper` | getElementById | transform |
 | Overlay selectors | querySelectorAll | hasOverlayOpen |
 
-## API Pública
+## Public API
 
 ### `export function initPullToRefresh(options?: { onRefresh?: Function }): { destroy: Function }`
 
-**Descripción:** Inicializa pull-to-refresh con callbacks.
+**Description:** Initializes pull-to-refresh with callbacks.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `options?` | `Object` | Opciones de configuración |
-| `options.onRefresh?` | `Function` | Callback async que se ejecuta al hacer pull. Debe retornar Promise. |
+| `options?` | `Object` | Configuration options |
+| `options.onRefresh?` | `Function` | Async callback executed on pull. Must return Promise. |
 
-**Retorno:** `{ destroy: Function }` — objeto con método `destroy()` para limpiar listeners.
+**Return:** `{ destroy: Function }` — object with `destroy()` method to clean up listeners.
 
-**Metadatos:**
-- Mutates state: Sí (configura event listeners, manipula DOM del indicador)
+**Metadata:**
+- Mutates state: Yes (configures event listeners, manipulates indicator DOM)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Solo en touchstart con 1 dedo, sin overlays abiertos
-2. Ignora si el touch empieza dentro de `#search-results`
-3. Distingue scroll horizontal vs vertical (ignora si X diff > Y diff)
-4. Distancia visual: `min(75, dist/2.5)`, umbral de activación: 60px
-5. Icono rota proporcionalmente hasta 360° al llegar a 75px
-6. Al soltar: si dist > 60px, spinning animation + llama `onRefresh`
-7. `onRefresh` debe retornar Promise; al completar, resetea UI
+1. Only on touchstart with 1 finger, without open overlays
+2. Ignores if touch starts inside `#search-results`
+3. Distinguishes horizontal vs vertical scroll (ignores if X diff > Y diff)
+4. Visual distance: `min(75, dist/2.5)`, activation threshold: 60px
+5. Icon rotates proportionally up to 360° at 75px
+6. On release: if dist > 60px, spinning animation + calls `onRefresh`
+7. `onRefresh` must return Promise; on completion, resets UI
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `options = null` / `undefined` | Inicializa sin callback, retorna `{ destroy }` |
-| `onRefresh` no es función | Inicializa sin callback, no lanza error |
-| Elementos DOM (`#ptr-icon`, `#ptr-indicator`) no existen | No lanza error, PTR no funcional |
-| Touch dentro de `#search-results` | Ignora, no inicia PTR |
-| Touch con 2+ dedos | Ignora, solo 1 dedo |
-| `destroy()` llamado dos veces | No lanza error, segunda llamada es no-op |
+| `options = null` / `undefined` | Initializes without callback, returns `{ destroy }` |
+| `onRefresh` is not a function | Initializes without callback, does not throw |
+| DOM elements (`#ptr-icon`, `#ptr-indicator`) do not exist | Does not throw, PTR non-functional |
+| Touch inside `#search-results` | Ignores, does not start PTR |
+| Touch with 2+ fingers | Ignores, only 1 finger |
+| `destroy()` called twice | Does not throw, second call is no-op |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con opciones:** `initPullToRefresh({ onRefresh })`, no lanza error
-2. **No lanza si faltan elementos DOM:** Elementos `#ptr-icon`, `#ptr-indicator` ausentes, no lanza error
-3. **Exporta las funciones esperadas:** `initPullToRefresh` exportado y retorna `{ destroy }`
-4. **Sin opciones:** `initPullToRefresh()` sin parámetros, retorna `{ destroy }`
-5. **Touch con 2+ dedos:** Ignora, no inicia PTR
-6. **Destroy llamado dos veces:** Segunda llamada es no-op
+1. **Initializes without errors with options:** `initPullToRefresh({ onRefresh })`, does not throw
+2. **Does not throw if DOM elements are missing:** Elements `#ptr-icon`, `#ptr-indicator` absent, does not throw
+3. **Exports expected functions:** `initPullToRefresh` exported and returns `{ destroy }`
+4. **Without options:** `initPullToRefresh()` without parameters, returns `{ destroy }`
+5. **Touch with 2+ fingers:** Ignores, does not start PTR
+6. **Destroy called twice:** Second call is no-op
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

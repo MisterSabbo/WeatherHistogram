@@ -1,72 +1,72 @@
-# Spec: `src/render/metrics/TemperatureRenderer.js`
+﻿# Spec: `src/render/metrics/TemperatureRenderer.js`
 
-## Propósito
-Renderiza la línea de temperatura, sensación térmica, sombras y efectos climáticos en el canvas del histograma.
+## Purpose
+Renders the temperature line, apparent temperature, shadows and weather effects on the histogram canvas.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | drawTemperature |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../../store.js` | `state` | acceso |
-| `../../theme.js` | `getThemeColor`, `getThemeFont` | colores |
-| `../../utils/math.js` | `normalizeY` | calcular Y |
+| `../../store.js` | `state` | access |
+| `../../theme.js` | `getThemeColor`, `getThemeFont` | colors |
+| `../../utils/math.js` | `normalizeY` | calculate Y |
 
-## API Pública
+## Public API
 
 ### `export function drawTemperature(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja línea base de temperatura (roja), línea punteada de sensación térmica, sombras y efectos.
+**Description:** Draws base temperature line (red), dotted apparent temperature line, shadows and effects.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `styles` | `Object` | Estilos del tema |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `styles` | `Object` | Theme styles |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Línea base: roja (`tempLine`), width 3, con puntos en cada hora
-2. Sensación térmica: línea punteada `[4,4]` azul si más fría, naranja si más cálida
-3. Diferencia >= 1°C entre temp y apparent → dibuja área sombreada entre ambas
-4. Efectos dinámicos: glow solar en cielo despejado, sombra en nubes, overlay azul en lluvia, blanco en nieve, amarillo en tormenta
-5. Etiquetas de temperatura en cada punto con glow si hay nubes/lluvia
+1. Base line: red (`tempLine`), width 3, with dots at each hour
+2. Apparent temperature: dotted line `[4,4]` blue if colder, orange if warmer
+3. Difference >= 1°C between temp and apparent → draws shaded area between both
+4. Dynamic effects: solar glow on clear sky, cloud shadow, blue overlay on rain, white on snow, yellow on storm
+5. Temperature labels at each point with glow if clouds/rain
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error |
-| `state.hourlyData` vacío | No dibuja nada |
-| `state.hourlyData` con < 2 puntos | No puede trazar línea, no dibuja |
-| `d.temp = null` / `undefined` para algunos puntos | Skip de ese punto, línea discontinua |
-| `d.apparent === d.temp` (diferencia < 1°C) | No dibuja línea punteada de sensación térmica |
-| `h = 0` | Todas las Y = 0, no lanza error |
-| Temperaturas extremas (>50°C o <-30°C) | Y fuera de rango, etiqueta se dibuja |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` empty | Draws nothing |
+| `state.hourlyData` with < 2 points | Cannot draw line, does not draw |
+| `d.temp = null` / `undefined` for some points | Skip that point, discontinuous line |
+| `d.apparent === d.temp` (difference < 1°C) | Does not draw dotted apparent line |
+| `h = 0` | All Y = 0, does not throw |
+| Extreme temperatures (>50°C or <-30°C) | Y out of range, label is drawn |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawTemperature` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Línea de temperatura base:** Temp normal dibuja línea roja con puntos
-5. **Sensación térmica diferente:** `apparent != temp` (≥1°C), dibuja línea punteada y área sombreada
-6. **Temperatura extrema:** `temp > 50°C` o `temp < -30°C`, etiqueta visible
+1. **Does not throw with mock data:** Calls `drawTemperature` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **Base temperature line:** Normal temp draws red line with dots
+5. **Different apparent temperature:** `apparent != temp` (≥1°C), draws dotted line and shaded area
+6. **Extreme temperature:** `temp > 50°C` or `temp < -30°C`, label visible
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

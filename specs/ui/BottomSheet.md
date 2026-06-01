@@ -1,111 +1,111 @@
-# Spec: `src/ui/BottomSheet.js`
+﻿# Spec: `src/ui/BottomSheet.js`
 
-## Propósito
-Sistema de bottom sheets modales con swipe-to-dismiss, stacking z-index, y callbacks de cierre.
+## Purpose
+Modal bottom sheet system with swipe-to-dismiss, stacking z-index, and close callbacks.
 
-## Dependencias
+## Dependencies
 
 ### DOM
-| Elemento | Tipo de acceso | Contexto |
+| Element | Access type | Context |
 |----------|---------------|----------|
-| elementos por ID dinámicos | getElementById | openBottomSheet |
+| elements by dynamic ID | getElementById | openBottomSheet |
 | `[id]-backdrop` | getElementById | backdrops |
 
-## API Pública
+## Public API
 
 ### `export function initBottomSheets(): void`
 
-**Descripción:** Reinicia estado interno de sheets.
+**Description:** Resets internal sheet state.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| — | — | Sin parámetros |
+| — | — | No parameters |
 
-**Metadatos:**
-- Mutates state: Sí (estado interno `_activeSheets`, `_depth`)
+**Metadata:**
+- Mutates state: Yes (internal state `_activeSheets`, `_depth`)
 - Async: No
 
 ### `export function onSheetClose(sheetId: string, callback: Function): void`
 
-**Descripción:** Registra callback al cerrar un sheet.
+**Description:** Registers callback when a sheet closes.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `sheetId` | `string` | ID del sheet a observar |
-| `callback` | `Function` | Función a ejecutar al cerrarse |
+| `sheetId` | `string` | Sheet ID to observe |
+| `callback` | `Function` | Function to execute on close |
 
-**Metadatos:**
-- Mutates state: Sí (registro interno de callbacks)
+**Metadata:**
+- Mutates state: Yes (internal callback registry)
 - Async: No
 
 ### `export function openBottomSheet(sheetId: string, backdropId?: string, scrollElementId?: string): Function`
 
-**Descripción:** Abre sheet con z-index creciente y swipe-to-dismiss. Retorna función no-op si elementos no existen.
+**Description:** Opens sheet with increasing z-index and swipe-to-dismiss. Returns no-op function if elements do not exist.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `sheetId` | `string` | ID del elemento sheet |
-| `backdropId?` | `string` | ID del backdrop (default `'{sheetId}-backdrop'`) |
-| `scrollElementId?` | `string` | ID del elemento con scroll para guard |
+| `sheetId` | `string` | Sheet element ID |
+| `backdropId?` | `string` | Backdrop ID (default `'{sheetId}-backdrop'`) |
+| `scrollElementId?` | `string` | Scroll element ID for guard |
 
-**Metadatos:**
-- Mutates state: Sí (clases CSS, z-index, eventos)
+**Metadata:**
+- Mutates state: Yes (CSS classes, z-index, events)
 - Async: No
 
 ### `export function closeBottomSheet(sheetId: string, backdropId?: string): void`
 
-**Descripción:** Cierra un sheet y limpia eventos.
+**Description:** Closes a sheet and cleans up events.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `sheetId` | `string` | ID del sheet a cerrar |
-| `backdropId?` | `string` | ID del backdrop |
+| `sheetId` | `string` | Sheet ID to close |
+| `backdropId?` | `string` | Backdrop ID |
 
-**Metadatos:**
-- Mutates state: Sí (clases CSS, eventos, callbacks)
+**Metadata:**
+- Mutates state: Yes (CSS classes, events, callbacks)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Z-index dinámico: 7000 + depth * 100 para sheet, 6999 + depth * 100 para backdrop
-2. Swipe-to-dismiss con pointer events y touch fallback
-3. Umbral de cierre: >100px de arrastre
-4. Scroll guard: si scrollElement tiene scrollTop > 0, no arrastra
-5. Backdrop click cierra sheet
-6. `_activeSheets` por backdropId: solo un sheet activo por backdrop
-7. **Fixed-handle pattern (estándar en todos los sheets):**
-   - El sheet tiene `overflow-y: hidden` y contiene solo el drag handle + un scroll wrapper
-   - El scroll wrapper (`.yip-sheet-scroll-content`) es un contenedor flex con `flex: 1; overflow-y: auto`
-   - `scrollElementId` debe apuntar al scroll wrapper, no al sheet
-   - Esto asegura que el drag handle siempre sea visible y no se desplace con el contenido
-   - El scroll guard lee `scrollTop` del scroll wrapper, no del sheet (cuyo `scrollTop` siempre es 0)
+1. Dynamic z-index: 7000 + depth * 100 for sheet, 6999 + depth * 100 for backdrop
+2. Swipe-to-dismiss with pointer events and touch fallback
+3. Close threshold: >100px of drag
+4. Scroll guard: if scrollElement has scrollTop > 0, does not drag
+5. Backdrop click closes sheet
+6. `_activeSheets` by backdropId: only one active sheet per backdrop
+7. **Fixed-handle pattern (standard in all sheets):**
+   - The sheet has `overflow-y: hidden` and contains only the drag handle + a scroll wrapper
+   - The scroll wrapper (`.yip-sheet-scroll-content`) is a flex container with `flex: 1; overflow-y: auto`
+   - `scrollElementId` must point to the scroll wrapper, not the sheet
+   - This ensures the drag handle is always visible and does not scroll with the content
+   - The scroll guard reads `scrollTop` from the scroll wrapper, not the sheet (whose `scrollTop` is always 0)
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `sheetId` no existe en DOM | Retorna función no-op, no lanza error |
-| `backdropId` no existe | Crea backdropId por defecto `{sheetId}-backdrop`, si no existe no lanza error |
-| `scrollElementId` no existe | Swipe-to-dismiss sin scroll guard |
-| `scrollElementId` existe pero sheet tiene `overflow-y: hidden` | Scroll guard usa `scrollTop` del scrollElement, no del sheet — el drag handle queda fijo arriba y no se desplaza con el contenido |
-| Llamar `closeBottomSheet` sin haber abierto | No lanza error, no modifica nada |
-| Múltiples sheets mismo backdropId | Solo un sheet activo por backdropId |
-| Pointer events no disponibles | Fallback a touch events |
+| `sheetId` does not exist in DOM | Returns no-op function, does not throw |
+| `backdropId` does not exist | Creates default backdropId `{sheetId}-backdrop`, if it does not exist does not throw |
+| `scrollElementId` does not exist | Swipe-to-dismiss without scroll guard |
+| `scrollElementId` exists but sheet has `overflow-y: hidden` | Scroll guard uses `scrollTop` of scrollElement, not the sheet — the drag handle stays fixed at top and does not scroll with content |
+| Calling `closeBottomSheet` without having opened | Does not throw, does not modify anything |
+| Multiple sheets same backdropId | Only one active sheet per backdropId |
+| Pointer events not available | Fallback to touch events |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** DOM completo, `initBottomSheets` no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** IDs no existen, no lanza error
-3. **Exporta las funciones esperadas:** `initBottomSheets`, `openBottomSheet`, `closeBottomSheet`, `onSheetClose` son funciones
-4. **Abrir y cerrar sheet:** `openBottomSheet('test')` + `closeBottomSheet('test')` sin errores
-5. **Swipe-to-dismiss:** Arrastre >100px cierra el sheet
-6. **Múltiples sheets mismo backdrop:** Solo un sheet activo por backdropId
-7. **Scroll guard con scroll wrapper:** Si el sheet tiene un scroll wrapper interno (`.yip-sheet-scroll-content`) y `scrollElementId` apunta a él, el swipe-to-dismiss solo funciona cuando el contenido está en la parte superior (`scrollTop === 0`)
-8. **Drag handle siempre visible:** En sheets con `overflow-y: hidden` y scroll wrapper, el drag handle no se desplaza con el contenido
+1. **Initializes without errors with DOM elements present:** Full DOM, `initBottomSheets` does not throw
+2. **Does not throw if DOM elements are missing:** IDs do not exist, does not throw
+3. **Exports expected functions:** `initBottomSheets`, `openBottomSheet`, `closeBottomSheet`, `onSheetClose` are functions
+4. **Open and close sheet:** `openBottomSheet('test')` + `closeBottomSheet('test')` without errors
+5. **Swipe-to-dismiss:** Drag >100px closes the sheet
+6. **Multiple sheets same backdrop:** Only one active sheet per backdropId
+7. **Scroll guard with scroll wrapper:** If the sheet has an internal scroll wrapper (`.yip-sheet-scroll-content`) and `scrollElementId` points to it, swipe-to-dismiss only works when content is at the top (`scrollTop === 0`)
+8. **Drag handle always visible:** In sheets with `overflow-y: hidden` and scroll wrapper, the drag handle does not scroll with content
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-28 | Fixed-handle pattern estandarizado en todos los sheets + actualización de scrollElementId | SDD |
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-28 | Fixed-handle pattern standardized in all sheets + scrollElementId update | SDD |
+| 2026-05-21 | Initial spec | SDD |

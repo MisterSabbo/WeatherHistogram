@@ -1,69 +1,69 @@
-# Spec: `src/render/PrecipProbabilityRenderer.js`
+﻿# Spec: `src/render/PrecipProbabilityRenderer.js`
 
-## Propósito
-Renderiza la probabilidad de precipitación como área sombreada con iconos en el canvas.
+## Purpose
+Renders precipitation probability as a shaded area with icons on the canvas.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | drawPrecipitationProbability |
-| `state.theme` | read | modo dark/light |
+| `state.theme` | read | dark/light mode |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
+| `../store.js` | `state` | access |
 
-## API Pública
+## Public API
 
 ### `export function drawPrecipitationProbability(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja probabilidad de precipitación como área sombreada con iconos.
+**Description:** Draws precipitation probability as a shaded area with icons.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `styles` | `Object` | Estilos del tema |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `styles` | `Object` | Theme styles |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Path suave bezierCurveTo de probabilidad
-2. Gradiente horizontal por tipo de precipitación (lluvia azul, nieve gris, tormenta púrpura)
-3. Iconos aleatorios de lluvia/nieve/tormenta dentro del área
-4. Borde inferior con gradiente
+1. Smooth bezierCurveTo probability path
+2. Horizontal gradient by precipitation type (rain blue, snow gray, storm purple)
+3. Random rain/snow/storm icons within the area
+4. Bottom border with gradient
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error |
-| `state.hourlyData` con < 2 puntos | No dibuja (necesita al menos 2 puntos para bezier) |
-| `state.hourlyData` vacío | No dibuja nada |
-| Todos `precipProb = 0` | No dibuja path ni iconos |
-| `precipProb = 100` en todos los puntos | Área completa coloreada |
-| `viewX` negativo | Dibuja offset negativo, no lanza error |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` with < 2 points | Does not draw (needs at least 2 points for bezier) |
+| `state.hourlyData` empty | Draws nothing |
+| All `precipProb = 0` | Does not draw path or icons |
+| `precipProb = 100` at all points | Full colored area |
+| `viewX` negative | Draws with negative offset, does not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawPrecipitationProbability` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Probabilidad 0%:** `precipProb = 0` en todos los puntos, no dibuja path
-5. **Probabilidad 100%:** `precipProb = 100` en todos, área completa coloreada
-6. **Menos de 2 puntos:** `hourlyData` con 1 punto, no dibuja bezier
+1. **Does not throw with mock data:** Calls `drawPrecipitationProbability` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **0% probability:** `precipProb = 0` at all points, does not draw path
+5. **100% probability:** `precipProb = 100` at all, full colored area
+6. **Less than 2 points:** `hourlyData` with 1 point, does not draw bezier
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

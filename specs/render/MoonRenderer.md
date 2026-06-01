@@ -1,56 +1,56 @@
-# Spec: `src/render/MoonRenderer.js`
+﻿# Spec: `src/render/MoonRenderer.js`
 
-## Propósito
-Dibuja un icono de luna creciente en el canvas con glow.
+## Purpose
+Draws a crescent moon icon on the canvas with glow.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias externas.
+No external dependencies.
 
-## API Pública
+## Public API
 
 ### `export function drawMoon(ctx: CanvasRenderingContext2D, x: number, y: number, moonColor: string, glowColor: string): void`
 
-**Descripción:** Dibuja luna creciente con glow radial.
+**Description:** Draws crescent moon with radial glow.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `x` | `number` | Posición X del centro |
-| `y` | `number` | Posición Y del centro |
-| `moonColor` | `string` | Color de la luna (ej. `'#90caf9'`) |
-| `glowColor` | `string` | Color del glow (ej. `'rgba(144,202,249,0.2)'`) |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `x` | `number` | Center X position |
+| `y` | `number` | Center Y position |
+| `moonColor` | `string` | Moon color (e.g. `'#90caf9'`) |
+| `glowColor` | `string` | Glow color (e.g. `'rgba(144,202,249,0.2)'`) |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Glow radial (40px adicionales) con color `rgba(144, 202, 249, 0.2)`
-2. Luna: arco de 0.2π a 1.8π con curva cuadrática
-3. Shadow blur 10px con glowColor
+1. Radial glow (40px extra) with color `rgba(144, 202, 249, 0.2)`
+2. Moon: arc from 0.2π to 1.8π with quadratic curve
+3. Shadow blur 10px with glowColor
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error (llamadas a ctx fallan) |
-| `x` / `y` negativos | Dibuja fuera del canvas, no lanza error |
-| `moonColor` / `glowColor` vacíos | Usa string vacío como color (no lanza error, pero dibujo invisible) |
-| `ctx` sin `createRadialGradient` | Glow no se dibuja, `fill()` falla silenciosamente |
-| `shadowBlur` no soportado | Luna se dibuja sin glow, no lanza error |
+| `ctx = null` / `undefined` | Does not throw (ctx calls fail) |
+| `x` / `y` negative | Draws outside canvas, does not throw |
+| `moonColor` / `glowColor` empty | Uses empty string as color (does not throw, but drawing invisible) |
+| `ctx` without `createRadialGradient` | Glow not drawn, `fill()` fails silently |
+| `shadowBlur` not supported | Moon drawn without glow, does not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con parámetros válidos:** Llama `drawMoon` con colores y posición válidos, no lanza error
-2. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-3. **No lanza con coordenadas negativas:** `x = -10`, `y = -10`, no lanza error
-4. **Dibujo de glow:** `createRadialGradient` produce efecto glow visible
-5. **Colores inválidos:** `moonColor = ''`, no lanza error
+1. **Does not throw with valid parameters:** Calls `drawMoon` with valid colors and position, does not throw
+2. **Does not throw with ctx = null/undefined:** Null context, does not throw
+3. **Does not throw with negative coordinates:** `x = -10`, `y = -10`, does not throw
+4. **Glow drawing:** `createRadialGradient` produces visible glow effect
+5. **Invalid colors:** `moonColor = ''`, does not throw
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

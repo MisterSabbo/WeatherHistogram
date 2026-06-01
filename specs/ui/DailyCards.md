@@ -1,93 +1,93 @@
-# Spec: `src/ui/DailyCards.js`
+﻿# Spec: `src/ui/DailyCards.js`
 
-## Propósito
-Genera y actualiza las tarjetas de pronóstico diario debajo del minimap/daily view.
+## Purpose
+Generates and updates daily forecast cards below the minimap/daily view.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.dailyData` | read | generateDailyCards |
 | `state.hourlyData` | read | updateActiveDailyCard |
 | `state.PIXELS_PER_HOUR` | read | scroll calculations |
-| `state.timezone` | read | formato fechas |
+| `state.timezone` | read | date formatting |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state`, `CONFIG` | acceso |
-| `../theme.js` | `getThemeIcon` | iconos |
+| `../store.js` | `state`, `CONFIG` | access |
+| `../theme.js` | `getThemeIcon` | icons |
 | `../utils/i18n.js` | `getLocale` | locale |
 
-## API Pública
+## Public API
 
 ### `export function getWeatherIconSVG(code: number): string`
 
-**Descripción:** Convierte código WMO a HTML de icono SVG.
+**Description:** Converts WMO code to SVG icon HTML.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `code` | `number` | Código meteorológico WMO (0-99) |
+| `code` | `number` | WMO weather code (0-99) |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
 ### `export function generateDailyCards(centerOnCurrentTimeCallback: Function): void`
 
-**Descripción:** Genera tarjetas de pronóstico diario desde `state.dailyData`.
+**Description:** Generates daily forecast cards from `state.dailyData`.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `centerOnCurrentTimeCallback` | `Function` | Callback para centrar scroll en hora actual |
+| `centerOnCurrentTimeCallback` | `Function` | Callback to center scroll on current hour |
 
-**Metadatos:**
-- Mutates state: Sí (modifica DOM de cards container)
+**Metadata:**
+- Mutates state: Yes (modifies cards container DOM)
 - Async: No
 
 ### `export function updateActiveDailyCard(): void`
 
-**Descripción:** Marca el día activo según posición de scroll.
+**Description:** Marks the active day according to scroll position.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| — | — | Sin parámetros (usa `state` directamente) |
+| — | — | No parameters (uses `state` directly) |
 
-**Metadatos:**
-- Mutates state: Sí (modifica clases CSS en DOM)
+**Metadata:**
+- Mutates state: Yes (modifies CSS classes in DOM)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. `generateDailyCards`: crea cards con día, fecha, icono, temp max/min
-2. Card click: scroll a mediodía de ese día (hora 12), smooth si hoy
-3. Días pasados: clase 'past-day' + icono history
-4. `updateActiveDailyCard`: usa scrollLeft + 60 para determinar día activo, setea `--arrow-pos` según progreso del día
-5. Scroll automático de cards container si el día activo está fuera de vista
+1. `generateDailyCards`: creates cards with day, date, icon, temp max/min
+2. Card click: scroll to noon of that day (hour 12), smooth if today
+3. Past days: class 'past-day' + history icon
+4. `updateActiveDailyCard`: uses scrollLeft + 60 to determine active day, sets `--arrow-pos` according to day progress
+5. Auto scroll of cards container if active day is out of view
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `state.dailyData` vacío | No genera ninguna card, no lanza error |
-| `state.hourlyData` vacío | `updateActiveDailyCard` retorna sin cambios |
-| Container DOM no existe | No lanza error |
-| `centerOnCurrentTimeCallback` no es función | No lanza error, ignora callback |
-| `getWeatherIconSVG(-1)` (código inválido) | Retorna icono por defecto `clear_day` |
-| Día fuera del rango visible | Scroll automático del container si el día activo está fuera de vista |
+| `state.dailyData` empty | Does not generate any card, does not throw |
+| `state.hourlyData` empty | `updateActiveDailyCard` returns without changes |
+| Container DOM does not exist | Does not throw |
+| `centerOnCurrentTimeCallback` is not a function | Does not throw, ignores callback |
+| `getWeatherIconSVG(-1)` (invalid code) | Returns default icon `clear_day` |
+| Day out of visible range | Auto scroll of container if active day is out of view |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `generateDailyCards` con DOM presente, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Container DOM ausente, no lanza error
-3. **Exporta las funciones esperadas:** `getWeatherIconSVG`, `generateDailyCards`, `updateActiveDailyCard` son funciones
-4. **Icono SVG por código WMO:** `getWeatherIconSVG(0)` retorna SVG de soleado
-5. **Datos diarios vacíos:** `state.dailyData = []`, no genera ninguna card
-6. **Click en card:** Scroll a mediodía del día seleccionado
+1. **Initializes without errors with DOM elements present:** `generateDailyCards` with DOM present, does not throw
+2. **Does not throw if DOM elements are missing:** Container DOM absent, does not throw
+3. **Exports expected functions:** `getWeatherIconSVG`, `generateDailyCards`, `updateActiveDailyCard` are functions
+4. **SVG icon by WMO code:** `getWeatherIconSVG(0)` returns sunny SVG
+5. **Empty daily data:** `state.dailyData = []`, does not generate any card
+6. **Card click:** Scroll to noon of selected day
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

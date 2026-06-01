@@ -2,7 +2,7 @@ export const changelogData = [
   {
     "version": "1.14.1",
     "changes": [
-      "YIP scroll snapping a meses en móvil: scroll-snap-type movido de .yip-year-grid (contenido interno) a .yip-modal-scroll-content (contenedor scroll real) y añadido scroll-snap-stop: always para que el scroll vertical se detenga en cada mes en lugar de ser continuo, facilitando la navegación móvil."
+      "YIP scroll snapping to months on mobile: scroll-snap-type moved from .yip-year-grid (internal content) to .yip-modal-scroll-content (actual scroll container) and added scroll-snap-stop: always so vertical scroll stops at each month instead of being continuous, making mobile navigation easier."
     ]
   },
   {
@@ -14,46 +14,46 @@ export const changelogData = [
   {
     "version": "1.13.1",
     "changes": [
-      "Soporte de modo claro en YIP: getColorForParam() ahora devuelve variantes 1-2 tonos más oscuras/saturadas en modo claro para los 5 colores pastel problemáticos (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), con cache _yipTheme para evitar 365+ lecturas de state.theme por render. Añadida variable CSS --yip-day-number-color en [data-theme='light']. Override .yip-dot-badge en light mode (fondo más claro, texto oscuro). Todas las pruebas unitarias y E2E pasan."
+      "Light mode support in YIP: getColorForParam() now returns color variants 1-2 tones darker/more saturated in light mode for the 5 problematic pastel colors (#93c5fd, #bfdbfe, #ccfbf1, #5eead4, #a3e635), with _yipTheme cache to avoid 365+ state.theme reads per render. Added CSS variable --yip-day-number-color in [data-theme='light']. Override .yip-dot-badge in light mode (lighter background, dark text). All unit and E2E tests pass."
     ]
   },
   {
     "version": "1.13.0b",
     "changes": [
-      "Fix: highlight YIP no visible por falta de data-theme en init — los selectores CSS [data-theme='dark'] nunca matcheaban porque data-theme solo se asignaba al toggle manual del tema. Añadido setAttribute en initTheme() para que todos los selectores [data-theme] funcionen desde el arranque. El toast '✓ Guardado' se movió fuera del detail sheet (position fixed) para no desaparecer con el cierre. El highlight se difiere 350ms para ejecutarse tras la animación de cierre (300ms). Todos los tests pasan."
+      "Fix: YIP highlight not visible due to missing data-theme in init — CSS selectors [data-theme='dark'] never matched because data-theme was only set on manual theme toggle. Added setAttribute in initTheme() so all [data-theme] selectors work from startup. The '✓ Saved' toast was moved outside the detail sheet (position fixed) to not disappear with the close animation. Highlight deferred 350ms to run after the close animation (300ms). All tests pass."
     ]
   },
   {
     "version": "1.13.0a",
     "changes": [
-      "Highlight más intenso y mini toast al guardar en YIP: el highlight combina box-shadow pulsante + transform: scale(1.15) + outline semitransparente usando var(--accent-precip). Duración 1s (antes 1.5s). Intensidad: opacidad 0.5 (claro) / 0.3 (oscuro). Mini toast animado '✓ Guardado' en parte inferior del detail sheet con fade in/out, 600ms antes de cerrar. Todas las pruebas pasan."
+      "Stronger highlight and mini toast on YIP save: highlight combines pulsing box-shadow + transform: scale(1.15) + semi-transparent outline using var(--accent-precip). Duration 1s (was 1.5s). Intensity: opacity 0.5 (light) / 0.3 (dark). Animated mini toast '✓ Saved' at bottom of detail sheet with fade in/out, persisting 600ms before closing. All tests pass."
     ]
   },
   {
     "version": "1.13.0",
     "changes": [
-      "YIP modal: cabecera y campos sticky al hacer scroll — DOM reestructurado para que header y fields-bar estén fuera del scroll-content, siempre visibles durante scroll vertical en el grid. Snapshots E2E regenerados."
+      "YIP modal: sticky header and fields when scrolling — DOM restructured so header and fields-bar are outside the scroll-content, always visible during vertical scroll in the grid. E2E snapshots regenerated."
     ]
   },
   {
     "version": "1.12.0",
     "changes": [
-      "Node.js 22 → 24 (Active LTS): CI actualizado a Node 24, añadido .nvmrc y engines en package.json.",
-      "Dependencias actualizadas: Vite 6→8, @types/node 25.9.0→25.9.1, vitest 4.1.6→4.1.7.",
-      "E2E visual snapshots regenerados para Node 24 + Vite 8. Todos los tests pasan.",
-      "PTR nativo de Chrome Android disparado al hacer scroll en YIP modal: movido overscroll-behavior-y: contain de .yip-modal a .yip-modal-scroll-content. En Chrome, overscroll-behavior debe estar en el elemento scrollable real, no en el contenedor."
+      "Node.js 22 → 24 (Active LTS): CI updated to Node 24, added .nvmrc and engines in package.json.",
+      "Dependencies updated: Vite 6→8, @types/node 25.9.0→25.9.1, vitest 4.1.6→4.1.7.",
+      "E2E visual snapshots regenerated for Node 24 + Vite 8. All tests pass.",
+      "Chrome Android native PTR triggered when scrolling in YIP modal: moved overscroll-behavior-y: contain from .yip-modal to .yip-modal-scroll-content. On Chrome, overscroll-behavior must be on the actual scrollable element, not the container."
     ]
   },
   {
     "version": "1.11.0d",
     "changes": [
-      "YIP modal responsive: bottom sheet en móvil (<768px, ≥95dvh), modal centrado en escritorio con animación de escala. Drag-to-dismiss (>100px), backdrop separado, control por clases CSS en vez de style.display. Celdas grid: min-width 32→38px, gap 4→5px."
+      "YIP modal responsive: bottom sheet on mobile (<768px, ≥95dvh), centered modal on desktop with scale animation. Drag-to-dismiss (>100px), backdrop separated, CSS class toggle instead of style.display. Grid cells: min-width 32→38px, gap 4→5px."
     ]
   },
   {
     "version": "1.11.0c",
     "changes": [
-      "Badge +N en vez de elipsis en YIP: reemplazado '…' por badge numérico '+N' con fondo semitransparente oscuro y texto blanco en negrita para indicar estados no meteorológicos extra en las celdas del Year in Pixels. El badge muestra 2 dots + '+N' (ej. '+2', '+3') en vez de 3 dots + '+N', asegurando máximo 3 elementos por celda. Todas las pruebas unitarias y E2E pasan."
+      "Badge +N instead of ellipsis in YIP: replaced '…' with numeric '+N' badge with semi-transparent dark background and bold white text to indicate extra non-weather states in Year in Pixels cells. Badge shows 2 dots + '+N' (e.g. '+2', '+3') instead of 3 dots + '+N', ensuring max 3 elements per cell. All unit and E2E tests pass."
     ]
   },
   {

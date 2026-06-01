@@ -1,84 +1,84 @@
-# Spec: `src/render/GridRenderer.js`
+﻿# Spec: `src/render/GridRenderer.js`
 
-## Propósito
-Renderiza la cuadrícula del histograma (líneas horizontales de temperatura, línea de cero grados, nombres de día, ejes X con horas).
+## Purpose
+Renders the histogram grid (horizontal temperature lines, zero degree line, day names, X axes with hours).
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | drawDayNames, drawAxes |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
-| `../theme.js` | `getThemeColor`, `getThemeFont` | colores/fuente |
+| `../store.js` | `state` | access |
+| `../theme.js` | `getThemeColor`, `getThemeFont` | colors/font |
 | `../utils/math.js` | `normalizeY` | Y |
-| `../utils/time.js` | `formatHour` | etiquetas hora |
+| `../utils/time.js` | `formatHour` | hour labels |
 
-## API Pública
+## Public API
 
 ### `export function drawGrid(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja líneas horizontales cada 10°C (-20 a 40) + línea de 0°C discontinua.
+**Description:** Draws horizontal lines every 10°C (-20 to 40) + dashed 0°C line.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `styles` | `Object` | Estilos del tema |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `styles` | `Object` | Theme styles |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadatos:** Mutates state: No, Async: No
+**Metadata:** Mutates state: No, Async: No
 
 ### `export function drawDayNames(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja nombres de día grandes y semitransparentes.
+**Description:** Draws large semi-transparent day names.
 
-**Metadatos:** Mutates state: No, Async: No
+**Metadata:** Mutates state: No, Async: No
 
 ### `export function drawAxes(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number, CHART_HEIGHT: number): void`
 
-**Descripción:** Dibuja etiquetas de hora con tick marks, saltando sunrise/sunset.
+**Description:** Draws hour labels with tick marks, skipping sunrise/sunset.
 
-| Parámetro adicional | Tipo | Descripción |
+| Additional parameter | Type | Description |
 |---------------------|------|-------------|
-| `CHART_HEIGHT` | `number` | Alto del canvas del histograma |
+| `CHART_HEIGHT` | `number` | Height of the histogram canvas |
 
-**Metadatos:** Mutates state: No, Async: No
+**Metadata:** Mutates state: No, Async: No
 
-## Comportamiento
+## Behavior
 
-1. `drawGrid`: línea sólida #e0e0e0 para temperaturas, discontinua [4,4] para 0°C
-2. `drawDayNames`: texto grande (80px), centrado en cada día, opacidad 0.15
-3. `drawAxes`: etiquetas de hora con tick de 8px, evita superposición con marcadores de sol/sombra (<25px)
+1. `drawGrid`: solid line #e0e0e0 for temperatures, dashed [4,4] for 0°C
+2. `drawDayNames`: large text (80px), centered on each day, opacity 0.15
+3. `drawAxes`: hour labels with 8px tick, avoids overlap with sun/shadow markers (<25px)
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error |
-| `state.hourlyData` vacío | `drawDayNames` y `drawAxes` no dibujan nada |
-| `viewX` / `viewW` negativos | No dibuja nada visible, no lanza error |
-| `h = 0` | No dibuja líneas (altura cero) |
-| Etiquetas de hora solapadas con sunrise/sunset (< 25px) | Skip de etiqueta, evita colisión |
-| `styles` sin propiedades de color | Usa valores por defecto, no lanza error |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` empty | `drawDayNames` and `drawAxes` draw nothing |
+| `viewX` / `viewW` negative | Draws nothing visible, does not throw |
+| `h = 0` | Does not draw lines (zero height) |
+| Hour labels overlapping with sunrise/sunset (< 25px) | Label skipped, avoids collision |
+| `styles` without color properties | Uses default values, does not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawGrid` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, los sub-módulos no dibujan nada
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Línea de 0°C:** Se dibuja discontinua [4,4] en Y correspondiente
-5. **Colisión de labels de hora:** Etiquetas cerca de sunrise/sunset se saltan
-6. **Nombres de día:** Texto centrado correctamente por día
+1. **Does not throw with mock data:** Calls `drawGrid` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, sub-modules draw nothing
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **0°C line:** Drawn dashed [4,4] at corresponding Y
+5. **Hour label collision:** Labels near sunrise/sunset are skipped
+6. **Day names:** Text correctly centered per day
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

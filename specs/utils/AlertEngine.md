@@ -1,34 +1,34 @@
-# Spec: `src/utils/AlertEngine.js`
+﻿# Spec: `src/utils/AlertEngine.js`
 
-## Propósito
-Genera alertas meteorológicas basadas en umbrales (temp, viento, lluvia, UV, nieve) a partir de datos horarios, y las renderiza en el DOM.
+## Purpose
+Generates weather alerts based on thresholds (temp, wind, rain, UV, snow) from hourly data, and renders them in the DOM.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `./i18n.js` | `t` | Traducción de textos de alerta |
+| `./i18n.js` | `t` | Alert text translation |
 
 ### DOM
-| Elemento | Tipo de acceso | Contexto |
+| Element | Access type | Context |
 |----------|---------------|----------|
 | `#alerts-container` | getElementById / display style | renderAlerts |
 | `#alerts-tooltip` | getElementById / innerHTML | renderAlerts |
 
-## API Pública
+## Public API
 
 ### `export function generateAlerts(hourlyData: Array, index: number): { alerts: Array, alertLevel: number }`
 
-**Descripción:** Escanea hasta 12 horas desde `index` en `hourlyData` y genera alertas por superación de umbrales. Cada tipo de alerta aparece una sola vez.
+**Description:** Scans up to 12 hours from `index` in `hourlyData` and generates alerts for threshold exceedances. Each alert type appears only once.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `hourlyData` | `Array` | Datos horarios con `temp`, `gusts`, `precip`, `uv`, `weatherCode` |
-| `index` | `number` | Índice inicial de escaneo |
+| `hourlyData` | `Array` | Hourly data with `temp`, `gusts`, `precip`, `uv`, `weatherCode` |
+| `index` | `number` | Initial scan index |
 
-**Retorno:** `{ alerts: Array<{type, level, msg}>, alertLevel: number }`
+**Return:** `{ alerts: Array<{type, level, msg}>, alertLevel: number }`
 
 **Mutates state:** No
 
@@ -36,57 +36,57 @@ Genera alertas meteorológicas basadas en umbrales (temp, viento, lluvia, UV, ni
 
 ### `export function renderAlerts(alerts: Array, alertLevel: number): void`
 
-**Descripción:** Renderiza las alertas en el DOM. Muestra contenedor con tooltip si hay alertas; lo oculta si no.
+**Description:** Renders alerts in the DOM. Shows container with tooltip if alerts exist; hides it if not.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `alerts` | `Array` | Lista de alertas de `generateAlerts` |
-| `alertLevel` | `number` | Nivel máximo de alerta (1-3) |
+| `alerts` | `Array` | Alert list from `generateAlerts` |
+| `alertLevel` | `number` | Maximum alert level (1-3) |
 
-**Retorno:** `void`
+**Return:** `void`
 
 **Mutates state:** No
 
 **Async:** No
 
-## Comportamiento
+## Behavior
 
-1. **Umbrales de temperatura:** `>=38°C` → level 3, `>=35°C` → level 2, `<=-5°C` → level 2
-2. **Umbrales de viento:** `>=90km/h` → level 3, `>=70km/h` → level 2
-3. **Umbrales de lluvia:** `>=15mm/h` → level 3, `>=8mm/h` → level 2
-4. **Umbrales UV:** `>=11` → level 3
-5. **Umbrales nieve:** weatherCode en [71,73,75,77,85,86] con precip `>=2mm` → level 2
-6. Cada tipo de alerta se emite una sola vez (primer match) gracias a `alertTypes` (Set)
-7. `alertLevel` es el máximo nivel encontrado entre todas las alertas
-8. `renderAlerts`: si hay alertas, muestra el contenedor y pinta tooltip con color según nivel; si no, oculta contenedor
-9. Colores de icono: level 3 → rojo (`#d32f2f`), level 2 → naranja (`#f57c00`), level 1 → amarillo (`#fbc02d`)
-10. Punto de alerta: level 3 → `#ef5350`, level 2 → `#ff9800`, level 1 → `#ffca28`
+1. **Temperature thresholds:** `>=38°C` → level 3, `>=35°C` → level 2, `<=-5°C` → level 2
+2. **Wind thresholds:** `>=90km/h` → level 3, `>=70km/h` → level 2
+3. **Rain thresholds:** `>=15mm/h` → level 3, `>=8mm/h` → level 2
+4. **UV thresholds:** `>=11` → level 3
+5. **Snow thresholds:** weatherCode in [71,73,75,77,85,86] with precip `>=2mm` → level 2
+6. Each alert type is emitted only once (first match) thanks to `alertTypes` (Set)
+7. `alertLevel` is the maximum level found among all alerts
+8. `renderAlerts`: if alerts exist, shows container and paints tooltip with color based on level; if not, hides container
+9. Icon colors: level 3 → red (`#d32f2f`), level 2 → orange (`#f57c00`), level 1 → yellow (`#fbc02d`)
+10. Alert dot: level 3 → `#ef5350`, level 2 → `#ff9800`, level 1 → `#ffca28`
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `hourlyData` vacío | Retorna `{ alerts: [], alertLevel: 0 }` |
-| `index` >= `hourlyData.length` | No itera (loop no ejecutado), retorna `{ alerts: [], alertLevel: 0 }` |
-| `hourlyData[i]` es null/undefined | Se salta con `continue` |
-| `alertContainer` o `alertTooltip` no existen | No hace nada (return temprano) |
+| `hourlyData` empty | Returns `{ alerts: [], alertLevel: 0 }` |
+| `index` >= `hourlyData.length` | Does not iterate, returns `{ alerts: [], alertLevel: 0 }` |
+| `hourlyData[i]` is null/undefined | Skipped with `continue` |
+| `alertContainer` or `alertTooltip` does not exist | Does nothing (early return) |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Alerta calor extremo:** `temp >= 38` → alerta level 3
-2. **Alerta vientos huracanados:** `gusts >= 90` → alerta level 3
-3. **Alerta lluvias torrenciales:** `precip >= 15` → alerta level 3
-4. **UV extremo:** `uv >= 11` → alerta level 3
-5. **Nevada intensa:** weatherCode 73 + precip >= 2 → alerta level 2
-6. **Sin alertas:** datos dentro de rangos normales → alerts vacío, level 0
-7. **Múltiples alertas:** se generan varios tipos, `alertTypes` evita duplicados
-8. **alertLevel máximo:** nivel se calcula como `Math.max` de todas las alertas
-9. **renderAlerts con alertas:** se muestra contenedor y se pinta tooltip
-10. **renderAlerts sin alertas:** se oculta contenedor
+1. **Extreme heat alert:** `temp >= 38` → alert level 3
+2. **Hurricane wind alert:** `gusts >= 90` → alert level 3
+3. **Torrential rain alert:** `precip >= 15` → alert level 3
+4. **Extreme UV:** `uv >= 11` → alert level 3
+5. **Heavy snow:** weatherCode 73 + precip >= 2 → alert level 2
+6. **No alerts:** data within normal ranges → empty alerts, level 0
+7. **Multiple alerts:** various types generated, `alertTypes` prevents duplicates
+8. **Maximum alert level:** level calculated as `Math.max` of all alerts
+9. **renderAlerts with alerts:** container shown and tooltip painted
+10. **renderAlerts without alerts:** container hidden
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

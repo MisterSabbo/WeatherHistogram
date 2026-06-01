@@ -4,7 +4,7 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 
 ## [v1.14.1] - 2026-05-31
 ### Fix
-- **YIP scroll snapping a meses en móvil**: El `scroll-snap-type: y mandatory` estaba aplicado en `.yip-year-grid` (contenido interno) en lugar de en el contenedor scroll (`.yip-modal-scroll-content`). Movido al contenedor correcto y añadido `scroll-snap-stop: always` para que el scroll vertical del YIP se detenga en cada mes en lugar de ser continuo, facilitando la navegación en móvil.
+- **YIP scroll snapping to months on mobile**: `scroll-snap-type: y mandatory` was applied to `.yip-year-grid` (internal content) instead of the scroll container (`.yip-modal-scroll-content`). Moved to the correct container and added `scroll-snap-stop: always` so vertical YIP scroll stops at each month instead of being continuous, making mobile navigation easier.
 
 ## [v1.14.0] - 2026-05-30
 ### Enhancement
@@ -12,37 +12,37 @@ All new features, improvements, and fixes for WeatherHist will be documented in 
 
 ## [v1.13.1] - 2026-05-30
 ### Enhancement
-- **Soporte de modo claro en Year In Pixels**: `getColorForParam()` ahora devuelve variantes de color 1-2 tonos más oscuras/saturadas en modo claro para los colores pastel con bajo contraste sobre fondo claro (#93c5fd → #60a5fa, #bfdbfe → #93c5fd, #ccfbf1 → #5eead4, #5eead4 → #14b8a6, #a3e635 → #65a30d). Se añadió cache `_yipTheme` (establecido en `renderYIPGrid`, leído en `getColorForParam`) para evitar leer `state.theme` 365+ veces por render. Nueva variable CSS `--yip-day-number-color` en `[data-theme="light"]`. Override de `.yip-dot-badge` en modo claro (fondo `rgba(0,0,0,0.2)`, texto `#1a1a1a`). Todas las pruebas pasan.
+- **Light mode support in Year In Pixels**: `getColorForParam()` now returns color variants 1-2 tones darker/more saturated in light mode for pastel colors with low contrast on light backgrounds (#93c5fd → #60a5fa, #bfdbfe → #93c5fd, #ccfbf1 → #5eead4, #5eead4 → #14b8a6, #a3e635 → #65a30d). Added `_yipTheme` cache (set in `renderYIPGrid`, read in `getColorForParam`) to avoid reading `state.theme` 365+ times per render. New CSS variable `--yip-day-number-color` in `[data-theme="light"]`. `.yip-dot-badge` override in light mode (background `rgba(0,0,0,0.2)`, text `#1a1a1a`). All tests pass.
 
 ## [v1.13.0b] - 2026-05-30
 ### Fix
-- **Highlight YIP no visible por falta de `data-theme` en init**: El highlight de celda al guardar usaba selectores CSS `[data-theme="dark"] .yip-highlight-flash`, pero `data-theme` nunca se asignaba en `<html>` durante la inicialización — solo en `toggleTheme()` al cambiar manualmente el tema. Añadido `document.documentElement.setAttribute('data-theme', state.theme)` en `initTheme()` para que todos los selectores `[data-theme]` funcionen desde el arranque. El toast "✓ Guardado" se movió fuera del detail sheet (position fixed) para que no desaparezca con la animación de cierre. El highlight se difiere 350ms para ejecutarse tras la animación de cierre de la sheet (300ms). Todos los tests (lint, typecheck, 394 unit, 29 E2E) pasan.
+- **YIP highlight not visible due to missing `data-theme` in init**: The save cell highlight used CSS selectors `[data-theme="dark"] .yip-highlight-flash`, but `data-theme` was never set on `<html>` during initialization — only in `toggleTheme()` when manually toggling the theme. Added `document.documentElement.setAttribute('data-theme', state.theme)` in `initTheme()` so all `[data-theme]` selectors work from startup. The "✓ Saved" toast was moved outside the detail sheet (position fixed) so it doesn't disappear with the close animation. The highlight is deferred 350ms to run after the sheet close animation (300ms). All tests (lint, typecheck, 394 unit, 29 E2E) pass.
 
 ## [v1.13.0a] - 2026-05-30
 ### Enhancement
-- **Highlight más intenso y mini toast al guardar en YIP**: El highlight al guardar datos en una celda del Year in Pixels ahora combina `box-shadow` pulsante con `transform: scale(1.15)` y outline semitransparente, usando `var(--accent-precip)` como color de acento. Duración reducida a 1s (antes 1.5s). Intensidad ajustada por tema: opacidad 0.5 en modo claro, 0.3 en modo oscuro. Aparece un mini toast animado "✓ Guardado" en la parte inferior del detail sheet con fade in/out que persiste 600ms antes de cerrar. Todas las pruebas unitarias y E2E pasan.
+- **Stronger highlight and mini toast on YIP save**: The highlight when saving data in a Year in Pixels cell now combines a pulsing `box-shadow` with `transform: scale(1.15)` and a semi-transparent outline, using `var(--accent-precip)` as accent color. Duration reduced to 1s (was 1.5s). Intensity adjusted by theme: opacity 0.5 in light mode, 0.3 in dark mode. An animated "✓ Saved" mini toast appears at the bottom of the detail sheet with fade in/out, persisting 600ms before closing. All unit and E2E tests pass.
 
 ## [v1.13.0] - 2026-05-29
 ### Enhancement
-- **YIP modal: cabecera y campos sticky al hacer scroll**: Reestructurado el DOM del modal para que `.yip-modal-header` y el nuevo `.yip-modal-fields-bar` (contiene campos de estado, toggle cold/allergies) estén fuera de `#yip-modal-scroll-content`, permaneciendo siempre visibles al hacer scroll vertical en el grid. Los horizontales (`padding`) se movieron de `.yip-modal-body` (eliminado) a `.yip-year-grid`. Snapshots visuales E2E regenerados.
+- **YIP modal: sticky header and fields when scrolling**: Restructured the modal DOM so `.yip-modal-header` and the new `.yip-modal-fields-bar` (contains state fields, cold/allergies toggles) are outside `#yip-modal-scroll-content`, remaining always visible when scrolling vertically in the grid. The horizontal (`padding`) was moved from `.yip-modal-body` (removed) to `.yip-year-grid`. E2E visual snapshots regenerated.
 
 ## [v1.12.0] - 2026-05-29
 ### Infrastructure
-- **Node.js 22 → 24 (Active LTS)**: Actualizado CI a Node 24 (`.github/workflows/ci.yml`). Añadido `.nvmrc` y `"engines": { "node": ">=22.12.0 <25.0.0" }` en `package.json`.
-- **Dependencias a latest**: Vite ^6.2.0 → ^8.0.0, @types/node ^25.9.0 → ^25.9.1, vitest ^4.1.6 → ^4.1.7.
-- **E2E snapshots regenerados**: 5 visual baselines actualizados para el nuevo entorno Node 24 + Vite 8.
-- Todos los tests (lint, typecheck, 394 unit, 29 E2E) pasan sin errores.
+- **Node.js 22 → 24 (Active LTS)**: Updated CI to Node 24 (`.github/workflows/ci.yml`). Added `.nvmrc` and `"engines": { "node": ">=22.12.0 <25.0.0" }` in `package.json`.
+- **Dependencies updated**: Vite ^6.2.0 → ^8.0.0, @types/node ^25.9.0 → ^25.9.1, vitest ^4.1.6 → ^4.1.7.
+- **E2E snapshots regenerated**: 5 visual baselines updated for the new Node 24 + Vite 8 environment.
+- All tests (lint, typecheck, 394 unit, 29 E2E) pass with no errors.
 
 ### Fixes
-- **PTR nativo de Chrome Android disparado al hacer scroll en YIP modal en móvil**: Movido `overscroll-behavior-y: contain` de `.yip-modal` (contenedor) a `.yip-modal-scroll-content` (elemento scrollable real). En Chrome Android, `overscroll-behavior` debe estar en el elemento que efectivamente scrollea, no en su contenedor padre. Esto evita que el native pull-to-refresh de Chrome se dispare al hacer scroll vertical en el contenido del YIP modal. El bug se manifestaba solo en el primer uso tras carga porque Chrome "aprendía" a contener el overscroll tras abrir el modal de settings (que sí tenía `contain` en su elemento scrollable correcto).
+- **Chrome Android native PTR triggered when scrolling in YIP modal on mobile**: Moved `overscroll-behavior-y: contain` from `.yip-modal` (container) to `.yip-modal-scroll-content` (actual scrollable element). On Chrome Android, `overscroll-behavior` must be on the element that actually scrolls, not its parent container. This prevents Chrome's native pull-to-refresh from firing when scrolling vertically in the YIP modal content. The bug only manifested on first use after loading because Chrome "learned" to contain overscroll after opening the settings modal (which did have `contain` on its correct scrollable element).
 
 ## [v1.11.0d] - 2026-05-29
 ### Enhancement
-- **YIP modal responsive: bottom sheet en móvil, modal centrado en escritorio**: El modal de Year in Pixels se adapta al viewport: en móvil (<768px) se convierte en un bottom sheet full-screen (≥95dvh) con animación de deslizamiento, drag handle para cerrar arrastrando hacia abajo (>100px), y backdrop click para cerrar. En escritorio (≥768px) se mantiene como modal centrado con animación de escala. Se ha separado el backdrop del modal para control de opacidad independiente. Celdas del grid: min-width 32→38px, gap 4→5px. El control de visibilidad ahora usa clases CSS en vez de style.display.
+- **YIP modal responsive: bottom sheet on mobile, centered modal on desktop**: The Year in Pixels modal adapts to the viewport: on mobile (<768px) it becomes a full-screen bottom sheet (≥95dvh) with slide animation, drag handle for swipe-to-dismiss (>100px), and backdrop click to close. On desktop (≥768px) it remains a centered modal with scale animation. The backdrop was separated from the modal for independent opacity control. Grid cells: min-width 32→38px, gap 4→5px. Visibility control now uses CSS classes instead of style.display.
 
 ## [v1.11.0c] - 2026-05-28
 ### Enhancement
-- **Badge +N en vez de elipsis en YIP**: Reemplazado el "…" (ellipsis) por un badge numérico "+N" con fondo semitransparente oscuro y texto blanco en negrita cuando hay más de 3 estados no meteorológicos activos en una celda del Year in Pixels. El badge muestra 2 dots + "+N" (ej. "+2", "+3") en vez de 3 dots + "+N", asegurando máximo 3 elementos por celda. Todas las pruebas unitarias y E2E pasan.
+- **Badge +N instead of ellipsis in YIP**: Replaced the "…" (ellipsis) with a numeric "+N" badge with semi-transparent dark background and bold white text when there are more than 3 non-weather states active in a Year in Pixels cell. The badge shows 2 dots + "+N" (e.g. "+2", "+3") instead of 3 dots + "+N", ensuring a maximum of 3 elements per cell. All unit and E2E tests pass.
 
 ## [v1.11.0b] - 2026-05-28
 ### Enhancement

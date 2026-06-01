@@ -1,55 +1,55 @@
-# Spec: `src/theme.js`
+﻿# Spec: `src/theme.js`
 
-## Propósito
-Gestión de temas de gráficas: carga de archivos JSON de tema, acceso a colores/iconos/fuente, y actualización del DOM.
+## Purpose
+Chart theme management: loading JSON theme files, accessing colors/icons/fonts, and DOM updates.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.themeConfig` | read/write | todas las funciones |
+| `state.themeConfig` | read/write | all functions |
 | `state.theme` | read | applyThemeDOM via getComputedStyle |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `./store.js` | `state` | acceso |
+| `./store.js` | `state` | access |
 
-## API Pública
+## Public API
 
-- `getThemeColor(path, fallbackColor)` — navega `state.themeConfig.colors` con path anidado
-- `getThemeIcon(path, fallbackIcon)` — navega `state.themeConfig.icons`
-- `getThemeFont(size?)` — retorna fuente del tema con size opcional
-- `async loadChartTheme(themeId)` — carga tema JSON (primary: `./themes/{id}.json`, fallback: `./public/themes/{id}.json`)
-- `applyThemeDOM()` — aplica font-family, theme-color meta, iconos de header
+- `getThemeColor(path, fallbackColor)` — navigates `state.themeConfig.colors` with nested path
+- `getThemeIcon(path, fallbackIcon)` — navigates `state.themeConfig.icons`
+- `getThemeFont(size?)` — returns theme font with optional size
+- `async loadChartTheme(themeId)` — loads JSON theme (primary: `./themes/{id}.json`, fallback: `./public/themes/{id}.json`)
+- `applyThemeDOM()` — applies font-family, theme-color meta, header icons
 
-## Comportamiento
+## Behavior
 
-1. `getThemeColor`/`getThemeIcon`: path separado por puntos, fallback si no existe
-2. `loadChartTheme`: intenta primary → fallback → fallback hardcodeado
-3. `applyThemeDOM`: actualiza `body.style.fontFamily`, `meta[theme-color]`, iconos `.material-symbols-outlined` en header
+1. `getThemeColor`/`getThemeIcon`: dot-separated path, fallback if not found
+2. `loadChartTheme`: tries primary → fallback → hardcoded fallback
+3. `applyThemeDOM`: updates `body.style.fontFamily`, `meta[theme-color]`, `.material-symbols-outlined` icons in header
 
-## Casos borde
+## Edge Cases
 
-| Condición | Comportamiento esperado |
+| Condition | Expected behavior |
 |-----------|------------------------|
-| themeConfig null | getThemeColor retorna fallback |
-| Path inexistente | Retorna fallback |
-| Tema no encontrado primary o fallback | Usa fallback hardcodeado |
-| Meta tag no existe | applyThemeDOM no lanza error |
+| themeConfig null | getThemeColor returns fallback |
+| Non-existent path | Returns fallback |
+| Theme not found primary or fallback | Uses hardcoded fallback |
+| Meta tag does not exist | applyThemeDOM does not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **getThemeColor con path:** retorna color del tema
-2. **getThemeColor sin config:** retorna fallback
-3. **getThemeColor path inválido:** retorna fallback
-4. **getThemeIcon:** retorna icono o fallback
-5. **getThemeFont:** retorna fuente con/sin size
-6. **loadChartTheme con tema válido:** state.themeConfig actualizado
+1. **getThemeColor with path:** returns theme color
+2. **getThemeColor without config:** returns fallback
+3. **getThemeColor invalid path:** returns fallback
+4. **getThemeIcon:** returns icon or fallback
+5. **getThemeFont:** returns font with/without size
+6. **loadChartTheme with valid theme:** state.themeConfig updated
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

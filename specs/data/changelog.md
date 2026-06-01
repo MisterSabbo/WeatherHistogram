@@ -1,40 +1,40 @@
 # Spec: `src/data/changelog.js`
 
-## Propósito
-Datos embebidos del changelog de la aplicación, con todas las versiones y sus cambios.
+## Purpose
+Embedded changelog data for the application, with all versions and their changes.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export const changelogData: Array<{ version: string, changes: Array<string> }>`
 
-**Descripción:** Array ordenado de versiones (de más reciente a más antigua). Cada entrada contiene `version` (semver con posible sufijo letra) y `changes` (lista de descripciones de cambios).
+**Description:** Array of versions ordered newest to oldest. Each entry contains `version` (semver with possible letter suffix) and `changes` (list of change descriptions).
 
-## Comportamiento
+## Behavior
 
-1. Datos estáticos, no mutables
-2. Version format: `X.Y.Z` o `X.Y.Z` + letra (a-g)
-3. Sin lógica de negocio
+1. Static, non-mutable data
+2. Version format: `X.Y.Z` or `X.Y.Z` + letter (a-g)
+3. No business logic
 
-## Casos borde
+## Edge Cases
 
-| Condición | Comportamiento esperado |
-|-----------|------------------------|
-| Array vacío | No hay cambios registrados |
-| Versión con 0 cambios | `changes: []` |
+| Condition | Expected Behavior |
+|-----------|-------------------|
+| Empty array | No changes recorded |
+| Version with 0 changes | `changes: []` |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Estructura:** cada entrada tiene `version` (string) y `changes` (array)
-2. **Orden:** más reciente primero
-3. **No vacío:** al menos una entrada
-4. **Changes son strings:** cada change es un string no vacío
+1. **Structure:** each entry has `version` (string) and `changes` (array)
+2. **Order:** newest first
+3. **Non-empty:** at least one entry
+4. **Changes are strings:** each change is a non-empty string
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
-|-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-21 | Initial spec | SDD |

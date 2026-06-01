@@ -1,67 +1,67 @@
-# Spec: `src/utils/time.js`
+﻿# Spec: `src/utils/time.js`
 
-## Propósito
-Utilidades de conversión de tiempo a coordenadas del histograma y formateo de fechas.
+## Purpose
+Time-to-coordinate conversion utilities for the histogram and date formatting.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export function dateToX(time: number, startTime: number, pixelsPerHour: number): number`
 
-**Descripción:** Convierte un timestamp ms a coordenada X en píxeles.
+**Description:** Converts a timestamp ms to X coordinate in pixels.
 
 ### `export function getCurrentTimeX(startTime: number, pixelsPerHour: number): number`
 
-**Descripción:** Coordenada X del momento actual.
+**Description:** X coordinate of the current time.
 
 ### `export function formatHour(hour: number): string`
 
-**Descripción:** Formatea hora (0-23) a string de 2 dígitos.
+**Description:** Formats hour (0-23) to 2-digit string.
 
 ### `export function formatDay(date: Date, locale: string): string`
 
-**Descripción:** Formatea fecha a "MON, 15 JAN" en mayúsculas.
+**Description:** Formats date to "MON, 15 JAN" in uppercase.
 
 ### `export function getSplitIndex(startTime: number, maxIndex?: number): number`
 
-**Descripción:** Índice de la hora actual en el array horario.
+**Description:** Index of the current hour in the hourly data array.
 
 ### `export function formatTooltipTime(date: Date, locale: string, timezone: string): { timeStr: string, dateStr: string, isToday: boolean }`
 
-**Descripción:** Formatea fecha para tooltip con hora local y detección de "hoy".
+**Description:** Formats date for tooltip with local time and "today" detection.
 
-## Comportamiento
+## Behavior
 
 1. `dateToX`: `((time - startTime) / 3600000) * pixelsPerHour`
-2. `getSplitIndex`: floor de horas desde startTime, acotado a `[0, maxIndex]`
+2. `getSplitIndex`: floor of hours from startTime, clamped to `[0, maxIndex]`
 3. `formatHour`: padStart(2, '0')
-4. `formatDay`: toLocaleString con weekday:'short', day:'numeric', month:'short' → toUpperCase
-5. `formatTooltipTime`: `isToday` compara día/mes/año; usa `toLocaleTimeString` con timezone
+4. `formatDay`: toLocaleString with weekday:'short', day:'numeric', month:'short' => toUpperCase
+5. `formatTooltipTime`: `isToday` compares day/month/year; uses `toLocaleTimeString` with timezone
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `startTime = 0` en `getSplitIndex` | Retorna 0 |
-| `maxIndex = null` | No acota el resultado |
-| `date` fuera de rango | `toLocaleTimeString` puede fallar; en navegadores modernos funciona |
-| `hour = 0` | Retorna `'00'` |
-| `hour = 23` | Retorna `'23'` |
+| `startTime = 0` in `getSplitIndex` | Returns 0 |
+| `maxIndex = null` | Does not clamp the result |
+| `date` out of range | `toLocaleTimeString` may fail; works in modern browsers |
+| `hour = 0` | Returns `'00'` |
+| `hour = 23` | Returns `'23'` |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **dateToX:** 1 hora de diferencia → retorna pixelsPerHour
-2. **getSplitIndex:** momento actual dentro del rango → índice correcto
-3. **getSplitIndex con startTime=0:** retorna 0
-4. **formatHour:** 5 → `'05'`, 12 → `'12'`
-5. **formatDay:** formato correcto con locale
-6. **formatTooltipTime:** estructura correcta del return
+1. **dateToX:** 1 hour difference => returns pixelsPerHour
+2. **getSplitIndex:** current time within range => correct index
+3. **getSplitIndex with startTime=0:** returns 0
+4. **formatHour:** 5 => `'05'`, 12 => `'12'`
+5. **formatDay:** correct format with locale
+6. **formatTooltipTime:** correct return structure
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

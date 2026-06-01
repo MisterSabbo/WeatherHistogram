@@ -1,76 +1,76 @@
-# Spec: `src/ui/MapSelector.js`
+﻿# Spec: `src/ui/MapSelector.js`
 
-## Propósito
-Modal de selección de ubicación con mapa Leaflet, geocoding por búsqueda, localización actual y favoritos.
+## Purpose
+Location selection modal with Leaflet map, geocoding by search, current location and favorites.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.lat` | read | posición inicial mapa |
-| `state.lon` | read | posición inicial mapa |
-| `state.locationName` | read | nombre inicial |
+| `state.lat` | read | initial map position |
+| `state.lon` | read | initial map position |
+| `state.locationName` | read | initial name |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
+| `../store.js` | `state` | access |
 | `../services/GeoService.js` | `geoService` | geocoding |
-| `../utils/i18n.js` | `t` | traducción |
-| *dynamic* | `favoritesService` | favoritos (dynamic import) |
+| `../utils/i18n.js` | `t` | translation |
+| *dynamic* | `favoritesService` | favorites (dynamic import) |
 
-### DOM externos
-| Elemento | Tipo de acceso | Contexto |
+### External DOM
+| Element | Access type | Context |
 |----------|---------------|----------|
-| `#leaflet-map` | L.map | mapa Leaflet |
-| `L` (global) | variable global | Leaflet library |
+| `#leaflet-map` | L.map | Leaflet map |
+| `L` (global) | global variable | Leaflet library |
 
-## API Pública
+## Public API
 
 ### `export function initMapModal(onLocationSelected: Function): void`
 
-**Descripción:** Inicializa modal de mapa.
+**Description:** Initializes map modal.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `onLocationSelected` | `Function` | Callback `(lat, lon, name)` al seleccionar ubicación |
+| `onLocationSelected` | `Function` | Callback `(lat, lon, name)` when selecting a location |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Mapa Leaflet con tileLayer OpenStreetMap, zoomControl en bottomleft
-2. Click en mapa → placeMarker + reverseGeocode
-3. Búsqueda con debounce 500ms, resultados con flag emoji
-4. Botón "Mi Ubicación" con geolocation API
-5. Favorites: auto-abre modal de favoritos si hay guardados al abrir mapa
-6. Marker popup con botones "Ir" y "Favorito"
+1. Leaflet map with OpenStreetMap tileLayer, zoomControl in bottomleft
+2. Click on map → placeMarker + reverseGeocode
+3. Search with 500ms debounce, results with flag emoji
+4. "My Location" button with geolocation API
+5. Favorites: auto-opens favorites modal if any saved when opening map
+6. Marker popup with "Go" and "Favorite" buttons
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `#map-location-modal` no existe | Lanza TypeError (código no hace null-check en elementos críticos) |
-| `L` (Leaflet) no disponible globalmente | Lanza error de Leaflet (no hay try-catch) |
-| `state.lat` / `state.lon` `null` | Mapa centrado en coordenadas por defecto (Madrid) con zoom 2 |
-| Geolocation denegada | Muestra alerta, no lanza error |
-| Búsqueda sin resultados | `suggestionsBox` oculto, no lanza error |
-| `onLocationSelected` no es función | Lanza error al hacer clic en "Ir" |
+| `#map-location-modal` does not exist | Throws TypeError (code does not null-check critical elements) |
+| `L` (Leaflet) not available globally | Leaflet error (no try-catch) |
+| `state.lat` / `state.lon` `null` | Map centered on default coordinates (Madrid) with zoom 2 |
+| Geolocation denied | Shows alert, does not throw |
+| Search without results | `suggestionsBox` hidden, does not throw |
+| `onLocationSelected` is not a function | Throws error when clicking "Go" |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initMapModal` con elementos DOM, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Elementos críticos ausentes, comportamiento esperado según casos borde
-3. **Exporta las funciones esperadas:** `initMapModal` es función
-4. **Geolocation denegada:** Muestra alerta, no lanza error
-5. **Búsqueda sin resultados:** `suggestionsBox` oculto, no lanza error
-6. **Coordenadas null:** Mapa centrado en Madrid con zoom 2
+1. **Initializes without errors with DOM elements present:** `initMapModal` with DOM elements, does not throw
+2. **Does not throw if DOM elements are missing:** Critical elements absent, expected behavior per edge cases
+3. **Exports expected functions:** `initMapModal` is a function
+4. **Geolocation denied:** Shows alert, does not throw
+5. **Search without results:** `suggestionsBox` hidden, does not throw
+6. **Null coordinates:** Map centered on Madrid with zoom 2
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

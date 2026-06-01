@@ -1,71 +1,71 @@
-# Spec: `src/render/SunMarkers.js`
+﻿# Spec: `src/render/SunMarkers.js`
 
-## Propósito
-Dibuja marcadores de salida y puesta de sol en el canvas con hora formateada.
+## Purpose
+Draws sunrise and sunset markers on the canvas with formatted time.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
-| `state.hourlyData` | read | obtener startTime |
-| `state.sunData` | read | sunrise/sunset por fecha |
-| `state.timezone` | read | formateo |
+| `state.hourlyData` | read | get startTime |
+| `state.sunData` | read | sunrise/sunset by date |
+| `state.timezone` | read | formatting |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
-| `../theme.js` | `getThemeFont` | fuente |
+| `../store.js` | `state` | access |
+| `../theme.js` | `getThemeFont` | font |
 | `../utils/i18n.js` | `getLocale` | locale |
 
-## API Pública
+## Public API
 
 ### `export function drawSunMarkersOnCanvas(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja marcadores de salida y puesta de sol.
+**Description:** Draws sunrise and sunset markers.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Para cada fecha en sunData, dibuja sunrise y sunset markers
-2. Marker: semicírculo con rayos + flecha arriba (sunrise) o abajo (sunset)
-3. Hora formateada con toLocaleTimeString
-4. Skip si fuera del viewport (±50px)
+1. For each date in sunData, draws sunrise and sunset markers
+2. Marker: semicircle with rays + arrow up (sunrise) or down (sunset)
+3. Time formatted with toLocaleTimeString
+4. Skip if outside viewport (±50px)
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error |
-| `state.hourlyData` vacío | No dibuja, retorna sin error |
-| `state.sunData` vacío (`{}`) | No hay sunrise/sunset, no dibuja nada |
-| Marcador fuera del viewport (±50px) | Skip, no dibuja |
-| `PIXELS_PER_HOUR = 0` | Posición X infinita, no lanza error |
-| `h = 0` | Marcadores en Y=0, no lanza error |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` empty | Does not draw, returns without error |
+| `state.sunData` empty (`{}`) | No sunrise/sunset, draws nothing |
+| Marker outside viewport (±50px) | Skip, does not draw |
+| `PIXELS_PER_HOUR = 0` | Infinite X position, does not throw |
+| `h = 0` | Markers at Y=0, does not throw |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawSunMarkersOnCanvas` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Marcadores fuera de viewport:** Sunrise/sunset fuera de ±50px, no se dibujan
-5. **SunData vacío:** `state.sunData = {}`, no dibuja nada
-6. **Formato de hora correcto:** Hora formateada con `toLocaleTimeString`
+1. **Does not throw with mock data:** Calls `drawSunMarkersOnCanvas` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **Markers outside viewport:** Sunrise/sunset outside ±50px, not drawn
+5. **Empty SunData:** `state.sunData = {}`, draws nothing
+6. **Correct time format:** Time formatted with `toLocaleTimeString`
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

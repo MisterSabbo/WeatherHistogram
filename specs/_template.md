@@ -1,78 +1,78 @@
-# Spec: `ruta/relativa/al/modulo.js`
+﻿# Spec: `relative/path/to/module.js`
 
-## Propósito
-Una línea describiendo qué hace este módulo y por qué existe.
+## Purpose
+One line describing what this module does and why it exists.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso (R/W) | Contexto |
+| Property | Access (R/W) | Context |
 |-----------|-------------|----------|
-| `state.xxx` | read / write | función donde se usa |
+| `state.xxx` | read / write | function where used |
 
 ### CONFIG
-| Constante | Contexto |
+| Constant | Context |
 |-----------|----------|
-| `CONFIG.XXX` | función donde se usa |
+| `CONFIG.XXX` | function where used |
 
 ### DOM
-| Elemento | Tipo de acceso | Contexto |
+| Element | Access type | Context |
 |----------|---------------|----------|
-| `#element-id` | querySelector / evento | función donde se usa |
+| `#element-id` | querySelector / event | function where used |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
 | `./foo.js` | `barFunction` | ... |
 
-## API Pública
+## Public API
 
-### `export function nombreFuncion(param1: type, param2: type): returnType`
+### `export function functionName(param1: type, param2: type): returnType`
 
-**Descripción:** Qué hace.
+**Description:** What it does.
 
-**Parámetros:**
-| Nombre | Tipo | Descripción |
+**Parameters:**
+| Name | Type | Description |
 |--------|------|-------------|
-| `param1` | `string` | Descripción |
+| `param1` | `string` | Description |
 
-**Retorno:** `{ r: number, g: number, b: number } | null`
+**Return:** `{ r: number, g: number, b: number } | null`
 
-**Mutates state:** No / Sí (propiedades: ...)
+**Mutates state:** No / Yes (properties: ...)
 
-**Async:** No / Sí (awaits: ...)
+**Async:** No / Yes (awaits: ...)
 
-### `export const CONSTANTE = valor`
+### `export const CONSTANT = value`
 
-**Descripción:** Para qué sirve.
+**Description:** What it is for.
 
 ---
 
-## Comportamiento
+## Behavior
 
-1. **Regla 1:** Descripción (ej: "Si el input no tiene #, se añade automáticamente")
-2. **Regla 2:** ...
-3. **Regla 3:** ...
+1. **Rule 1:** Description (e.g.: "If input has no #, it is added automatically")
+2. **Rule 2:** ...
+3. **Rule 3:** ...
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `null` | Retorna `null` |
-| `''` (string vacío) | Retorna `null` |
-| Valor fuera de rango | ... |
+| `null` | Returns `null` |
+| `''` (empty string) | Returns `null` |
+| Value out of range | ... |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Caso normal:** Input `X` → output `Y`
-2. **Sin prefijo #:** Input `"ff0000"` → output `{ r: 255, g: 0, b: 0 }`
-3. **Shorthand 3 dígitos:** Input `"#fff"` → output `{ r: 255, g: 255, b: 255 }`
-4. **Input inválido:** Input `"xyz"` → output `null`
-5. **Input null:** Input `null` → output `null`
-6. **Input vacío:** Input `""` → output `null`
+1. **Normal case:** Input `X` → output `Y`
+2. **Without # prefix:** Input `"ff0000"` → output `{ r: 255, g: 0, b: 0 }`
+3. **3-digit shorthand:** Input `"#fff"` → output `{ r: 255, g: 255, b: 255 }`
+4. **Invalid input:** Input `"xyz"` → output `null`
+5. **Null input:** Input `null` → output `null`
+6. **Empty input:** Input `""` → output `null`
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| YYYY-MM-DD | Spec inicial | SDD |
+| YYYY-MM-DD | Initial spec | SDD |

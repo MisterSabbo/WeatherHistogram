@@ -1,70 +1,70 @@
-# Spec: `src/render/CloudRenderer.js`
+﻿# Spec: `src/render/CloudRenderer.js`
 
-## Propósito
-Renderiza cobertura de nubes como área sombreada con path suave en el canvas.
+## Purpose
+Renders cloud cover as a shaded area with smooth path on the canvas.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso | Contexto |
+| Property | Access | Context |
 |-----------|--------|----------|
 | `state.hourlyData` | read | drawClouds |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso |
+| `../store.js` | `state` | access |
 
-## API Pública
+## Public API
 
 ### `export function drawClouds(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
 
-**Descripción:** Dibuja área de nubes con gradiente horizontal, múltiples capas de contorno y línea de borde.
+**Description:** Draws cloud area with horizontal gradient, multiple contour layers and border line.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `ctx` | `CanvasRenderingContext2D` | Contexto del canvas |
-| `viewX` | `number` | Inicio X del viewport |
-| `viewW` | `number` | Ancho del viewport |
-| `h` | `number` | Alto del canvas |
-| `styles` | `Object` | Estilos del tema |
-| `PIXELS_PER_HOUR` | `number` | Píxeles por hora |
+| `ctx` | `CanvasRenderingContext2D` | Canvas context |
+| `viewX` | `number` | Viewport X start |
+| `viewW` | `number` | Viewport width |
+| `h` | `number` | Canvas height |
+| `styles` | `Object` | Theme styles |
+| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadatos:**
+**Metadata:**
 - Mutates state: No
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Renderiza puntos `(x, i*PPH)` e `y = h - (h * (clouds/100))`
-2. Path suave con bezierCurveTo (puntos de control en midpoint x)
-3. Gradiente horizontal: luma = `255 - (clouds/100) * 115` por punto
-4. 5 capas de contorno con offset y width progresivos
-5. Línea de borde con glow
+1. Renders points `(x, i*PPH)` and `y = h - (h * (clouds/100))`
+2. Smooth path with bezierCurveTo (control points at midpoint x)
+3. Horizontal gradient: luma = `255 - (clouds/100) * 115` per point
+4. 5 contour layers with progressive offset and width
+5. Border line with glow
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | No lanza error |
-| `state.hourlyData` con < 2 puntos | No dibuja (necesita al menos 2 puntos para bezier) |
-| `state.hourlyData` vacío | No dibuja nada |
-| `viewX` negativo | Dibuja offset negativo, no lanza error |
-| `h = 0` | No dibuja nada (altura cero) |
-| `clouds = 100` en todos los puntos | Luma mínimo (140), cobertura completa |
-| `clouds = 0` en todos los puntos | Luma máximo (255), área transparente |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` with < 2 points | Does not draw (needs at least 2 points for bezier) |
+| `state.hourlyData` empty | Draws nothing |
+| `viewX` negative | Draws with negative offset, does not throw |
+| `h = 0` | Draws nothing (zero height) |
+| `clouds = 100` at all points | Minimum luma (140), full coverage |
+| `clouds = 0` at all points | Maximum luma (255), transparent area |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **No lanza excepción con datos simulados:** Llama `drawClouds` con datos mock, no lanza error
-2. **No lanza con hourlyData vacío:** `state.hourlyData = []`, no lanza error
-3. **No lanza con ctx = null/undefined:** Contexto nulo, no lanza error
-4. **Cobertura 0%:** `clouds = 0` en todos los puntos, área transparente
-5. **Cobertura 100%:** `clouds = 100` en todos los puntos, luma mínimo
-6. **Menos de 2 puntos:** `hourlyData` con 1 punto, no dibuja bezier
+1. **Does not throw with mock data:** Calls `drawClouds` with mock data, does not throw
+2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
+3. **Does not throw with ctx = null/undefined:** Null context, does not throw
+4. **0% coverage:** `clouds = 0` at all points, transparent area
+5. **100% coverage:** `clouds = 100` at all points, minimum luma
+6. **Less than 2 points:** `hourlyData` with 1 point, does not draw bezier
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

@@ -1,66 +1,66 @@
-# Spec: `src/services/DataProcessor.js`
+﻿# Spec: `src/services/DataProcessor.js`
 
-## Propósito
-Procesa los datos crudos de la API (forecast + AQI), los transforma al formato interno del state, calcula datos diarios, y persiste el historial en IndexedDB.
+## Purpose
+Processes raw API data (forecast + AQI), transforms to internal state format, calculates daily data, and persists history in IndexedDB.
 
-## Dependencias
+## Dependencies
 
 ### state
-| Propiedad | Acceso (R/W) | Contexto |
+| Property | Access (R/W) | Context |
 |-----------|-------------|----------|
 | `state.timezone` | write | processData |
 | `state.sunData` | read/write | processData |
 | `state.dailyData` | write | processData |
 | `state.hourlyData` | write | processData |
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../store.js` | `state` | acceso al estado |
-| `../utils/i18n.js` | `getLocale` | formato de fechas |
-| `../ui/DailyCards.js` | `generateDailyCards` | renderizar daily cards |
-| `./StorageService.js` | `storageService` | persistir historial |
+| `../store.js` | `state` | state access |
+| `../utils/i18n.js` | `getLocale` | date formatting |
+| `../ui/DailyCards.js` | `generateDailyCards` | render daily cards |
+| `./StorageService.js` | `storageService` | persist history |
 
-## API Pública
+## Public API
 
 ### `export function processData(forecastData: Object, aqiData: Object, centerOnCurrentTime: Function): void`
 
-**Descripción:** Procesa datos de forecast y AQI, actualiza state, genera daily cards y persiste historial.
+**Description:** Processes forecast and AQI data, updates state, generates daily cards and persists history.
 
-## Comportamiento
+## Behavior
 
-1. Valida que `forecastData.hourly.time` y `aqiData.hourly.time` existan
-2. Valida zona horaria con `Intl.DateTimeFormat`, fallback a UTC
-3. Procesa datos diarios: sunrise/sunset, dailyData array
-4. Procesa datos horarios: temp, precip, wind, clouds, UV, AQI, polen, isNight
-5. Ordena hourlyData por tiempo ascendente
-6. Agrega AQI y polen a dailyData por día
-7. Recalcula precipTotal diario como suma de datos horarios
-8. Llama a `generateDailyCards(centerOnCurrentTime)`
-9. Persiste historial en IndexedDB (solo días pasados)
-10. El merge de `saveHistoryData` preserva campos extra (como `notes`) porque solo añade días nuevos con Set-based dedup — nunca sobrescribe entradas existentes del `daily[]`
+1. Validates that `forecastData.hourly.time` and `aqiData.hourly.time` exist
+2. Validates timezone with `Intl.DateTimeFormat`, fallback to UTC
+3. Processes daily data: sunrise/sunset, dailyData array
+4. Processes hourly data: temp, precip, wind, clouds, UV, AQI, pollen, isNight
+5. Sorts hourlyData by ascending time
+6. Adds AQI and pollen to dailyData by day
+7. Recalculates daily precipTotal as sum of hourly data
+8. Calls `generateDailyCards(centerOnCurrentTime)`
+9. Persists history in IndexedDB (past days only)
+10. `saveHistoryData` merge preserves extra fields (like `notes`) because it only adds new days with Set-based dedup — never overwrites existing `daily[]` entries
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `forecastData` sin hourly | Lanza Error |
-| `aqiData` sin hourly | Lanza Error |
-| Timezone inválida | Fallback a UTC |
-| Datos de un solo día | No hay datos "pasados" → no persiste |
-| Sin datos horarios | No procesa nada, no persiste |
+| `forecastData` without hourly | Throws Error |
+| `aqiData` without hourly | Throws Error |
+| Invalid timezone | Fallback to UTC |
+| Single day data | No "past" data → does not persist |
+| No hourly data | Processes nothing, does not persist |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Datos válidos:** hourlyData se puebla correctamente con campos esperados
-2. **Timezone inválida:** fallback a UTC
-3. **Datos incompletos sin hourly:** lanza Error
-4. **IsNight detection:** usa is_day de API, fallback a sunrise/sunset
-5. **Historial guardado:** datos pasados se persisten en storageService
-6. **DailyData vacío:** no procesa, no persiste
+1. **Valid data:** hourlyData populated correctly with expected fields
+2. **Invalid timezone:** fallback to UTC
+3. **Incomplete data without hourly:** throws Error
+4. **IsNight detection:** uses API is_day, fallback to sunrise/sunset
+5. **History saved:** past data persisted in storageService
+6. **Empty DailyData:** does not process, does not persist
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

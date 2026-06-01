@@ -1,74 +1,74 @@
-# Spec: `src/ui/ScrollIndicator.js`
+﻿# Spec: `src/ui/ScrollIndicator.js`
 
-## Propósito
-Indicadores de scroll horizontal (flechas izquierda/derecha) con paginación por dots y animación de descubrimiento.
+## Purpose
+Horizontal scroll indicators (left/right arrows) with dot pagination and discovery animation.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias externas.
+No external dependencies.
 
-## API Pública
+## Public API
 
 ### `export function updateScrollIndicator(metricsContainer: HTMLElement, scrollIndLeft: HTMLElement, scrollIndRight: HTMLElement, metricsDots: HTMLElement): void`
 
-**Descripción:** Actualiza visibilidad de flechas y dots según posición de scroll.
+**Description:** Updates arrow and dot visibility based on scroll position.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `metricsContainer` | `HTMLElement` | Contenedor con scroll horizontal |
-| `scrollIndLeft` | `HTMLElement` | Flecha izquierda |
-| `scrollIndRight` | `HTMLElement` | Flecha derecha |
-| `metricsDots` | `HTMLElement` | Contenedor de dots de paginación |
+| `metricsContainer` | `HTMLElement` | Container with horizontal scroll |
+| `scrollIndLeft` | `HTMLElement` | Left arrow |
+| `scrollIndRight` | `HTMLElement` | Right arrow |
+| `metricsDots` | `HTMLElement` | Pagination dots container |
 
-**Metadatos:**
-- Mutates state: Sí (modifica display de elementos DOM)
+**Metadata:**
+- Mutates state: Yes (modifies display of DOM elements)
 - Async: No
 
 ### `export function initScrollIndicator(metricsContainer: HTMLElement, scrollIndLeft: HTMLElement, scrollIndRight: HTMLElement, metricsDots: HTMLElement): void`
 
-**Descripción:** Inicializa indicadores con auto-discovery animation.
+**Description:** Initializes indicators with auto-discovery animation.
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `metricsContainer` | `HTMLElement` | Contenedor con scroll horizontal |
-| `scrollIndLeft` | `HTMLElement` | Flecha izquierda |
-| `scrollIndRight` | `HTMLElement` | Flecha derecha |
-| `metricsDots` | `HTMLElement` | Contenedor de dots |
+| `metricsContainer` | `HTMLElement` | Container with horizontal scroll |
+| `scrollIndLeft` | `HTMLElement` | Left arrow |
+| `scrollIndRight` | `HTMLElement` | Right arrow |
+| `metricsDots` | `HTMLElement` | Dots container |
 
-**Metadatos:**
-- Mutates state: Sí (registra event listeners scroll + resize)
+**Metadata:**
+- Mutates state: Yes (registers scroll + resize event listeners)
 - Async: No
 
-## Comportamiento
+## Behavior
 
-1. Muestra flecha derecha si hay overflow y no está al final
-2. Muestra flecha izquierda si hay overflow y no está al inicio
+1. Shows right arrow if there is overflow and not at the end
+2. Shows left arrow if there is overflow and not at the start
 3. Dots: `totalPages = ceil(scrollWidth / clientWidth)`, `currentPage = round(scrollLeft / pageWidth)`
-4. Si totalPages > 1, añade contador "N/total"
-5. Discovery animation: primer overflow → 3 bounces de la flecha derecha
+4. If totalPages > 1, adds "N/total" counter
+5. Discovery animation: first overflow → 3 bounces of the right arrow
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
-| `metricsContainer = null` / `undefined` | No lanza error (parámetros opcionales en práctica) |
-| Container sin overflow (`scrollWidth <= clientWidth`) | Flechas ocultas, dots vacíos |
-| Container con `scrollWidth = 0` | No muestra flechas ni dots |
-| `totalPages = 0` | No añade contador "N/total" |
-| Discovery animation ya reproducida | No reproduce animación de nuevo |
-| Resize del viewport | `initScrollIndicator` recalcula visibilidad |
+| `metricsContainer = null` / `undefined` | Does not throw (parameters optional in practice) |
+| Container without overflow (`scrollWidth <= clientWidth`) | Arrows hidden, dots empty |
+| Container with `scrollWidth = 0` | Does not show arrows or dots |
+| `totalPages = 0` | Does not add "N/total" counter |
+| Discovery animation already played | Does not replay animation |
+| Viewport resize | `initScrollIndicator` recalculates visibility |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **Se inicializa sin errores con elementos DOM presentes:** `initScrollIndicator` con elementos válidos, no lanza error
-2. **No lanza si faltan elementos DOM en el documento:** Parámetros null/undefined, no lanza error
-3. **Exporta las funciones esperadas:** `initScrollIndicator`, `updateScrollIndicator` son funciones
-4. **Sin overflow:** `scrollWidth <= clientWidth`, flechas ocultas
-5. **Con overflow:** Flechas visibles según posición de scroll
-6. **Discovery animation:** Primer overflow reproduce 3 bounces
+1. **Initializes without errors with DOM elements present:** `initScrollIndicator` with valid elements, does not throw
+2. **Does not throw if DOM elements are missing:** Null/undefined parameters, does not throw
+3. **Exports expected functions:** `initScrollIndicator`, `updateScrollIndicator` are functions
+4. **Without overflow:** `scrollWidth <= clientWidth`, arrows hidden
+5. **With overflow:** Arrows visible according to scroll position
+6. **Discovery animation:** First overflow plays 3 bounces
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

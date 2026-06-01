@@ -1,65 +1,65 @@
-# Spec: `src/services/AqiManager.js`
+﻿# Spec: `src/services/AqiManager.js`
 
-## Propósito
-Gestión de calidad del aire (AQI) y niveles de polen. Proporciona clasificación AQI, niveles de polen por especie y colores asociados.
+## Purpose
+Air quality (AQI) and pollen level management. Provides AQI classification, pollen levels by species and associated colors.
 
-## Dependencias
+## Dependencies
 
-### Módulos internos
-| Módulo | Export usado | Para qué |
+### Internal modules
+| Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../utils/i18n.js` | `t` | Textos de niveles AQI y polen |
+| `../utils/i18n.js` | `t` | AQI and pollen level texts |
 
-## API Pública
+## Public API
 
 ### `export function getAQIInfo(aqi: number|null): { text: string, rec: string, val: number }`
 
-**Descripción:** Clasifica un valor AQI en nivel 1-6 con texto y recomendación.
+**Description:** Classifies an AQI value into level 1-6 with text and recommendation.
 
 ### `export function getPollenLevelByType(type: string, raw: number): number`
 
-**Descripción:** Nivel 0-4 para un tipo de polen según umbrales específicos.
+**Description:** Level 0-4 for a pollen type according to specific thresholds.
 
 ### `export function getAggregatedPollenLevel(pollenDetails: Object): number`
 
-**Descripción:** Nivel máximo entre todos los tipos de polen.
+**Description:** Maximum level among all pollen types.
 
 ### `export function getPollenColor(level: number): string`
 
-**Descripción:** Color CSS para un nivel de polen.
+**Description:** CSS color for a pollen level.
 
 ### `export function getPollenText(val: number, pollenDetails: Object): string`
 
-**Descripción:** Texto descriptivo del nivel de polen.
+**Description:** Descriptive text for pollen level.
 
-## Comportamiento
+## Behavior
 
 1. AQI: ≤50=1, ≤100=2, ≤150=3, ≤200=4, ≤300=5, >300=6
-2. Pollen thresholds por especie definidos en `POLLEN_THRESHOLDS`
-3. `getAggregatedPollenLevel`: máximo de todos los tipos
-4. `getPollenText`: si hay `pollenDetails`, usa nivel agregado; si no, usa `val` con thresholds genéricos (10/50/100)
+2. Pollen thresholds by species defined in `POLLEN_THRESHOLDS`
+3. `getAggregatedPollenLevel`: maximum of all types
+4. `getPollenText`: if `pollenDetails` exists, uses aggregated level; otherwise uses `val` with generic thresholds (10/50/100)
 
-## Casos borde
+## Edge Cases
 
-| Entrada | Comportamiento esperado |
+| Input | Expected behavior |
 |---------|------------------------|
 | `aqi = null` | `{ text: '--', rec: '' }` |
-| `raw = null/undefined` | `getPollenLevelByType` retorna 0 |
-| `pollenDetails = null` | `getAggregatedPollenLevel` retorna 0 |
-| `type` inexistente en `POLLEN_THRESHOLDS` | Retorna 1 si raw > 0, si no 0 |
+| `raw = null/undefined` | `getPollenLevelByType` returns 0 |
+| `pollenDetails = null` | `getAggregatedPollenLevel` returns 0 |
+| `type` not in `POLLEN_THRESHOLDS` | Returns 1 if raw > 0, otherwise 0 |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **AQI bueno:** 30 → level 1, text "Buena"/"Good"
-2. **AQI peligroso:** 350 → level 6, text "Peligrosa"/"Hazardous"
-3. **AQI null:** retorna texto '--'
-4. **Pollen level por especie:** alder=100 → entre 75 y 250 → level 3
-5. **Pollen nivel agregado:** máximo entre especies
-6. **Pollen color:** level 0 → secondary, level 4 → rojo
-7. **Pollen text sin details:** val=20 → "Moderado"
+1. **Good AQI:** 30 → level 1, text "Buena"/"Good"
+2. **Hazardous AQI:** 350 → level 6, text "Peligrosa"/"Hazardous"
+3. **AQI null:** returns text '--'
+4. **Pollen level by species:** alder=100 → between 75 and 250 → level 3
+5. **Aggregated pollen level:** maximum among species
+6. **Pollen color:** level 0 → secondary, level 4 → red
+7. **Pollen text without details:** val=20 → "Moderado"
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |

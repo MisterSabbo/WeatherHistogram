@@ -1,53 +1,53 @@
-# Spec: `src/services/WeatherService.js`
+﻿# Spec: `src/services/WeatherService.js`
 
-## Propósito
-Cliente HTTP para las APIs de Open-Meteo (forecast y air quality). Construye URLs y realiza fetch paralelo.
+## Purpose
+HTTP client for Open-Meteo APIs (forecast and air quality). Builds URLs and performs parallel fetch.
 
-## Dependencias
+## Dependencies
 
-Sin dependencias internas.
+No internal dependencies.
 
-## API Pública
+## Public API
 
 ### `export class WeatherService`
 
 ### `constructor(baseURLForecast?: string, baseURLAQI?: string)`
 
-**Descripción:** URLs base configurables (default: Open-Meteo).
+**Description:** Configurable base URLs (default: Open-Meteo).
 
 ### `async getWeatherData(lat: number, lon: number, pastDays: number, forecastDays: number, signal: AbortSignal): Promise<{ forecastData: Object, aqiData: Object }>`
 
-**Descripción:** Fetch paralelo a forecast y AQI APIs con timeout via AbortSignal.
+**Description:** Parallel fetch to forecast and AQI APIs with timeout via AbortSignal.
 
-## Comportamiento
+## Behavior
 
-1. Construye URLs con todos los parámetros horarios y diarios necesarios
-2. Usa `Promise.all` para fetch paralelo
-3. Parámetros forecast: temperature_2m, apparent_temperature, precipitation, precipitation_probability, cloudcover, wind_speed_10m, wind_gusts_10m, wind_direction_10m, weather_code, relative_humidity_2m, surface_pressure, uv_index, visibility, is_day
-4. Parámetros AQI: us_aqi, european_aqi, pm10, pm2_5, nitrogen_dioxide, ozone, alder_pollen, birch_pollen, grass_pollen, mugwort_pollen, olive_pollen, ragweed_pollen
-5. Verifica `response.ok` y `forecastData.error` / `aqiData.error`
+1. Builds URLs with all necessary hourly and daily parameters
+2. Uses `Promise.all` for parallel fetch
+3. Forecast parameters: temperature_2m, apparent_temperature, precipitation, precipitation_probability, cloudcover, wind_speed_10m, wind_gusts_10m, wind_direction_10m, weather_code, relative_humidity_2m, surface_pressure, uv_index, visibility, is_day
+4. AQI parameters: us_aqi, european_aqi, pm10, pm2_5, nitrogen_dioxide, ozone, alder_pollen, birch_pollen, grass_pollen, mugwort_pollen, olive_pollen, ragweed_pollen
+5. Verifies `response.ok` and `forecastData.error` / `aqiData.error`
 6. Cache header: `cache: 'reload'`
 
-## Casos borde
+## Edge Cases
 
-| Condición | Comportamiento esperado |
+| Condition | Expected behavior |
 |-----------|------------------------|
-| API retorna 4xx/5xx | Lanza Error con status codes |
-| API retorna error interno | Lanza Error con `forecastData.reason` |
-| AbortSignal abortada | fetch lanza AbortError |
-| Red caída | fetch lanza TypeError |
+| API returns 4xx/5xx | Throws Error with status codes |
+| API returns internal error | Throws Error with `forecastData.reason` |
+| AbortSignal aborted | fetch throws AbortError |
+| Network down | fetch throws TypeError |
 
-## Escenarios de test
+## Test Scenarios
 
-1. **URL construida correctamente:** contiene lat, lon, past_days, forecast_days
-2. **Forecast URL:** contiene todos los parámetros horarios
-3. **AQI URL:** contiene parámetros de polen
-4. **Error API:** response no ok → lanza Error
-5. **Error interno:** forecastData.error true → lanza Error
-6. **Singleton:** weatherService es instancia única
+1. **URL built correctly:** contains lat, lon, past_days, forecast_days
+2. **Forecast URL:** contains all hourly parameters
+3. **AQI URL:** contains pollen parameters
+4. **API Error:** response not ok → throws Error
+5. **Internal error:** forecastData.error true → throws Error
+6. **Singleton:** weatherService is a unique instance
 
-## Historial de cambios
+## Change History
 
-| Fecha | Cambio | Autor |
+| Date | Change | Author |
 |-------|--------|-------|
-| 2026-05-21 | Spec inicial | SDD |
+| 2026-05-21 | Initial spec | SDD |
