@@ -1,23 +1,12 @@
-export function updateScrollIndicator(
-  metricsContainer,
-  scrollIndLeft,
-  scrollIndRight,
-  metricsDots
-) {
+export function updateMetricsOverlay(metricsContainer, metricsDots) {
   const hasOverflow = metricsContainer.scrollWidth > metricsContainer.clientWidth;
   const isAtStart = metricsContainer.scrollLeft <= 5;
   const isAtEnd = metricsContainer.scrollLeft + metricsContainer.clientWidth >= metricsContainer.scrollWidth - 5;
 
-  if (hasOverflow && !isAtEnd) {
-    scrollIndRight.classList.add('visible');
-  } else {
-    scrollIndRight.classList.remove('visible');
-  }
-
-  if (hasOverflow && !isAtStart) {
-    scrollIndLeft.classList.add('visible');
-  } else {
-    scrollIndLeft.classList.remove('visible');
+  const topPanel = metricsContainer.closest('#top-panel');
+  if (topPanel) {
+    topPanel.classList.toggle('gradient-right-visible', hasOverflow && !isAtEnd);
+    topPanel.classList.toggle('gradient-left-visible', hasOverflow && !isAtStart);
   }
 
   if (metricsDots) {
@@ -28,59 +17,43 @@ export function updateScrollIndicator(
     }
     metricsDots.style.display = '';
     const pageWidth = metricsContainer.clientWidth;
+    const maxScrollLeft = Math.max(0, metricsContainer.scrollWidth - pageWidth);
     const totalPages = Math.max(1, Math.ceil(metricsContainer.scrollWidth / pageWidth));
-    const currentPage = Math.round(metricsContainer.scrollLeft / pageWidth);
+    const currentPage = totalPages <= 1 ? 0 : Math.round((metricsContainer.scrollLeft / maxScrollLeft) * (totalPages - 1));
     let html = '';
+
+    if (hasOverflow && !isAtStart) {
+      html += '<span class="metric-chevron metric-chevron-left material-symbols-outlined">chevron_left</span>';
+    }
+
     for (let i = 0; i < totalPages; i++) {
       html += '<span class="metric-dot' + (i === currentPage ? ' active' : '') + '"></span>';
     }
+
+    if (hasOverflow && !isAtEnd) {
+      html += '<span class="metric-chevron metric-chevron-right material-symbols-outlined">chevron_right</span>';
+    }
+
     if (totalPages > 1) {
       html += '<span class="metric-page-counter">' + (currentPage + 1) + '/' + totalPages + '</span>';
     }
+
     metricsDots.innerHTML = html;
   }
 
   return hasOverflow;
 }
 
-export function initScrollIndicator(metricsContainer, scrollIndLeft, scrollIndRight, metricsDots) {
-  let _discoveryPlayed = false;
-
+export function initScrollIndicator(metricsContainer, metricsDots) {
   const fn = () => {
-    const hasOverflow = updateScrollIndicator(metricsContainer, scrollIndLeft, scrollIndRight, metricsDots);
-
-    if (!_discoveryPlayed && hasOverflow) {
-      _discoveryPlayed = true;
-      playDiscoveryAnimation(scrollIndRight);
-    }
+    updateMetricsOverlay(metricsContainer, metricsDots);
   };
 
   metricsContainer.addEventListener('scroll', fn, { passive: true });
   window.addEventListener('resize', fn);
   setTimeout(fn, 1000);
 
-  return fn;
-}
+  window.updateScrollIndicator = fn;
 
-function playDiscoveryAnimation(el) {
-  el.classList.add('visible');
-  el.style.transition = 'none';
-  el.style.transform = 'translateY(-50%) translateX(0)';
-  void el.offsetHeight;
-  let step = 0;
-  const swipe = () => {
-    if (step > 5) {
-      el.style.transition = '';
-      el.style.transform = '';
-      return;
-    }
-    const isEven = step % 2 === 0;
-    el.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    el.style.transform = isEven
-      ? 'translateY(-50%) translateX(14px)'
-      : 'translateY(-50%) translateX(0)';
-    step++;
-    setTimeout(swipe, 280);
-  };
-  setTimeout(swipe, 400);
+  return fn;
 }

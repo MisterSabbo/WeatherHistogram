@@ -196,7 +196,8 @@
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 width: 100%;
-                padding: 5px 35px 5px 0;
+                padding: 5px 5px 5px 0;
+                touch-action: pan-x;
                 scrollbar-width: none;
                 overscroll-behavior-x: contain;
                 position: relative;
@@ -253,59 +254,51 @@
             .info-icon {
                 display: none !important;
             }
-            .scroll-indicator {
-                display: flex;
+            .gradient-overlay {
                 position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
-                height: 32px;
-                width: 32px;
-                align-items: center;
-                justify-content: center;
-                color: var(--accent-temp);
+                top: 10px;
+                width: 50px;
+                height: 50px;
                 pointer-events: none;
                 z-index: var(--z-floating);
-                transition: opacity 0.3s, transform 0.3s;
-                font-size: 0.6rem;
-                border-radius: 50%;
-                background: var(--card-bg);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                border: 1px solid var(--grid-color);
                 opacity: 0;
+                transition: opacity 0.3s;
             }
-            .scroll-indicator.visible {
+            .gradient-left {
+                left: 0;
+                background: linear-gradient(to right, var(--bg-color), transparent);
+            }
+            .gradient-right {
+                right: 0;
+                background: linear-gradient(to left, var(--bg-color), transparent);
+            }
+            #top-panel.gradient-left-visible > .gradient-left,
+            #top-panel.gradient-right-visible > .gradient-right {
                 opacity: 1;
             }
-            .scroll-indicator-right {
-                right: 10px;
-                animation: pulse-horizontal-right 2s infinite;
-            }
-            .scroll-indicator-left {
-                left: 10px;
-                animation: pulse-horizontal-left 2s infinite;
-            }
 
-            .top-panel-metrics #metrics-dots {
-                position: sticky;
-                right: 10px;
-                bottom: 5px;
-                z-index: 2;
+            #top-panel #metrics-dots {
+                position: absolute;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 3;
                 flex-shrink: 0;
-                align-self: flex-end;
                 display: flex;
                 align-items: center;
                 gap: 3px;
-                padding: 3px 8px;
+                padding: 2px 8px;
                 background: color-mix(in srgb, var(--card-bg) 85%, transparent);
                 backdrop-filter: blur(6px);
                 -webkit-backdrop-filter: blur(6px);
-                border-radius: 8px;
-                border: 1px solid var(--grid-color);
+                border-radius: 0 0 8px 8px;
+                border-left: 1px solid var(--grid-color);
+                border-right: 1px solid var(--grid-color);
+                border-bottom: 1px solid var(--grid-color);
                 box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
                 pointer-events: none;
-                margin-left: auto;
             }
-            .top-panel-metrics #metrics-dots .metric-dot {
+            #top-panel #metrics-dots .metric-dot {
                 width: 12px;
                 height: 3px;
                 border-radius: 2px;
@@ -314,11 +307,11 @@
                 transition: opacity 0.3s, background 0.3s;
                 flex-shrink: 0;
             }
-            .top-panel-metrics #metrics-dots .metric-dot.active {
+            #top-panel #metrics-dots .metric-dot.active {
                 background: var(--accent-precip);
                 opacity: 1;
             }
-            .top-panel-metrics #metrics-dots .metric-page-counter {
+            #top-panel #metrics-dots .metric-page-counter {
                 font-size: 0.5rem;
                 color: var(--text-secondary);
                 margin-left: 4px;
@@ -326,10 +319,12 @@
                 font-variant-numeric: tabular-nums;
                 line-height: 1;
             }
-        }
-
-        .scroll-indicator {
-            display: none;
+            #top-panel #metrics-dots .metric-chevron {
+                font-size: 14px;
+                color: var(--text-secondary);
+                line-height: 1;
+                flex-shrink: 0;
+            }
         }
 
         .data-label {
@@ -539,8 +534,9 @@
         .loading .skeleton-controls { display: flex; }
 
         .loading #top-panel > .top-panel-info,
-        .loading #top-panel > .scroll-indicator,
-        .loading #top-panel > .top-panel-metrics { display: none; }
+        .loading #top-panel > .gradient-overlay,
+        .loading #top-panel > .top-panel-metrics,
+        .loading #top-panel > #metrics-dots { display: none; }
         .loading .skeleton-top-panel { display: flex; }
 
         .loading .skeleton-chart { display: block; }

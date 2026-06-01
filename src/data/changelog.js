@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.15.0",
+    "changes": [
+      "Scroll indicator redesigned: removed left/right arrow buttons (with pulse-horizontal animations) and replaced with gradient overlays that fade content at edges, plus chevron &#x2039;/&#x203a; buttons that appear only when the scroll position is not at the start/end. Desktop layout unaffected. All unit tests pass."
+    ]
+  },
+  {
     "version": "1.14.1",
     "changes": [
       "YIP scroll snapping to months on mobile: scroll-snap-type moved from .yip-year-grid (internal content) to .yip-modal-scroll-content (actual scroll container) and added scroll-snap-stop: always so vertical scroll stops at each month instead of being continuous, making mobile navigation easier."

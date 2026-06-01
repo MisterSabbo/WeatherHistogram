@@ -837,11 +837,9 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
 
             function initScrollIndicator() {
                 const metricsContainer = document.querySelector('.top-panel-metrics');
-                const scrollIndLeft = document.querySelector('.scroll-indicator-left');
-                const scrollIndRight = document.querySelector('.scroll-indicator-right');
                 const metricsDots = document.getElementById('metrics-dots');
-                if (metricsContainer && scrollIndLeft && scrollIndRight) {
-                    window.updateScrollIndicator = initScrollIndicatorRef(metricsContainer, scrollIndLeft, scrollIndRight, metricsDots);
+                if (metricsContainer) {
+                    initScrollIndicatorRef(metricsContainer, metricsDots);
                 }
             }
 

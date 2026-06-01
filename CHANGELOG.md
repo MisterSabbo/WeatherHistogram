@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.15.0] - 2026-06-01
+### Enhancement
+- **Scroll indicator redesigned**: Replaced left/right arrow buttons (with pulse-horizontal animations) by gradient overlays that fade content at edges, plus chevron ‹/› buttons that appear only when scroll position isn't at the start/end. Desktop layout unaffected. All tests pass.
+
 ## [v1.14.1] - 2026-05-31
 ### Fix
 - **YIP scroll snapping to months on mobile**: `scroll-snap-type: y mandatory` was applied to `.yip-year-grid` (internal content) instead of the scroll container (`.yip-modal-scroll-content`). Moved to the correct container and added `scroll-snap-stop: always` so vertical YIP scroll stops at each month instead of being continuous, making mobile navigation easier.

@@ -163,7 +163,6 @@ export const translations = {
             windN: "N",
             today: "HOY",
             activeAlerts: "Alertas Activas (próx 12h)",
-            swipeHint: "Desliza para ver más métricas"
         },
         pollen: {
             riskTitle: "Riesgo por Planta",
@@ -421,7 +420,6 @@ export const translations = {
             windN: "N",
             today: "TODAY",
             activeAlerts: "Active Alerts (next 12h)",
-            swipeHint: "Swipe to see more metrics"
         },
         pollen: {
             riskTitle: "Risk by Plant",
