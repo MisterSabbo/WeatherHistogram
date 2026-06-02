@@ -26,6 +26,14 @@ No internal dependencies.
 
 **Description:** Returns `devicePixelRatio`, capped at maximum 2.
 
+**Parameters:** None
+
+**Return:** `number` (1–2)
+
+**Mutates state:** No
+
+**Async:** No
+
 ### `export const state: Object` (mutable)
 
 **Description:** Global mutable state object with properties for data, UI, configuration.
@@ -34,7 +42,7 @@ No internal dependencies.
 |-----------|------|---------|-------------|
 | `lat` | number|null | null | Current latitude |
 | `lon` | number|null | null | Current longitude |
-| `locationName` | string | "Loading..." | Location name |
+| `locationName` | string | "Cargando..." | Location name |
 | `hourlyData` | Array | [] | Processed hourly data |
 | `dailyData` | Array | [] | Processed daily data |
 | `sunData` | Object | {} | Sunrise/sunset by date |
@@ -51,7 +59,7 @@ No internal dependencies.
 | `activeChartTheme` | string | 'default' | Chart theme |
 | `isDailyCardsView` | boolean | false | Daily cards view |
 | `themeConfig` | Object|null | null | Loaded theme config |
-| `PIXELS_PER_HOUR` | number | 60/50 | Pixels per hour (responsive) |
+| `PIXELS_PER_HOUR` | number | 60/50 | Pixels per hour (responsive: 60 on desktop, 50 on mobile <600px) |
 | `stickmanThresholds` | Object | {cold:10, hot:30, wind:45, clouds:60} | Stickman thresholds |
 | `skinType` | number | 2 | Fitzpatrick skin type |
 
@@ -59,16 +67,17 @@ No internal dependencies.
 
 1. **CONFIG frozen:** `Object.freeze(CONFIG)` protects the configuration from mutations.
 2. **Mutable state:** `state` is modified directly from any module.
-3. **Safe getDPR():** uses `window.devicePixelRatio || 1` to avoid NaN.
-4. **Responsive PIXELS_PER_HOUR:** changes according to `window.innerWidth`.
+3. **Safe getDPR():** uses `window.devicePixelRatio || 1` to avoid NaN, capped at 2 via `Math.min`.
+4. **Responsive PIXELS_PER_HOUR:** set at module evaluation time based on `window.innerWidth < 600`.
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
 | `devicePixelRatio` undefined | `getDPR()` returns 1 (`window.devicePixelRatio \|\| 1` fallback) |
-| `window.innerWidth` < 600 | `PIXELS_PER_HOUR` changes to 50, `TILE_WIDTH` changes to 720 |
-| `window.innerWidth` = 0 (headless/test) | `PIXELS_PER_HOUR` uses desktop branch (60/1440) |
+| `devicePixelRatio` > 2 | `getDPR()` returns 2 (Math.min cap) |
+| `window.innerWidth` < 600 | `PIXELS_PER_HOUR` initializes to 50 |
+| `window.innerWidth` = 0 (headless/test) | `PIXELS_PER_HOUR` uses desktop branch (60) |
 | `Object.freeze(CONFIG)` fails (strict mode disabled) | CONFIG remains modifiable |
 | `state.lat`/`state.lon` set to `null` | Application in no-location state, uses DEFAULT_COORDS as fallback |
 | `state.hourlyData` mutated externally | No protection, inconsistent data |
@@ -80,10 +89,11 @@ No internal dependencies.
 2. **CONFIG correct values:** constants have expected values
 3. **state default values:** properties initialized correctly
 4. **getDPR():** returns value between 1 and 2
-5. **Responsive PIXELS_PER_HOUR:** changes according to window.innerWidth
+5. **Responsive PIXELS_PER_HOUR:** initialized according to window.innerWidth
 
 ## Change History
 
 | Date | Change | Author |
 |-------|--------|-------|
 | 2026-05-21 | Initial spec | SDD |
+| 2026-06-02 | Fix locationName default to "Cargando..."; remove TILE_WIDTH edge case (overridden in app.js, not store.js) | SDD |

@@ -1,52 +1,53 @@
 ﻿# Spec: `src/render/MoonRenderer.js`
 
 ## Purpose
-Draws a crescent moon icon on the canvas with glow.
+Draws a crescent moon icon on the canvas with radial glow.
 
 ## Dependencies
 
-No external dependencies.
+No external dependencies — pure canvas drawing function.
 
 ## Public API
 
-### `export function drawMoon(ctx: CanvasRenderingContext2D, x: number, y: number, moonColor: string, glowColor: string): void`
+### `export function drawMoon(ctx, x, y, moonColor, glowColor): void`
 
 **Description:** Draws crescent moon with radial glow.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `ctx` | `CanvasRenderingContext2D` | Canvas context |
 | `x` | `number` | Center X position |
 | `y` | `number` | Center Y position |
-| `moonColor` | `string` | Moon color (e.g. `'#90caf9'`) |
-| `glowColor` | `string` | Glow color (e.g. `'rgba(144,202,249,0.2)'`) |
+| `moonColor` | `string` | Moon fill color (e.g. `'#f5f5f5'`) |
+| `glowColor` | `string` | Glow shadow color (e.g. `'#90caf9'`) |
 
-**Metadata:**
-- Mutates state: No
-- Async: No
+**Mutates state:** No
+
+**Async:** No
 
 ## Behavior
 
-1. Radial glow (40px extra) with color `rgba(144, 202, 249, 0.2)`
-2. Moon: arc from 0.2π to 1.8π with quadratic curve
-3. Shadow blur 10px with glowColor
+1. Radial glow: `createRadialGradient(x, y, radius, x, y, radius + 40)` with `rgba(144, 202, 249, 0.2)` at center fading to `rgba(144, 202, 249, 0)` at edge
+2. Moon crescent shape: arc from `0.2 * Math.PI` to `1.8 * Math.PI` (radius 20), closed with `quadraticCurveTo` through right midpoint
+3. Moon fill uses `moonColor` parameter
+4. Shadow: `shadowBlur = 10` with `shadowColor = glowColor`
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | Does not throw (ctx calls fail) |
+| `ctx = null` / `undefined` | Does not throw |
 | `x` / `y` negative | Draws outside canvas, does not throw |
-| `moonColor` / `glowColor` empty | Uses empty string as color (does not throw, but drawing invisible) |
-| `ctx` without `createRadialGradient` | Glow not drawn, `fill()` fails silently |
-| `shadowBlur` not supported | Moon drawn without glow, does not throw |
+| `moonColor` / `glowColor` empty | Uses empty string as color (invisible, does not throw) |
+| `ctx` without `createRadialGradient` | Glow not drawn, fills silently |
 
 ## Test Scenarios
 
 1. **Does not throw with valid parameters:** Calls `drawMoon` with valid colors and position, does not throw
 2. **Does not throw with ctx = null/undefined:** Null context, does not throw
 3. **Does not throw with negative coordinates:** `x = -10`, `y = -10`, does not throw
-4. **Glow drawing:** `createRadialGradient` produces visible glow effect
+4. **Glow drawing:** `createRadialGradient` produces visible glow effect around moon
 5. **Invalid colors:** `moonColor = ''`, does not throw
 
 ## Change History

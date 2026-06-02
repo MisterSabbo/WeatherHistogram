@@ -6,22 +6,27 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 ## Dependencies
 
 ### state
-| Property | Access | Context |
-|-----------|--------|----------|
-| `state.hourlyData` | read | draw, updateViewport |
-| `state.dpr` | read | draw |
-| `state.theme` | read | colors |
+| Property | Access (R/W) | Context |
+|-----------|-------------|----------|
+| `state.hourlyData` | read | draw, updateViewport, handleClick, setCanvasSize |
+| `state.dpr` | read | draw, setCanvasSize |
+| `state.theme` | read | draw (past overlay, colors) |
 | `state.sunData` | read | not used directly |
 
-### CONFIG via parameter
+### CONFIG (via parameter)
 | Constant | Context |
 |-----------|----------|
-| `config.PIXELS_PER_HOUR` | position calculations |
+| `config.PIXELS_PER_HOUR` | updateViewport, handleClick |
+
+### DOM
+| Element | Access type | Context |
+|----------|---------------|----------|
+| `#minimap-container` | getElementById | updateViewport (scrolling) |
 
 ### Internal modules
 | Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../utils/time.js` | `getSplitIndex` | split past/future |
+| `../utils/time.js` | `getSplitIndex` | split past/future data |
 | `../theme.js` | `getThemeColor`, `getThemeFont` | colors/font |
 | `../utils/math.js` | `normalizeY` | temperature Y |
 
@@ -29,12 +34,13 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 
 ### `export class MinimapRenderer`
 
-#### `constructor(options: Object)`
+#### `constructor(options)`
 
-**Description:** Initializes the minimap renderer.
+**Description:** Initializes the minimap renderer with canvas, context, viewport selector, scroll container, callbacks, and height.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `options.canvas` | `HTMLCanvasElement` | Minimap canvas |
 | `options.ctx` | `CanvasRenderingContext2D` | Canvas context |
 | `options.viewportEl` | `HTMLElement` | Viewport selector element |
@@ -43,51 +49,50 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 | `options.updateNowButtonPosition` | `Function` | Callback to update now button |
 | `options.minimapHeight` | `number` | Minimap height |
 
-**Metadata:** Mutates state: Yes (class internal state), Async: No
+**Mutates state:** Yes (internal properties)
+
+**Async:** No
 
 #### `invalidateCache(): void`
 
-**Description:** Clears the cacheCanvas.
+**Description:** Sets `cacheCanvas = null` to force redraw on next `draw()`.
 
-**Metadata:** Mutates state: Yes (clears cache), Async: No
+#### `setMode(mode, isUserInteraction, state, config): void`
 
-#### `setMode(mode: string, isUserInteraction: boolean, state: Object, config: Object): void`
+**Description:** Changes past/future mode. If user interaction, scrolls to appropriate position (future → center on current time, past → scrollLeft=0). Re-caches and re-draws if mode changed.
 
-**Description:** Changes past/future mode.
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
+| `mode` | `string` | `'past'` or `'future'` |
+| `isUserInteraction` | `boolean` | Whether triggered by user |
+| `state` | `Object` | App state |
+| `config` | `Object` | Config |
 
-**Metadata:** Mutates state: Yes (internal mode), Async: No
+#### `updateViewport(state, config): void`
 
-#### `updateViewport(state: Object, config: Object): void`
+**Description:** Updates viewport selector position and auto-switches mode based on scroll center (past mode if center < splitIndex, future if center >= splitIndex). Auto-switch disabled during drag.
 
-**Description:** Updates viewport selector position.
+#### `handleClick(clientX, state, config): number`
 
-**Metadata:** Mutates state: Yes (viewportEl.style), Async: No
+**Description:** Calculates target scrollLeft from minimap click position, clamped to ratio [0,1].
 
-#### `handleClick(clientX: number, state: Object, config: Object): number`
+#### `setCanvasSize(state): void`
 
-**Description:** Calculates target scrollLeft from minimap click.
+**Description:** Resizes minimap canvas to parent width × minimapHeight, scaled by DPR. Uses `state.dpr`.
 
-**Metadata:** Mutates state: No, Async: No
+#### `draw(state, config): void`
 
-#### `setCanvasSize(state: Object): void`
-
-**Description:** Resizes minimap canvas.
-
-**Metadata:** Mutates state: Yes (canvas dimensions), Async: No
-
-#### `draw(state: Object, config: Object): void`
-
-**Description:** Renders minimap with cache.
-
-**Metadata:** Mutates state: No (uses cacheCanvas), Async: No
+**Description:** Renders minimap to cacheCanvas then blits to main canvas. Calls `updateViewport` at end.
 
 ## Behavior
 
-1. Two modes: 'past' (splitIndex → 0) and 'future' (splitIndex → end)
-2. Auto-switch between modes based on scroll position
-3. Cache in cacheCanvas to avoid redrawing on every scroll
-4. Auto-switch disabled during manual drag (isDragging)
-5. Renders: background, night, date labels, 0°C line, clouds, precipitation, probability, temperature, UV, now line
+1. Two modes: `'past'` (indices 0 to splitIndex) and `'future'` (splitIndex to end)
+2. Auto-switch between modes based on scroll center position relative to splitIndex
+3. Auto-switch disabled during manual drag (`isDragging === true`)
+4. Renders to offscreen `cacheCanvas` to avoid redrawing on every scroll
+5. Rendered layers (bottom to top): yellow background `#fffde7`, night `#f3e8ff` fill, date labels with day number, 0°C dashed line, cloud fill + stroke, precipitation bars (color-coded by snow/storm), precipitation probability fill + stroke, temperature line (red, 1.8px), UV indicator bars at top, "now" red vertical line + dot, past mode dark overlay
+6. Date labels: shown at `localHour === 0` (or first entry), format `localDayShort DD/MM`, bold 9px, with collision avoidance
 
 ## Edge Cases
 
@@ -95,12 +100,11 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 |---------|------------------------|
 | `state.hourlyData` empty | `draw` returns without drawing |
 | `config.PIXELS_PER_HOUR = 0` | Invalid position calculations, does not throw |
-| `handleClick` with `clientX` negative | Calculates scrollLeft < 0, clamped to 0 |
-| `canvas = null` in constructor | Does not throw (constructor does not validate) |
+| `handleClick` with `clientX` negative | Ratio clamped to 0, scrollLeft = -containerW/2 |
+| `canvas = null` in constructor | Does not throw |
 | `setCanvasSize` with `state.dpr = 0` | Canvas sized to 0 |
 | `invalidateCache` without having drawn | Does not throw |
 | Auto-switch disabled during drag | Does not change mode even if scroll changes |
-| Invalid mode (neither 'past' nor 'future') | `setMode` does not update correctly |
 
 ## Test Scenarios
 

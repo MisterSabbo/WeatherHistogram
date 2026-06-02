@@ -6,10 +6,16 @@ Renders precipitation (rain, snow, storm) on the histogram canvas. Re-exports Cl
 ## Dependencies
 
 ### state
-| Property | Access | Context |
-|-----------|--------|----------|
+| Property | Access (R/W) | Context |
+|-----------|-------------|----------|
 | `state.hourlyData` | read | drawPrecipitation |
-| `state.theme` | read | colors |
+| `state.theme` | read | drawPrecipitation (snow color selection) |
+
+### CONFIG
+| Constant | Context |
+|-----------|----------|
+| `CONFIG.PIXELS_PER_MM` | drawPrecipitation (bar height) |
+| `CONFIG.PIXELS_PER_HOUR` | drawPrecipitation (position) |
 
 ### Internal modules
 | Module | Export used | Purpose |
@@ -21,47 +27,53 @@ Renders precipitation (rain, snow, storm) on the histogram canvas. Re-exports Cl
 
 ## Public API
 
-### `export function drawPrecipitation(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number, PIXELS_PER_MM: number): void`
+### `export function drawPrecipitation(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR, PIXELS_PER_MM): void`
 
 **Description:** Draws precipitation bars with icons according to type (rain, snow, storm).
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `ctx` | `CanvasRenderingContext2D` | Canvas context |
 | `viewX` | `number` | Viewport X start |
 | `viewW` | `number` | Viewport width |
 | `h` | `number` | Canvas height |
-| `styles` | `Object` | Theme styles |
+| `styles` | `Object` | Theme styles (unused directly) |
 | `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 | `PIXELS_PER_MM` | `number` | Pixels per mm of precipitation |
 
-**Metadata:**
-- Mutates state: No
-- Async: No
+**Mutates state:** No
 
-**Private sub-functions:**
-- `drawRain(ctx, x, bw, barY, strokeColor, idx)` — raindrops
-- `drawSnow(ctx, x, bw, barY)` — snowflakes
-- `drawThunder(ctx, x, bw, barY)` — lightning bolts
+**Async:** No
+
+**Private helpers:**
+- `drawRain(ctx, x, bw, barY, strokeColor, idx)` — raindrops via Material icon `water_drop`, white stroke + colored fill with shadow
+- `drawSnow(ctx, x, bw, barY)` — snowflakes (black stroke + white stroke, 4 per bar)
+- `drawThunder(ctx, x, bw, barY)` — lightning bolts (black stroke + yellow glow), 2 per bar
 
 ## Behavior
 
-1. Semi-transparent vertical gradient bar
-2. Bar height = `d.precip * PIXELS_PER_MM` (max 90% of height)
-3. Snow codes: [71,73,75,77,85,86]; storm: [95,96,99]
-4. If bar exceeds max height, draws zigzag overflow indicator
-5. Gradient uses base color with 40% opacity blend
+1. Semi-transparent vertical gradient bar per hour with precipitation > 0
+2. Bar height = `d.precip * PIXELS_PER_MM`, capped at 90% of canvas height
+3. Fill gradient: base color at 100% opacity blends to 40% over 30px from top
+4. Stroke gradient: base color at 50% opacity blends to 100% over 30px, drawn on left/right edges
+5. Weather type detection via WMO codes and internal icon overlays
+6. Snow codes: `[71, 73, 75, 77, 85, 86]` — snowflakes, white/light base color depending on theme
+7. Storm codes: `[95, 96, 99]` — lightning bolts, purple base color
+8. Fallback: rain drops (water_drop icon, 3 per bar with jitter)
+9. If bar exceeds max height, draws zigzag overflow indicator at the cap
+10. Gradient uses `rgba(R, G, B, Math.max(0.1, A * 0.4))` for semi-transparent top blend
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
-| `ctx = null` / `undefined` | Does not throw (no try-catch, but draw does not execute) |
-| `state.hourlyData` empty | Draws nothing, returns without error |
-| `PIXELS_PER_MM = 0` | Bar with height 0, draws nothing |
-| `viewX` / `viewW` negative | Draws outside viewport, does not throw |
-| `d.precip = 0` | Does not draw bar for that hour |
-| Unrecognized weatherCode | Treats as rain by default |
+| `ctx = null` / `undefined` | Does not throw |
+| `state.hourlyData` empty | For loop has no iterations, draws nothing |
+| `PIXELS_PER_MM = 0` | Bar height = 0, draws nothing |
+| `viewX` / `viewW` negative | Iterates unexpected indices, does not throw |
+| `d.precip = 0` | Skips bar for that hour |
+| Unrecognized weatherCode | Treated as rain by default |
 
 ## Test Scenarios
 

@@ -1,61 +1,68 @@
 ﻿# Spec: `src/render/GridRenderer.js`
 
 ## Purpose
-Renders the histogram grid (horizontal temperature lines, zero degree line, day names, X axes with hours).
+Renders the histogram grid (horizontal temperature lines, zero degree line, day names, X axes with hour labels).
 
 ## Dependencies
 
 ### state
-| Property | Access | Context |
-|-----------|--------|----------|
+| Property | Access (R/W) | Context |
+|-----------|-------------|----------|
 | `state.hourlyData` | read | drawDayNames, drawAxes |
+| `state.sunData` | read | drawAxes (sunrise/sunset collision) |
+
+### CONFIG
+| Constant | Context |
+|-----------|----------|
+| `CONFIG.PIXELS_PER_HOUR` | drawDayNames, drawAxes (position) |
 
 ### Internal modules
 | Module | Export used | Purpose |
 |--------|-------------|----------|
 | `../store.js` | `state` | access |
 | `../theme.js` | `getThemeColor`, `getThemeFont` | colors/font |
-| `../utils/math.js` | `normalizeY` | Y |
-| `../utils/time.js` | `formatHour` | hour labels |
+| `../utils/math.js` | `normalizeY` | Y coordinate mapping |
+| `../utils/time.js` | `formatHour` | hour label formatting |
 
 ## Public API
 
-### `export function drawGrid(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
+### `export function drawGrid(ctx, viewX, viewW, h): void`
 
-**Description:** Draws horizontal lines every 10°C (-20 to 40) + dashed 0°C line.
+**Description:** Draws horizontal temperature grid lines every 10°C (-20 to 40) + dashed 0°C line.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `ctx` | `CanvasRenderingContext2D` | Canvas context |
 | `viewX` | `number` | Viewport X start |
 | `viewW` | `number` | Viewport width |
 | `h` | `number` | Canvas height |
-| `styles` | `Object` | Theme styles |
-| `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadata:** Mutates state: No, Async: No
+**Mutates state:** No
 
-### `export function drawDayNames(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
+**Async:** No
 
-**Description:** Draws large semi-transparent day names.
+### `export function drawDayNames(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR): void`
 
-**Metadata:** Mutates state: No, Async: No
+**Description:** Draws large semi-transparent day names (80px, 15% opacity) centered on each calendar day.
 
-### `export function drawAxes(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number, CHART_HEIGHT: number): void`
+**Mutates state:** No
 
-**Description:** Draws hour labels with tick marks, skipping sunrise/sunset.
+**Async:** No
 
-| Additional parameter | Type | Description |
-|---------------------|------|-------------|
-| `CHART_HEIGHT` | `number` | Height of the histogram canvas |
+### `export function drawAxes(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR): void`
 
-**Metadata:** Mutates state: No, Async: No
+**Description:** Draws hour labels with tick marks, skipping labels that overlap with sunrise/sunset markers (< 25px).
+
+**Mutates state:** No
+
+**Async:** No
 
 ## Behavior
 
-1. `drawGrid`: solid line #e0e0e0 for temperatures, dashed [4,4] for 0°C
-2. `drawDayNames`: large text (80px), centered on each day, opacity 0.15
-3. `drawAxes`: hour labels with 8px tick, avoids overlap with sun/shadow markers (<25px)
+1. **drawGrid:** Solid `#e0e0e0` lines for temperatures -20 to 40 every 10°C; dashed `[4,4]` zero line at 0°C using `getThemeColor('zeroLine')`; ends by setting strokeStyle to `rgba(0,0,0,0.08)`
+2. **drawDayNames:** Large text (900 weight, 80px), uses `getThemeFont()`, opacity 0.15; finds first day start at `localHour === 0` going backwards; centers text at midpoint of each data day
+3. **drawAxes:** Hour labels with 8px tick at top, `formatHour(d.localHour)`, avoids overlap with sunrise/sunset markers (< 25px); white shadow for legibility; uses `getThemeColor('xAxisLabel')` for label color
 
 ## Edge Cases
 
@@ -63,7 +70,7 @@ Renders the histogram grid (horizontal temperature lines, zero degree line, day 
 |---------|------------------------|
 | `ctx = null` / `undefined` | Does not throw |
 | `state.hourlyData` empty | `drawDayNames` and `drawAxes` draw nothing |
-| `viewX` / `viewW` negative | Draws nothing visible, does not throw |
+| `viewX` / `viewW` negative | Draws outside viewport, does not throw |
 | `h = 0` | Does not draw lines (zero height) |
 | Hour labels overlapping with sunrise/sunset (< 25px) | Label skipped, avoids collision |
 | `styles` without color properties | Uses default values, does not throw |

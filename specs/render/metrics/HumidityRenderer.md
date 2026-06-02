@@ -1,14 +1,19 @@
 ﻿# Spec: `src/render/metrics/HumidityRenderer.js`
 
 ## Purpose
-Renders a dashed humidity line on the histogram canvas.
+Draws the humidity line (dashed) on the histogram canvas.
 
 ## Dependencies
 
 ### state
-| Property | Access | Context |
-|-----------|--------|----------|
+| Property | Access (R/W) | Context |
+|-----------|-------------|----------|
 | `state.hourlyData` | read | drawHumidity |
+
+### CONFIG
+| Constant | Context |
+|-----------|----------|
+| `CONFIG.PIXELS_PER_HOUR` | drawHumidity (position) |
 
 ### Internal modules
 | Module | Export used | Purpose |
@@ -18,49 +23,48 @@ Renders a dashed humidity line on the histogram canvas.
 
 ## Public API
 
-### `export function drawHumidity(ctx: CanvasRenderingContext2D, viewX: number, viewW: number, h: number, styles: Object, PIXELS_PER_HOUR: number): void`
+### `export function drawHumidity(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR): void`
 
-**Description:** Draws dashed humidity line on the histogram.
+**Description:** Draws a dashed humidity line from 0–100% mapped to 0–h height.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `ctx` | `CanvasRenderingContext2D` | Canvas context |
 | `viewX` | `number` | Viewport X start |
 | `viewW` | `number` | Viewport width |
 | `h` | `number` | Canvas height |
-| `styles` | `Object` | Theme styles (uses `humidityLine`) |
+| `styles` | `Object` | Theme styles (unused directly) |
 | `PIXELS_PER_HOUR` | `number` | Pixels per hour |
 
-**Metadata:**
-- Mutates state: No
-- Async: No
+**Mutates state:** No
+
+**Async:** No
 
 ## Behavior
 
-1. Renders only visible data (viewX to viewX+viewW) with ±5 hour buffer
-2. Dashed line `[5, 5]` with theme color `humidityLine`
-3. Y = `h - (h * (d.humidity / 100))`, X = `i * PIXELS_PER_HOUR`
-4. Line width = 1
+1. Draws a single dashed `[5,5]` polyline connecting all hourly humidity values
+2. Y = `h - (h * (d.humidity / 100))` — 0% at bottom, 100% at top
+3. Color from `getThemeColor('humidityLine', 'rgba(0, 188, 212, 0.3)')`
+4. Line width: 1px
+5. Resets line dash to `[]` after drawing
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
 | `ctx = null` / `undefined` | Does not throw |
-| `state.hourlyData` empty | Draws nothing, returns without error |
-| `state.hourlyData` with only 1 point | Does not draw line (needs at least 2 points) |
-| `h = 0` | Line at Y=0, does not throw |
-| `viewX` / `viewW` negative | Draws nothing visible |
-| `styles` without `humidityLine` | Uses `''` as color, invisible line |
+| `state.hourlyData` empty | No iterations, draws nothing |
+| `d.humidity = undefined` | Y = NaN, line segment not drawn |
+| `viewX` / `viewW` negative | Iterates unexpected indices, does not throw |
 
 ## Test Scenarios
 
-1. **Does not throw with mock data:** Calls `drawHumidity` with mock data, does not throw
+1. **Does not throw with mock data:** Calls drawHumidity with mock data, does not throw
 2. **Does not throw with empty hourlyData:** `state.hourlyData = []`, does not throw
 3. **Does not throw with ctx = null/undefined:** Null context, does not throw
-4. **0% humidity:** Line at `y = h` (bottom)
-5. **100% humidity:** Line at `y = 0` (top)
-6. **Single point:** `hourlyData` with 1 point, does not draw line
+4. **Full humidity:** All values 100, line at top of canvas
+5. **Zero humidity:** All values 0, line at bottom
 
 ## Change History
 

@@ -8,104 +8,109 @@ Modal bottom sheet system with swipe-to-dismiss, stacking z-index, and close cal
 ### DOM
 | Element | Access type | Context |
 |----------|---------------|----------|
-| elements by dynamic ID | getElementById | openBottomSheet |
-| `[id]-backdrop` | getElementById | backdrops |
+| `[sheetId]` | getElementById | openBottomSheet |
+| `[backdropId]` | getElementById (default `'pill-sheet-backdrop'`) | openBottomSheet |
 
 ## Public API
 
 ### `export function initBottomSheets(): void`
 
-**Description:** Resets internal sheet state.
+**Description:** Resets internal sheet state (clears `_activeSheets`, `_sheetIdCounter`, `_onSheetCloseCallbacks`).
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| — | — | No parameters |
+**Parameters:** None
 
-**Metadata:**
-- Mutates state: Yes (internal state `_activeSheets`, `_depth`)
-- Async: No
+**Return:** `void`
 
-### `export function onSheetClose(sheetId: string, callback: Function): void`
+**Mutates state:** Yes (internal module state)
 
-**Description:** Registers callback when a sheet closes.
+**Async:** No
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+### `export function onSheetClose(sheetId, callback): void`
+
+**Description:** Registers a callback invoked when a specific sheet closes.
+
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `sheetId` | `string` | Sheet ID to observe |
-| `callback` | `Function` | Function to execute on close |
+| `callback` | `Function` | Function called on close |
 
-**Metadata:**
-- Mutates state: Yes (internal callback registry)
-- Async: No
+**Return:** `void`
 
-### `export function openBottomSheet(sheetId: string, backdropId?: string, scrollElementId?: string): Function`
+**Mutates state:** Yes (`_onSheetCloseCallbacks` map)
 
-**Description:** Opens sheet with increasing z-index and swipe-to-dismiss. Returns no-op function if elements do not exist.
+**Async:** No
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+### `export function openBottomSheet(sheetId, backdropId?, scrollElementId?): Function`
+
+**Description:** Opens a sheet with increasing z-index and swipe-to-dismiss. Returns a `closeSheet` function, or no-op if elements not found.
+
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `sheetId` | `string` | Sheet element ID |
-| `backdropId?` | `string` | Backdrop ID (default `'{sheetId}-backdrop'`) |
-| `scrollElementId?` | `string` | Scroll element ID for guard |
+| `backdropId` | `string` | Backdrop element ID (default `'pill-sheet-backdrop'`) |
+| `scrollElementId` | `string` | Scroll element ID for scroll guard |
 
-**Metadata:**
-- Mutates state: Yes (CSS classes, z-index, events)
-- Async: No
+**Return:** `Function` — call to close the sheet
 
-### `export function closeBottomSheet(sheetId: string, backdropId?: string): void`
+**Mutates state:** Yes (CSS classes, z-index, inline styles, event listeners)
 
-**Description:** Closes a sheet and cleans up events.
+**Async:** No
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sheetId` | `string` | Sheet ID to close |
-| `backdropId?` | `string` | Backdrop ID |
+### `export function closeBottomSheet(sheetId, backdropId?): void`
 
-**Metadata:**
-- Mutates state: Yes (CSS classes, events, callbacks)
-- Async: No
+**Description:** Closes a sheet by invoking the stored close function for that backdrop.
+
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
+| `sheetId` | `string` | Sheet ID |
+| `backdropId` | `string` | Backdrop ID (default `'pill-sheet-backdrop'`) |
+
+**Return:** `void`
+
+**Mutates state:** Yes (calls closeSheet which modifies DOM and state)
+
+**Async:** No
 
 ## Behavior
 
-1. Dynamic z-index: 7000 + depth * 100 for sheet, 6999 + depth * 100 for backdrop
-2. Swipe-to-dismiss with pointer events and touch fallback
-3. Close threshold: >100px of drag
-4. Scroll guard: if scrollElement has scrollTop > 0, does not drag
-5. Backdrop click closes sheet
-6. `_activeSheets` by backdropId: only one active sheet per backdrop
-7. **Fixed-handle pattern (standard in all sheets):**
-   - The sheet has `overflow-y: hidden` and contains only the drag handle + a scroll wrapper
-   - The scroll wrapper (`.yip-sheet-scroll-content`) is a flex container with `flex: 1; overflow-y: auto`
-   - `scrollElementId` must point to the scroll wrapper, not the sheet
-   - This ensures the drag handle is always visible and does not scroll with the content
-   - The scroll guard reads `scrollTop` from the scroll wrapper, not the sheet (whose `scrollTop` is always 0)
+1. **Z-index stacking:** Sheet gets `7000 + depth * 100`, backdrop gets `6999 + depth * 100`. Depth is auto-incrementing `_sheetIdCounter`.
+2. **Swipe-to-dismiss:** Uses pointer events (pointerdown → pointermove → pointerup). Falls back to touch events on `touchcancel`.
+3. **Close threshold:** Drag down >100px triggers close; otherwise sheet snaps back (`translateY(0)`) with cubic-bezier transition (0.32, 0.72, 0, 1).
+4. **Scroll guard:** If `scrollElementId` is provided, drag is blocked when `scrollElement.scrollTop > 0`.
+5. **Backdrop click:** Closes the sheet via `backdrop.onclick`.
+6. **Single active sheet per backdrop:** `_activeSheets[backdropId]` ensures only one active sheet per backdrop. Opening a new sheet with the same backdrop closes the previous one.
+7. **Pointer to touch fallback chain:** If `pointercancel` fires while dragging, `touchFallback` is set and subsequent touchmove events are handled directly. Uses `usingTouch` flag to avoid double-handling.
+8. **Close callbacks:** `_onSheetCloseCallbacks.get(sheetId)?.()` invoked when sheet closes.
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
 | `sheetId` does not exist in DOM | Returns no-op function, does not throw |
-| `backdropId` does not exist | Creates default backdropId `{sheetId}-backdrop`, if it does not exist does not throw |
+| `backdropId` does not exist | Returns no-op function, does not throw |
 | `scrollElementId` does not exist | Swipe-to-dismiss without scroll guard |
-| `scrollElementId` exists but sheet has `overflow-y: hidden` | Scroll guard uses `scrollTop` of scrollElement, not the sheet — the drag handle stays fixed at top and does not scroll with content |
-| Calling `closeBottomSheet` without having opened | Does not throw, does not modify anything |
-| Multiple sheets same backdropId | Only one active sheet per backdropId |
-| Pointer events not available | Fallback to touch events |
+| Multiple sheets same backdropId | Only one active sheet per backdropId — previous is closed |
+| Calling `closeBottomSheet` without having opened | Does not throw, does nothing |
+| `touchcancel` during drag | Falls back to touch events for the remainder of the gesture |
 
 ## Test Scenarios
 
-1. **Initializes without errors with DOM elements present:** Full DOM, `initBottomSheets` does not throw
-2. **Does not throw if DOM elements are missing:** IDs do not exist, does not throw
+1. **Initializes without errors with DOM elements present:** `initBottomSheets` does not throw
+2. **Does not throw if DOM elements are missing:** IDs do not exist
 3. **Exports expected functions:** `initBottomSheets`, `openBottomSheet`, `closeBottomSheet`, `onSheetClose` are functions
 4. **Open and close sheet:** `openBottomSheet('test')` + `closeBottomSheet('test')` without errors
 5. **Swipe-to-dismiss:** Drag >100px closes the sheet
 6. **Multiple sheets same backdrop:** Only one active sheet per backdropId
-7. **Scroll guard with scroll wrapper:** If the sheet has an internal scroll wrapper (`.yip-sheet-scroll-content`) and `scrollElementId` points to it, swipe-to-dismiss only works when content is at the top (`scrollTop === 0`)
-8. **Drag handle always visible:** In sheets with `overflow-y: hidden` and scroll wrapper, the drag handle does not scroll with content
+7. **Scroll guard:** If `scrollElement` has `scrollTop > 0`, drag is blocked
+8. **Default backdropId:** Default is `'pill-sheet-backdrop'` (not `'{sheetId}-backdrop'`)
 
 ## Change History
 
 | Date | Change | Author |
 |-------|--------|-------|
+| 2026-06-02 | Fixed default backdropId to `'pill-sheet-backdrop'`, added touch-fallback chain, documented _sheetIdCounter instead of _depth | SDD |
 | 2026-05-28 | Fixed-handle pattern standardized in all sheets + scrollElementId update | SDD |
 | 2026-05-21 | Initial spec | SDD |

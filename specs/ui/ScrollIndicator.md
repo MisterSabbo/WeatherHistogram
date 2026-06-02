@@ -1,7 +1,7 @@
 ﻿# Spec: `src/ui/ScrollIndicator.js`
 
 ## Purpose
-Manages the horizontal scroll overlay for metrics in the top panel: gradient fade indicators at the edges and dot pagination with chevron icons, plus `touch-action: pan-x` prevention for accidental vertical scroll.
+Manages the horizontal scroll overlay for metrics in the top panel: gradient fade indicators at the edges, dot pagination with chevron icons, and page counter.
 
 ## Dependencies
 
@@ -9,83 +9,73 @@ No external dependencies.
 
 ## Public API
 
-### `export function updateMetricsOverlay(metricsContainer: HTMLElement, metricsDots: HTMLElement): void`
+### `export function updateMetricsOverlay(metricsContainer, metricsDots): void`
 
-**Description:** Updates gradient overlay visibility and pagination dots + chevrons based on scroll position.
+**Description:** Updates gradient overlay visibility and pagination dots + chevrons + page counter based on scroll position.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `metricsContainer` | `HTMLElement` | Container with horizontal scroll (`.top-panel-metrics`) |
 | `metricsDots` | `HTMLElement` | Pagination container (`#metrics-dots`) |
 
-**Side effects:**
-- Toggles `.gradient-left-visible` / `.gradient-right-visible` classes on `metricsContainer`
-- Renders dot spans with `.metric-dot` / `.active` classes inside `metricsDots`
-- Renders chevron spans (`.metric-chevron .material-symbols-outlined`) left/right when pages exist on that side
-- Renders `.metric-page-counter` (`N/total`) when `totalPages > 1`
-- Shows/hides `metricsDots` based on overflow
+**Return:** `boolean` — `true` if container has overflow, `false` otherwise
 
-**Metadata:**
-- Mutates state: Yes (modifies DOM classes and innerHTML)
-- Async: No
+**Mutates state:** Yes (toggles CSS classes on `#top-panel`, modifies innerHTML)
 
-### `export function initScrollIndicator(metricsContainer: HTMLElement, metricsDots: HTMLElement): void`
+**Async:** No
 
-**Description:** Registers scroll + resize listeners that call `updateMetricsOverlay` on every event.
+### `export function initScrollIndicator(metricsContainer, metricsDots): Function`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+**Description:** Registers scroll + resize listeners and sets `window.updateScrollIndicator` to the bound handler.
+
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
 | `metricsContainer` | `HTMLElement` | Container with horizontal scroll |
 | `metricsDots` | `HTMLElement` | Pagination dots container |
 
-**Side effects:**
-- Adds `scroll` event listener (passive) on `metricsContainer`
-- Adds `resize` event listener on `window`
-- Sets `window.updateScrollIndicator` to the bound handler (for external callers like `TopPanel.js`)
-- Runs an initial update after 1000ms
+**Return:** `Function` — the bound handler function
 
-**Metadata:**
-- Mutates state: Yes (registers event listeners, sets global reference)
-- Async: No
+**Mutates state:** Yes (registers event listeners, sets global reference)
+
+**Async:** No
 
 ## Behavior
 
-1. If `scrollWidth > clientWidth` (overflow exists):
-   - Shows right gradient (`.gradient-right-visible`) when `scrollLeft + clientWidth < scrollWidth - 5` (not at end)
-   - Shows left gradient (`.gradient-left-visible`) when `scrollLeft > 5` (not at start)
-   - Calculates `totalPages = Math.max(1, Math.ceil(scrollWidth / clientWidth))`
-   - Calculates `currentPage = Math.round(scrollLeft / pageWidth)`
-   - Renders dots: `<span class="metric-dot">` for each page, `.active` on current
-   - Renders `chevron_left` when `currentPage > 0`
-   - Renders `chevron_right` when `currentPage < totalPages - 1`
-   - Renders page counter `(currentPage+1)/totalPages` when `totalPages > 1`
-2. If no overflow: hides `#metrics-dots`, removes gradient visibility classes
+1. **Overflow detection:** If `scrollWidth > clientWidth`, indicators are shown. Otherwise: hides `metricsDots`, removes gradient classes.
+2. **Gradient classes:** Toggles `.gradient-right-visible` on `#top-panel` when overflow exists and not at end (`scrollLeft + clientWidth < scrollWidth - 5`). Toggles `.gradient-left-visible` when not at start (`scrollLeft > 5`).
+3. **Page calculation:** `totalPages = Math.max(1, Math.ceil(scrollWidth / pageWidth))`. `currentPage` is the page whose start is closest to `scrollLeft`.
+4. **Dots:** One `.metric-dot` per page. `.active` class on current page.
+5. **Chevrons:** `.metric-chevron-left` shown when `hasOverflow && !isAtStart`. `.metric-chevron-right` shown when `hasOverflow && !isAtEnd`.
+6. **Page counter:** `<span class="metric-page-counter">` rendered as `(currentPage+1)/totalPages` when `totalPages > 1`.
+7. **initScrollIndicator:** Adds passive scroll listener on container, resize listener on window, sets `window.updateScrollIndicator = fn`, runs initial update after 1000ms.
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
-| `metricsContainer = null` / `undefined` | Does not throw (parameters optional in practice) |
-| Container without overflow (`scrollWidth <= clientWidth`) | Gradients hidden, dots empty |
-| Container with `scrollWidth = 0` | No gradients, no dots |
+| `metricsContainer = null` / `undefined` | Throws (no guard) |
+| Container without overflow | Gradients hidden, dots empty, display none |
+| `scrollWidth = 0` | No gradients, no dots, no throw |
 | Single page (`totalPages = 1`) | No chevrons, no counter, only one dot |
 | `metricsDots = null` | Gradient classes still toggle, pagination skipped |
-| Viewport resize | `initScrollIndicator` recalculates on resize event |
+| Viewport resize | `initScrollIndicator` recalculates |
 
 ## Test Scenarios
 
-1. **Shows right gradient + chevron when overflow and not at end:** `scrollWidth > clientWidth`, `scrollLeft = 0`, right gradient visible, right chevron visible, left hidden
-2. **Hides right gradient + chevron when at end:** `scrollLeft` near end, right gradient hidden, right chevron hidden
-3. **Shows left gradient + chevron when not at start:** `scrollLeft > 5`, left gradient visible, left chevron visible
-4. **Hides left gradient + chevron when at start:** `scrollLeft = 0`, left hidden
-5. **Clears dots when no overflow:** `scrollWidth <= clientWidth`, dots innerHTML empty, display none
-6. **Does not crash when metricsDots is null:** gradient classes still toggle
-7. **Chevrons rendered correctly at middle page:** `scrollLeft` in middle, both chevrons visible
-8. **No chevrons when totalPages <= 1:** no overflow, no chevrons
+1. **Shows right gradient + chevron when not at end:** `scrollLeft = 0`, overflow exists
+2. **Hides right gradient + chevron when at end:** `scrollLeft` near end
+3. **Shows left gradient + chevron when not at start:** `scrollLeft > 5`
+4. **Hides left gradient + chevron at start:** `scrollLeft = 0`
+5. **Clears dots when no overflow:** `scrollWidth <= clientWidth`
+6. **Does not crash when metricsDots null:** Gradient classes still toggle
+7. **Chevrons at middle page:** Both chevrons visible
+8. **No chevrons when `totalPages <= 1`:** Single page, no chevrons
 
 ## Change History
 
 | Date | Change | Author |
 |-------|--------|-------|
+| 2026-06-02 | Fixed return type of initScrollIndicator (returns fn not void), added page counter details | SDD |
 | 2026-05-21 | Initial spec | SDD |
-| 2026-06-01 | Refactored: removed arrow indicators and discovery animation, added gradient overlays + chevron pagination + touch-action | Ticket 006 |

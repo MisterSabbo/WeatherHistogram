@@ -18,18 +18,14 @@ Barrel re-export for metric renderers (humidity, wind, temperature).
 
 **Description:** Barrel re-export of metric renderers.
 
-**Metadata:**
-- Mutates state: No
-- Async: No
+**Mutates state:** No
+
+**Async:** No
 
 ## Behavior
 
-1. Barrel module: re-exports `drawHumidity`, `drawWind`, `drawTemperature` from metrics/ modules.
-2. Has no logic of its own; all exports are delegated.
-
-## Test Scenarios
-
-1. **Correct exports:** drawHumidity, drawWind, drawTemperature are functions
+1. Barrel module: re-exports `drawHumidity`, `drawWind`, `drawTemperature` from `metrics/` modules
+2. Has no logic of its own; all exports are delegated
 
 ## Edge Cases
 
@@ -37,6 +33,10 @@ Barrel re-export for metric renderers (humidity, wind, temperature).
 |---------|------------------------|
 | Module imported without calling | Does not throw, exports are functions |
 | Any export is `undefined` | Fails when trying to call (not controlled here) |
+
+## Test Scenarios
+
+1. **Correct exports:** `drawHumidity`, `drawWind`, `drawTemperature` are functions
 
 ## Change History
 
