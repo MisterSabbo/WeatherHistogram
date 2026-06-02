@@ -39,11 +39,9 @@
 - `agent-rules/pre-action-checklist.md` — mandatory steps before every task
 
 **Read on demand** when editing specific areas:
-- `agent-rules/core-workflow.md` — install, run, entry point, init functions
+- `agent-rules/build-and-workflow.md` — install, run, entry point, build config, lint, test commands
 - `agent-rules/architecture-*.md` — rendering, services, UI docs
-- `agent-rules/build-config.md` — build, test, lint details
+- `agent-rules/architecture-rendering.md` — rendering pipeline, scroll, PWA interactions, view modes
 - `agent-rules/e2e-testing.md` — Playwright workflow and snapshot management
-- `agent-rules/key-interactions.md` — pull-to-refresh, scroll rendering, PWA, view modes
-- `agent-rules/defaults-constants.md` — all hardcoded dimensions and values
-- `agent-rules/theme-i18n.md` — theme switching and i18n patterns
+- `agent-rules/config-and-theming.md` — hardcoded dimensions, constants, theme switching, i18n patterns
 - `agent-rules/spec-driven-development.md` — SDD workflow orchestration

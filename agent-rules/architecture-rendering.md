@@ -16,3 +16,18 @@
   - `MinimapRenderer` — minimap with past/future modes, click-to-scroll, cache invalidation
   - `StickmanRenderer` — animated stickman
   - `CloudRenderer`, `MoonRenderer`, `PrecipProbabilityRenderer`, `SunMarkers` — supporting renders
+
+### Key Interactions
+
+- **Pull-to-refresh:** `src/ui/PullToRefresh.js`. Touch drag-down resets `weatherCache`, clears tile canvases, reloads via `loadWeather()`. Disabled when modals or search overlay are open.
+- **Scroll-driven rendering:** `scroll` on `#scroll-container` calls `render()` via `requestAnimationFrame`. Only way tiles update during scroll.
+- **Label collision avoidance:** `drawFixedOverlay()` has custom collision detection (`state.labelRects`). Reset each frame.
+- **BottomSheet swipe-to-dismiss:** Pointer events with touch fallback. Swipe-down closes when `scrollTop === 0`. Dynamic z-index via counter.
+- **Settings panel:** Bottom sheet on mobile (<768px), sliding panel on desktop (>=768px). CSS `translateY`/`translateX` with media queries.
+- **Collapsible sections:** Fototipo and Umbrales in settings via `.collapsible-trigger`.
+- **Language switch:** Triggers `showConfirm()` before applying translations and re-render.
+- **Minimap auto-switch:** `updateMinimapViewport()` toggles `minimapMode` between `'past'`/`'future'` based on viewport center vs current-time split.
+- **Service Worker** (`sw.js`): Cache-first for static assets, stale-while-revalidate for others. API calls (open-meteo, openstreetmap) deliberately not intercepted.
+- **IndexedDB migration** (app.js init): Legacy localStorage keys migrated on first load.
+- **PWA standalone detection:** Checks `display-mode: standalone` / `navigator.standalone`, adds `pwa-standalone` class to `<html>`.
+- **View mode toggle:** `toggle-nav-btn` switches minimap/daily cards. Persisted as `viewMode` in StorageService.
