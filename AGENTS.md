@@ -37,6 +37,7 @@
 - `agent-rules/subagents.md` — when to use subagents
 - `agent-rules/memory.md` — MCP memory persistence workflow
 - `agent-rules/pre-action-checklist.md` — mandatory steps before every task
+- `agent-rules/repository-language.md` — English-only policy for all repo files
 
 **Read on demand** when editing specific areas:
 - `agent-rules/build-and-workflow.md` — install, run, entry point, build config, lint, test commands

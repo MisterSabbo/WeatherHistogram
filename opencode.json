@@ -3,7 +3,8 @@
   "instructions": [
     "agent-rules/subagents.md",
     "agent-rules/memory.md",
-    "agent-rules/pre-action-checklist.md"
+    "agent-rules/pre-action-checklist.md",
+    "agent-rules/repository-language.md"
   ],
   "mcp": {
     "memory": {
