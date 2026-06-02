@@ -7,283 +7,177 @@ description: Use when implementing Spec-Driven Development (SDD) — whether doc
 
 ## Overview
 
-Orchestrates the full Spec-Driven Development lifecycle. Accepts any input from the user (module path, user story, feature request, change description) and executes the correct SDD mode automatically — breaking down work into phases, dispatching sub-tasks to specialized agents, and verifying gates before proceeding.
+Orchestrates the SDD lifecycle in 4 phases inspired by GitHub Spec Kit:
 
-**Core principle:** Specs are written first. Code and tests follow. Changes start with spec updates.
+```
+Constitution → Specify → Plan → Implement
+```
+
+Accepts any input (module path, user story, feature request, change description) and automatically detects the mode — dispatching to specialized agents and verifying gates before proceeding.
+
+**Core principle:** Specs are the source of truth. Code follows.
 
 ## Mode Detection
 
-The orchestrator decides the mode based on what exists:
+The orchestrator decides the mode based on what exists and what the user says:
 
-| User says... | Detected as... |
-|---|---|---|
-| `"SDD para src/utils/color.js"` | `spec-retro` — module exists, check if spec exists |
-| `"Nuevo servicio src/services/HeatIndex.js"` | `spec-first` — new module path given |
-| `"Añade exportar datos guardados"` | `feature` — user story, needs breakdown |
-| `"Actualiza color.js con hslToRgb"` | `spec-update` — existing module + existing spec |
-| `"Añade una función hslToRgb a color.js"` | `spec-update` — existing module |
-| `"Crea un validador de emails"` | `spec-first` — new module implied |
-| `"Convierte todo el proyecto a SDD"` | `spec-crawl` — bulk retroactive |
-| `"SDD para src/utils/"` | `spec-crawl` — directory-level bulk |
-| `"SDD para src/services/ y src/domain/"` | `spec-crawl` — multi-directory bulk |
-| `"Convierte src/render/ a SDD"` | `spec-crawl` — directory-level bulk |
+| Input | Detected as |
+|---|---|
+| `"SDD para src/utils/color.js"` — file exists, no spec | `spec` |
+| `"Crea src/services/ExportCsv.js"` — file doesn't exist | `full` |
+| `"Añade exportar datos guardados"` — user story | `full` |
+| `"SDD full para src/utils/color.js"` — explicit mode prefix | `full` forced |
+| `"SDD para src/utils/"` — directory path | `crawl` |
+| `"Convierte todo el proyecto a SDD"` — bulk keywords | `crawl` |
+| `"SDD para src/services/ y src/domain/"` — multi-directory | `crawl` |
 
-**Detection logic:**
-1. If input mentions an **existing file path** (`src/...`) AND the file exists → check for existing spec
-   - Spec exists → `spec-update`
-   - No spec → `spec-retro`
-2. If input mentions a **new file path** (doesn't exist) → `spec-first`
-3. If input mentions a **directory path** (`src/utils/`, `src/services/`) → `spec-crawl`
-4. If input mentions **bulk keywords** ("todo", "convertir", "todos", "resto", "crawl") → `spec-crawl`
-5. If input is a **user story** (feature description without file paths) → `feature`
-6. Default → `feature` (safe fallback, will analyze and decide)
+> Mode can be forced by prefix: `"full: <input>"`, `"spec: <input>"`, `"crawl: <input>"`.
+
+### Detection Logic
+
+1. Input mentions an **existing file path** (`src/...`) AND file exists → check for spec
+   - Spec exists → `full` (update mode: re-spec + re-plan + re-implement)
+   - No spec → `spec` (document existing code)
+2. Input mentions a **new file path** (doesn't exist) → `full`
+3. Input is a **user story** (feature description, no file) → `full`
+4. Input mentions a **directory path** or **bulk keywords** → `crawl`
+5. Explicit prefix `"full:"`, `"spec:"`, `"crawl:"` → forced mode
+6. Default → `full` (safe fallback, will analyze)
 
 ## Modes
 
-### spec-retro — Document existing code
+### spec — Only Specify
+
+Runs **Constitution (check) → Specify**. For documenting existing code without changing it.
 
 ```
-ANALYZE → SPEC WRITE → SPEC REVIEW → TEST WRITE → VERIFY
+1. CONSTITUTION (verify exists, skip if current)
+2. SPECIFY
+   Task(general + agent-specify)
+   Input: module path
+   Output: specs/<path>.md created/updated
+
+   [GATE] No [NEEDS CLARIFICATION] markers? → report them to user
 ```
 
-Use when: code exists, no spec, goal is documentation + test regeneration.
+### full — Full Cycle
 
-### spec-first — New feature from scratch
-
-```
-SPEC WRITE → SPEC REVIEW → TEST WRITE → IMPLEMENT → VERIFY
-```
-
-Use when: no code exists, spec drives implementation (TDD).
-
-### spec-update — Update existing spec + code
+Runs all 4 phases. For new features, changes, or anything producing code.
 
 ```
-ANALYZE (diff) → UPDATE SPEC → SPEC REVIEW → UPDATE TESTS → IMPLEMENT → VERIFY
-```
+1. CONSTITUTION (verify exists, update if needed)
+   Task(general + agent-constitution)
+   Input: project path
+   Output: memory/constitution.md verified
 
-Use when: both code and spec exist, behavior changes.
-
-### spec-crawl — Bulk retroactive specs
-
-```
-SCAN → SORT → [for each module: spec-retro]
-```
-
-Use when: user wants to document multiple existing modules (a directory, a list, or the whole project) in one go. The orchestrator scans source files, identifies which lack specs, orders them by dependency, and runs `spec-retro` on each sequentially.
-
-### feature — User story decomposition
-
-```
-FEATURE BREAKDOWN → [for each unit: run appropriate mode]
-```
-
-Use when: user describes a feature without technical details. The breakdown phase produces a plan of SDD units, then executes each one in dependency order.
-
-## Orchestration Flow (per mode)
-
-### spec-retro flow
-
-```
-1. ANALYZE
-   Task(explore + agent-sdd-analyst)
-   Input:  module path
-   Output: { api: [...], deps: [...], stateAccess: [...], domDeps: [...],
-             edgeCases: [...], testCoverage: [...] }
-
-   [GATE] All exports and dependencies identified? → No → retry ANALYZE
-
-2. SPEC WRITE
-   Task(docs-writer + agent-sdd-spec-writer)
-   Input:  analysis output
-   Output: specs/<module-path>.md created
-
-   [GATE] Spec follows template, no gaps? → No → retry SPEC WRITE
-
-3. SPEC REVIEW
-   Task(general + agent-sdd-spec-reviewer)
-   Input:  spec file path
-   Output: APPROVED | corrections list
-
-   [GATE] APPROVED? → No → apply corrections, re-review
-
-4. TEST WRITE
-   Task(general + agent-sdd-test-writer)
-   Input:  spec file path
-   Output: test file created/updated
-
-   [GATE] Tests cover all spec scenarios? → No → retry TEST WRITE
-
-5. VERIFY
-   Task(general + agent-sdd-verifier)
-   Input:  module path
-   Output: PASS | FAIL with details
-
-   [GATE] PASS? → Yes → done. No → fix and retry.
-```
-
-### spec-first flow
-
-```
-1. SPEC WRITE (no analysis needed — new module)
-   Task(docs-writer + agent-sdd-spec-writer)
+2. SPECIFY
+   Task(general + agent-specify)
+   Input: module path + description
    Output: specs/<path>.md
 
-   [GATE] Spec complete and reviewable? → No → retry
+   [GATE] [NEEDS CLARIFICATION]? → pause, ask user, retry
+   [GATE] Spec is reviewable? → no → retry
 
-2. SPEC REVIEW
-   Task(general + agent-sdd-spec-reviewer)
-   Output: APPROVED | corrections
+3. PLAN
+   Task(general + agent-plan)
+   Input: spec path
+   Output: plans/<feature-name>/plan.md + tasks.md
 
-   [GATE] APPROVED? → No → fix
-
-3. TEST WRITE
-   Task(general + agent-sdd-test-writer)
-   Output: test file
-
-   [GATE] Tests cover spec? → No → retry
+   [GATE] Tasks are ordered and actionable? → no → retry
 
 4. IMPLEMENT
-   Task(general + agent-sdd-implementer)
-   Output: source file created
+   Task(general + agent-implement)
+   Input: plan directory path
+   Output: working code + passing tests
 
-   [GATE] npm test passes? → No → fix
+   [GATE] npm test + lint + typecheck + build pass? → no → fix, retry (max 2)
 
-5. VERIFY
-   Task(general + agent-sdd-verifier)
-   Output: PASS | FAIL
+   [FINAL GATE] All checks green? → done
 ```
 
-### spec-crawl flow
+### crawl — Bulk Mode
+
+Scans directories, finds modules without specs, runs `spec` or `full` on each.
 
 ```
 1. SCAN
-   Find all .js files under the target directories (src/ or subdirectories)
-   Exclude: *.test.js, *node_modules*, *dist*
-   For each file, check if specs/<relative-path-without-src>.md exists
+   Find all .js files under target directories
+   Exclude: *.test.js, node_modules, dist
+   For each, check if specs/<relative-path>.md exists
 
-   Input:  target path(s) from user (default: src/)
    Output: modules_without_spec = [path1, path2, ...]
 
-   [GATE] At least one module found? → No → report "all modules already spec'd"
+   [GATE] At least one module? → no → report "all done"
 
 2. SORT
-   Read each module's import statements (regex: import ... from '...')
-   Build a dependency graph (module → its internal deps)
-   Topological sort: modules that nothing depends on go first
+   Build dependency graph from import statements
+   Topological sort (leaf modules first)
 
-   Dependency tier ordering (used as fallback if no imports found):
-     utils/ → data/ → services/ → domain/ → render/metrics/ → render/ → ui/ → store/theme → app.js
+3. For each module in order:
+   Run `spec` mode (or `full` if user specified)
+   Report: "[3/15] src/utils/dom.js — PASS"
 
-   Output: ordered_modules = [path1, path2, ...]
-
-3. For each module in ordered_modules:
-   Run spec-retro flow (ANALYZE → SPEC WRITE → SPEC REVIEW → TEST WRITE → VERIFY)
-   Report progress: "[3/15] src/utils/dom.js — PASS"
-
-4. Summary report
-   Total: X modules
-   Passed: X
-   Failed: X (with details)
-   Specs created: X files in specs/
-   Tests rewritten: X files
-   Bugs found: X (if any)
+4. Summary: total, passed, failed, specs created
 ```
 
-### feature flow
-
-```
-1. FEATURE BREAKDOWN
-   Task(explore + agent-sdd-feature-breakdown)
-   Input:  user story
-   Output: {
-     units: [{ path, mode, description, deps }],
-     order: [path1, path2, ...]
-   }
-
-   [GATE] Plan covers all aspects of the user story? → No → retry
-
-2. For each unit in order:
-   Run appropriate mode (spec-first | spec-update | spec-retro)
-
-3. Summary report
-```
-
-## Sub-task Conventions
-
-When launching sub-tasks, use the following format:
-
-```
-Task(
-  subagent_type: <type>,
-  description: "<role> for <module>",
-  prompt: """
-    [LOAD SKILL: sdd-orchestrator/<role-skill-file>]
-    [ROLE: <role-name>]
-    [MODULE: <path>]
-    [SPEC: <spec-path>]  // if applicable
-    [ANALYSIS: <analysis-json>]  // if applicable
-    ...
-  """
-)
-```
-
-### Subagent mapping
+## Sub-agent Mapping
 
 | Phase | subagent_type | Skill file |
 |---|---|---|
-| FEATURE BREAKDOWN | explore | agent-sdd-feature-breakdown.md |
-| ANALYZE | explore | agent-sdd-analyst.md |
-| SPEC WRITE | docs-writer | agent-sdd-spec-writer.md |
-| SPEC REVIEW | general | agent-sdd-spec-reviewer.md |
-| TEST WRITE | general | agent-sdd-test-writer.md |
-| IMPLEMENT | general | agent-sdd-implementer.md |
-| VERIFY | general | agent-sdd-verifier.md |
+| CONSTITUTION | general | agent-constitution.md |
+| SPECIFY | general | agent-specify.md |
+| PLAN | general | agent-plan.md |
+| IMPLEMENT | general | agent-implement.md |
 
 ## Error Handling
 
 **Gate failures:**
-- If a gate fails, retry the phase up to 2 times
-- After 2 failures, abort the mode and report to user with details
-- User can choose to skip the gate or fix manually
+- Retry phase up to 2 times
+- After 2 failures, abort and report to user with details
+- User can skip the gate or fix manually
 
-**Test failures in VERIFY:**
-- Collect failure details
-- Re-run IMPLEMENT (or TEST WRITE if spec changed)
-- If same failures persist after 2 retries, abort and report
+**Spec ambiguity:**
+- If `[NEEDS CLARIFICATION]` markers found → pause flow, ask user for clarification
+- Resume from same phase after user responds
 
-**Missing dependencies:**
-- If FEATURE BREAKDOWN detects a dependency that isn't spec'd yet, queue it as a spec-retro unit before the feature unit
+**Implementation failures:**
+- Collect failure details (test name, expected vs actual, lint rule)
+- Re-run IMPLEMENT phase
+- If same failures after 2 retries → abort and report
+
+**Missing dependencies (in crawl):**
+- Queue undocumented dependencies as spec units before the dependent module
 
 ## Verification Checklist (post-mode)
 
-- [ ] All specs written/updated follow `specs/_template.md`
-- [ ] `npm test` passes (all tests, not just changed ones)
-- [ ] `npm run lint` has no new errors
+- [ ] All specs follow template format
+- [ ] No `[NEEDS CLARIFICATION]` markers remain (if full mode)
+- [ ] `npm test` passes
+- [ ] `npm run lint` — 0 warnings, 0 errors
 - [ ] `npm run typecheck` passes
 - [ ] `npm run build` succeeds
 
 ## Invocation Examples
 
 ```
-// Mode: spec-retro (single module)
+// Mode: spec (document existing code)
 Task(general + sdd-orchestrator) → "SDD para src/store.js"
 
-// Mode: spec-crawl (directory)
-Task(general + sdd-orchestrator) → "SDD para src/utils/"
-
-// Mode: spec-crawl (whole project)
-Task(general + sdd-orchestrator) → "Convierte todo el proyecto a SDD"
-
-// Mode: spec-crawl (multiple dirs)
-Task(general + sdd-orchestrator) → "SDD para src/services/ y src/domain/"
-
-// Mode: feature (user story)
-Task(general + sdd-orchestrator) → "Añade exportar datos guardados como CSV"
-
-// Mode: spec-first (new module)
+// Mode: full (new feature)
 Task(general + sdd-orchestrator) → "Crea un módulo que calcule el Wind Chill"
 
-// Mode: spec-update (existing change)
+// Mode: full (user story)
+Task(general + sdd-orchestrator) → "Añade exportar datos guardados como CSV"
+
+// Mode: full (update existing)
 Task(general + sdd-orchestrator) → "Añade una función hslToRgb a src/utils/color.js"
+
+// Mode: full forced (re-document + implement)
+Task(general + sdd-orchestrator) → "full: src/utils/color.js"
+
+// Mode: crawl (directory)
+Task(general + sdd-orchestrator) → "SDD para src/utils/"
+
+// Mode: crawl (whole project)
+Task(general + sdd-orchestrator) → "Convierte todo el proyecto a SDD"
 ```

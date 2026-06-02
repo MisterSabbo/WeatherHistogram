@@ -114,10 +114,9 @@ Do not skip this category. Do not infer the type from the original message witho
 
 Based on what you now know, suggest the most appropriate SDD mode:
 
-- `spec-first` — completely new feature, no code exists yet
-- `spec-retro` — code already exists but has no spec
-- `spec-update` — both code and spec exist, behavior changes
-- `feature` — user story that needs decomposition across multiple units
+- `full` — full SDD cycle: new feature, change, or user story
+- `spec` — only create/update specification (existing code, no implementation needed)
+- `crawl` — bulk SDD across directories or the whole project
 
 Ask: "¿Te parece correcto usar modo **{mode}** para SDD?"
 
@@ -156,7 +155,7 @@ The file must match the template format exactly:
 |---|---|
 | **ID** | `{ID}` |
 | **Type** | `{feature | enhancement | bugfix}` |
-| **SDD Mode** | `{spec-first | spec-retro | spec-update | feature}` |
+| **SDD Mode** | `{spec | full | crawl}` |
 | **Priority** | `{high | medium | low}` |
 | **Dependencies** | `{none | ticket IDs}` |
 
@@ -195,7 +194,7 @@ As a **{role}**, I want **{capability}** so that **{benefit}**.
 |---|---|---|
 | **ID** | Yes | 3-digit zero-padded number, auto-incremented from existing tickets |
 | **Type** | Yes | One of: `feature`, `enhancement`, `bugfix`, `refactor`, `performance` |
-| **SDD Mode** | Yes | One of: `spec-first`, `spec-retro`, `spec-update`, `feature` |
+| **SDD Mode** | Yes | One of: `spec`, `full`, `crawl` |
 | **Priority** | Yes | One of: `high`, `medium`, `low` |
 | **Dependencies** | Yes | `none` or comma-separated ticket IDs (e.g., `002, 003`) |
 | **User Story** | Yes | Standard format with role, capability, benefit |

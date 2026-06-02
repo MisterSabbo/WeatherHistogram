@@ -36,11 +36,11 @@ Before every task, verify these rules **in order**:
 
     | Situation | Action |
     |---|---|
-    | Feature nueva sin código | Invocar orquestador SDD: `Task(general + sdd-orchestrator)` en modo `spec-first` |
-    | Cambio en módulo existente con spec | Invocar orquestador SDD en modo `spec-update` |
-    | Cambio en módulo existente SIN spec | Invocar orquestador SDD en modo `spec-retro` |
-    | User story sin detalles técnicos | Invocar orquestador SDD en modo `feature` |
-    | Directorio completo o todo el proyecto | Invocar orquestador SDD en modo `spec-crawl` |
+    | Feature nueva sin código | Invocar orquestador SDD — detecta `full` automáticamente |
+    | Cambio en módulo existente con spec | Invocar orquestador SDD — detecta `full` automáticamente |
+    | Cambio en módulo existente SIN spec | Invocar orquestador SDD — detecta `spec` automáticamente |
+    | User story sin detalles técnicos | Invocar orquestador SDD — detecta `full` automáticamente |
+    | Directorio completo o todo el proyecto | Invocar orquestador SDD — detecta `crawl` automáticamente |
     | Bugfix trivial (1 línea, sin cambio de comportamiento) | Saltar SDD, ir directo a implementación |
 
     > Para invocar: `Task(general + sdd-orchestrator)` con la descripción de lo que se quiere hacer.

@@ -63,6 +63,12 @@
 {"type":"entity","name":"layout.css","entityType":"file","observations":["Archivo CSS principal de estilos de layout.","Contiene reglas para .gradient-overlay, .gradient-left, .gradient-right en la sección responsive (<600px).","2026-06-01: Swap de colores en gradientes — var(--bg-color) en borde exterior (sólido), transparent en borde interior (difuminado)."]}
 {"type":"entity","name":"E2E test infrastructure","entityType":"test","observations":["mock-data.js: t.getHours() → t.getUTCHours() to fix timezone-dependent mock data","5 visual snapshots regenerated after UTC fix","All 29 E2E tests pass"]}
 {"type":"entity","name":"WeatherHistogram v1.15.0a","entityType":"release","observations":["Infrastructure fix: E2E visual snapshot timezone dependency in mock-data.js","Version: 1.15.0a (letter suffix)"]}
+{"type":"entity","name":"sdd-orchestrator","entityType":"skill","observations":["SDD orchestrator redesigned from 7 sub-agents to 4 phases inspired by GitHub Spec Kit","Phases: Constitution -> Specify -> Plan -> Implement","Agent files: agent-constitution.md, agent-specify.md, agent-plan.md, agent-implement.md","Old agents archived as _obsolete_ files","Modes: spec (document), full (full cycle), crawl (bulk)","Plan output: plans/<feature-name>/plan.md + tasks.md"]}
+{"type":"entity","name":"memory/constitution.md","entityType":"project-file","observations":["Created at memory/constitution.md — WeatherHistogram governing document","Contains 8 core principles and SDD workflow rules","Read by all SDD phases as reference"]}
+{"type":"entity","name":"agent-rules/spec-driven-development.md","entityType":"project-file","observations":["Updated to reflect new 4-phase SDD design: spec, full, crawl modes"]}
+{"type":"entity","name":"agent-rules/pre-action-checklist.md","entityType":"project-file","observations":["Updated SDD check table to use auto-detection of new modes"]}
+{"type":"entity","name":"agent-rules/subagents.md","entityType":"project-file","observations":["Updated SDD reference from old modes to spec/full/crawl"]}
+{"type":"entity","name":"feature-ticket-creator","entityType":"skill","observations":["Updated SDD mode values from old to new modes (spec/full/crawl)"]}
 {"type":"relation","from":"src/app.js","to":"src/store.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/theme.js","relationType":"imports"}
 {"type":"relation","from":"src/app.js","to":"src/domain/WeatherFetcher.js","relationType":"imports"}
@@ -179,3 +185,10 @@
 {"type":"relation","from":"specs/ui/ScrollIndicator.md","to":"src/ui/ScrollIndicator.js","relationType":"specifies"}
 {"type":"relation","from":"WeatherHistogram v1.15.0","to":"src/ui/ScrollIndicator.js","relationType":"includes"}
 {"type":"relation","from":"WeatherHistogram v1.15.0","to":"specs/ui/ScrollIndicator.md","relationType":"includes"}
+{"type":"relation","from":"sdd-orchestrator","to":"agent-constitution.md","relationType":"has-agent"}
+{"type":"relation","from":"sdd-orchestrator","to":"agent-specify.md","relationType":"has-agent"}
+{"type":"relation","from":"sdd-orchestrator","to":"agent-plan.md","relationType":"has-agent"}
+{"type":"relation","from":"sdd-orchestrator","to":"agent-implement.md","relationType":"has-agent"}
+{"type":"relation","from":"sdd-orchestrator","to":"memory/constitution.md","relationType":"reads"}
+{"type":"relation","from":"sdd-orchestrator","to":"agent-rules/spec-driven-development.md","relationType":"documented-in"}
+{"type":"relation","from":"sdd-orchestrator","to":"feature-ticket-creator","relationType":"referenced-by"}

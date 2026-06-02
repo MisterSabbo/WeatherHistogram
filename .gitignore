@@ -10,6 +10,5 @@ test-results/
 .opencode/node_modules/
 .opencode/package-lock.json
 skills-lock.json
-plans/
 feat-tickets/*
 !feat-tickets/template.md

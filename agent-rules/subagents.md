@@ -20,4 +20,4 @@ For Spec-Driven Development tasks, use the SDD orquestrator:
 Task(general + sdd-orchestrator) → "descripción de lo que quieres hacer"
 ```
 
-The orquestrator automatically detects the mode (`spec-retro`, `spec-first`, `spec-update`, `feature`) and runs all phases. See `agent-rules/spec-driven-development.md` for details.
+The orquestrator automatically detects the mode (`spec`, `full`, `crawl`) and runs all phases. See `agent-rules/spec-driven-development.md` for details.
