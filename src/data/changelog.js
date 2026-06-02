@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.15.0a",
+    "changes": [
+      "Fix: E2E visual snapshot timezone dependency — mock-data.js used t.getHours() for is_day/weather_code/uv_index, which is timezone-dependent. Changed to t.getUTCHours() so mock data is deterministic across machines. Fixes ~20% pixel diff on CI when snapshots are generated on a different timezone. All 29 E2E tests pass."
+    ]
+  },
+  {
     "version": "1.15.0",
     "changes": [
       "Scroll indicator redesigned: removed left/right arrow buttons (with pulse-horizontal animations) and replaced with gradient overlays that fade content at edges, plus chevron &#x2039;/&#x203a; buttons that appear only when the scroll position is not at the start/end. Desktop layout unaffected. All unit tests pass."

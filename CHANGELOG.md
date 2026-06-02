@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.15.0a] - 2026-06-02
+### Infrastructure
+- **Fix: E2E visual snapshot timezone dependency**: `tests/e2e/helpers/mock-data.js` used `t.getHours()` to determine `is_day`, `weather_code`, and `uv_index`, which is timezone-dependent. Changed to `t.getUTCHours()` so mock data is deterministic across machines, preventing ~20% pixel diff on CI when snapshots are generated on a different timezone. All 29 E2E tests pass.
+
 ## [v1.15.0] - 2026-06-01
 ### Enhancement
 - **Scroll indicator redesigned**: Replaced left/right arrow buttons (with pulse-horizontal animations) by gradient overlays that fade content at edges, plus chevron ‹/› buttons that appear only when scroll position isn't at the start/end. Desktop layout unaffected. All tests pass.

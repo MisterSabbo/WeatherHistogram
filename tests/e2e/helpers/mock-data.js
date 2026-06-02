@@ -70,7 +70,7 @@ export function generateMockForecast(pastDays = 7, forecastDays = 7) {
   for (let i = 0; i < totalHours; i++) {
     const t = new Date(startDate.getTime() + i * 3600000)
     hourly.time.push(Math.floor(t.getTime() / 1000))
-    const hour = t.getHours()
+    const hour = t.getUTCHours()
     const isDay = hour >= 6 && hour < 20 ? 1 : 0
     hourly.is_day.push(isDay)
     hourly.temperature_2m.push(20 + Math.sin(i / 12 * Math.PI) * 8 + (rand() - 0.5) * 2)
