@@ -1,6 +1,5 @@
 ---
 description: SDD Phase 1 — Create or update project constitution
-agent: build
 ---
 
 Run SDD Phase 1 (CONSTITUTION).

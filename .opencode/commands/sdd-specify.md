@@ -1,6 +1,5 @@
 ---
 description: SDD Phase 2 — Write specification for a module
-agent: plan
 ---
 
 Run SDD Phase 2 (SPECIFY).

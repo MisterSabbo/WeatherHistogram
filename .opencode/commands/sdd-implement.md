@@ -1,6 +1,5 @@
 ---
 description: SDD Phase 4 — Implement code from a plan
-agent: general
 ---
 
 Run SDD Phase 4 (IMPLEMENT).
