@@ -1,6 +1,6 @@
 ---
 description: SDD Phase 3 — Create implementation plan from a spec
-agent: general
+agent: plan
 ---
 
 Run SDD Phase 3 (PLAN).
