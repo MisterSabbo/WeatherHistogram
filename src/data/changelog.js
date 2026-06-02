@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.15.1",
+    "changes": [
+      "Unified ConfirmModal: extracted duplicate showConfirm() from app.js and YearInPixels.js into a standalone ConfirmModal.js with Promise-based API. Added confirmButtonClone() to BottomSheet.js. Removed window.openBottomSheet global leak. Both call sites in app.js migrated to async/await Promise API. All 408 unit tests + E2E pass."
+    ]
+  },
+  {
     "version": "1.15.0a",
     "changes": [
       "Fix: E2E visual snapshot timezone dependency — mock-data.js used t.getHours() for is_day/weather_code/uv_index, which is timezone-dependent. Changed to t.getUTCHours() so mock data is deterministic across machines. Fixes ~20% pixel diff on CI when snapshots are generated on a different timezone. All 29 E2E tests pass."

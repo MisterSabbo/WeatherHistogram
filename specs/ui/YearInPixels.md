@@ -18,6 +18,8 @@ Annual "Year in Pixels" visualization with monthly grid (12×31) of historical w
 | `../services/AqiManager.js` | `getPollenLevelByType`, `getAggregatedPollenLevel` | pollen levels |
 | `../utils/color.js` | `getTextColorForBg` | adaptive text color by background luminance |
 | `../store.js` | `state` | theme |
+| `./BottomSheet.js` | `openBottomSheet` | open bottom sheets |
+| `./ConfirmModal.js` | `showConfirm` | confirmation dialog |
 
 ### DOM elements
 | Element | Access type | Context |
@@ -57,8 +59,8 @@ Annual "Year in Pixels" visualization with monthly grid (12×31) of historical w
 | `#confirm-message` | getElementById textContent | showConfirm |
 | `#confirm-cancel-btn` | getElementById clone + onclick | showConfirm |
 | `#confirm-ok-btn` | getElementById clone + onclick | showConfirm |
-| `#confirm-modal` | openBottomSheet | showConfirm |
-| `#confirm-sheet-backdrop` | openBottomSheet | showConfirm |
+| `#confirm-modal` | showConfirm (ConfirmModal) | showConfirm |
+| `#confirm-sheet-backdrop` | showConfirm (ConfirmModal) | showConfirm |
 
 ## Module global variables
 
@@ -168,7 +170,7 @@ Finds `.yip-day-cell[data-time]` in DOM and applies `.yip-highlight-flash` class
 Shows `#yip-toast` with error message, auto-dismiss after 3s.
 
 ### `function showConfirm(title, message): Promise<boolean>`
-Shows confirmation modal using `openBottomSheet` with OK/Cancel. Clones buttons to avoid duplicate listeners. Resolves `true` on OK, `false` on Cancel.
+Delegates to `ConfirmModal.showConfirm()`. See `specs/ui/ConfirmModal.md`.
 
 ## Behavior
 

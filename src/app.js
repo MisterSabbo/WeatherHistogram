@@ -24,6 +24,7 @@ import { initMapModal } from './ui/MapSelector.js';
 import { initFavoritesModal } from './ui/FavoritesModal.js';
 import { initYearInPixels } from './ui/YearInPixels.js';
 import { openBottomSheet, closeBottomSheet } from './ui/BottomSheet.js';
+import { showConfirm } from './ui/ConfirmModal.js';
 import { initScrollIndicator as initScrollIndicatorRef } from './ui/ScrollIndicator.js';
 import { updateTopPanel as updateTopPanelRef } from './ui/TopPanel.js';
 import { initPullToRefresh as initPullToRefreshRef } from './ui/PullToRefresh.js';
@@ -589,42 +590,17 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 }
             }
 
-            function showConfirm(title, message, onOk) {
-                const titleEl = document.getElementById('confirm-title');
-                const msgEl = document.getElementById('confirm-message');
-                const cancelBtn = document.getElementById('confirm-cancel-btn');
-                const okBtn = document.getElementById('confirm-ok-btn');
-                if (titleEl) titleEl.textContent = title;
-                if (msgEl) msgEl.textContent = message;
-                if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
-                if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
-                const newOk = okBtn.cloneNode(true);
-                okBtn.parentNode.replaceChild(newOk, okBtn);
-                const newCancel = cancelBtn.cloneNode(true);
-                cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-                const closeFn = openBottomSheet('confirm-modal', 'confirm-sheet-backdrop', 'confirm-sheet-scroll-content');
-                let confirmed = false;
-                newCancel.addEventListener('click', () => closeFn());
-                newOk.addEventListener('click', () => {
-                    if (confirmed) return;
-                    confirmed = true;
-                    closeFn();
-                    onOk();
-                });
-            }
-
             function initForceRefresh() {
                 const forceRefreshBtn = document.getElementById('force-refresh-btn');
                 if (forceRefreshBtn) {
-                    forceRefreshBtn.addEventListener('click', () => {
-                        showConfirm(
+                    forceRefreshBtn.addEventListener('click', async () => {
+                        const confirmed = await showConfirm(
                             t('config.clearCache') || "Limpiar caché",
-                            t('config.clearCacheMsg') || "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?",
-                            async () => {
-                                state.isFetching = true;
-                                await onClearCache();
-                            }
+                            t('config.clearCacheMsg') || "¿Estás seguro de que quieres limpiar la caché y recargar la aplicación?"
                         );
+                        if (!confirmed) return;
+                        state.isFetching = true;
+                        await onClearCache();
                     });
                 }
             }
@@ -632,27 +608,26 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
             function initClearData() {
                 const clearDataBtn = document.getElementById('clear-data-btn');
                 if (clearDataBtn) {
-                    clearDataBtn.addEventListener('click', () => {
-                        showConfirm(
+                    clearDataBtn.addEventListener('click', async () => {
+                        const confirmed = await showConfirm(
                             t('config.clearData') || "Borrar datos guardados",
-                            t('config.clearDataMsg') || "¿Estás seguro de que quieres eliminar todos los datos persistentes (favoritos, configuraciones)? Esta acción no se puede deshacer.",
-                            async () => {
-                                state.isFetching = true;
-                                const { favoritesService } = await import('./services/FavoritesService.js');
-                                await favoritesService.clear();
-                                try { storageService.db?.close(); } catch {}
-                                await new Promise((resolve) => {
-                                    const req = indexedDB.deleteDatabase("WeatherHistDB");
-                                    req.onsuccess = () => resolve();
-                                    req.onerror = () => resolve();
-                                    req.onblocked = () => resolve();
-                                });
-                                try { localStorage.clear(); } catch {}
-                                const url = new URL(location.href);
-                                url.searchParams.set('_t', String(Date.now()));
-                                location.href = url.toString();
-                            }
+                            t('config.clearDataMsg') || "¿Estás seguro de que quieres eliminar todos los datos persistentes (favoritos, configuraciones)? Esta acción no se puede deshacer."
                         );
+                        if (!confirmed) return;
+                        state.isFetching = true;
+                        const { favoritesService } = await import('./services/FavoritesService.js');
+                        await favoritesService.clear();
+                        try { storageService.db?.close(); } catch {}
+                        await new Promise((resolve) => {
+                            const req = indexedDB.deleteDatabase("WeatherHistDB");
+                            req.onsuccess = () => resolve();
+                            req.onerror = () => resolve();
+                            req.onblocked = () => resolve();
+                        });
+                        try { localStorage.clear(); } catch {}
+                        const url = new URL(location.href);
+                        url.searchParams.set('_t', String(Date.now()));
+                        location.href = url.toString();
                     });
                 }
             }
@@ -1367,5 +1342,3 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
         checkAppVersion((remoteVersion) => {
             showChangelogModal(remoteVersion, onClearCache);
         });
-        
-        window.openBottomSheet = openBottomSheet;

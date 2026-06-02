@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.15.1] - 2026-06-02
+### Refactor
+- **Unified ConfirmModal**: Extracted duplicate `showConfirm()` from `app.js` and `YearInPixels.js` into a standalone `src/ui/ConfirmModal.js` with a Promise-based API. Added `confirmButtonClone(id, onClick)` utility to `BottomSheet.js` to canonicalize the button-cloning pattern used in 3 places. Removed `window.openBottomSheet` global leak — `YearInPixels.js` now imports `openBottomSheet` directly. Both call sites in `app.js` (forceRefresh, clearData) migrated to async/await Promise API. All 408 unit tests + E2E interaction tests pass.
+
 ## [v1.15.0a] - 2026-06-02
 ### Infrastructure
 - **Fix: E2E visual snapshot timezone dependency**: `tests/e2e/helpers/mock-data.js` used `t.getHours()` to determine `is_day`, `weather_code`, and `uv_index`, which is timezone-dependent. Changed to `t.getUTCHours()` so mock data is deterministic across machines, preventing ~20% pixel diff on CI when snapshots are generated on a different timezone. All 29 E2E tests pass.

@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { openBottomSheet } from './BottomSheet.js'
 
 const mockStorageService = {
   init: vi.fn(),
@@ -60,6 +61,13 @@ vi.mock('../utils/i18n.js', () => ({
     }
     return map[key] || fallback || key
   }
+}))
+
+vi.mock('./BottomSheet.js', () => ({
+  openBottomSheet: vi.fn(() => vi.fn()),
+  closeBottomSheet: vi.fn(),
+  onSheetClose: vi.fn(),
+  confirmButtonClone: vi.fn()
 }))
 
 vi.mock('../services/AqiManager.js', () => ({
@@ -135,14 +143,9 @@ describe('YearInPixels', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    vi.stubGlobal('openBottomSheet', vi.fn(() => vi.fn()))
     setDefaultDom()
     vi.resetModules()
     YIP = await import('./YearInPixels.js')
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   describe('exports', () => {
@@ -445,9 +448,9 @@ describe('YearInPixels', () => {
       expect(() => YIP.openYIPDetail(null, '15 Junio 2026')).not.toThrow()
     })
 
-    it('calls window.openBottomSheet', () => {
+    it('calls openBottomSheet', () => {
       YIP.openYIPDetail(mockDayData, '15 Junio 2026')
-      expect(window.openBottomSheet).toHaveBeenCalledWith('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content')
+      expect(openBottomSheet).toHaveBeenCalledWith('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content')
     })
 
     it('shows Sin datos meteorológicos if data has no weather fields', () => {

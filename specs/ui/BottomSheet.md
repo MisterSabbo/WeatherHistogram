@@ -74,6 +74,20 @@ Modal bottom sheet system with swipe-to-dismiss, stacking z-index, and close cal
 
 **Async:** No
 
+### `export function confirmButtonClone(id, onClick): void`
+
+**Description:** Replaces a button element with a clone to strip previous event listeners, then assigns `onclick`. Avoids listener accumulation on reused buttons in bottom sheets.
+
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
+| `id` | `string` | Button element ID |
+| `onClick` | `Function` | Click handler |
+
+**Return:** `void`
+
+**Mutates state:** Yes (DOM replacement)
+
 ## Behavior
 
 1. **Z-index stacking:** Sheet gets `7000 + depth * 100`, backdrop gets `6999 + depth * 100`. Depth is auto-incrementing `_sheetIdCounter`.

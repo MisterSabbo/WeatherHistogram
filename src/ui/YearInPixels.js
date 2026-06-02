@@ -3,6 +3,8 @@ import { t } from '../utils/i18n.js';
 import { getPollenLevelByType, getAggregatedPollenLevel } from '../services/AqiManager.js';
 import { getTextColorForBg } from '../utils/color.js';
 import { state } from '../store.js';
+import { openBottomSheet } from './BottomSheet.js';
+import { showConfirm } from './ConfirmModal.js';
 
 const MOODS = [
   { id: 'happy', emoji: '😊', labelKey: 'moods.happy', color: '#fbbf24' },
@@ -47,7 +49,7 @@ export function initYearInPixels() {
   if (paramDisplay) {
     paramDisplay.addEventListener('click', () => {
       populateParamSheet();
-      _closeSheet = window.openBottomSheet ? window.openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop', 'yip-param-options-container') : undefined;
+      _closeSheet = openBottomSheet('yip-param-sheet', 'yip-param-sheet-backdrop', 'yip-param-options-container');
     });
   }
 
@@ -661,9 +663,7 @@ function openYIPDetail(data, dateStr, locationName) {
         metricsContainer.innerHTML = `<div class="yip-no-data-msg">${t('config.yipNoDataMeteo', 'Sin datos meteorológicos')}</div>`;
     }
 
-    if (window.openBottomSheet) {
-        _closeDetailSheet = window.openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content');
-    }
+    _closeDetailSheet = openBottomSheet('yip-detail-sheet', 'yip-sheet-backdrop', 'yip-detail-sheet-scroll-content');
 
     const saveBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-save-btn'));
     const clearBtn = /** @type {HTMLElement|null} */ (document.getElementById('yip-detail-clear-btn'));
@@ -1102,37 +1102,4 @@ function updateYipScrollUI() {
 
 export { renderYIPGrid, saveDayNote, saveDayMoods, saveDayDetail, openYIPDetail, updateYipScrollUI, closeYipModal };
 
-async function showConfirm(title, message) {
-    return new Promise((resolve) => {
-        const titleEl = document.getElementById('confirm-title');
-        const msgEl = document.getElementById('confirm-message');
-        const cancelBtn = document.getElementById('confirm-cancel-btn');
-        const okBtn = document.getElementById('confirm-ok-btn');
 
-        if (titleEl) titleEl.textContent = title;
-        if (msgEl) msgEl.textContent = message;
-
-        if (cancelBtn) cancelBtn.textContent = t('config.cancel') || 'Cancelar';
-        if (okBtn) okBtn.textContent = t('config.accept') || 'Aceptar';
-
-        if (okBtn) {
-            const newOk = okBtn.cloneNode(true);
-            okBtn.parentNode.replaceChild(newOk, okBtn);
-            /** @type {HTMLElement} */ (newOk).onclick = () => {
-                closeFn();
-                resolve(true);
-            };
-        }
-        if (cancelBtn) {
-            const newCancel = cancelBtn.cloneNode(true);
-            cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-            /** @type {HTMLElement} */ (newCancel).onclick = () => {
-                closeFn();
-                resolve(false);
-            };
-        }
-
-        const closeFn = window.openBottomSheet ? window.openBottomSheet('confirm-modal', 'confirm-sheet-backdrop', 'confirm-sheet-scroll-content') : () => { resolve(confirm(message)); };
-
-    });
-}

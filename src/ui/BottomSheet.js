@@ -176,3 +176,11 @@ export function closeBottomSheet(sheetId, backdropId = 'pill-sheet-backdrop') {
   const closeFn = _activeSheets[backdropId];
   if (closeFn) closeFn();
 }
+
+export function confirmButtonClone(id, onClick) {
+  const original = document.getElementById(id);
+  if (!original) return;
+  const clone = /** @type {HTMLElement} */ (original.cloneNode(true));
+  original.parentNode.replaceChild(clone, original);
+  clone.onclick = onClick;
+}
