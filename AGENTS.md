@@ -4,10 +4,12 @@
 - `npm install` — install dependencies (CI uses `npm ci`)
 - `npm run dev` — Vite on port 3000
 - `npm run build` — production build
+- `npm run preview` — Vite preview of production build
 - `npm run clean` — `rm -rf dist` (fails on Windows; use `Remove-Item -Recurse -Force dist`)
 - `npm run lint` — ESLint on `src/` (CI uses `--max-warnings 0`)
-- `npm run typecheck` — `tsc --noEmit`
-- `npm test` — Vitest unit tests (jsdom, `passWithNoTests: true`)
+- `npm run typecheck` — `tsc --noEmit` (test files excluded via tsconfig.json)
+- `npm test` — Vitest unit tests (`src/**/*.test.js`, jsdom, `passWithNoTests: true`)
+- **Node**: `>=22.12.0 <25.0.0` (`.nvmrc` = 24)
 - `npm run test:e2e` — Playwright (Chromium, single worker, webServer auto-starts dev on :3000, 7% pixel diff). Pre-requisite: `npx playwright install --with-deps chromium`
 - `npm run test:e2e -- --update-snapshots` — regenerate E2E screenshot baselines
 
@@ -32,7 +34,7 @@
 - **E2E:** add/update mock data in `tests/e2e/helpers/mock-data.js` first, then tests in `tests/e2e/interaction/` or `tests/e2e/visual/`. Snapshot path: `{testFileDir}/{testFileName}-snapshots/{arg}{ext}`.
 - **README:** update if documented features or setup change.
 
-## Agent-rules (referenced by `opencode.json` — only 3 auto-loaded, rest read on demand)
+## Agent-rules (referenced by `opencode.json` — only 4 auto-loaded, rest read on demand)
 **Auto-loaded** via `opencode.json` `instructions`:
 - `agent-rules/subagents.md` — when to use subagents
 - `agent-rules/memory.md` — MCP memory persistence workflow
