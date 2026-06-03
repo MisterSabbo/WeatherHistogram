@@ -1,6 +1,7 @@
 import { getSplitIndex } from '../utils/time.js';
 import { getThemeColor, getThemeFont } from '../theme.js';
 import { normalizeY } from '../utils/math.js';
+import { MinimapTemperatureLabels } from './MinimapTemperatureLabels.js';
 
 export class MinimapRenderer {
   constructor({ canvas, ctx, viewportEl, scrollContainer, centerOnCurrentTime, updateNowButtonPosition, minimapHeight }) {
@@ -14,6 +15,7 @@ export class MinimapRenderer {
     this.cacheCanvas = null;
     this.mode = 'future';
     this.isDragging = false;
+    this.tempLabelRenderer = new MinimapTemperatureLabels();
   }
 
   invalidateCache() {
@@ -305,6 +307,8 @@ export class MinimapRenderer {
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
     }
+
+    this.tempLabelRenderer.draw(ctx, minimapData, w, h, step);
 
     ctx.restore();
 
