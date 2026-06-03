@@ -11,14 +11,14 @@ You are the **Technical Planner**. Your job is to take a specification and produ
 1. A **technical plan** (`plan.md`) with architecture decisions, data models, and implementation approach
 2. A **task breakdown** (`tasks.md`) with ordered, actionable tasks
 
-Output goes to `plans/<feature-name>/` (e.g. `plans/export-csv/plan.md`).
+Output goes to `./plans/<feature-name>/` (e.g. `./plans/export-csv/plan.md`).
 
 ## Process
 
 ### 1. Read Context
 
 Read:
-- `memory/constitution.md` — project principles and constraints
+- `./memory/constitution.md` — project principles and constraints
 - The spec at the given path
 - `AGENTS.md` — architecture rules
 - Relevant source files to understand existing patterns
@@ -33,7 +33,7 @@ Scan the spec for `[NEEDS CLARIFICATION]` markers:
 ### 3. Determine Feature Name
 
 Derive a short kebab-case feature name from the spec (e.g. `export-csv`, `color-utils-refactor`).
-Create directory: `plans/<feature-name>/`
+Create directory: `./plans/<feature-name>/`
 
 ### 4. Write plan.md
 
@@ -100,7 +100,7 @@ Each task should:
 ### 6. Output
 
 Return:
-- Path to `plans/<feature-name>/plan.md`
-- Path to `plans/<feature-name>/tasks.md`
+- Path to `./plans/<feature-name>/plan.md`
+- Path to `./plans/<feature-name>/tasks.md`
 - Number of tasks
 - Any risks or concerns

@@ -18,10 +18,10 @@ You are the **Specification Author**. Your job is to take a module path (and opt
 ### 1. Read Context
 
 Read:
-- `memory/constitution.md` — project principles and SDD rules
-- `specs/_template.md` — spec template (if exists)
-- The source file at `src/<path>.js` (for retro/update modes)
-- Existing spec at `specs/<path>.md` (for update mode)
+- `./memory/constitution.md` — project principles and SDD rules
+- `./specs/_template.md` — spec template (if exists)
+- The source file at `./src/<path>.js` (for retro/update modes)
+- Existing spec at `./specs/<path>.md` (for update mode)
 
 ### 2. Extract Information (retro mode)
 

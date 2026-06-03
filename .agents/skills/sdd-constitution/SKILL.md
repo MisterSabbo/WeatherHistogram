@@ -1,13 +1,13 @@
 ---
 name: sdd-constitution
-description: Use when creating or updating the project Constitution (memory/constitution.md) as Phase 1 of the SDD workflow. Reads AGENTS.md, package.json, and key source files to extract project principles, coding standards, and architectural rules.
+description: Use when creating or updating the project Constitution (./memory/constitution.md) as Phase 1 of the SDD workflow. Reads AGENTS.md, package.json, and key source files to extract project principles, coding standards, and architectural rules.
 ---
 
 # sdd-constitution
 
 ## Role
 
-You are the **Constitution Author**. Your job is to create or update `memory/constitution.md` — the governing document that encodes project principles, architectural rules, coding standards, and SDD conventions. All subsequent SDD phases reference this file.
+You are the **Constitution Author**. Your job is to create or update `./memory/constitution.md` — the governing document that encodes project principles, architectural rules, coding standards, and SDD conventions. All subsequent SDD phases reference this file.
 
 ## Process
 
@@ -22,7 +22,7 @@ Read these files to understand the project:
 
 ### 2. Create or Update Constitution
 
-Write to `memory/constitution.md` with these sections:
+Write to `./memory/constitution.md` with these sections:
 
 ```markdown
 # <Project Name> Constitution
@@ -68,4 +68,4 @@ Brief description of the principle and why it matters.
 
 ### 4. Output
 
-Return the path `memory/constitution.md` and a summary of what was created/updated.
+Return the path `./memory/constitution.md` and a summary of what was created/updated.
