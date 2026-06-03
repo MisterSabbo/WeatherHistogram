@@ -2,10 +2,6 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
-## [v1.16.0] - 2026-06-03
-### Enhancement
-- **Minimap temperature labels**: Added `MinimapTemperatureLabels` class that detects local temperature extrema (peaks and valleys) on the minimap temperature curve and renders rounded degree labels (e.g. "22°", "-3°") with intelligent filtering and collision avoidance. Labels are drawn after the past overlay for visibility in past mode. Significance threshold: 3°C (compares against raw predecessor; if previous extremum was skipped by threshold, current is auto-kept). Collision: per-type (max/min) with 40px minimum between same-type labels — alternating peak/valley labels don't collide. Deduplication of consecutive same-type extrema (keeps higher max / lower min). `detectExtrema` uses `Math.round()` for consistent detection with displayed values. All labels use `tempLine` color matching the temperature curve, with offsets (-4/+5) and adaptive flip for extreme Y positions. White shadow halo for legibility. All 424 unit tests pass. 0 lint errors. Typecheck clean.
-
 ## [v1.15.1] - 2026-06-02
 ### Refactor
 - **Unified ConfirmModal**: Extracted duplicate `showConfirm()` from `app.js` and `YearInPixels.js` into a standalone `src/ui/ConfirmModal.js` with a Promise-based API. Added `confirmButtonClone(id, onClick)` utility to `BottomSheet.js` to canonicalize the button-cloning pattern used in 3 places. Removed `window.openBottomSheet` global leak — `YearInPixels.js` now imports `openBottomSheet` directly. Both call sites in `app.js` (forceRefresh, clearData) migrated to async/await Promise API. All 408 unit tests + E2E interaction tests pass.

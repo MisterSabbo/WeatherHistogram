@@ -1,11 +1,5 @@
 export const changelogData = [
   {
-    "version": "1.16.0",
-    "changes": [
-      "Minimap temperature labels: added MinimapTemperatureLabels class that detects local temperature extrema (peaks and valleys) on the minimap curve and renders rounded degree labels (e.g. '22°', '-3°') with intelligent filtering (3°C threshold, auto-keep on previous skip), per-type collision avoidance (40px between same-type labels), deduplication of consecutive same-type extrema, Math.round() in detection, and adaptive flip for extreme Y positions. Labels drawn after past overlay for past-mode visibility. All 424 unit tests pass."
-    ]
-  },
-  {
     "version": "1.15.1",
     "changes": [
       "Unified ConfirmModal: extracted duplicate showConfirm() from app.js and YearInPixels.js into a standalone ConfirmModal.js with Promise-based API. Added confirmButtonClone() to BottomSheet.js. Removed window.openBottomSheet global leak. Both call sites in app.js migrated to async/await Promise API. All 408 unit tests + E2E pass."

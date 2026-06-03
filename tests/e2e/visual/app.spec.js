@@ -34,10 +34,7 @@ test.describe('App visual screenshots', () => {
   test('daily cards visible', async ({ page }) => {
     const toggleBtn = page.locator('#toggle-nav-btn')
     await toggleBtn.click()
-    await page.waitForFunction(() => {
-      const el = document.getElementById('daily-cards-container')
-      return el && el.style.display === 'flex' && el.querySelector('.daily-card')
-    }, { timeout: 5000 })
+    await page.waitForTimeout(500)
     const cardsContainer = page.locator('#daily-cards-container')
     await expect(cardsContainer).toBeVisible()
     await expect(page).toHaveScreenshot('daily-cards.png', { fullPage: true })

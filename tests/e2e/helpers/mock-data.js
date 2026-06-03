@@ -88,7 +88,7 @@ export function generateMockForecast(pastDays = 7, forecastDays = 7) {
     hourly.visibility.push(8000 + rand() * 4000)
   }
 
-  return { hourly, daily, timezone: 'UTC' }
+  return { hourly, daily }
 }
 
 export function generateMockAQI(pastDays = 7, forecastDays = 7) {
