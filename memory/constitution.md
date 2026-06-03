@@ -1,9 +1,9 @@
 # WeatherHistogram — Agent Constitution
 
-> **Version:** 2.0
+> **Version:** 3.0
 > **Last Updated:** 2026-06-03
 > **Status:** Ratified
-> **Supersedes:** All prior agent-rules/ files as sole governing document for agent conduct.
+> **Supersedes:** All prior agent-rules/ files as the authoritative reference; this constitution is the single governing document. Agent-rules files remain as boot-time instructions (loaded via opencode.json) and may contain operational specifics not duplicated here.
 >
 > This constitution is the supreme governing document for all AI agents operating within the WeatherHistogram project. Every action, decision, and output must comply with its clauses. In case of conflict, this constitution takes precedence over all other project documentation.
 
@@ -179,7 +179,7 @@ Agents operate with the following decision-making hierarchy:
 
 - `src/style.css` is an `@import` index of 8 modules in `src/styles/`
 - Edit the individual modules, not the index
-- CSS modules: `variables.css`, `layout.css`, `controls.css`, `minimap.css`, `daily-cards.css`, `modals.css`, `animations.css`, `year-in-pixels.css`
+- CSS `@import` order (from `src/style.css`): `variables.css` → `controls.css` → `layout.css` → `daily-cards.css` → `minimap.css` → `year-in-pixels.css` → `modals.css` → `animations.css`
 
 ### III-E. ESLint Rules (enforced, must be 0 warnings, 0 errors)
 
@@ -211,6 +211,9 @@ Agents operate with the following decision-making hierarchy:
 | `CACHE_DURATION` | 300000 (5 min) | Weather data cache TTL |
 | `DEFAULT_COORDS` | `{lat: 40.4167, lon: -3.70325, name: "Madrid"}` | Fallback location |
 | `PIXELS_PER_HOUR` | 60 (desktop) / 50 (mobile) | On `state`, not CONFIG (dynamic) |
+| `getDPR()` | `Math.min(window.devicePixelRatio || 1, 2)` | Exported from `src/store.js`; caps at 2 for canvas resolution |
+
+- `.nvmrc` specifies **Node.js 24** — must be used for development and CI
 
 ### III-H. DOM Manipulation Patterns
 
@@ -220,6 +223,23 @@ Agents operate with the following decision-making hierarchy:
 - Collapsible sections use `.collapsible-trigger` / `.collapsible` / `.open` pattern
 - All inline styles should be CSS variables (`var(--bg-color)`) or minimal dynamic values
 - Do not add explanatory comments to code — let the code speak for itself
+
+### III-I. Year in Pixels (YIP) System
+
+- **Purpose:** Per-day mood tracking, health conditions (cold/allergies), personal notes, and weather parameter visualization in a calendar grid
+- **Module:** `src/ui/YearInPixels.js` — exports `initYearInPixels`, `renderYIPGrid`, `saveDayNote`, `saveDayMoods`, `saveDayDetail`, `openYIPDetail`, `updateYipScrollUI`, `closeYipModal`
+- **Moods:** 6 predefined states (happy/😊, neutral/😐, sad/😢, angry/😠, anxious/😰, tired/😴) with distinct colors; multi-select per day
+- **Health conditions:** Cold (🤧) and Allergies (🌿) — boolean toggles per day, persisted via `StorageService.updateDayConditions()`
+- **Notes:** Free-text per day, persisted via `StorageService.updateDayNotes()`
+- **Unified persistence:** `StorageService.updateDayData()` saves all fields (notes, moods, cold, allergies) atomically
+- **Grid rendering:** 12 monthly blocks with 7-column day grids per month; scroll-snapping per month on mobile (`scroll-snap-type: y mandatory` on `.yip-modal-scroll-content`)
+- **Parameters displayed:** Temperature (max/min/apparent), Precipitation, Wind (max/gusts), AQI, Pollen (6 species: alder, birch, grass, mugwort, olive, ragweed), Mood, Health (cold, allergies)
+- **Legend:** Two-tab system — Cell tab (parameter color scale) and State tab (condition dots: blue=notes, gold=mood, red=cold, green=allergies)
+- **DOM elements:** `#yip-modal`, `#yip-modal-backdrop`, `#yip-modal-scroll-content`, `#yip-grid-container`, `#yip-location-chips`, `#yip-param-display`, `#yip-detail-sheet`, `#yip-sheet-backdrop`, `#yip-detail-sheet-scroll-content`, `#yip-cold-toggle`, `#yip-allergies-toggle`
+- **Location management:** Horizontal chip selector with pagination dots; delete location or individual month data via IndexedDB
+- **CSS:** Dedicated module at `src/styles/year-in-pixels.css` — responsive: bottom sheet on mobile (<768px, ≥95dvh, border-radius top), centered modal on desktop (scale animation)
+- **Drag-to-dismiss:** Pointer events with 100px threshold; swipe-down gesture on scroll content when `scrollTop === 0`
+- **Storage:** IndexedDB object store `historyData` via `StorageService` — methods: `getHistory()`, `setHistory()`, `updateDayNotes()`, `updateDayMoods()`, `updateDayConditions()`, `updateDayData()`
 
 ---
 
@@ -363,7 +383,7 @@ If file content conflicts with memory data:
 ### VII-A. Theme System
 
 - Built-in chart themes: `default`, `neon`, `pastel`
-- Themes loaded from `public/themes/{id}.json` with fallback to `themes/{id}.json`
+- Themes loaded from `./themes/{id}.json` with fallback to `./public/themes/{id}.json`
 - Access via `getThemeColor('key')`, `getThemeIcon('key')`, `getThemeFont('fallback')`
 - Dark/light mode toggle persists `state.theme` via StorageService
 - Chart theme (`state.activeChartTheme`) persists via StorageService
@@ -380,9 +400,10 @@ When changing theme:
 
 ## Article VIII: PWA & Deployment Rules
 
-### VIII-A. Standalone Mode Detection
+### VIII-A. Manifest & Standalone Mode
 
-PWA standalone mode is detected via `display-mode: standalone` or `navigator.standalone`. When detected, add `pwa-standalone` class to `<html>` element.
+- **Manifest:** `manifest.json` includes `display_override: ['standalone']` for robust standalone mode on Android Chrome
+- **Detection:** PWA standalone mode detected via `display-mode: standalone` or `navigator.standalone`; add `pwa-standalone` class to `<html>` element
 
 ### VIII-B. Service Worker
 
@@ -443,6 +464,7 @@ app.js:loadWeather()
 - Pointer drag for mouse, touch events for mobile — both set `state.isDragging` and trigger `render()`
 - Floating "Now" button appears when scrolled away from current time position
 - Pull-to-refresh: `PullToRefresh.js` with touch drag-down gesture, 80px threshold
+- **Navigation API back-prevention:** `window.navigation` `navigate` event intercepts `traverse` type when `window._preventBackNav` is set (triggered on `#scroll-container` scroll, cleared after 400ms idle) — prevents accidental browser back/forward gestures during chart scrolling
 
 ### X-B. View Modes
 
@@ -545,4 +567,4 @@ This constitution is the supreme governing document. In case of conflict between
 
 ---
 
-*Ratified by project maintainer on 2026-06-03. This constitution replaces all prior agent-rules/ files and memory/constitution.md v1 as the single governing document for AI agent activity in the WeatherHistogram project.*
+*Ratified by project maintainer on 2026-06-03. This constitution replaces memory/constitution.md v2 as the single governing document for AI agent activity in the WeatherHistogram project. Agent-rules files remain as boot-time instructions with operational specifics.*
