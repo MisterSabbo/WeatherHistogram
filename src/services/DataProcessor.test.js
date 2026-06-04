@@ -46,17 +46,17 @@ beforeEach(async () => {
 });
 
 describe('DataProcessor', () => {
-  it('throws when forecastData has no hourly', () => {
-    expect(() => processData({}, { hourly: { time: [] } }, vi.fn())).toThrow('Datos de API incompletos');
-    expect(() => processData(null, { hourly: { time: [] } }, vi.fn())).toThrow('Datos de API incompletos');
+  it('throws when forecastData has no hourly', async () => {
+    await expect(processData({}, { hourly: { time: [] } }, vi.fn())).rejects.toThrow('Datos de API incompletos');
+    await expect(processData(null, { hourly: { time: [] } }, vi.fn())).rejects.toThrow('Datos de API incompletos');
   });
 
-  it('throws when aqiData has no hourly', () => {
+  it('throws when aqiData has no hourly', async () => {
     const forecast = { hourly: { time: [1000] }, daily: { time: [1000] } };
-    expect(() => processData(forecast, {}, vi.fn())).toThrow('Datos de API incompletos');
+    await expect(processData(forecast, {}, vi.fn())).rejects.toThrow('Datos de API incompletos');
   });
 
-  it('processes valid data and populates hourlyData', () => {
+  it('processes valid data and populates hourlyData', async () => {
     const now = Math.floor(Date.now() / 1000);
     const forecastData = {
       timezone: 'Europe/Madrid',
@@ -109,7 +109,7 @@ describe('DataProcessor', () => {
     };
 
     const centerOnCurrentTime = vi.fn();
-    processData(forecastData, aqiData, centerOnCurrentTime);
+    await processData(forecastData, aqiData, centerOnCurrentTime);
 
     expect(state.hourlyData).toBeDefined();
     expect(state.hourlyData.length).toBe(2);
@@ -123,7 +123,7 @@ describe('DataProcessor', () => {
     expect(state.hourlyData[0].pollen).toBeGreaterThan(0);
   });
 
-  it('falls back to UTC for invalid timezone', () => {
+  it('falls back to UTC for invalid timezone', async () => {
     const now = Math.floor(Date.now() / 1000);
     const forecastData = {
       timezone: 'Invalid/Timezone',
@@ -132,11 +132,11 @@ describe('DataProcessor', () => {
     };
     const aqiData = { hourly: { time: [now], us_aqi: [30], european_aqi: [25], pm10: [5], pm2_5: [2], nitrogen_dioxide: [10], ozone: [50], alder_pollen: [0], birch_pollen: [0], grass_pollen: [0], mugwort_pollen: [0], olive_pollen: [0], ragweed_pollen: [0] } };
 
-    processData(forecastData, aqiData, vi.fn());
+    await processData(forecastData, aqiData, vi.fn());
     expect(state.timezone).toBe('UTC');
   });
 
-  it('handles missing daily data gracefully', () => {
+  it('handles missing daily data gracefully', async () => {
     const now = Math.floor(Date.now() / 1000);
     const forecastData = {
       timezone: 'UTC',
@@ -144,7 +144,7 @@ describe('DataProcessor', () => {
     };
     const aqiData = { hourly: { time: [now], us_aqi: [30], european_aqi: [25], pm10: [5], pm2_5: [2], nitrogen_dioxide: [10], ozone: [50], alder_pollen: [0], birch_pollen: [0], grass_pollen: [0], mugwort_pollen: [0], olive_pollen: [0], ragweed_pollen: [0] } };
 
-    processData(forecastData, aqiData, vi.fn());
+    await processData(forecastData, aqiData, vi.fn());
     expect(state.hourlyData).toHaveLength(1);
     expect(state.dailyData).toBeDefined();
   });
@@ -212,7 +212,7 @@ describe('DataProcessor', () => {
       }
     };
 
-    processData(forecastData, aqiData, vi.fn());
+    await processData(forecastData, aqiData, vi.fn());
 
     await vi.waitFor(() => {
       expect(mockStorage.setHistory).toHaveBeenCalled();
@@ -223,7 +223,7 @@ describe('DataProcessor', () => {
     expect(savedDay.notes).toBe('my note');
   });
 
-  it('calls generateDailyCards', () => {
+  it('calls generateDailyCards', async () => {
     const now = Math.floor(Date.now() / 1000);
     const forecastData = {
       timezone: 'UTC',
@@ -231,7 +231,7 @@ describe('DataProcessor', () => {
     };
     const aqiData = { hourly: { time: [now], us_aqi: [30], european_aqi: [25], pm10: [5], pm2_5: [2], nitrogen_dioxide: [10], ozone: [50], alder_pollen: [0], birch_pollen: [0], grass_pollen: [0], mugwort_pollen: [0], olive_pollen: [0], ragweed_pollen: [0] } };
 
-    processData(forecastData, aqiData, vi.fn());
+    await processData(forecastData, aqiData, vi.fn());
     expect(mockGenerateDailyCards).toHaveBeenCalled();
   });
 });

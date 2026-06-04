@@ -445,7 +445,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                             updateLangCardsUI(newLang);
                             applyTranslations();
                             if (state.rawForecast && state.rawAQI) {
-                                processData(state.rawForecast, state.rawAQI, false);
+                                await processData(state.rawForecast, state.rawAQI, false);
                                 updateTopPanel();
                                 generateDailyCards();
                             }

@@ -25,7 +25,7 @@ export async function fetchWeatherData(pastDays, forecastDays, {
       console.log("Usando datos en caché para:", cacheKey);
       state.rawForecast = cached.forecastData;
       state.rawAQI = cached.aqiData;
-      processData(cached.forecastData, cached.aqiData, onCenterOnCurrentTime);
+      await processData(cached.forecastData, cached.aqiData, onCenterOnCurrentTime);
       onResize();
       return;
     }
@@ -47,7 +47,7 @@ export async function fetchWeatherData(pastDays, forecastDays, {
     state.rawForecast = forecastData;
     state.rawAQI = aqiData;
 
-    processData(forecastData, aqiData, onCenterOnCurrentTime);
+    await processData(forecastData, aqiData, onCenterOnCurrentTime);
     onResize();
   } catch (err) {
     clearTimeout(timeoutId);
@@ -64,7 +64,7 @@ export async function fetchWeatherData(pastDays, forecastDays, {
         onUpdateLocationUI();
       }
 
-      processData(cached.forecastData, cached.aqiData, onCenterOnCurrentTime);
+      await processData(cached.forecastData, cached.aqiData, onCenterOnCurrentTime);
       onResize();
     } else {
       console.warn("API falló y no hay caché, generando datos simulados");
@@ -75,7 +75,7 @@ export async function fetchWeatherData(pastDays, forecastDays, {
       state.locationName = "Ninguna";
       onUpdateLocationUI();
 
-      processData(mock.forecastData, mock.aqiData, onCenterOnCurrentTime);
+      await processData(mock.forecastData, mock.aqiData, onCenterOnCurrentTime);
       onResize();
     }
   } finally {

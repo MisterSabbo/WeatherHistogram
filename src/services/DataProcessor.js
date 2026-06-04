@@ -4,7 +4,7 @@ import { generateDailyCards } from '../ui/DailyCards.js';
 
 import { storageService } from './StorageService.js';
 
-export function processData(forecastData, aqiData, centerOnCurrentTime) {
+export async function processData(forecastData, aqiData, centerOnCurrentTime) {
     if (!forecastData || !forecastData.hourly || !forecastData.hourly.time || !aqiData || !aqiData.hourly || !aqiData.hourly.time) {
         throw new Error("Datos de API incompletos o inválidos");
     }
@@ -153,7 +153,7 @@ export function processData(forecastData, aqiData, centerOnCurrentTime) {
     // Generate daily cards if the container exists
     generateDailyCards(centerOnCurrentTime);
 
-    saveHistoryData(state);
+    await saveHistoryData(state);
 }
 
 async function saveHistoryData(state) {
