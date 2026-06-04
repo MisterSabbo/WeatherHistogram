@@ -11,7 +11,7 @@
    - `tests/e2e/interaction/` — for button clicks, modal open/close, toggle switches, etc.
    - `tests/e2e/visual/` — for screenshot comparisons (full-page or element-specific).
 3. Run the full suite: `npm run test:e2e` (starts dev server automatically on port 3000).
-4. If you added or modified screenshot tests, regenerate snapshots: `npm run test:e2e -- --update-snapshots`.
+4. If you added or modified screenshot tests, regenerate snapshots: `npx playwright test --update-snapshots` (Windows: npm intercepts the flag, use npx directly).
 5. Commit both test files and generated snapshot images (`*.png` in `tests/e2e/*.spec.js-snapshots/`).
 
 #### Snapshot management
@@ -23,6 +23,6 @@
 #### Available script
 
 ```bash
-npm run test:e2e              # run all tests (compares against stored snapshots)
-npm run test:e2e -- --update-snapshots  # run and overwrite snapshots
+npm run test:e2e                     # run all tests (compares against stored snapshots)
+npx playwright test --update-snapshots  # run and overwrite snapshots (Windows: npm intercepts --flag)
 ```

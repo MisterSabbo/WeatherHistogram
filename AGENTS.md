@@ -9,7 +9,7 @@
 - `npm run typecheck` — `tsc --noEmit`
 - `npm test` — Vitest unit tests (jsdom, `passWithNoTests: true`)
 - `npm run test:e2e` — Playwright (Chromium, single worker, webServer auto-starts dev on :3000, 7% pixel diff). Pre-requisite: `npx playwright install --with-deps chromium`
-- `npm run test:e2e -- --update-snapshots` — regenerate E2E screenshot baselines
+- `npx playwright test --update-snapshots` — regenerate E2E screenshot baselines (Windows: npm intercepts the flag, use npx directly)
 
 ## Architecture
 - **Vanilla JS SPA** — no framework. Vite + JSDoc types (`tsconfig.json`: `checkJs: true`, `strict: false`). `@` alias → project root.
