@@ -1,92 +1,208 @@
 ﻿# Spec: `src/ui/ChangelogModal.js`
 
 ## Purpose
-Changelog modal with visual timeline, expandable detail bottom sheet, and entrance animations.
+
+Paginate changelog rendering in blocks of 10 entries with auto-load on scroll, eliminating the latency of rendering all ~66+ entries at once when the modal opens.
 
 ## Dependencies
 
+### state
+
+| Property | Access (R/W) | Context |
+|-----------|-------------|----------|
+| — | — | This module does not read or write `state` |
+
+### CONFIG
+
+| Constant | Context |
+|-----------|----------|
+| — | This module does not use `CONFIG` |
+
+### DOM
+
+| Element | Access type | Context |
+|----------|---------------|----------|
+| `#changelog-modal` | getElementById | main modal container |
+| `#changelog-title` | getElementById | modal title text |
+| `#changelog-list` | getElementById | list container (ul) — entries appended here |
+| `#changelog-items` | getElementById | outer items container — cleared on open |
+| `#changelog-close-btn` | getElementById | close button |
+| `#changelog-update-container` | getElementById | update button wrapper (version-specific mode) |
+| `#changelog-update-btn` | getElementById | update button |
+| `#changelog-detail-sheet` | getElementById | detail view bottom sheet |
+| `#changelog-detail-backdrop` | getElementById | detail view backdrop |
+| `#changelog-detail-scroll-content` | getElementById | detail view scroll container |
+| `#changelog-detail-title` | getElementById | detail view title |
+| `#changelog-detail-subtitle` | getElementById | detail view subtitle |
+| `#changelog-detail-list` | getElementById | detail view changes list |
+| `#changelog-scroll-content` | getElementById | main changelog scroll container (for IntersectionObserver root) |
+
 ### Internal modules
+
 | Module | Export used | Purpose |
 |--------|-------------|----------|
-| `../data/changelog.js` | `changelogData` | version data |
-| `../utils/i18n.js` | `t` | translation |
-| `./BottomSheet.js` | `openBottomSheet` | modal and detail sheet |
+| `../data/changelog.js` | `changelogData` | Array of changelog entries (embedded, not fetched) |
+| `../utils/i18n.js` | `t` | Localized string lookup |
+| `./BottomSheet.js` | `openBottomSheet` | Opens bottom sheet with swipe-to-dismiss |
 
 ## Public API
 
-### `export function showChangelogModal(version?, onUpdate?): void`
+### `export function showChangelogModal(version?: string, onUpdate?: () => Promise<void>): void`
 
-**Description:** Opens the changelog modal as a bottom sheet. Shows a specific version with update button, or all versions.
-
-**Parameters:**
-| Name | Type | Description |
-|--------|------|-------------|
-| `version` | `string` | Specific version to highlight (omit to show all) |
-| `onUpdate` | `Function` | Async callback triggered on "update" button click |
-
-**Return:** `void`
-
-**Mutates state:** Yes (DOM manipulation: innerHTML, textContent, style changes)
-
-**Async:** No
-
-### `export function initChangelog(onBeforeOpen?): void`
-
-**Description:** Attaches click handler to `#open-changelog-link` with double-click guard (`isChangelogLoading` flag).
+**Description:** Opens the changelog modal. If `version` is provided, shows only that version's entry (no pagination). If `version` is `null`/`undefined`, shows full paginated changelog.
 
 **Parameters:**
 | Name | Type | Description |
 |--------|------|-------------|
-| `onBeforeOpen` | `Function` | Optional callback invoked before opening the modal |
+| `version` | `string \| null` | If set, shows single version detail. If null, shows all versions with pagination. |
+| `onUpdate` | `() => Promise<void>` | Called when update button is clicked (version-specific mode only). |
 
 **Return:** `void`
 
-**Mutates state:** Yes (registers event listener, manages `isChangelogLoading` flag)
+**Mutates state:** No
+
+**Async:** No (the `onUpdate` callback is async but called from a click handler)
+
+### `export function initChangelog(onBeforeOpen?: () => void): void`
+
+**Description:** Wires the `#open-changelog-link` click handler. Calls `showChangelogModal()` on click.
+
+**Parameters:**
+| Name | Type | Description |
+|--------|------|-------------|
+| `onBeforeOpen` | `() => void` | Optional callback executed before modal renders (e.g., to hide other UI). |
+
+**Return:** `void`
+
+**Mutates state:** No
 
 **Async:** No
 
-## Internal functions
-
-### `function openChangelogDetail(item): void`
-
-**Description:** Opens a detail bottom sheet (`#changelog-detail-sheet`) for a specific changelog item, showing full change list or default placeholder text.
-
-### `function renderChangelogData(changelogData, version, listEl, closeBtn, updateBtn, onUpdate): void`
-
-**Description:** Renders the timeline list with staggered fadeInUp animation, circular markers (major=blue, patch=gray), clickable items, and properly wires close/update buttons. Opens the modal bottom sheet.
+---
 
 ## Behavior
 
-1. **Timeline rendering:** Each item has a circular marker (major version = `var(--accent-temp)`, patch = `var(--grid-color)`) and a card with type tag (Major/Patch), version title, and first change description preview (2-line clamp).
-2. **Staggered animation:** `fadeInUp` CSS animation with `index * 0.1s` delay. After animation ends, inline style is set to `opacity:1; transform:none; animation:none`.
-3. **Detail view:** Click on a timeline item → `openChangelogDetail` → bottom sheet with full list. If no changes, shows default "minor fixes" text.
-4. **Version-specific mode:** If `version` is provided, shows update button (`onUpdate` callback), marks the version item with a blue unread dot, and sets title from i18n key `config.changelogTitle`.
-5. **All versions mode:** If no version, shows all items, hides update container, title from `config.changelogTitleAll`.
-6. **initChangelog:** Sets up click on `#open-changelog-link` with guard against rapid double-clicks (`isChangelogLoading` flag).
+### Pagination (full changelog mode — no `version` argument)
+
+1. **Initial render:** Render the first 10 entries from `changelogData` into `#changelog-list`.
+2. **Auto-load trigger:** A sentinel `<div>` element is appended after the last rendered entry. An `IntersectionObserver` watches it with `rootMargin: '0px 0px 200px 0px'` (triggers 200px before the sentinel enters the viewport).
+3. **On intersection:** When the sentinel becomes visible within the threshold:
+   - Hide the sentinel (to prevent double-triggering).
+   - Append a "Loading…" indicator (`<li>` with class `changelog-loading`).
+   - Wait at least 150ms (minimum perceptible delay).
+   - Append the next 10 entries (or remaining if <10 left) using a `DocumentFragment`.
+   - Remove the loading indicator.
+   - If more entries remain, re-show the sentinel after the newly appended entries.
+   - If no more entries remain, replace the sentinel with an "All caught up" / "Estás al día" indicator (class `changelog-caught-up`).
+4. **Block animation:** Each block of newly loaded entries fades in as a group via a CSS class `changelog-block-enter` (opacity 0 → 1, no per-item stagger).
+5. **Entry animation:** Individual entry stagger animation (`fadeInUp`) is removed. Entries appear with the block fade-in only.
+
+### Single version mode (with `version` argument)
+
+1. Renders only the matching entry (no pagination, no sentinel).
+2. Behavior is identical to current implementation — single entry, detail view on click.
+3. No "Loading…" or "All caught up" indicators shown.
+
+### DOM construction
+
+1. Each entry `<li>` uses CSS classes instead of inline styles. All inline `style.*` assignments in current `renderChangelogData()` are replaced with CSS class toggles:
+   - `.changelog-entry` — base entry styles (position, padding, cursor)
+   - `.changelog-entry-major` — accent marker for `.0` versions
+   - `.changelog-entry-marker` — timeline dot
+   - `.changelog-entry-content` — card background/border
+   - `.changelog-entry-header` — flex row for tag + title
+   - `.changelog-entry-tag` — Major/Patch badge
+   - `.changelog-entry-title` — version number
+   - `.changelog-entry-desc` — truncated description
+2. Each block is built via `DocumentFragment` and appended in a single DOM operation.
+
+### Sentinel and loading indicators
+
+- **Sentinel element:** `<li class="changelog-sentinel" aria-hidden="true"></li>` — invisible, zero-height, used only for IntersectionObserver.
+- **Loading indicator:** `<li class="changelog-loading" role="status" aria-live="polite">{t('config.changelogLoading')}</li>` — visible spinner or text.
+- **Caught-up indicator:** `<li class="changelog-caught-up">{t('config.changelogCaughtUp')}</li>` — static text, no sentinel after it.
+
+### Error handling
+
+- The `IntersectionObserver` callback wraps all DOM manipulation in `try/catch`.
+- On error: remove loading indicator, restore the sentinel, show error message in the loading indicator's position with a "Retry" link (class `changelog-error`).
+- Retry re-invokes the load logic for the same block.
+
+### Accessibility
+
+- `aria-live="polite"` on the loading indicator announces new content to screen readers.
+- Sentinel has `aria-hidden="true"`.
+- No other accessibility changes (out of scope).
+
+### CSS additions (in `src/styles/modals.css`)
+
+New classes:
+- `.changelog-block-enter` — opacity transition for block fade-in
+- `.changelog-loading` — loading state styling
+- `.changelog-caught-up` — end-of-list styling
+- `.changelog-sentinel` — zero-height invisible element
+- `.changelog-error` — error state with retry link
+- `.changelog-entry` — replaces inline styles on `<li>`
+- `.changelog-entry-major` — accent marker variant
+- `.changelog-entry-marker` — timeline dot
+- `.changelog-entry-content` — card wrapper
+- `.changelog-entry-header` — flex row
+- `.changelog-entry-tag` — badge
+- `.changelog-entry-title` — version text
+- `.changelog-entry-desc` — description text
+
+### i18n additions
+
+New keys in `src/utils/i18n.js`:
+
+| Key | `es` | `en` |
+|-----|------|------|
+| `config.changelogLoading` | `Cargando más cambios…` | `Loading more changes…` |
+| `config.changelogCaughtUp` | `Estás al día` | `All caught up` |
+| `config.changelogLoadError` | `Error al cargar. Reintenta.` | `Load error. Retry.` |
+| `config.changelogRetry` | `Reintentar` | `Retry` |
+
+---
 
 ## Edge Cases
 
 | Input | Expected behavior |
 |---------|------------------------|
-| `version` is `undefined` | Shows full timeline without highlighted version, hides update button |
-| `changelogData` empty | Renders an empty list |
-| `#open-changelog-link` does not exist | `initChangelog` returns without registering listener |
-| Double-click on link | Guarded by `isChangelogLoading` flag |
-| `onBeforeOpen` not a function | Called anyway (no-op if undefined) |
-| DOM elements for detail sheet missing | `openChangelogDetail` may fail silently |
+| `changelogData` has ≤10 entries | Render all entries, no sentinel, no observer |
+| `changelogData` is empty | Render empty state (existing behavior — no entries) |
+| `version` is provided (single mode) | Render only that entry, no pagination |
+| `version` not found in data | Render empty entry with empty changes array |
+| Scroll to bottom with <10 remaining | Render remaining entries, then show "All caught up" |
+| Observer fires multiple times before block loads | Guard flag (`isLoading`) prevents concurrent loads |
+| Modal closed mid-load | Observer disconnected on close; sentinel state reset on next open |
+| `IntersectionObserver` not supported (very old browsers) | Fallback: render all entries immediately (no pagination) |
 
 ## Test Scenarios
 
-1. **Initializes without errors with DOM elements present:** `initChangelog` with link present
-2. **Does not throw if DOM elements are missing:** Link absent
-3. **Exports expected functions:** `showChangelogModal`, `initChangelog` are functions
-4. **Modal with specific version:** `showChangelogModal('1.0.0')` opens with highlighted version and update button
-5. **Modal without version:** `showChangelogModal()` shows full timeline, no update button
-6. **Double-click guard:** Rapid clicks do not trigger multiple opens
+### Unit tests (Vitest, `src/ui/ChangelogModal.test.js`)
+
+1. **Initial 10 entries rendered:** Mock `changelogData` with 15 entries → open modal → assert `#changelog-list` has 10 `<li>` children (excluding sentinel).
+2. **Sentinel present:** After initial render, assert `.changelog-sentinel` exists in the DOM.
+3. **Load more on intersection:** Mock `IntersectionObserver` to fire callback → assert 20 entries rendered (or 15 if total is 15).
+4. **All caught up:** After all entries loaded, assert `.changelog-caught-up` exists and `.changelog-sentinel` does not.
+5. **≤10 entries:** Mock 5 entries → assert 5 rendered, no sentinel, no observer.
+6. **Single version mode:** Call `showChangelogModal('1.15.0')` → assert 1 entry rendered, no sentinel.
+7. **Error recovery:** Mock observer callback to throw → assert sentinel restored and error message shown.
+8. **Loading indicator shown:** During load, assert `.changelog-loading` exists (at least briefly).
+9. **CSS classes applied:** Assert entries use `.changelog-entry`, `.changelog-entry-content`, etc. (no inline styles).
+10. **Observer disconnected on close:** Open modal, then close → assert observer is disconnected.
+
+### E2E tests (Playwright)
+
+1. **Changelog opens with 10 entries:** Open changelog modal → screenshot shows ~10 entries (not all).
+2. **Scroll to load more:** Scroll to bottom of changelog → screenshot shows additional entries loaded.
+3. **Single version mode unchanged:** Open changelog with version → screenshot matches existing baseline.
+4. **Snapshot regeneration:** All existing changelog E2E snapshots must be regenerated (modal now shows 10 entries initially).
+
+---
 
 ## Change History
 
 | Date | Change | Author |
 |-------|--------|-------|
-| 2026-06-02 | Added internal functions `openChangelogDetail` and `renderChangelogData`, detail sheet behavior, double-click guard, animation cleanup | SDD |
-| 2026-05-21 | Initial spec | SDD |
+| 2026-06-04 | Initial spec — paginated changelog with infinite scroll auto-load | SDD |

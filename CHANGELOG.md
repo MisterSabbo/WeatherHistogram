@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.16.0] - 2026-06-04
+### Enhancement
+- **Changelog modal pagination**: The changelog modal now renders entries in blocks of 10 with `IntersectionObserver`-driven auto-load on scroll (rootMargin `0px 0px 200px 0px`). Each block fades in via `.changelog-block-enter` CSS animation. All inline `style.*` assignments replaced with CSS classes (`.changelog-entry`, `.changelog-entry-content`, `.changelog-entry-marker`, `.changelog-entry-header`, `.changelog-entry-tag`, `.changelog-entry-title`, `.changelog-entry-desc`, `.changelog-entry-major`). New indicators: loading (`changelog-loading`), caught-up (`changelog-caught-up`), error with retry (`changelog-error`). Sentinel element (`changelog-sentinel`) triggers the observer. Falls back to rendering all entries if `IntersectionObserver` is unavailable. i18n keys added for loading/caught-up/error/retry in Spanish and English. All 428 unit tests + 29 E2E tests pass.
+
 ## [v1.15.1] - 2026-06-02
 ### Refactor
 - **Unified ConfirmModal**: Extracted duplicate `showConfirm()` from `app.js` and `YearInPixels.js` into a standalone `src/ui/ConfirmModal.js` with a Promise-based API. Added `confirmButtonClone(id, onClick)` utility to `BottomSheet.js` to canonicalize the button-cloning pattern used in 3 places. Removed `window.openBottomSheet` global leak — `YearInPixels.js` now imports `openBottomSheet` directly. Both call sites in `app.js` (forceRefresh, clearData) migrated to async/await Promise API. All 408 unit tests + E2E interaction tests pass.

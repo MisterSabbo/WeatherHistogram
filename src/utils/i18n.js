@@ -116,7 +116,11 @@ export const translations = {
             legendMood: "Ánimo",
             legendCold: "Resfriado",
             legendAllergies: "Alergias",
-            langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará."
+            langChangeConfirm: "¿Cambiar idioma? La aplicación se actualizará.",
+            changelogLoading: "Cargando más cambios…",
+            changelogCaughtUp: "Estás al día",
+            changelogLoadError: "Error al cargar. Reintenta.",
+            changelogRetry: "Reintentar"
         },
         theme: {
         },
@@ -373,7 +377,11 @@ export const translations = {
             legendMood: "Mood",
             legendCold: "Cold",
             legendAllergies: "Allergies",
-            langChangeConfirm: "Change language? The application will update."
+            langChangeConfirm: "Change language? The application will update.",
+            changelogLoading: "Loading more changes…",
+            changelogCaughtUp: "All caught up",
+            changelogLoadError: "Load error. Retry.",
+            changelogRetry: "Retry"
         },
         theme: {
         },

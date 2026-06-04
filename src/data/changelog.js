@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.16.0",
+    "changes": [
+      "Changelog modal pagination: changelog now renders 10 entries per block with IntersectionObserver-driven auto-load on scroll. Replaced all inline styles with CSS classes (.changelog-entry, .changelog-entry-content, etc.). Added loading, caught-up, and error indicators. Falls back to rendering all entries on browsers without IntersectionObserver. All 428 unit tests + 29 E2E tests pass."
+    ]
+  },
+  {
     "version": "1.15.1",
     "changes": [
       "Unified ConfirmModal: extracted duplicate showConfirm() from app.js and YearInPixels.js into a standalone ConfirmModal.js with Promise-based API. Added confirmButtonClone() to BottomSheet.js. Removed window.openBottomSheet global leak. Both call sites in app.js migrated to async/await Promise API. All 408 unit tests + E2E pass."
