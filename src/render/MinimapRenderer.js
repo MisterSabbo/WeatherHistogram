@@ -142,7 +142,7 @@ export class MinimapRenderer {
 
     const step = w / minimapData.length;
 
-    ctx.fillStyle = '#FFFCF0';
+    ctx.fillStyle = '#fff2c0';
     ctx.fillRect(0, 0, w, h);
 
     ctx.fillStyle = '#EDE4F7';
