@@ -50,7 +50,7 @@ The output must be ideas and trade-offs. No code snippets, no architecture detai
 - If you catch yourself describing HOW instead of WHAT, stop and rephrase
 
 ### 4. Multiple Approaches
-Always present 3+ distinct approaches. If only one reasonable approach exists, explain why. Approaches should be meaningfully different — not minor variations of the same idea.
+Always present 3 or more distinct approaches. If only one reasonable approach exists, explain why. Approaches should be meaningfully different — not minor variations of the same idea.
 
 ## Brainstorming Process
 
@@ -103,7 +103,7 @@ End with a clear question asking which direction the user wants to explore furth
 
 - Deepen the analysis on a specific approach
 - Combine ideas from multiple approaches
-- Move to implementation when ready (which would then use the feature-ticket-creator skill)
+- Move to implementation when ready (which would then use the sdd-spec sub-agent)
 
 ## Output Format
 
