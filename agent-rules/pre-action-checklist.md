@@ -9,6 +9,7 @@ Verify in order before every task:
 - [ ] **Adding UI strings?** → Add to both `es`/`en` in `src/utils/i18n.js`
 - [ ] **Changing user-facing behavior?** → Update `README.md`
 - [ ] **E2E fails after intentional changes?** → (1) update mock data in `tests/e2e/helpers/mock-data.js`, (2) add/modify tests, (3) `npx playwright test --update-snapshots` (Windows: npm intercepts --flag, use npx directly)
+- [ ] **Visual code changed?** (renderers, themes, backgrounds, clouds, minimap, CSS) → Regenerate snapshots: `npx playwright test --update-snapshots` → stage updated PNGs. See `@agent-rules/e2e-testing.md`.
 - [ ] **Complex task?** (3+ files across dirs, multiple architectural layers) → Delegate to subagent — see keyword→subagent table in `@agent-rules/subagents.md`
 - [ ] **SDD applies?** → If modifying/creating code, check `agent-rules/spec-driven-development.md` for mode detection. Bugfix trivial (1 line, no behavior change) → skip SDD. Else → `Task(general + sdd-orchestrator)` with description
 - [ ] **Respect SOLID** — SRP, OCP, LSP, ISP, DIP

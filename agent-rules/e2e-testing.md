@@ -20,6 +20,17 @@
 - A global `maxDiffPixelRatio: 0.02` tolerance is set in `playwright.config.ts` to account for minor rendering variance (font rasterization, GPU output).
 - On CI, snapshots are compared against committed references. To update, run locally with `--update-snapshots` and commit the changed PNGs.
 
+#### When modifying visual code
+
+Any change to rendering logic, colors, themes, or CSS can break visual snapshots. After modifying these files, always regenerate baselines:
+
+**Trigger files:** `src/render/**/*.js`, `src/theme.js`, `public/themes/*.json`, `src/styles/*.css`
+
+1. Run `npm run test:e2e` — visual tests will fail with pixel diffs.
+2. Regenerate: `npx playwright test --update-snapshots` (Windows: use npx directly).
+3. Stage updated PNGs: `git add tests/e2e/**/*-snapshots/*.png` and any root-level `visual/` or `interaction/` snapshot dirs.
+4. Verify: `npm run test:e2e` passes clean.
+
 #### Available script
 
 ```bash

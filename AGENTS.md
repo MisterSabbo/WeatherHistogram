@@ -30,6 +30,7 @@
 - **i18n:** add UI strings to both `es`/`en` in `src/utils/i18n.js`.
 - **Changelog:** update `CHANGELOG.md` + `src/data/changelog.js` (embedded JS, not fetched) + version (`index.html` `#app-version-label` + `public/version.json`). Semver `X.Y.Z`; letter suffix for trivial (resets when X/Y/Z changes).
 - **E2E:** add/update mock data in `tests/e2e/helpers/mock-data.js` first, then tests in `tests/e2e/interaction/` or `tests/e2e/visual/`. Snapshot path: `{testFileDir}/{testFileName}-snapshots/{arg}{ext}`.
+- **Snapshots:** after any visual change (renderers, themes, backgrounds, clouds, minimap, CSS), regenerate with `npx playwright test --update-snapshots` and stage updated PNGs.
 - **README:** update if documented features or setup change.
 
 ## Agent-rules (referenced by `opencode.json` — only 3 auto-loaded, rest read on demand)
