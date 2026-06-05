@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.17.0",
+    "changes": [
+      "Cielo Mediterráneo color palette: complete visual overhaul inspired by Mediterranean sky tones. Removed humidityLine from theme and deleted HumidityRenderer. Updated all 3 theme JSONs (default, neon, pastel) with cohesive palette: warm reds (#D94040) for temperature, ocean blues (#1E82BE, #4A9FD9) for rain/snow/wind, coral accents (#E8734A) for gusts and hot weather, slate blues (#6B8DAD, #A8C4D8) for clouds. Clouds render in blue density tiers instead of grayscale. Night sky uses warm peach-to-indigo gradients. All 426 unit tests + 29 E2E tests pass, snapshots regenerated."
+    ]
+  },
+  {
     "version": "1.16.0",
     "changes": [
       "Changelog modal pagination: changelog now renders 10 entries per block with IntersectionObserver-driven auto-load on scroll. Replaced all inline styles with CSS classes (.changelog-entry, .changelog-entry-content, etc.). Added loading, caught-up, and error indicators. Falls back to rendering all entries on browsers without IntersectionObserver. All 428 unit tests + 29 E2E tests pass."

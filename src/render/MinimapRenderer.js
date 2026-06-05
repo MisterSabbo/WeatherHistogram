@@ -142,10 +142,10 @@ export class MinimapRenderer {
 
     const step = w / minimapData.length;
 
-    ctx.fillStyle = '#fffde7';
+    ctx.fillStyle = '#FEF0A8';
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = '#f3e8ff';
+    ctx.fillStyle = '#EDE4F7';
     minimapData.forEach((d, i) => {
       if (d.isNight) ctx.fillRect(i * step, 0, step + 0.5, h);
     });
@@ -179,7 +179,7 @@ export class MinimapRenderer {
     ctx.restore();
 
     const y0 = normalizeY(0, -20, 40, h);
-    ctx.strokeStyle = 'rgba(2, 136, 209, 0.4)';
+    ctx.strokeStyle = 'rgba(30, 144, 200, 0.70)';
     ctx.setLineDash([2, 2]);
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -189,8 +189,8 @@ export class MinimapRenderer {
     ctx.setLineDash([]);
 
     ctx.save();
-    ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
-    ctx.strokeStyle = 'rgba(100, 116, 139, 0.6)';
+    ctx.fillStyle = 'rgba(100, 145, 180, 0.25)';
+    ctx.strokeStyle = 'rgba(100, 145, 180, 0.6)';
     ctx.lineWidth = 1;
     const cloudPath = new Path2D();
     minimapData.forEach((d, i) => {
@@ -207,13 +207,13 @@ export class MinimapRenderer {
 
     const buildPrecipGradient = (alpha) => {
       const grad = ctx.createLinearGradient(0, 0, w, 0);
-      if (minimapData.length === 0) return `rgba(2, 136, 209, ${alpha})`;
+      if (minimapData.length === 0) return `rgba(30, 144, 200, ${alpha})`;
       minimapData.forEach((d, i) => {
         const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
         const isThunder = [95, 96, 99].includes(d.weatherCode);
-        let baseColor = '2, 136, 209';
-        if (isSnow) baseColor = '0, 188, 212';
-        else if (isThunder) baseColor = '126, 87, 194';
+        let baseColor = '30, 144, 200';
+        if (isSnow) baseColor = '200, 215, 230';
+        else if (isThunder) baseColor = '100, 80, 160';
         grad.addColorStop(i / (minimapData.length - 1 || 1), `rgba(${baseColor}, ${alpha})`);
       });
       return grad;
@@ -249,7 +249,7 @@ export class MinimapRenderer {
     ctx.fill(probPath);
     ctx.restore();
 
-    ctx.strokeStyle = '#d32f2f';
+    ctx.strokeStyle = '#D94040';
     ctx.lineWidth = 1.8;
     ctx.beginPath();
     minimapData.forEach((d, i) => {
@@ -263,11 +263,11 @@ export class MinimapRenderer {
     minimapData.forEach((d, i) => {
       if (d.uv >= 1) {
         const x = i * step;
-        let color = getThemeColor('uvLevels.low', '#4caf50');
-        if (d.uv >= 3 && d.uv < 6) color = getThemeColor('uvLevels.moderate', '#fbc02d');
-        else if (d.uv >= 6 && d.uv < 8) color = getThemeColor('uvLevels.high', '#f57c00');
-        else if (d.uv >= 8 && d.uv < 11) color = getThemeColor('uvLevels.veryHigh', '#d32f2f');
-        else if (d.uv >= 11) color = getThemeColor('uvLevels.extreme', '#7b1fa2');
+        let color = getThemeColor('uvLevels.low', '#4CAF50');
+        if (d.uv >= 3 && d.uv < 6) color = getThemeColor('uvLevels.moderate', '#FBC02D');
+        else if (d.uv >= 6 && d.uv < 8) color = getThemeColor('uvLevels.high', '#F57C00');
+        else if (d.uv >= 8 && d.uv < 11) color = getThemeColor('uvLevels.veryHigh', '#D94040');
+        else if (d.uv >= 11) color = getThemeColor('uvLevels.extreme', '#8E44AD');
         ctx.fillStyle = color;
         ctx.fillRect(x, 0, Math.max(1, step), 3);
       }

@@ -39,25 +39,6 @@ vi.mock('../../utils/math.js', () => ({
   normalizeY: vi.fn((val) => 200 - val * 4)
 }));
 
-describe('HumidityRenderer', () => {
-  let drawHumidity;
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    const mod = await import('./HumidityRenderer.js');
-    drawHumidity = mod.drawHumidity;
-  });
-
-  it('does not throw', () => {
-    expect(() => drawHumidity(mockCtx, 0, 200, 200, {}, 60)).not.toThrow();
-  });
-
-  it('uses setLineDash', () => {
-    drawHumidity(mockCtx, 0, 200, 200, {}, 60);
-    expect(mockCtx.setLineDash).toHaveBeenCalledWith([5, 5]);
-  });
-});
-
 describe('TemperatureRenderer', () => {
   let drawTemperature;
 

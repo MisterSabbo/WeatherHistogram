@@ -14,10 +14,9 @@ describe('theme', () => {
         scrubber: { temp: 'device_thermostat' }
       },
       colors: {
-        tempLine: '#d32f2f',
-        humidityLine: 'rgba(0, 172, 193, 0.4)',
-        uvLevels: { low: '#4caf50', high: '#f57c00' },
-        wind: { normalLight: '#64748b', cold: '#3b82f6' }
+        tempLine: '#D94040',
+        uvLevels: { low: '#4CAF50', high: '#F57C00' },
+        wind: { normalLight: '#6B8DAD', cold: '#4A9FD9' }
       }
     };
 
@@ -26,9 +25,9 @@ describe('theme', () => {
 
   describe('getThemeColor', () => {
     it('returns color from path', () => {
-      expect(theme.getThemeColor('tempLine')).toBe('#d32f2f');
-      expect(theme.getThemeColor('uvLevels.low')).toBe('#4caf50');
-      expect(theme.getThemeColor('wind.cold')).toBe('#3b82f6');
+      expect(theme.getThemeColor('tempLine')).toBe('#D94040');
+      expect(theme.getThemeColor('uvLevels.low')).toBe('#4CAF50');
+      expect(theme.getThemeColor('wind.cold')).toBe('#4A9FD9');
     });
 
     it('returns fallback when themeConfig is missing', async () => {

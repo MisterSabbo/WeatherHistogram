@@ -19,15 +19,15 @@ export function drawWind(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.shadowBlur = 4;
             ctx.rotate((d.windDir + 180) * Math.PI / 180);
 
-            let windColor = state.theme === 'dark' ? getThemeColor('wind.normalDark', '#cbd5e1') : getThemeColor('wind.normalLight', '#64748b');
+            let windColor = state.theme === 'dark' ? getThemeColor('wind.normalDark', '#A8C4D8') : getThemeColor('wind.normalLight', '#6B8DAD');
             if (d.temp < 10) {
-                windColor = getThemeColor('wind.cold', '#3b82f6');
+                windColor = getThemeColor('wind.cold', '#4A9FD9');
             } else if (d.temp > 28) {
-                windColor = getThemeColor('wind.hot', '#ef4444');
+                windColor = getThemeColor('wind.hot', '#E8734A');
             }
 
             if (d.wind > 40 && d.temp <= 28 && d.temp >= 10) {
-                windColor = state.theme === 'dark' ? getThemeColor('wind.strongDefaultDark', '#f87171') : getThemeColor('wind.strongDefaultLight', '#dc2626');
+                windColor = state.theme === 'dark' ? getThemeColor('wind.strongDefaultDark', '#E8734A') : getThemeColor('wind.strongDefaultLight', '#E8734A');
             }
 
             const wIcon = getThemeIcon('windDirection', null);

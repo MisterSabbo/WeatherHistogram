@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
 
+## [v1.17.0] - 2026-06-05
+### Enhancement
+- **Cielo Mediterráneo color palette**: Complete visual overhaul of the color system inspired by Mediterranean sky tones. Removed `humidityLine` from theme and deleted `HumidityRenderer` (humidity data no longer rendered as a separate line). Updated all 3 theme JSONs (`default`, `neon`, `pastel`) with a cohesive Mediterranean palette: warm reds (`#D94040`) for temperature, ocean blues (`#1E82BE`, `#4A9FD9`) for rain/snow/wind, coral accents (`#E8734A`) for gusts and hot weather, slate blues (`#6B8DAD`, `#A8C4D8`) for clouds and wind. Clouds now render in blue density tiers instead of grayscale. Night sky uses warm peach-to-indigo gradients. Updated all renderers: `CloudRenderer`, `PrecipProbabilityRenderer`, `AtmosphereRenderer`, `BackgroundRenderer`, `WindRenderer`, `TemperatureRenderer`, `MinimapRenderer`, `OverlayRenderer`. Updated theme.js fallback colors. All 426 unit tests + 29 E2E tests pass, snapshots regenerated.
+
 ## [v1.16.0] - 2026-06-04
 ### Enhancement
 - **Changelog modal pagination**: The changelog modal now renders entries in blocks of 10 with `IntersectionObserver`-driven auto-load on scroll (rootMargin `0px 0px 200px 0px`). Each block fades in via `.changelog-block-enter` CSS animation. All inline `style.*` assignments replaced with CSS classes (`.changelog-entry`, `.changelog-entry-content`, `.changelog-entry-marker`, `.changelog-entry-header`, `.changelog-entry-tag`, `.changelog-entry-title`, `.changelog-entry-desc`, `.changelog-entry-major`). New indicators: loading (`changelog-loading`), caught-up (`changelog-caught-up`), error with retry (`changelog-error`). Sentinel element (`changelog-sentinel`) triggers the observer. Falls back to rendering all entries if `IntersectionObserver` is unavailable. i18n keys added for loading/caught-up/error/retry in Spanish and English. All 428 unit tests + 29 E2E tests pass.

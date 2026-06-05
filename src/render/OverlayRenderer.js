@@ -233,11 +233,11 @@ export function updateUVBlock(d1, index, fixedOverlayCanvas, PIXELS_PER_HOUR) {
   const uvBlockDOM = document.getElementById('uv-active-block');
   if (d1.uv > 0 && !d1.isNight) {
     let uvColor;
-    if (d1.uv >= 11) uvColor = getThemeColor('uvLevels.extreme', '#7b1fa2');
-    else if (d1.uv >= 8) uvColor = getThemeColor('uvLevels.veryHigh', '#d32f2f');
-    else if (d1.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#f57c00');
-    else if (d1.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#fbc02d');
-    else uvColor = getThemeColor('uvLevels.low', '#4caf50');
+    if (d1.uv >= 11) uvColor = getThemeColor('uvLevels.extreme', '#8E44AD');
+    else if (d1.uv >= 8) uvColor = getThemeColor('uvLevels.veryHigh', '#D94040');
+    else if (d1.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#F57C00');
+    else if (d1.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#FBC02D');
+    else uvColor = getThemeColor('uvLevels.low', '#4CAF50');
 
     const uvText = `UV ${parseFloat(d1.uv).toFixed(1)}`;
 
@@ -248,7 +248,7 @@ export function updateUVBlock(d1, index, fixedOverlayCanvas, PIXELS_PER_HOUR) {
     const opacityColor = `rgba(${bgR}, ${bgG}, ${bgB}, 0.95)`;
 
     let textColor = uvColor;
-    if (uvColor === getThemeColor('uvLevels.moderate', '#fbc02d') || uvColor === '#fbc02d') {
+    if (uvColor === getThemeColor('uvLevels.moderate', '#FBC02D') || uvColor === '#FBC02D') {
       textColor = '#e65100';
     }
 

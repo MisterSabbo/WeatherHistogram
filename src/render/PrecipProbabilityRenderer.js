@@ -4,8 +4,6 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
     const endIdx = Math.min(state.hourlyData.length, Math.ceil((viewX + viewW) / PIXELS_PER_HOUR) + 5);
 
-    const isDark = state.theme === 'dark';
-
     const points = [];
     let hasProb = false;
     for (let i = startIdx; i < endIdx; i++) {
@@ -52,12 +50,12 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     points.forEach(p => {
         const isSnow = [71, 73, 75, 77, 85, 86].includes(p.code);
         const isThunder = [95, 96, 99].includes(p.code);
-        let r = 2, g = 136, b = 209;
-        if (isSnow) { r = 148; g = 163; b = 184; }
-        else if (isThunder) { r = 94; g = 53; b = 177; }
+        let r = 30, g = 144, b = 200;
+        if (isSnow) { r = 200; g = 215; b = 230; }
+        else if (isThunder) { r = 100; g = 80; b = 160; }
 
         const stop = Math.max(0, Math.min(1, (p.x - minX) / (maxX - minX || 1)));
-        hGrad.addColorStop(stop, `rgba(${r}, ${g}, ${b}, ${isDark ? 0.15 : 0.08})`);
+        hGrad.addColorStop(stop, `rgba(${r}, ${g}, ${b}, 0.12)`);
     });
 
     ctx.fillStyle = hGrad;
@@ -69,7 +67,7 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = '14px "Material Symbols Outlined"';
-    ctx.globalAlpha = isDark ? 0.2 : 0.15;
+    ctx.globalAlpha = 0.15;
 
     const rand = (seed) => {
         const x = Math.sin(seed * 9.9898) * 43758.5453;
@@ -88,14 +86,14 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
 
                 if (ry > p.y + 10 && ry < h - 10) {
                     if (isSnow) {
-                        ctx.fillStyle = isDark ? '#ffffff' : '#000000';
+                        ctx.fillStyle = '#FFFFFF';
                         ctx.fillText('ac_unit', rx, ry);
                     } else if (isThunder && s === 0) {
-                        ctx.fillStyle = isDark ? '#ffffff' : '#000000';
+                        ctx.fillStyle = '#FDE047';
                         ctx.fillText('bolt', rx, ry);
                     } else {
                         ctx.beginPath();
-                        ctx.strokeStyle = isDark ? '#ffffff' : '#000000';
+                        ctx.strokeStyle = '#FFFFFF';
                         ctx.lineWidth = 1.5;
                         const len = 4 + rand(seed)*6;
                         ctx.moveTo(rx, ry);
@@ -113,12 +111,12 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     points.forEach(p => {
         const isSnow = [71, 73, 75, 77, 85, 86].includes(p.code);
         const isThunder = [95, 96, 99].includes(p.code);
-        let r = 2, g = 136, b = 209;
-        if (isSnow) { r = 148; g = 163; b = 184; }
-        else if (isThunder) { r = 94; g = 53; b = 177; }
+        let r = 30, g = 144, b = 200;
+        if (isSnow) { r = 200; g = 215; b = 230; }
+        else if (isThunder) { r = 100; g = 80; b = 160; }
 
         const stop = Math.max(0, Math.min(1, (p.x - minX) / (maxX - minX || 1)));
-        strokeGrad.addColorStop(stop, `rgba(${r}, ${g}, ${b}, ${isDark ? 0.8 : 0.7})`);
+        strokeGrad.addColorStop(stop, `rgba(${r}, ${g}, ${b}, 0.75)`);
     });
 
     ctx.strokeStyle = strokeGrad;

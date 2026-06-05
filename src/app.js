@@ -1130,20 +1130,20 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 // 1. Temperatura
                 const diff = Math.abs(temp - apparent);
                 const showApparent = diff >= 1.5;
-                const tempColor = '#d32f2f';
+                            const tempColor = '#D94040';
                 if (showApparent) {
                     const isCold = apparent <= temp;
-                    const apparentColor = isCold ? '#0288d1' : '#f97316';
+                    const apparentColor = isCold ? '#4A9FD9' : '#E8734A';
                     drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${Math.round(temp)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'), `${Math.round(apparent)}°C`, apparentColor, 'emoji_people');
                 } else {
                     drawPoint(normalizeY(temp, -20, 40, h), tempColor, `${Math.round(temp)}°C`, '', 'circle', getThemeIcon('scrubber.temp', 'device_thermostat'));
                 }
 
                 if (currentData && currentData.gusts > 35) {
-                    let color = getThemeColor('gusts.normal', '#64748b');
-                    if (currentData.gusts >= state.stickmanThresholds.wind) {
-                        color = getThemeColor('gusts.strong', '#ea580c');
-                        if (currentData.gusts > 70) color = getThemeColor('gusts.extreme', '#dc2626');
+                    let color = getThemeColor('gusts.normal', '#6B8DAD');
+                    if (currentData.gusts > 50) {
+                        color = getThemeColor('gusts.strong', '#E8734A');
+                        if (currentData.gusts > 70) color = getThemeColor('gusts.extreme', '#D94040');
                     }
                     drawPoint(h - 35, color, currentData.gusts.toFixed(1), 'km/h', 'none', getThemeIcon('scrubber.gusts', 'air'));
                 }

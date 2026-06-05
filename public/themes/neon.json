@@ -29,34 +29,33 @@
     "windDirection": "arrow_upward"
   },
   "colors": {
-    "tempLine": "#ff00ff",
-    "humidityLine": "rgba(0, 255, 255, 0.4)",
-    "precipBar": "rgba(255, 0, 128, 0.4)",
-    "precipProbArea": "rgba(255, 0, 128, 0.2)",
-    "cloudsArea": "rgba(102, 0, 255, 0.2)",
+    "tempLine": "#D94040",
+    "precipBar": "rgba(30, 130, 190, 0.45)",
+    "precipProbArea": "rgba(30, 144, 200, 0.12)",
+    "cloudsArea": "rgba(115, 132, 148, 0.25)",
     "uvLevels": {
-      "low": "#4caf50",
-      "moderate": "#fbc02d",
-      "high": "#f57c00",
-      "veryHigh": "#d32f2f",
-      "extreme": "#7b1fa2"
+      "low": "#4CAF50",
+      "moderate": "#FBC02D",
+      "high": "#F57C00",
+      "veryHigh": "#D94040",
+      "extreme": "#8E44AD"
     },
     "wind": {
-      "normalLight": "#00ffff",
-      "normalDark": "#00ffff",
-      "cold": "#0088ff",
-      "hot": "#ff0088",
-      "strongDefaultLight": "#ff0000",
-      "strongDefaultDark": "#ff0000"
+      "normalLight": "#6B8DAD",
+      "normalDark": "#A8C4D8",
+      "cold": "#4A9FD9",
+      "hot": "#E8734A",
+      "strongDefaultLight": "#E8734A",
+      "strongDefaultDark": "#E8734A"
     },
     "gusts": {
-      "normal": "#00ffff",
-      "strong": "#ff8800",
-      "extreme": "#ff0000"
+      "normal": "#6B8DAD",
+      "strong": "#E8734A",
+      "extreme": "#D94040"
     },
-    "zeroLine": "rgba(0, 255, 255, 0.8)",
-    "zeroLineIcon": "#00ffff",
-    "referenceLine": "rgba(255, 0, 255, 0.4)",
+    "zeroLine": "rgba(30, 144, 200, 0.70)",
+    "zeroLineIcon": "#1E82BE",
+    "referenceLine": "rgba(255, 255, 255, 0.3)",
     "scrubber": {
       "bgLightMix": 0.1,
       "bgOpacity": 0.90

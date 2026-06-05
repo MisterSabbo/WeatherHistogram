@@ -45,8 +45,12 @@ export function drawClouds(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     points.forEach(p => {
         const stop = (p.x - minX) / (maxX - minX || 1);
         const safeStop = Math.max(0, Math.min(1, stop));
-        const luma = Math.round(255 - (p.val / 100) * 115);
-        globalGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 10}, 0.7)`);
+        const density = p.val / 100;
+        let r, g, b, a;
+        if (density <= 0.33) { r = 185; g = 180; b = 175; a = 0.40; }
+        else if (density <= 0.66) { r = 155; g = 150; b = 145; a = 0.50; }
+        else { r = 125; g = 120; b = 115; a = 0.60; }
+        globalGrad.addColorStop(safeStop, `rgba(${r}, ${g}, ${b}, ${a})`);
     });
 
     ctx.fillStyle = globalGrad;
@@ -58,11 +62,11 @@ export function drawClouds(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     ctx.globalAlpha = 0.45;
 
     const layers = [
-        { offset: 5, width: 4, color: 'rgba(255, 255, 255, 0.3)' },
-        { offset: 12, width: 8, color: 'rgba(255, 255, 255, 0.2)' },
-        { offset: 25, width: 15, color: 'rgba(255, 255, 255, 0.1)' },
-        { offset: 45, width: 22, color: 'rgba(0, 0, 0, 0.05)' },
-        { offset: 65, width: 30, color: 'rgba(0, 0, 0, 0.03)' }
+        { offset: 5, width: 4, color: 'rgba(195, 188, 182, 0.3)' },
+        { offset: 12, width: 8, color: 'rgba(185, 180, 175, 0.2)' },
+        { offset: 25, width: 15, color: 'rgba(155, 150, 145, 0.1)' },
+        { offset: 45, width: 22, color: 'rgba(125, 120, 115, 0.05)' },
+        { offset: 65, width: 30, color: 'rgba(125, 120, 115, 0.03)' }
     ];
 
     layers.forEach(layer => {
@@ -86,8 +90,12 @@ export function drawClouds(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     points.forEach(p => {
         const stop = (p.x - minX) / (maxX - minX || 1);
         const safeStop = Math.max(0, Math.min(1, stop));
-        const luma = Math.round(230 - (p.val / 100) * 110);
-        strokeGrad.addColorStop(safeStop, `rgba(${luma}, ${luma}, ${luma + 5}, 1)`);
+        const density = p.val / 100;
+        let r, g, b;
+        if (density <= 0.33) { r = 170; g = 165; b = 160; }
+        else if (density <= 0.66) { r = 145; g = 140; b = 135; }
+        else { r = 115; g = 110; b = 105; }
+        strokeGrad.addColorStop(safeStop, `rgba(${r}, ${g}, ${b}, 1)`);
     });
 
     ctx.strokeStyle = strokeGrad;

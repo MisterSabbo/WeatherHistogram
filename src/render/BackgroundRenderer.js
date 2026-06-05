@@ -14,11 +14,11 @@ export function drawWeatherPhenomena(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
         if (d.gusts > 35) {
             ctx.save();
             
-            let color = 'rgba(100, 116, 139, 1)'; 
+            let color = '#6B8DAD';
             if (d.gusts > 70) {
-                color = 'rgba(220, 38, 38, 1)'; 
+                color = '#D94040';
             } else if (d.gusts > 50) {
-                color = 'rgba(234, 88, 12, 1)';
+                color = '#E8734A';
             }
             
             ctx.shadowBlur = 4;
@@ -117,11 +117,11 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             const x = i * PIXELS_PER_HOUR;
             
             let uvColor;
-            if (d.uv >= 11) uvColor = getThemeColor('uvLevels.extreme', '#7b1fa2');
-            else if (d.uv >= 8) uvColor = getThemeColor('uvLevels.veryHigh', '#d32f2f');
-            else if (d.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#f57c00');
-            else if (d.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#fbc02d');
-            else uvColor = getThemeColor('uvLevels.low', '#4caf50');
+            if (d.uv >= 11) uvColor = getThemeColor('uvLevels.extreme', '#8E44AD');
+            else if (d.uv >= 8) uvColor = getThemeColor('uvLevels.veryHigh', '#D94040');
+            else if (d.uv >= 6) uvColor = getThemeColor('uvLevels.high', '#F57C00');
+            else if (d.uv >= 3) uvColor = getThemeColor('uvLevels.moderate', '#FBC02D');
+            else uvColor = getThemeColor('uvLevels.low', '#4CAF50');
 
             ctx.save();
             // Draw rectangle block (reduced height, solid intense color)
@@ -135,9 +135,9 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 }
 
 export function drawSunnyBackground(ctx, viewX, viewW, h, styles, drawSunIcon, PIXELS_PER_HOUR) {
-    const skyColor = '#fffde7'; 
-    const sunColor = '#fdd835';
-    const rayColor = '#fff59d';
+    const skyColor = '#FEF0A8'; 
+    const sunColor = '#FDD835';
+    const rayColor = '#FFF59D';
 
     ctx.save();
     ctx.fillStyle = skyColor;
@@ -165,8 +165,8 @@ function drawSun(ctx, x, y, sunColor, rayColor) {
 
     ctx.save();
     const grad = ctx.createRadialGradient(x, y, radius, x, y, radius + 50);
-    grad.addColorStop(0, 'rgba(253, 216, 53, 0.3)');
-    grad.addColorStop(1, 'rgba(253, 216, 53, 0)');
+    grad.addColorStop(0, 'rgba(254, 240, 168, 0.3)');
+    grad.addColorStop(1, 'rgba(254, 240, 168, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(x, y, radius + 50, 0, Math.PI * 2);
@@ -207,26 +207,26 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 
             if (prevIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = '#e9d5ff';
+                    ctx.fillStyle = '#1A2744';
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
-                grad.addColorStop(0, '#fffde7');
-                grad.addColorStop(0.5, '#ffedd5');
-                grad.addColorStop(1, '#e9d5ff');
+                grad.addColorStop(0, '#FEF0A8');
+                grad.addColorStop(0.5, '#FFDDBA');
+                grad.addColorStop(1, '#1A2744');
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w + 0.5, h);
             } else if (nextIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = '#e9d5ff';
+                    ctx.fillStyle = '#1A2744';
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
-                grad.addColorStop(0, '#e9d5ff');
-                grad.addColorStop(0.5, '#ffedd5');
-                grad.addColorStop(1, '#fffde7');
+                grad.addColorStop(0, '#1A2744');
+                grad.addColorStop(0.5, '#FFDDBA');
+                grad.addColorStop(1, '#FEF0A8');
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w + 0.5, h);
             } else {
@@ -236,7 +236,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             }
         } else {
             if (solidNightStart !== -1) {
-                ctx.fillStyle = '#e9d5ff'; 
+                ctx.fillStyle = '#1A2744'; 
                 ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
                 solidNightStart = -1;
             }
@@ -244,7 +244,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     }
 
     if (solidNightStart !== -1) {
-        ctx.fillStyle = '#e9d5ff';
+        ctx.fillStyle = '#1A2744';
         ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (endIdx - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
     }
 
@@ -259,7 +259,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
                 const midpoint = (currentSun.sunset + nextSun.sunrise) / 2;
                 const x = ((midpoint - startTime) / 3600000) * PIXELS_PER_HOUR;
                 if (x >= viewX - 50 && x <= viewX + viewW + 50) {
-                    drawMoon(ctx, x, h * 0.25, '#f5f5f5', '#90caf9');
+                    drawMoon(ctx, x, h * 0.25, '#F5F5F5', 'rgba(144, 202, 249, 0.20)');
                 }
             }
         }
@@ -282,24 +282,24 @@ export function drawNightShadow(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 
             if (prevIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                    ctx.fillStyle = 'rgba(26, 39, 68, 0.15)';
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, x - solidNightStart * PIXELS_PER_HOUR, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, 'rgba(0, 0, 20, 0)');
-                grad.addColorStop(1, 'rgba(0, 0, 20, 0.15)');
+                grad.addColorStop(0, 'rgba(26, 39, 68, 0)');
+                grad.addColorStop(1, 'rgba(26, 39, 68, 0.15)');
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w, h);
             } else if (nextIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+                    ctx.fillStyle = 'rgba(26, 39, 68, 0.15)';
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, x - solidNightStart * PIXELS_PER_HOUR, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, 'rgba(0, 0, 20, 0.15)');
-                grad.addColorStop(1, 'rgba(0, 0, 20, 0)');
+                grad.addColorStop(0, 'rgba(26, 39, 68, 0.15)');
+                grad.addColorStop(1, 'rgba(26, 39, 68, 0)');
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w, h);
             } else {
@@ -309,7 +309,7 @@ export function drawNightShadow(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             }
         } else {
             if (solidNightStart !== -1) {
-                ctx.fillStyle = 'rgba(0, 0, 20, 0.15)'; 
+                ctx.fillStyle = 'rgba(26, 39, 68, 0.15)'; 
                 ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i * PIXELS_PER_HOUR) - (solidNightStart * PIXELS_PER_HOUR), h);
                 solidNightStart = -1;
             }
@@ -317,7 +317,7 @@ export function drawNightShadow(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     }
 
     if (solidNightStart !== -1) {
-        ctx.fillStyle = 'rgba(0, 0, 20, 0.15)';
+        ctx.fillStyle = 'rgba(26, 39, 68, 0.15)';
         ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (endIdx * PIXELS_PER_HOUR) - (solidNightStart * PIXELS_PER_HOUR), h);
     }
 }

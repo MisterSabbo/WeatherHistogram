@@ -141,9 +141,8 @@ describe('render/PrecipProbabilityRenderer', () => {
 });
 
 describe('render/MetricsRenderer', () => {
-  it('re-exports drawHumidity, drawWind, drawTemperature', async () => {
+  it('re-exports drawWind, drawTemperature', async () => {
     const mod = await import('./MetricsRenderer.js');
-    expect(mod.drawHumidity).toBeInstanceOf(Function);
     expect(mod.drawWind).toBeInstanceOf(Function);
     expect(mod.drawTemperature).toBeInstanceOf(Function);
   });

@@ -20,14 +20,14 @@ function drawRain(ctx, x, bw, barY, strokeColor, idx) {
         ctx.strokeText(dropIcon, dropX, dropY);
 
         ctx.fillStyle = strokeColor;
-        ctx.shadowColor = 'rgba(13, 71, 161, 0.4)';
+        ctx.shadowColor = 'rgba(30, 130, 190, 0.4)';
         ctx.shadowBlur = 1;
         ctx.fillText(dropIcon, dropX, dropY);
     }
 }
 
 function drawSnow(ctx, x, bw, barY) {
-    ctx.strokeStyle = '#000000';
+    ctx.strokeStyle = 'rgba(100, 130, 160, 0.8)';
     ctx.lineWidth = 4;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -43,9 +43,9 @@ function drawSnow(ctx, x, bw, barY) {
         ctx.stroke();
     }
 
-    ctx.strokeStyle = 'white';
+    ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 1.5;
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+    ctx.shadowColor = 'rgba(200, 215, 230, 0.8)';
     ctx.shadowBlur = 2;
     for (let k = 0; k < 4; k++) {
         const sx = x + bw * 0.15 + k * (bw * 0.25);
@@ -61,7 +61,7 @@ function drawSnow(ctx, x, bw, barY) {
 }
 
 function drawThunder(ctx, x, bw, barY) {
-    ctx.strokeStyle = '#000000';
+    ctx.strokeStyle = 'rgba(80, 70, 150, 0.8)';
     ctx.lineWidth = 5;
     ctx.lineJoin = 'round';
     for (let k = 0; k < 2; k++) {
@@ -73,7 +73,7 @@ function drawThunder(ctx, x, bw, barY) {
         ctx.stroke();
     }
 
-    ctx.strokeStyle = '#fde047';
+    ctx.strokeStyle = '#FDE047';
     ctx.shadowColor = 'rgba(253, 224, 71, 0.8)';
     ctx.shadowBlur = 6;
     ctx.lineWidth = 2.0;
@@ -102,13 +102,13 @@ export function drawPrecipitation(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR,
             const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
             const isThunder = [95, 96, 99].includes(d.weatherCode);
 
-            const baseColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(148, 163, 184, 0.4)') :
-                            isThunder ? 'rgba(57, 73, 171, 0.4)' :
-                            getThemeColor('precipBar', 'rgba(13, 71, 161, 0.4)');
+            const baseColor = isSnow ? 'rgba(180, 200, 220, 0.40)' :
+                            isThunder ? 'rgba(80, 70, 150, 0.40)' :
+                            getThemeColor('precipBar', 'rgba(30, 130, 190, 0.45)');
 
-            const strokeColor = isSnow ? (state.theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(100, 116, 139, 0.8)') :
-                              isThunder ? 'rgba(57, 73, 171, 0.8)' :
-                              'rgba(13, 71, 161, 0.8)';
+            const strokeColor = isSnow ? 'rgba(180, 200, 220, 0.80)' :
+                              isThunder ? 'rgba(80, 70, 150, 0.80)' :
+                              'rgba(30, 130, 190, 0.80)';
 
             ctx.fillStyle = baseColor;
             ctx.strokeStyle = strokeColor;

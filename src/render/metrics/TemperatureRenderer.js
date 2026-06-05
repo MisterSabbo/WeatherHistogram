@@ -3,7 +3,7 @@ import { getThemeColor, getThemeFont } from '../../theme.js';
 import { normalizeY } from '../../utils/math.js';
 
 export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
-    const color = getThemeColor('tempLine', '#d32f2f');
+    const color = getThemeColor('tempLine', '#D94040');
     const textColor = '#1a1a1a';
 
     const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
@@ -18,7 +18,7 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
 
         if (diff1 >= 1 || diff2 >= 1) {
             const isCold = diff1 >= Math.max(1, diff2) ? (d.apparent < d.temp) : (nextD.apparent < nextD.temp);
-            ctx.fillStyle = isCold ? 'rgba(2, 136, 209, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            ctx.fillStyle = isCold ? 'rgba(74, 159, 217, 0.2)' : 'rgba(232, 115, 74, 0.2)';
 
             const x1 = i * PIXELS_PER_HOUR;
             const x2 = (i + 1) * PIXELS_PER_HOUR;
@@ -86,7 +86,7 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             let sOffY = 0;
 
             if (isWet) {
-                sCol = 'rgba(0, 200, 255, 0.3)';
+                sCol = 'rgba(30, 144, 200, 0.3)';
                 sBlur = 20;
                 sOffY = 2;
             } else if (isCloudy) {
@@ -111,12 +111,12 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
 
             if (!isWet && !isCloudy) {
                 if (d.isNight) {
-                    ctx.strokeStyle = isCold ? '#0288d1' : 'rgba(247, 161, 161, 0.9)';
+                    ctx.strokeStyle = isCold ? '#4A9FD9' : 'rgba(232, 115, 74, 0.9)';
                 } else {
-                    ctx.strokeStyle = isCold ? '#0288d1' : 'rgba(247, 104, 34, 1)';
+                    ctx.strokeStyle = isCold ? '#4A9FD9' : 'rgba(232, 115, 74, 1)';
                 }
             } else {
-                ctx.strokeStyle = isCold ? '#0288d1' : '#ef4444';
+                ctx.strokeStyle = isCold ? '#4A9FD9' : '#E8734A';
             }
 
             ctx.lineWidth = 1.5;
@@ -127,7 +127,7 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
 
             if (isWet) {
                 ctx.setLineDash([]);
-                ctx.strokeStyle = 'rgba(200, 240, 255, 0.4)';
+                ctx.strokeStyle = 'rgba(30, 144, 200, 0.4)';
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
             }
@@ -199,7 +199,7 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
 
-            ctx.shadowColor = d.isNight ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 140, 0, 1)';
+            ctx.shadowColor = d.isNight ? '#C8D6E5' : '#FF9F43';
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = isMobile ? (d.isNight ? 24 : 20) : (d.isNight ? 30 : 25);
             ctx.stroke();
@@ -256,11 +256,11 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
             const grad = ctx.createLinearGradient(x1, y1, x2, y2);
 
             if (hasSnow) {
-                grad.addColorStop(0, isWet1 && isSnow1 ? 'rgba(0, 220, 255, 0.7)' : 'rgba(0, 220, 255, 0)');
-                grad.addColorStop(1, isWet2 && isSnow2 ? 'rgba(0, 220, 255, 0.7)' : 'rgba(0, 220, 255, 0)');
+                grad.addColorStop(0, isWet1 && isSnow1 ? 'rgba(200, 215, 230, 0.7)' : 'rgba(200, 215, 230, 0)');
+                grad.addColorStop(1, isWet2 && isSnow2 ? 'rgba(200, 215, 230, 0.7)' : 'rgba(200, 215, 230, 0)');
             } else {
-                grad.addColorStop(0, isWet1 ? 'rgba(13, 71, 161, 0.45)' : 'rgba(13, 71, 161, 0)');
-                grad.addColorStop(1, isWet2 ? 'rgba(13, 71, 161, 0.45)' : 'rgba(13, 71, 161, 0)');
+                grad.addColorStop(0, isWet1 ? 'rgba(30, 144, 200, 0.45)' : 'rgba(30, 144, 200, 0)');
+                grad.addColorStop(1, isWet2 ? 'rgba(30, 144, 200, 0.45)' : 'rgba(30, 144, 200, 0)');
             }
 
             ctx.save();
@@ -346,19 +346,12 @@ export function drawTemperature(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
 
-        const cloudY = h - (h * (d.clouds / 100));
-        const probY = h - (h * ((d.precipProb || 0) / 100));
-        const isWet = y >= probY && (d.precipProb || 0) > 15;
-        const isCloudy = y >= cloudY && d.clouds >= 25;
-
         ctx.save();
-        if (isWet || isCloudy) {
-            ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
-            ctx.shadowBlur = 5;
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.strokeText(Math.round(d.temp) + '\u00b0', x, y - 10);
-        }
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+        ctx.shadowBlur = 5;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.strokeText(Math.round(d.temp) + '\u00b0', x, y - 10);
 
         ctx.fillStyle = textColor;
         ctx.fillText(Math.round(d.temp) + '\u00b0', x, y - 10);
