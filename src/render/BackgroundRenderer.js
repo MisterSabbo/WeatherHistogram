@@ -135,7 +135,7 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 }
 
 export function drawSunnyBackground(ctx, viewX, viewW, h, styles, drawSunIcon, PIXELS_PER_HOUR) {
-    const skyColor = '#FEF0A8'; 
+    const skyColor = '#FFFCF0'; 
     const sunColor = '#FDD835';
     const rayColor = '#FFF59D';
 
@@ -165,8 +165,8 @@ function drawSun(ctx, x, y, sunColor, rayColor) {
 
     ctx.save();
     const grad = ctx.createRadialGradient(x, y, radius, x, y, radius + 50);
-    grad.addColorStop(0, 'rgba(254, 240, 168, 0.3)');
-    grad.addColorStop(1, 'rgba(254, 240, 168, 0)');
+    grad.addColorStop(0, 'rgba(255, 252, 240, 0.3)');
+    grad.addColorStop(1, 'rgba(255, 252, 240, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(x, y, radius + 50, 0, Math.PI * 2);
@@ -212,7 +212,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
-                grad.addColorStop(0, '#FEF0A8');
+                grad.addColorStop(0, '#FFFCF0');
                 grad.addColorStop(0.5, '#FFDDBA');
                 grad.addColorStop(1, '#1A2744');
                 ctx.fillStyle = grad;
@@ -226,7 +226,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
                 const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
                 grad.addColorStop(0, '#1A2744');
                 grad.addColorStop(0.5, '#FFDDBA');
-                grad.addColorStop(1, '#FEF0A8');
+                grad.addColorStop(1, '#FFFCF0');
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w + 0.5, h);
             } else {
