@@ -277,3 +277,25 @@
                 transform: none;
             }
         }
+
+        .refresh-toast {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            color: var(--accent-precip);
+            padding: 10px 22px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: calc(var(--z-modal, 6000) + 100);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid var(--accent-precip);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .refresh-toast.visible {
+            opacity: 1;
+        }

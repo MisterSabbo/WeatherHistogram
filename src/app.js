@@ -192,10 +192,11 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                                     state.locationName = results[0].name + (results[0].admin1 ? `, ${results[0].admin1}` : "");
                                 }
                             }
-                            await loadWeather();
                         } catch (e) {
-                            console.error('PTR refresh failed:', e);
+                            console.error('PTR geo-search failed, using existing coordinates:', e);
                         }
+                        await loadWeather();
+                        showRefreshToast();
                     }
                 });
             }
@@ -1324,6 +1325,18 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 </button>
             `;
             errDiv.style.display = 'block';
+        }
+
+        function showRefreshToast() {
+            const toast = document.getElementById('refresh-toast');
+            if (!toast) return;
+            toast.textContent = t('config.dataUpdated') || 'Datos actualizados';
+            toast.style.display = 'block';
+            requestAnimationFrame(() => toast.classList.add('visible'));
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 2000);
         }
 
         const onClearCache = async () => {

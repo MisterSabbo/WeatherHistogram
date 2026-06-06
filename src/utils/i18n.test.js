@@ -48,6 +48,17 @@ describe('i18n', () => {
     });
   });
 
+  describe('config.dataUpdated', () => {
+    it('returns "Datos actualizados" in Spanish', () => {
+      expect(t('config.dataUpdated')).toBe('Datos actualizados');
+    });
+
+    it('returns "Data updated" in English', () => {
+      setLanguage('en');
+      expect(t('config.dataUpdated')).toBe('Data updated');
+    });
+  });
+
   describe('YIP notes keys', () => {
     it('returns yipNotesLabel in Spanish', () => {
       expect(t('config.yipNotesLabel')).toMatch(/Notas personales/);

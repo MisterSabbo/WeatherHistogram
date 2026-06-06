@@ -107,10 +107,69 @@ describe('WeatherFetcher', () => {
       expect(mockWeatherService.getWeatherData).not.toHaveBeenCalled();
     });
 
-    it('does not fetch when isFetching is true', async () => {
+    it('aborts previous fetch and starts new one when isFetching is true', async () => {
       mockState.isFetching = true;
+      mockWeatherService.getWeatherData.mockResolvedValue({
+        forecastData: mockForecastData,
+        aqiData: mockAqiData
+      });
       await fetchWeatherData(7, 7, defaultCallbacks);
-      expect(mockWeatherService.getWeatherData).not.toHaveBeenCalled();
+      expect(mockWeatherService.getWeatherData).toHaveBeenCalled();
+    });
+
+    it('concurrent calls abort previous request and only last completes', async () => {
+      let resolveFirst;
+      const firstCall = new Promise((resolve) => { resolveFirst = resolve; });
+      let resolveSecond;
+      const secondCall = new Promise((resolve) => { resolveSecond = resolve; });
+
+      mockWeatherService.getWeatherData
+        .mockImplementationOnce(() => firstCall)
+        .mockImplementationOnce(() => secondCall);
+
+      const p1 = fetchWeatherData(7, 7, defaultCallbacks);
+      const p2 = fetchWeatherData(7, 7, defaultCallbacks);
+
+      resolveFirst({ forecastData: mockForecastData, aqiData: mockAqiData });
+      resolveSecond({ forecastData: mockForecastData, aqiData: mockAqiData });
+
+      await Promise.all([p1, p2]);
+
+      expect(mockWeatherService.getWeatherData).toHaveBeenCalledTimes(2);
+      expect(mockState.isFetching).toBe(false);
+    });
+
+    it('resets isFetching to false after abort', async () => {
+      mockWeatherService.getWeatherData.mockImplementation(() => {
+        return new Promise(() => {});
+      });
+
+      const p1 = fetchWeatherData(7, 7, defaultCallbacks);
+      expect(mockState.isFetching).toBe(true);
+
+      mockWeatherService.getWeatherData.mockResolvedValue({
+        forecastData: mockForecastData,
+        aqiData: mockAqiData
+      });
+      await fetchWeatherData(7, 7, defaultCallbacks);
+
+      expect(mockState.isFetching).toBe(false);
+      p1.catch(() => {});
+    });
+
+    it('isFetching does not stay stuck after aborted slow fetch', async () => {
+      const abortError = new DOMException('The operation was aborted', 'AbortError');
+      mockWeatherService.getWeatherData.mockRejectedValueOnce(abortError);
+      mockWeatherService.getWeatherData.mockResolvedValueOnce({
+        forecastData: mockForecastData,
+        aqiData: mockAqiData
+      });
+
+      await fetchWeatherData(7, 7, defaultCallbacks);
+      expect(mockState.isFetching).toBe(false);
+
+      await fetchWeatherData(7, 7, defaultCallbacks);
+      expect(mockState.isFetching).toBe(false);
     });
 
     it('falls back to expired cache when API fails', async () => {

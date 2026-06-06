@@ -233,6 +233,7 @@ test.describe('YIP Cold & Allergy Tracking', () => {
   test('cells with 4 states show 2 dots + badge +N', async ({ page }) => {
     await page.locator('#year-in-pixels-btn').click()
     await page.waitForTimeout(1000)
+    await expect(page.locator('.yip-dot-badge').first()).toBeVisible({ timeout: 5000 })
 
     const hasBadge = await page.evaluate(() => {
       const containers = document.querySelectorAll('.yip-dot-container')
@@ -286,7 +287,7 @@ test.describe('YIP Cold & Allergy Tracking', () => {
     // Get the cell's timestamp to find it again after reload
     const cellTs = await page.evaluate(() => {
       const cell = document.querySelector('.yip-day-cell.completed')
-      return cell ? cell.dataset.ts || '' : ''
+      return cell ? cell.dataset.time || '' : ''
     })
 
     await cells.first().click()
@@ -309,7 +310,26 @@ test.describe('YIP Cold & Allergy Tracking', () => {
       const wrapper = document.getElementById('app-wrapper')
       return wrapper && !wrapper.classList.contains('loading')
     }, { timeout: 30000 })
-    await page.waitForTimeout(1500)
+    // Wait for IndexedDB data to be fully committed after app re-saves
+    await page.waitForFunction(() => {
+      return new Promise((resolve) => {
+        const req = indexedDB.open('WeatherHistDB', 2)
+        req.onsuccess = () => {
+          const db = req.result
+          if (!db.objectStoreNames.contains('historyData')) { db.close(); resolve(false); return }
+          const tx = db.transaction('historyData', 'readonly')
+          const store = tx.objectStore('historyData')
+          const getReq = store.get('Madrid')
+          getReq.onsuccess = () => {
+            const data = getReq.result
+            db.close()
+            resolve(data && data.daily && data.daily.length > 0)
+          }
+          getReq.onerror = () => { db.close(); resolve(false) }
+        }
+        req.onerror = () => resolve(false)
+      })
+    }, { timeout: 30000 })
 
     // Reopen YIP
     await page.locator('#year-in-pixels-btn').click()

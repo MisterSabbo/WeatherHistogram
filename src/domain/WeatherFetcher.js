@@ -5,6 +5,7 @@ import { generateMockData } from '../services/MockData.js';
 import { processData } from '../services/DataProcessor.js';
 
 const weatherCache = new Map();
+let activeController = null;
 
 export function clearWeatherCache() {
   weatherCache.clear();
@@ -31,10 +32,14 @@ export async function fetchWeatherData(pastDays, forecastDays, {
     }
   }
 
-  if (state.isFetching) return;
+  if (state.isFetching && activeController) {
+    activeController.abort();
+  }
+
   state.isFetching = true;
 
   const controller = new AbortController();
+  activeController = controller;
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
@@ -51,6 +56,11 @@ export async function fetchWeatherData(pastDays, forecastDays, {
     onResize();
   } catch (err) {
     clearTimeout(timeoutId);
+
+    if (err.name === 'AbortError' && activeController !== controller) {
+      return;
+    }
+
     console.error("fetchWeatherData error:", err);
 
     if (weatherCache.has(cacheKey)) {
@@ -79,6 +89,9 @@ export async function fetchWeatherData(pastDays, forecastDays, {
       onResize();
     }
   } finally {
-    state.isFetching = false;
+    if (activeController === controller) {
+      state.isFetching = false;
+      activeController = null;
+    }
   }
 }
