@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.19.0",
+    "changes": [
+      "Atmospheric palette redesign 2026: Redesigned all palette definitions — classic now uses realistic sky blue (#87CEEB) with golden sun (#FFD700); warm renamed to vivid with saturated purple-night tones; cold renamed to pastel with soft pastel tones; original unchanged. Added migration for old warm/cold stored IDs. Updated i18n palette display names (Realista/Realistic, Vívida/Vivid, Pastel/Pastel). E2E selectors updated, snapshots regenerated."
+    ]
+  },
+  {
     "version": "1.18.0",
     "changes": [
       "Atmospheric palette selector: Four selectable atmospheric color palettes (Classic, Original, Warm, Cold) that change sky, clouds, precipitation, and night overlay colors across all renderers. Palette definitions centralized in src/data/atmosphericPalettes.js with flat key structure for easy color tuning. Persisted in localStorage, selectable from Settings panel via bottom sheet. Updated BackgroundRenderer, CloudRenderer, AtmosphereRenderer, PrecipProbabilityRenderer, and MinimapRenderer to use palette lookups instead of hardcoded values. All unit tests + E2E tests pass, snapshots regenerated."

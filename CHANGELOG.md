@@ -2,9 +2,16 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensively.
 
-## [v1.18.0] - 2026-06-06
+## [v1.19.0] - 2026-06-07
 ### Enhancement
-- **Atmospheric palette selector**: Four selectable atmospheric color palettes (Classic, Original, Warm, Cold) that change sky, clouds, precipitation, and night overlay colors across all renderers. Palette definitions centralized in `src/data/atmosphericPalettes.js` with a flat key structure for easy color tuning. Persisted in localStorage, selectable from Settings panel via bottom sheet. Updated `BackgroundRenderer`, `CloudRenderer`, `AtmosphereRenderer`, `PrecipProbabilityRenderer`, and `MinimapRenderer` to use palette lookups instead of hardcoded values. All unit tests + E2E tests pass, snapshots regenerated.
+- **Atmospheric palette redesign 2026**: Redesigned all atmospheric palette definitions with new colors and naming:
+  - `classic` → "Realista/Realistic": Realistic sky blue (`#87CEEB`) with golden sun (`#FFD700`), natural gray-white clouds, and realistic rain/snow tones.
+  - `warm` → `vivid` ("Vívida/Vivid"): Renamed with entirely new saturated purple-night tones (deep purple `#2D1B69` sky, intense orange `#FF6B35` sun, dark `#1A0533` night).
+  - `cold` → `pastel` ("Pastel/Pastel"): Renamed with soft pastel tones (soft blue `#D4E8F8` sky, gentle yellow `#F9D56E` sun, lavender `#2E2252` night).
+  - `original` unchanged.
+- **Migration**: Old stored `warm`/`cold` palette IDs are automatically migrated to `classic` in `initStorage()` with a console warning.
+- **i18n**: Updated palette display names in Spanish and English; removed old `atmoPaletteWarm`/`atmoPaletteCold` keys.
+- **E2E**: Updated selectors (`data-value="vivid"`, `data-value="pastel"`), expected label text, and snapshot filenames. All visual snapshots regenerated.
 
 ## [v1.17.0] - 2026-06-05
 ### Enhancement

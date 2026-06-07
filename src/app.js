@@ -146,7 +146,14 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 state.skinType = await storageService.get('skinType', 2);
                 state.stickmanThresholds = await storageService.get('stickmanThresholds', { cold: 10, hot: 30, wind: 45, clouds: 60 });
                 state.activeChartTheme = await storageService.get('chartTheme', 'default');
-                state.activeAtmosphericPalette = await storageService.get('atmosphericPalette', 'classic');
+                const storedPalette = await storageService.get('atmosphericPalette', 'classic');
+                if (storedPalette === 'warm' || storedPalette === 'cold') {
+                    console.warn('Migrated old atmospheric palette ID: ' + storedPalette + ' → classic');
+                    state.activeAtmosphericPalette = 'classic';
+                    await storageService.set('atmosphericPalette', 'classic');
+                } else {
+                    state.activeAtmosphericPalette = storedPalette;
+                }
                 state.isDailyCardsView = await storageService.get('viewMode', 'minimap') === 'daily';
                 await loadChartTheme(state.activeChartTheme);
             }

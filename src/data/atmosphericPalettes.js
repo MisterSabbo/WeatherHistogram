@@ -24,34 +24,34 @@ const classic = {
     icon: '☀️',
     colors: {
         /* ── Sky ─────────────────────────────────────────── */
-        daySky:         '#fff2c0',
-        daySun:         '#FDD835',
-        daySunRay:      '#FFF59D',
+        daySky:         '#87CEEB',
+        daySun:         '#FFD700',
+        daySunRay:      '#FFF3B0',
 
         /* ── Night ───────────────────────────────────────── */
         nightFill:            '#1A2744',
-        minimapNightFill:     '#e7b9f7',
-        nightTransitionMid:   '#FFDDBA',
+        minimapNightFill:     '#f8e4ff',
+        nightTransitionMid:   '#7a91c2',
         nightShadowColor:            'rgba(26, 39, 68, 0.15)',
         nightShadowColorTransparent: 'rgba(26, 39, 68, 0)',
 
         /* ── Clouds ──────────────────────────────────────── */
         cloudFill: {
-            light:  { r: 185, g: 180, b: 175, a: 0.40 },
-            medium: { r: 155, g: 150, b: 145, a: 0.50 },
-            heavy:  { r: 125, g: 120, b: 115, a: 0.60 }
+            light:  { r: 220, g: 225, b: 240, a: 0.65 },
+            medium: { r: 195, g: 205, b: 225, a: 0.75 },
+            heavy:  { r: 170, g: 180, b: 210, a: 0.85 }
         },
         cloudStroke: {
-            light:  { r: 170, g: 165, b: 160 },
-            medium: { r: 145, g: 140, b: 135 },
-            heavy:  { r: 115, g: 110, b: 105 }
+            light:  { r: 200, g: 210, b: 230 },
+            medium: { r: 175, g: 185, b: 210 },
+            heavy:  { r: 150, g: 160, b: 190 }
         },
         cloudLayers: [
-            { offset: 5,  width: 4,  color: 'rgba(195, 188, 182, 0.3)' },
-            { offset: 12, width: 8,  color: 'rgba(185, 180, 175, 0.2)' },
-            { offset: 25, width: 15, color: 'rgba(155, 150, 145, 0.1)' },
-            { offset: 45, width: 22, color: 'rgba(125, 120, 115, 0.05)' },
-            { offset: 65, width: 30, color: 'rgba(125, 120, 115, 0.03)' }
+            { offset: 5,  width: 4,  color: 'rgba(220, 225, 240, 0.3)' },
+            { offset: 12, width: 8,  color: 'rgba(200, 210, 230, 0.2)' },
+            { offset: 25, width: 15, color: 'rgba(195, 205, 225, 0.1)' },
+            { offset: 45, width: 22, color: 'rgba(170, 180, 210, 0.05)' },
+            { offset: 65, width: 30, color: 'rgba(170, 180, 210, 0.03)' }
         ],
 
         /* ── Rain ────────────────────────────────────────── */
@@ -60,10 +60,10 @@ const classic = {
         rainShadow: 'rgba(30, 130, 190, 0.4)',
 
         /* ── Snow ────────────────────────────────────────── */
-        snowBar:     'rgba(180, 200, 220, 0.40)',
-        snowStroke:  'rgba(180, 200, 220, 0.80)',
-        snowFlake:   'rgba(100, 130, 160, 0.8)',
-        snowShadow:  'rgba(200, 215, 230, 0.8)',
+        snowBar:     'rgba(200, 220, 240, 0.40)',
+        snowStroke:  'rgba(200, 220, 240, 0.80)',
+        snowFlake:   'rgba(150, 180, 210, 0.8)',
+        snowShadow:  'rgba(210, 225, 240, 0.8)',
 
         /* ── Thunder ─────────────────────────────────────── */
         thunderBar:       'rgba(80, 70, 150, 0.40)',
@@ -89,28 +89,28 @@ const original = {
 
         /* ── Night ───────────────────────────────────────── */
         nightFill:            '#2D1B4D',
-        minimapNightFill:     '#e7b9f7',
+        minimapNightFill:     '#f8e4ff',
         nightTransitionMid:   '#E8D0F0',
         nightShadowColor:            'rgba(45, 27, 77, 0.15)',
         nightShadowColorTransparent: 'rgba(45, 27, 77, 0)',
 
         /* ── Clouds ──────────────────────────────────────── */
         cloudFill: {
-            light:  { r: 185, g: 180, b: 175, a: 0.40 },
-            medium: { r: 155, g: 150, b: 145, a: 0.50 },
-            heavy:  { r: 125, g: 120, b: 115, a: 0.60 }
+            light:  { r: 220, g: 225, b: 240, a: 0.65 },
+            medium: { r: 195, g: 205, b: 225, a: 0.75 },
+            heavy:  { r: 170, g: 180, b: 210, a: 0.85 }
         },
         cloudStroke: {
-            light:  { r: 170, g: 165, b: 160 },
-            medium: { r: 145, g: 140, b: 135 },
-            heavy:  { r: 115, g: 110, b: 105 }
+            light:  { r: 200, g: 210, b: 230 },
+            medium: { r: 175, g: 185, b: 210 },
+            heavy:  { r: 150, g: 160, b: 190 }
         },
         cloudLayers: [
-            { offset: 5,  width: 4,  color: 'rgba(195, 188, 182, 0.3)' },
-            { offset: 12, width: 8,  color: 'rgba(185, 180, 175, 0.2)' },
-            { offset: 25, width: 15, color: 'rgba(155, 150, 145, 0.1)' },
-            { offset: 45, width: 22, color: 'rgba(125, 120, 115, 0.05)' },
-            { offset: 65, width: 30, color: 'rgba(125, 120, 115, 0.03)' }
+            { offset: 5,  width: 4,  color: 'rgba(220, 225, 240, 0.3)' },
+            { offset: 12, width: 8,  color: 'rgba(200, 210, 230, 0.2)' },
+            { offset: 25, width: 15, color: 'rgba(195, 205, 225, 0.1)' },
+            { offset: 45, width: 22, color: 'rgba(170, 180, 210, 0.05)' },
+            { offset: 65, width: 30, color: 'rgba(170, 180, 210, 0.03)' }
         ],
 
         /* ── Rain ────────────────────────────────────────── */
@@ -137,129 +137,129 @@ const original = {
     }
 };
 
-const warm = {
-    id: 'warm',
+const vivid = {
+    id: 'vivid',
     icon: '🌅',
     colors: {
         /* ── Sky ─────────────────────────────────────────── */
-        daySky:         '#FFE0A0',
-        daySun:         '#FF8F00',
-        daySunRay:      '#FFB74D',
+        daySky:         '#FFD699',
+        daySun:         '#FFA000',
+        daySunRay:      '#FFD54F',
 
         /* ── Night ───────────────────────────────────────── */
-        nightFill:            '#2D1B3D',
-        minimapNightFill:     '#e7b9f7',
-        nightTransitionMid:   '#FFB088',
-        nightShadowColor:            'rgba(45, 27, 61, 0.18)',
-        nightShadowColorTransparent: 'rgba(45, 27, 61, 0)',
+        nightFill:            '#1A0033',
+        minimapNightFill:     '#D080F0',
+        nightTransitionMid:   '#C060D0',
+        nightShadowColor:            'rgba(26, 0, 51, 0.20)',
+        nightShadowColorTransparent: 'rgba(26, 0, 51, 0)',
 
         /* ── Clouds ──────────────────────────────────────── */
         cloudFill: {
-            light:  { r: 210, g: 185, b: 165, a: 0.40 },
-            medium: { r: 180, g: 155, b: 135, a: 0.50 },
-            heavy:  { r: 150, g: 125, b: 105, a: 0.60 }
+            light:  { r: 215, g: 220, b: 245, a: 0.55 },
+            medium: { r: 190, g: 200, b: 230, a: 0.65 },
+            heavy:  { r: 165, g: 175, b: 215, a: 0.75 }
         },
         cloudStroke: {
-            light:  { r: 195, g: 170, b: 150 },
-            medium: { r: 165, g: 140, b: 120 },
-            heavy:  { r: 135, g: 110, b: 90 }
+            light:  { r: 195, g: 205, b: 235 },
+            medium: { r: 170, g: 180, b: 215 },
+            heavy:  { r: 145, g: 155, b: 195 }
         },
         cloudLayers: [
-            { offset: 5,  width: 4,  color: 'rgba(210, 185, 165, 0.3)' },
-            { offset: 12, width: 8,  color: 'rgba(195, 170, 150, 0.2)' },
-            { offset: 25, width: 15, color: 'rgba(180, 155, 135, 0.1)' },
-            { offset: 45, width: 22, color: 'rgba(150, 125, 105, 0.05)' },
-            { offset: 65, width: 30, color: 'rgba(150, 125, 105, 0.03)' }
+            { offset: 5,  width: 4,  color: 'rgba(215, 220, 245, 0.3)' },
+            { offset: 12, width: 8,  color: 'rgba(205, 210, 240, 0.2)' },
+            { offset: 25, width: 15, color: 'rgba(190, 200, 230, 0.1)' },
+            { offset: 45, width: 22, color: 'rgba(165, 175, 215, 0.05)' },
+            { offset: 65, width: 30, color: 'rgba(165, 175, 215, 0.03)' }
         ],
 
         /* ── Rain ────────────────────────────────────────── */
-        rainBar:    'rgba(25, 118, 170, 0.45)',
-        rainStroke: 'rgba(25, 118, 170, 0.80)',
-        rainShadow: 'rgba(25, 118, 170, 0.4)',
+        rainBar:    'rgba(25, 130, 210, 0.50)',
+        rainStroke: 'rgba(25, 130, 210, 0.85)',
+        rainShadow: 'rgba(25, 130, 210, 0.45)',
 
         /* ── Snow ────────────────────────────────────────── */
-        snowBar:     'rgba(220, 200, 180, 0.40)',
-        snowStroke:  'rgba(220, 200, 180, 0.80)',
-        snowFlake:   'rgba(180, 150, 120, 0.8)',
-        snowShadow:  'rgba(235, 220, 200, 0.8)',
+        snowBar:     'rgba(200, 220, 240, 0.45)',
+        snowStroke:  'rgba(200, 220, 240, 0.85)',
+        snowFlake:   'rgba(130, 160, 200, 0.8)',
+        snowShadow:  'rgba(210, 225, 245, 0.8)',
 
         /* ── Thunder ─────────────────────────────────────── */
-        thunderBar:       'rgba(130, 50, 30, 0.40)',
-        thunderStroke:    'rgba(130, 50, 30, 0.80)',
-        thunderBolt:      '#FFB300',
-        thunderBoltShadow: 'rgba(255, 179, 0, 0.8)',
+        thunderBar:       'rgba(90, 60, 170, 0.45)',
+        thunderStroke:    'rgba(90, 60, 170, 0.85)',
+        thunderBolt:      '#FFD600',
+        thunderBoltShadow: 'rgba(255, 214, 0, 0.8)',
 
         /* ── Precipitation Probability ───────────────────── */
-        precipProbRain:    { r: 25,  g: 118, b: 170 },
-        precipProbSnow:    { r: 220, g: 200, b: 180 },
-        precipProbThunder: { r: 130, g: 50,  b: 30 }
+        precipProbRain:    { r: 25,  g: 130, b: 210 },
+        precipProbSnow:    { r: 200, g: 220, b: 240 },
+        precipProbThunder: { r: 90,  g: 60,  b: 170 }
     }
 };
 
-const cold = {
-    id: 'cold',
-    icon: '❄️',
+const pastel = {
+    id: 'pastel',
+    icon: '🌸',
     colors: {
         /* ── Sky ─────────────────────────────────────────── */
-        daySky:         '#D6ECFF',
-        daySun:         '#90CAF9',
-        daySunRay:      '#BBDEFB',
+        daySky:         '#D4E8F8',
+        daySun:         '#F9D56E',
+        daySunRay:      '#FCE8B2',
 
         /* ── Night ───────────────────────────────────────── */
-        nightFill:            '#0D1B3E',
-        minimapNightFill:     '#e7b9f7',
-        nightTransitionMid:   '#B3CCE6',
-        nightShadowColor:            'rgba(13, 27, 62, 0.20)',
-        nightShadowColorTransparent: 'rgba(13, 27, 62, 0)',
+        nightFill:            '#2E2252',
+        minimapNightFill:     '#f8e4ff',
+        nightTransitionMid:   '#E8D4F0',
+        nightShadowColor:            'rgba(46, 34, 82, 0.12)',
+        nightShadowColorTransparent: 'rgba(46, 34, 82, 0)',
 
         /* ── Clouds ──────────────────────────────────────── */
         cloudFill: {
-            light:  { r: 170, g: 195, b: 215, a: 0.40 },
-            medium: { r: 140, g: 170, b: 195, a: 0.50 },
-            heavy:  { r: 110, g: 145, b: 175, a: 0.60 }
+            light:  { r: 220, g: 225, b: 240, a: 0.65 },
+            medium: { r: 195, g: 205, b: 225, a: 0.75 },
+            heavy:  { r: 170, g: 180, b: 210, a: 0.85 }
         },
         cloudStroke: {
-            light:  { r: 155, g: 180, b: 200 },
-            medium: { r: 125, g: 155, b: 180 },
-            heavy:  { r: 95,  g: 130, b: 160 }
+            light:  { r: 200, g: 210, b: 230 },
+            medium: { r: 175, g: 185, b: 210 },
+            heavy:  { r: 150, g: 160, b: 190 }
         },
         cloudLayers: [
-            { offset: 5,  width: 4,  color: 'rgba(170, 195, 215, 0.3)' },
-            { offset: 12, width: 8,  color: 'rgba(155, 180, 200, 0.2)' },
-            { offset: 25, width: 15, color: 'rgba(140, 170, 195, 0.1)' },
-            { offset: 45, width: 22, color: 'rgba(110, 145, 175, 0.05)' },
-            { offset: 65, width: 30, color: 'rgba(110, 145, 175, 0.03)' }
+            { offset: 5,  width: 4,  color: 'rgba(220, 225, 240, 0.3)' },
+            { offset: 12, width: 8,  color: 'rgba(200, 210, 230, 0.2)' },
+            { offset: 25, width: 15, color: 'rgba(195, 205, 225, 0.1)' },
+            { offset: 45, width: 22, color: 'rgba(170, 180, 210, 0.05)' },
+            { offset: 65, width: 30, color: 'rgba(170, 180, 210, 0.03)' }
         ],
 
         /* ── Rain ────────────────────────────────────────── */
-        rainBar:    'rgba(0, 150, 210, 0.45)',
-        rainStroke: 'rgba(0, 150, 210, 0.80)',
-        rainShadow: 'rgba(0, 150, 210, 0.4)',
+        rainBar:    'rgba(130, 180, 220, 0.40)',
+        rainStroke: 'rgba(130, 180, 220, 0.75)',
+        rainShadow: 'rgba(130, 180, 220, 0.35)',
 
         /* ── Snow ────────────────────────────────────────── */
-        snowBar:     'rgba(180, 210, 240, 0.40)',
-        snowStroke:  'rgba(180, 210, 240, 0.80)',
-        snowFlake:   'rgba(120, 160, 200, 0.8)',
-        snowShadow:  'rgba(200, 225, 250, 0.8)',
+        snowBar:     'rgba(200, 215, 240, 0.40)',
+        snowStroke:  'rgba(200, 215, 240, 0.75)',
+        snowFlake:   'rgba(150, 170, 210, 0.7)',
+        snowShadow:  'rgba(210, 220, 245, 0.7)',
 
         /* ── Thunder ─────────────────────────────────────── */
-        thunderBar:       'rgba(60, 40, 140, 0.40)',
-        thunderStroke:    'rgba(60, 40, 140, 0.80)',
-        thunderBolt:      '#80D8FF',
-        thunderBoltShadow: 'rgba(128, 216, 255, 0.8)',
+        thunderBar:       'rgba(100, 90, 170, 0.35)',
+        thunderStroke:    'rgba(100, 90, 170, 0.70)',
+        thunderBolt:      '#A78BFA',
+        thunderBoltShadow: 'rgba(167, 139, 250, 0.7)',
 
         /* ── Precipitation Probability ───────────────────── */
-        precipProbRain:    { r: 0,   g: 150, b: 210 },
-        precipProbSnow:    { r: 180, g: 210, b: 240 },
-        precipProbThunder: { r: 60,  g: 40,  b: 140 }
+        precipProbRain:    { r: 130, g: 180, b: 220 },
+        precipProbSnow:    { r: 200, g: 215, b: 240 },
+        precipProbThunder: { r: 100, g: 90,  b: 170 }
     }
 };
 
 export const ATMOSPHERIC_PALETTES = Object.freeze({
     classic:  Object.freeze(classic),
     original: Object.freeze(original),
-    warm:     Object.freeze(warm),
-    cold:     Object.freeze(cold)
+    vivid:    Object.freeze(vivid),
+    pastel:   Object.freeze(pastel)
 });
 
 /**

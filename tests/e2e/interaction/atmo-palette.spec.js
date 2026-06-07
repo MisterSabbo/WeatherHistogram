@@ -39,9 +39,9 @@ test.describe('Atmospheric palette selector', () => {
     await page.waitForTimeout(500)
     await page.locator('#atmo-palette-select-trigger').click({ force: true })
     await page.waitForTimeout(500)
-    const warmOption = page.locator('#atmo-palette-options-container .theme-option[data-value="warm"]')
-    await expect(warmOption).toBeVisible()
-    await warmOption.click()
+    const vividOption = page.locator('#atmo-palette-options-container .theme-option[data-value="vivid"]')
+    await expect(vividOption).toBeVisible()
+    await vividOption.click()
     await page.waitForTimeout(800)
     const sheet = page.locator('#atmo-palette-select-sheet')
     const hasOpenClass = await page.evaluate(() => {
@@ -49,7 +49,7 @@ test.describe('Atmospheric palette selector', () => {
     })
     expect(hasOpenClass).toBe(false)
     const label = page.locator('#atmo-palette-current-label')
-    await expect(label).toHaveText('Cálida')
+    await expect(label).toHaveText('Vívida')
   })
 
   test('palette persists across page reload', async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe('Atmospheric palette selector', () => {
     await page.waitForTimeout(500)
     await page.locator('#atmo-palette-select-trigger').click({ force: true })
     await page.waitForTimeout(500)
-    await page.locator('#atmo-palette-options-container .theme-option[data-value="cold"]').click()
+    await page.locator('#atmo-palette-options-container .theme-option[data-value="pastel"]').click()
     await page.waitForTimeout(800)
     await page.reload()
     await page.waitForFunction(() => {
@@ -66,6 +66,6 @@ test.describe('Atmospheric palette selector', () => {
     }, { timeout: 30000 })
     await page.waitForTimeout(1500)
     const label = page.locator('#atmo-palette-current-label')
-    await expect(label).toHaveText('Fría')
+    await expect(label).toHaveText('Pastel')
   })
 })

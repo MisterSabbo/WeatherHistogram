@@ -21,24 +21,24 @@ test.describe('Atmospheric palette visual', () => {
     await page.waitForTimeout(1500)
   })
 
-  test('warm palette screenshot', async ({ page }) => {
+  test('vivid palette screenshot', async ({ page }) => {
     await page.locator('#btn-info').click()
     await page.waitForTimeout(500)
     await page.locator('#atmo-palette-select-trigger').click({ force: true })
     await page.waitForTimeout(500)
-    await page.locator('#atmo-palette-options-container .theme-option[data-value="warm"]').click()
+    await page.locator('#atmo-palette-options-container .theme-option[data-value="vivid"]').click()
     await page.waitForTimeout(1500)
-    await expect(page).toHaveScreenshot('atmo-palette-warm.png', { fullPage: true })
+    await expect(page).toHaveScreenshot('atmo-palette-vivid.png', { fullPage: true })
   })
 
-  test('cold palette screenshot', async ({ page }) => {
+  test('pastel palette screenshot', async ({ page }) => {
     await page.locator('#btn-info').click()
     await page.waitForTimeout(500)
     await page.locator('#atmo-palette-select-trigger').click({ force: true })
     await page.waitForTimeout(500)
-    await page.locator('#atmo-palette-options-container .theme-option[data-value="cold"]').click()
+    await page.locator('#atmo-palette-options-container .theme-option[data-value="pastel"]').click()
     await page.waitForTimeout(1500)
-    await expect(page).toHaveScreenshot('atmo-palette-cold.png', { fullPage: true })
+    await expect(page).toHaveScreenshot('atmo-palette-pastel.png', { fullPage: true })
   })
 
   test('palette selector open screenshot', async ({ page }) => {
