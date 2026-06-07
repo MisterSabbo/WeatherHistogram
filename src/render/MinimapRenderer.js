@@ -1,6 +1,7 @@
 import { getSplitIndex } from '../utils/time.js';
 import { getThemeColor, getThemeFont } from '../theme.js';
 import { normalizeY } from '../utils/math.js';
+import { getAtmosphericColor } from '../data/atmosphericPalettes.js';
 
 export class MinimapRenderer {
   constructor({ canvas, ctx, viewportEl, scrollContainer, centerOnCurrentTime, updateNowButtonPosition, minimapHeight }) {
@@ -142,10 +143,10 @@ export class MinimapRenderer {
 
     const step = w / minimapData.length;
 
-    ctx.fillStyle = '#fff2c0';
+    ctx.fillStyle = getAtmosphericColor('daySky');
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = '#EDE4F7';
+    ctx.fillStyle = getAtmosphericColor('nightFill');
     minimapData.forEach((d, i) => {
       if (d.isNight) ctx.fillRect(i * step, 0, step + 0.5, h);
     });
@@ -207,14 +208,17 @@ export class MinimapRenderer {
 
     const buildPrecipGradient = (alpha) => {
       const grad = ctx.createLinearGradient(0, 0, w, 0);
-      if (minimapData.length === 0) return `rgba(30, 144, 200, ${alpha})`;
+      const rain = getAtmosphericColor('precipProbRain');
+      const snow = getAtmosphericColor('precipProbSnow');
+      const thunder = getAtmosphericColor('precipProbThunder');
+      if (minimapData.length === 0) return `rgba(${rain.r}, ${rain.g}, ${rain.b}, ${alpha})`;
       minimapData.forEach((d, i) => {
         const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
         const isThunder = [95, 96, 99].includes(d.weatherCode);
-        let baseColor = '30, 144, 200';
-        if (isSnow) baseColor = '200, 215, 230';
-        else if (isThunder) baseColor = '100, 80, 160';
-        grad.addColorStop(i / (minimapData.length - 1 || 1), `rgba(${baseColor}, ${alpha})`);
+        let c = rain;
+        if (isSnow) c = snow;
+        else if (isThunder) c = thunder;
+        grad.addColorStop(i / (minimapData.length - 1 || 1), `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`);
       });
       return grad;
     };

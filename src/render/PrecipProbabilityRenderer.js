@@ -1,4 +1,5 @@
 import { state } from '../store.js';
+import { getAtmosphericColor } from '../data/atmosphericPalettes.js';
 
 export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR) {
     const startIdx = Math.max(0, Math.floor(viewX / PIXELS_PER_HOUR) - 5);
@@ -50,9 +51,12 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     points.forEach(p => {
         const isSnow = [71, 73, 75, 77, 85, 86].includes(p.code);
         const isThunder = [95, 96, 99].includes(p.code);
-        let r = 30, g = 144, b = 200;
-        if (isSnow) { r = 200; g = 215; b = 230; }
-        else if (isThunder) { r = 100; g = 80; b = 160; }
+        const rainColor = getAtmosphericColor('precipProbRain');
+        const snowColor = getAtmosphericColor('precipProbSnow');
+        const thunderColor = getAtmosphericColor('precipProbThunder');
+        let r = rainColor.r, g = rainColor.g, b = rainColor.b;
+        if (isSnow) { r = snowColor.r; g = snowColor.g; b = snowColor.b; }
+        else if (isThunder) { r = thunderColor.r; g = thunderColor.g; b = thunderColor.b; }
 
         const stop = Math.max(0, Math.min(1, (p.x - minX) / (maxX - minX || 1)));
         hGrad.addColorStop(stop, `rgba(${r}, ${g}, ${b}, 0.12)`);
@@ -111,9 +115,12 @@ export function drawPrecipitationProbability(ctx, viewX, viewW, h, styles, PIXEL
     points.forEach(p => {
         const isSnow = [71, 73, 75, 77, 85, 86].includes(p.code);
         const isThunder = [95, 96, 99].includes(p.code);
-        let r = 30, g = 144, b = 200;
-        if (isSnow) { r = 200; g = 215; b = 230; }
-        else if (isThunder) { r = 100; g = 80; b = 160; }
+        const rainColor = getAtmosphericColor('precipProbRain');
+        const snowColor = getAtmosphericColor('precipProbSnow');
+        const thunderColor = getAtmosphericColor('precipProbThunder');
+        let r = rainColor.r, g = rainColor.g, b = rainColor.b;
+        if (isSnow) { r = snowColor.r; g = snowColor.g; b = snowColor.b; }
+        else if (isThunder) { r = thunderColor.r; g = thunderColor.g; b = thunderColor.b; }
 
         const stop = Math.max(0, Math.min(1, (p.x - minX) / (maxX - minX || 1)));
         strokeGrad.addColorStop(stop, `rgba(${r}, ${g}, ${b}, 0.75)`);

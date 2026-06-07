@@ -1,5 +1,6 @@
 import { state } from '../store.js';
 import { getThemeColor } from '../theme.js';
+import { getAtmosphericColor } from '../data/atmosphericPalettes.js';
 export { drawClouds } from './CloudRenderer.js';
 export { drawPrecipitationProbability } from './PrecipProbabilityRenderer.js';
 
@@ -20,14 +21,15 @@ function drawRain(ctx, x, bw, barY, strokeColor, idx) {
         ctx.strokeText(dropIcon, dropX, dropY);
 
         ctx.fillStyle = strokeColor;
-        ctx.shadowColor = 'rgba(30, 130, 190, 0.4)';
+        ctx.shadowColor = getAtmosphericColor('rainShadow');
         ctx.shadowBlur = 1;
         ctx.fillText(dropIcon, dropX, dropY);
     }
 }
 
 function drawSnow(ctx, x, bw, barY) {
-    ctx.strokeStyle = 'rgba(100, 130, 160, 0.8)';
+    ctx.strokeStyle = getAtmosphericColor('snowFlake');
+
     ctx.lineWidth = 4;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -45,7 +47,7 @@ function drawSnow(ctx, x, bw, barY) {
 
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 1.5;
-    ctx.shadowColor = 'rgba(200, 215, 230, 0.8)';
+    ctx.shadowColor = getAtmosphericColor('snowShadow');
     ctx.shadowBlur = 2;
     for (let k = 0; k < 4; k++) {
         const sx = x + bw * 0.15 + k * (bw * 0.25);
@@ -61,7 +63,7 @@ function drawSnow(ctx, x, bw, barY) {
 }
 
 function drawThunder(ctx, x, bw, barY) {
-    ctx.strokeStyle = 'rgba(80, 70, 150, 0.8)';
+    ctx.strokeStyle = getAtmosphericColor('thunderStroke');
     ctx.lineWidth = 5;
     ctx.lineJoin = 'round';
     for (let k = 0; k < 2; k++) {
@@ -73,8 +75,8 @@ function drawThunder(ctx, x, bw, barY) {
         ctx.stroke();
     }
 
-    ctx.strokeStyle = '#FDE047';
-    ctx.shadowColor = 'rgba(253, 224, 71, 0.8)';
+    ctx.strokeStyle = getAtmosphericColor('thunderBolt');
+    ctx.shadowColor = getAtmosphericColor('thunderBoltShadow');
     ctx.shadowBlur = 6;
     ctx.lineWidth = 2.0;
     for (let k = 0; k < 2; k++) {
@@ -102,13 +104,13 @@ export function drawPrecipitation(ctx, viewX, viewW, h, styles, PIXELS_PER_HOUR,
             const isSnow = [71, 73, 75, 77, 85, 86].includes(d.weatherCode);
             const isThunder = [95, 96, 99].includes(d.weatherCode);
 
-            const baseColor = isSnow ? 'rgba(180, 200, 220, 0.40)' :
-                            isThunder ? 'rgba(80, 70, 150, 0.40)' :
-                            getThemeColor('precipBar', 'rgba(30, 130, 190, 0.45)');
+            const baseColor = isSnow ? getAtmosphericColor('snowBar') :
+                            isThunder ? getAtmosphericColor('thunderBar') :
+                            getThemeColor('precipBar', getAtmosphericColor('rainBar'));
 
-            const strokeColor = isSnow ? 'rgba(180, 200, 220, 0.80)' :
-                              isThunder ? 'rgba(80, 70, 150, 0.80)' :
-                              'rgba(30, 130, 190, 0.80)';
+            const strokeColor = isSnow ? getAtmosphericColor('snowStroke') :
+                              isThunder ? getAtmosphericColor('thunderStroke') :
+                              getAtmosphericColor('rainStroke');
 
             ctx.fillStyle = baseColor;
             ctx.strokeStyle = strokeColor;

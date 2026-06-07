@@ -1,5 +1,6 @@
 import { state } from '../store.js';
 import { getThemeColor } from '../theme.js';
+import { getAtmosphericColor } from '../data/atmosphericPalettes.js';
 import { drawMoon } from './MoonRenderer.js';
 export { drawSunMarkersOnCanvas } from './SunMarkers.js';
 
@@ -135,9 +136,9 @@ export function drawUVSegments(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 }
 
 export function drawSunnyBackground(ctx, viewX, viewW, h, styles, drawSunIcon, PIXELS_PER_HOUR) {
-    const skyColor = '#fff2c0'; 
-    const sunColor = '#FDD835';
-    const rayColor = '#FFF59D';
+    const skyColor = getAtmosphericColor('daySky');
+    const sunColor = getAtmosphericColor('daySun');
+    const rayColor = getAtmosphericColor('daySunRay');
 
     ctx.save();
     ctx.fillStyle = skyColor;
@@ -207,26 +208,26 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 
             if (prevIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = '#1A2744';
+                    ctx.fillStyle = getAtmosphericColor('nightFill');
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
-                grad.addColorStop(0, '#fff2c0');
-                grad.addColorStop(0.5, '#FFDDBA');
-                grad.addColorStop(1, '#1A2744');
+                grad.addColorStop(0, getAtmosphericColor('daySky'));
+                grad.addColorStop(0.5, getAtmosphericColor('nightTransitionMid'));
+                grad.addColorStop(1, getAtmosphericColor('nightFill'));
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w + 0.5, h);
             } else if (nextIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = '#1A2744';
+                    ctx.fillStyle = getAtmosphericColor('nightFill');
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w + 0.5, 0);
-                grad.addColorStop(0, '#1A2744');
-                grad.addColorStop(0.5, '#FFDDBA');
-                grad.addColorStop(1, '#fff2c0');
+                grad.addColorStop(0, getAtmosphericColor('nightFill'));
+                grad.addColorStop(0.5, getAtmosphericColor('nightTransitionMid'));
+                grad.addColorStop(1, getAtmosphericColor('daySky'));
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w + 0.5, h);
             } else {
@@ -236,7 +237,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             }
         } else {
             if (solidNightStart !== -1) {
-                ctx.fillStyle = '#1A2744'; 
+                ctx.fillStyle = getAtmosphericColor('nightFill'); 
                 ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
                 solidNightStart = -1;
             }
@@ -244,7 +245,7 @@ export function drawNightOverlay(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     }
 
     if (solidNightStart !== -1) {
-        ctx.fillStyle = '#1A2744';
+        ctx.fillStyle = getAtmosphericColor('nightFill');
         ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (endIdx - solidNightStart) * PIXELS_PER_HOUR + 1.5, h);
     }
 
@@ -282,24 +283,24 @@ export function drawNightShadow(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
 
             if (prevIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = 'rgba(26, 39, 68, 0.15)';
+                    ctx.fillStyle = getAtmosphericColor('nightShadowColor');
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, x - solidNightStart * PIXELS_PER_HOUR, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, 'rgba(26, 39, 68, 0)');
-                grad.addColorStop(1, 'rgba(26, 39, 68, 0.15)');
+                grad.addColorStop(0, getAtmosphericColor('nightShadowColorTransparent'));
+                grad.addColorStop(1, getAtmosphericColor('nightShadowColor'));
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w, h);
             } else if (nextIsDay) {
                 if (solidNightStart !== -1) {
-                    ctx.fillStyle = 'rgba(26, 39, 68, 0.15)';
+                    ctx.fillStyle = getAtmosphericColor('nightShadowColor');
                     ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, x - solidNightStart * PIXELS_PER_HOUR, h);
                     solidNightStart = -1;
                 }
                 const grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, 'rgba(26, 39, 68, 0.15)');
-                grad.addColorStop(1, 'rgba(26, 39, 68, 0)');
+                grad.addColorStop(0, getAtmosphericColor('nightShadowColor'));
+                grad.addColorStop(1, getAtmosphericColor('nightShadowColorTransparent'));
                 ctx.fillStyle = grad;
                 ctx.fillRect(x, 0, w, h);
             } else {
@@ -309,7 +310,7 @@ export function drawNightShadow(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
             }
         } else {
             if (solidNightStart !== -1) {
-                ctx.fillStyle = 'rgba(26, 39, 68, 0.15)'; 
+                ctx.fillStyle = getAtmosphericColor('nightShadowColor'); 
                 ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (i * PIXELS_PER_HOUR) - (solidNightStart * PIXELS_PER_HOUR), h);
                 solidNightStart = -1;
             }
@@ -317,7 +318,7 @@ export function drawNightShadow(ctx, viewX, viewW, h, PIXELS_PER_HOUR) {
     }
 
     if (solidNightStart !== -1) {
-        ctx.fillStyle = 'rgba(26, 39, 68, 0.15)';
+        ctx.fillStyle = getAtmosphericColor('nightShadowColor');
         ctx.fillRect(solidNightStart * PIXELS_PER_HOUR, 0, (endIdx * PIXELS_PER_HOUR) - (solidNightStart * PIXELS_PER_HOUR), h);
     }
 }

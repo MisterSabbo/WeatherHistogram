@@ -49,6 +49,48 @@ vi.mock('../utils/color.js', () => ({
   hexToRgb: vi.fn(() => ({ r: 0, g: 0, b: 0 }))
 }));
 
+vi.mock('../data/atmosphericPalettes.js', () => ({
+  getAtmosphericColor: vi.fn((key) => {
+    const defaults = {
+      rainBar: 'rgba(30, 130, 190, 0.45)',
+      rainStroke: 'rgba(30, 130, 190, 0.80)',
+      rainShadow: 'rgba(30, 130, 190, 0.4)',
+      snowBar: 'rgba(180, 200, 220, 0.40)',
+      snowStroke: 'rgba(180, 200, 220, 0.80)',
+      snowFlake: 'rgba(100, 130, 160, 0.8)',
+      snowShadow: 'rgba(200, 215, 230, 0.8)',
+      thunderBar: 'rgba(80, 70, 150, 0.40)',
+      thunderStroke: 'rgba(80, 70, 150, 0.80)',
+      thunderBolt: '#FDE047',
+      thunderBoltShadow: 'rgba(253, 224, 71, 0.8)',
+      daySky: '#fff2c0',
+      daySun: '#FDD835',
+      daySunRay: '#FFF59D',
+      nightFill: '#1A2744',
+      nightTransitionMid: '#FFDDBA',
+      nightShadowColor: 'rgba(26, 39, 68, 0.15)',
+      nightShadowColorTransparent: 'rgba(26, 39, 68, 0)',
+      precipProbRain: { r: 30, g: 144, b: 200 },
+      precipProbSnow: { r: 200, g: 215, b: 230 },
+      precipProbThunder: { r: 100, g: 80, b: 160 },
+      'cloudFill.light': { r: 185, g: 180, b: 175, a: 0.40 },
+      'cloudFill.medium': { r: 155, g: 150, b: 145, a: 0.50 },
+      'cloudFill.heavy': { r: 125, g: 120, b: 115, a: 0.60 },
+      'cloudStroke.light': { r: 170, g: 165, b: 160 },
+      'cloudStroke.medium': { r: 145, g: 140, b: 135 },
+      'cloudStroke.heavy': { r: 115, g: 110, b: 105 },
+      cloudLayers: [
+        { offset: 5, width: 4, color: 'rgba(195, 188, 182, 0.3)' },
+        { offset: 12, width: 8, color: 'rgba(185, 180, 175, 0.2)' },
+        { offset: 25, width: 15, color: 'rgba(170, 165, 160, 0.1)' },
+        { offset: 45, width: 22, color: 'rgba(155, 150, 145, 0.05)' },
+        { offset: 65, width: 30, color: 'rgba(155, 150, 145, 0.03)' }
+      ]
+    };
+    return defaults[key] || '';
+  })
+}));
+
 vi.mock('../utils/math.js', () => ({
   normalizeY: vi.fn((val) => 200 - val * 4)
 }));

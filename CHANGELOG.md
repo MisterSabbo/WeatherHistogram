@@ -1,6 +1,10 @@
 # Changelog
 
-All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensibly.
+All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensively.
+
+## [v1.18.0] - 2026-06-06
+### Enhancement
+- **Atmospheric palette selector**: Four selectable atmospheric color palettes (Classic, Original, Warm, Cold) that change sky, clouds, precipitation, and night overlay colors across all renderers. Palette definitions centralized in `src/data/atmosphericPalettes.js` with a flat key structure for easy color tuning. Persisted in localStorage, selectable from Settings panel via bottom sheet. Updated `BackgroundRenderer`, `CloudRenderer`, `AtmosphereRenderer`, `PrecipProbabilityRenderer`, and `MinimapRenderer` to use palette lookups instead of hardcoded values. All unit tests + E2E tests pass, snapshots regenerated.
 
 ## [v1.17.0] - 2026-06-05
 ### Enhancement

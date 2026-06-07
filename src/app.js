@@ -29,6 +29,7 @@ import { initScrollIndicator as initScrollIndicatorRef } from './ui/ScrollIndica
 import { updateTopPanel as updateTopPanelRef } from './ui/TopPanel.js';
 import { initPullToRefresh as initPullToRefreshRef } from './ui/PullToRefresh.js';
 import { initSpfModal as initSpfModalRef } from './ui/SpfModal.js';
+import { initAtmosphericPaletteSelector } from './data/atmosphericPalettes.js';
 
 import { initTooltipManager } from './ui/TooltipManager.js';
 import { MinimapRenderer } from './render/MinimapRenderer.js';
@@ -90,6 +91,13 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 initInfoModal();
                 initLanguage();
                 initThemeSelector();
+                initAtmosphericPaletteSelector({
+                    onPaletteChange: () => {
+                        tiles.forEach(t => t.drawn = false);
+                        minimapRenderer.invalidateCache();
+                        render();
+                    }
+                });
                 initStickmanSliders();
                 initSkinCards();
                 initForceRefresh();
@@ -138,6 +146,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                 state.skinType = await storageService.get('skinType', 2);
                 state.stickmanThresholds = await storageService.get('stickmanThresholds', { cold: 10, hot: 30, wind: 45, clouds: 60 });
                 state.activeChartTheme = await storageService.get('chartTheme', 'default');
+                state.activeAtmosphericPalette = await storageService.get('atmosphericPalette', 'classic');
                 state.isDailyCardsView = await storageService.get('viewMode', 'minimap') === 'daily';
                 await loadChartTheme(state.activeChartTheme);
             }

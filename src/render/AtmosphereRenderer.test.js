@@ -64,6 +64,25 @@ vi.mock('../utils/color.js', () => ({
   hexToRgb: vi.fn(() => ({ r: 0, g: 0, b: 0 }))
 }));
 
+vi.mock('../data/atmosphericPalettes.js', () => ({
+  getAtmosphericColor: vi.fn((key) => {
+    const defaults = {
+      rainBar: 'rgba(30, 130, 190, 0.45)',
+      rainStroke: 'rgba(30, 130, 190, 0.80)',
+      rainShadow: 'rgba(30, 130, 190, 0.4)',
+      snowBar: 'rgba(180, 200, 220, 0.40)',
+      snowStroke: 'rgba(180, 200, 220, 0.80)',
+      snowFlake: 'rgba(100, 130, 160, 0.8)',
+      snowShadow: 'rgba(200, 215, 230, 0.8)',
+      thunderBar: 'rgba(80, 70, 150, 0.40)',
+      thunderStroke: 'rgba(80, 70, 150, 0.80)',
+      thunderBolt: '#FDE047',
+      thunderBoltShadow: 'rgba(253, 224, 71, 0.8)',
+    };
+    return defaults[key] || '';
+  })
+}));
+
 describe('render/AtmosphereRenderer', () => {
   beforeEach(() => {
     vi.clearAllMocks();

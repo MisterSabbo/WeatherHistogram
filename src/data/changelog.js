@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.18.0",
+    "changes": [
+      "Atmospheric palette selector: Four selectable atmospheric color palettes (Classic, Original, Warm, Cold) that change sky, clouds, precipitation, and night overlay colors across all renderers. Palette definitions centralized in src/data/atmosphericPalettes.js with flat key structure for easy color tuning. Persisted in localStorage, selectable from Settings panel via bottom sheet. Updated BackgroundRenderer, CloudRenderer, AtmosphereRenderer, PrecipProbabilityRenderer, and MinimapRenderer to use palette lookups instead of hardcoded values. All unit tests + E2E tests pass, snapshots regenerated."
+    ]
+  },
+  {
     "version": "1.17.0",
     "changes": [
       "Cielo Mediterráneo color palette: complete visual overhaul inspired by Mediterranean sky tones. Removed humidityLine from theme and deleted HumidityRenderer. Updated all 3 theme JSONs (default, neon, pastel) with cohesive palette: warm reds (#D94040) for temperature, ocean blues (#1E82BE, #4A9FD9) for rain/snow/wind, coral accents (#E8734A) for gusts and hot weather, slate blues (#6B8DAD, #A8C4D8) for clouds. Clouds render in blue density tiers instead of grayscale. Night sky uses warm peach-to-indigo gradients. All 426 unit tests + 29 E2E tests pass, snapshots regenerated."

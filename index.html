@@ -1374,7 +1374,7 @@
           <div class="info-section-body">
             <div class="settings-row" style="gap:6px;flex-wrap:wrap;">
               <strong data-i18n="config.version">Versión:</strong>
-              <span id="app-version-label">v1.17.0</span>
+              <span id="app-version-label">v1.18.0</span>
               <button id="open-changelog-link" class="link-btn" data-i18n="config.changelogLink">Changelog</button>
             </div>
             <div class="settings-row" style="flex-wrap:wrap;">
@@ -1406,6 +1406,14 @@
               <div class="theme-select-value">
                 <span id="theme-current-label">Clásico</span>
                 <div id="theme-current-swatch" class="theme-swatch"></div>
+                <span class="material-symbols-outlined" style="font-size:18px;color:var(--text-secondary);">chevron_right</span>
+              </div>
+            </div>
+            <div class="settings-row clickable" id="atmo-palette-select-trigger">
+              <span data-i18n="config.atmoPaletteSelect">Paleta atmosférica</span>
+              <div class="theme-select-value">
+                <span id="atmo-palette-current-label">Clásica</span>
+                <div id="atmo-palette-current-swatch" class="theme-swatch"></div>
                 <span class="material-symbols-outlined" style="font-size:18px;color:var(--text-secondary);">chevron_right</span>
               </div>
             </div>
@@ -1546,6 +1554,20 @@
         <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);" data-i18n="config.themeSelectTitle">Seleccionar tema</h3>
       </div>
       <div id="theme-options-container" style="padding:8px 24px calc(24px + env(safe-area-inset-bottom));overflow-y:auto;flex:1;">
+        <!-- Options generated dynamically -->
+      </div>
+    </div>
+
+    <!-- Atmospheric Palette Sheet Backdrop -->
+    <div id="atmo-palette-sheet-backdrop" class="yip-sheet-backdrop"></div>
+
+    <!-- Atmospheric Palette Select Sheet -->
+    <div id="atmo-palette-select-sheet" class="yip-bottom-sheet" style="display:flex;flex-direction:column;">
+      <div id="atmo-palette-sheet-drag-handle" style="width:40px;height:5px;background:var(--grid-color);border-radius:3px;margin:0 auto 16px auto;cursor:grab;flex-shrink:0;"></div>
+      <div style="padding:0 24px 16px;border-bottom:1px solid var(--grid-color);">
+        <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);" data-i18n="config.atmoPaletteSelectTitle">Seleccionar paleta</h3>
+      </div>
+      <div id="atmo-palette-options-container" style="padding:8px 24px calc(24px + env(safe-area-inset-bottom));overflow-y:auto;flex:1;">
         <!-- Options generated dynamically -->
       </div>
     </div>

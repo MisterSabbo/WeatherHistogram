@@ -36,5 +36,6 @@ export const state = {
         wind: 45,
         clouds: 60
     },
-    skinType: 2
+    skinType: 2,
+    activeAtmosphericPalette: 'classic'
 };
