@@ -2,6 +2,10 @@
 
 All new features, improvements, and fixes for WeatherHist will be documented in this file comprehensively.
 
+## [v1.19.1] - 2026-06-07
+### Fix
+- **Minimap auto-update on palette/theme change**: Fixed a bug where the minimap did not automatically update its colors when the user selected a different atmospheric palette or chart theme. The `onPaletteChange` callback and the chart theme selector handler now explicitly call `minimapRenderer.draw()` after invalidating the cache and calling `render()`, matching the established pattern used by `toggleTheme()`, `loadWeather()`, `handleResize()`, and language change handler.
+
 ## [v1.19.0] - 2026-06-07
 ### Enhancement
 - **Atmospheric palette redesign 2026**: Redesigned all atmospheric palette definitions with new colors and naming:

@@ -96,6 +96,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                         tiles.forEach(t => t.drawn = false);
                         minimapRenderer.invalidateCache();
                         render();
+                        minimapRenderer.draw(state, { PIXELS_PER_HOUR });
                     }
                 });
                 initStickmanSliders();
@@ -530,6 +531,7 @@ const DEFAULT_COORDS = CONFIG.DEFAULT_COORDS;
                                     tiles.forEach(t => t.drawn = false);
                                     minimapRenderer.invalidateCache();
                                     render();
+                                    minimapRenderer.draw(state, { PIXELS_PER_HOUR });
                                     closeBottomSheet('theme-select-sheet', 'theme-sheet-backdrop');
                                 });
                                 themeOptionsContainer.appendChild(div);

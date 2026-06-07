@@ -94,6 +94,7 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 5. Rendered layers (bottom to top): yellow background `#fffde7`, night `minimapNightFill` (default `#e7b9f7`) fill, date labels with day number, 0°C dashed line, cloud fill + stroke, precipitation bars (color-coded by snow/storm), precipitation probability fill + stroke, temperature line (red, 1.8px), UV indicator bars at top, "now" red vertical line + dot, past mode dark overlay
 6. Date labels: shown at `localHour === 0` (or first entry), format `localDayShort DD/MM`, bold 9px, with collision avoidance
 7. Minimap night fill uses `minimapNightFill` from the active atmospheric palette (default `#e7b9f7` across all palettes), independent of `nightFill` used by the main chart background
+8. After atmospheric palette or chart theme changes, `draw()` must be explicitly called by the caller (not by `render()`, which only calls `updateViewport()`) to redraw the minimap with new colors
 
 ## Edge Cases
 
@@ -116,6 +117,7 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 5. **Viewport update:** `updateViewport` reflects current scroll
 6. **Minimap click:** `handleClick` returns correct scrollLeft
 7. **Night color from palette:** When `draw` renders night hours, the fill color is `getAtmosphericColor('minimapNightFill')` from the active palette
+8. **Draw after palette change:** After `invalidateCache()` + palette change, calling `draw()` redraws minimap with new palette colors
 
 ## Change History
 
@@ -123,3 +125,4 @@ Renders the minimap (reduced histogram view with past/future mode), viewport sel
 |-------|--------|-------|
 | 2026-05-21 | Initial spec | SDD |
 | 2026-06-07 | Night color now uses `minimapNightFill` from atmospheric palette (configurable per palette, default `#e7b9f7`) | SDD |
+| 2026-06-07 | Bugfix spec: Documented that `draw()` must be explicitly called after palette/theme changes (caller responsibility, not handled by `render()`). Added test scenario 8 for post-palette-change redraw. | SDD |

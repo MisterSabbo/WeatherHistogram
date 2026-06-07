@@ -334,6 +334,16 @@ Previously, the minimap night fill was a shared value across palettes (all used 
 | Vívida | `#D080F0` — saturated lavender matching deep purple night |
 | Pastel | `#C8B8E8` — soft pastel lavender matching lavender night |
 
+### Minimap must re-render on palette change
+
+The `onPaletteChange` callback must explicitly call `minimapRenderer.draw()` after invalidating the cache and calling `render()`. The `render()` function only calls `minimapRenderer.updateViewport()` (which updates the viewport indicator position) but does **not** call `minimapRenderer.draw()` (which redraws the minimap canvas content). Without the explicit `draw()` call, the minimap retains stale pixel data from the previous palette.
+
+**Root cause of the bug:** The `onPaletteChange` callback at `src/app.js:94-99` calls `minimapRenderer.invalidateCache()` and `render()`, but `render()` only calls `minimapRenderer.updateViewport()`. The cache is invalidated (set to `null`) but never redrawn because `draw()` is not called. The minimap canvas retains old pixel data until a resize or data reload forces a redraw.
+
+**Fix:** Add `minimapRenderer.draw(state, { PIXELS_PER_HOUR })` after `render()` in the `onPaletteChange` callback.
+
+**Same bug exists in chart theme selector:** The chart theme click handler at `src/app.js:525-534` has the same pattern — `invalidateCache()` + `render()` without `draw()`. The fix should also be applied there for consistency.
+
 ## What Does NOT Change
 
 - Original palette stays exactly as-is (unchanged ID, values, and display name)
@@ -343,6 +353,7 @@ Previously, the minimap night fill was a shared value across palettes (all used 
 - Storage/persistence mechanism (key `'atmosphericPalette'`, StorageService)
 - Chart theme system (orthogonal, unaffected)
 - Palette shape/structure in `ATMOSPHERIC_PALETTES`
+- `MinimapRenderer.draw()` internal behavior — it already reads `getAtmosphericColor()` correctly; it just needs to be called
 
 ## Edge Cases
 
@@ -356,6 +367,8 @@ Previously, the minimap night fill was a shared value across palettes (all used 
 | Chart theme changed after palette | Both systems are independent; chart theme affects `getThemeColor()` lookups, palette affects atmospheric-specific colors |
 | Old `'warm'` ID in localStorage (after rename to `'vivid'`) | Fallback logic treats unknown IDs as invalid → defaults to `'classic'`, logs warning, corrects storage. One-time migration cost for users who had `warm` stored. |
 | Old `'cold'` ID in localStorage (after rename to `'pastel'`) | Same as above — defaults to `'classic'`, logs warning, corrects storage. |
+| Palette changed while minimap is in past mode | Minimap redraws with new colors in past mode; overlay color remains from chart theme, unaffected by palette change |
+| Palette changed while minimap is in future mode | Minimap redraws with new colors in future mode |
 
 ## Test Scenarios
 
@@ -366,9 +379,11 @@ Previously, the minimap night fill was a shared value across palettes (all used 
 5. **Old ID migration:** IndexedDB contains `'warm'` or `'cold'` (pre-rename IDs) → app defaults to `'classic'`, warning logged, storage corrected
 6. **Palette + theme independence:** User selects "Pastel" palette while on "neon" chart theme → both apply independently; chart elements use neon theme, atmospheric elements use Pastel colors
 7. **Re-render on change:** Switching palette invalidates all tile caches → scrolling the chart shows new colors everywhere
-8. **Minimap reflects palette:** After palette change, minimap re-renders with new atmospheric colors (including palette-specific `minimapNightFill`)
+8. **Minimap reflects palette:** After palette change, minimap re-renders with new atmospheric colors (including palette-specific `minimapNightFill`) — this requires `minimapRenderer.draw()` to be called in the `onPaletteChange` callback
 9. **UI reflects current palette:** Opening settings shows correct palette name and swatch highlighted as active
 10. **i18n consistency:** Switching language to English shows "Realistic", "Original", "Vivid", "Pastel"; switching to Spanish shows "Realista", "Original", "Vívida", "Pastel"
+11. **Minimap palette change in past mode:** User scrolls minimap to past mode → changes palette → minimap redraws with new colors, remaining in past mode
+12. **Minimap palette change in future mode:** User scrolls minimap to future mode → changes palette → minimap redraws with new colors, remaining in future mode
 
 ## Change History
 
@@ -376,3 +391,4 @@ Previously, the minimap night fill was a shared value across palettes (all used 
 |-------|--------|-------|
 | 2026-06-06 | Initial spec | SDD |
 | 2026-06-07 | Palette redesign: renamed `classic`→Realista (ID kept), `warm`→`vivid`, `cold`→`pastel`. Added full color value tables for all palettes. Documented contrast strategy, layering harmony, night character, and `minimapNightFill` palette-specific design decisions. Added old-ID migration edge cases. Updated test scenarios to reflect new names. | SDD |
+| 2026-06-07 | Bugfix spec: Documented minimap auto-update on palette change. Root cause: `onPaletteChange` callback invalidates cache and calls `render()`, but `render()` only calls `updateViewport()` — not `draw()`. Fix: add `minimapRenderer.draw(state, { PIXELS_PER_HOUR })` after `render()`. Same bug exists in chart theme selector at line 525-534. Added test scenarios 11-12 for past/future mode palette changes. | SDD |

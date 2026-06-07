@@ -1,5 +1,11 @@
 export const changelogData = [
   {
+    "version": "1.19.1",
+    "changes": [
+      "Fix: Minimap auto-update on palette/theme change — fixed a bug where the minimap did not automatically update its colors when the user selected a different atmospheric palette or chart theme. The onPaletteChange callback and chart theme selector handler now explicitly call minimapRenderer.draw() after invalidating the cache and calling render(), matching the established pattern used by toggleTheme(), loadWeather(), handleResize(), and language change handler."
+    ]
+  },
+  {
     "version": "1.19.0",
     "changes": [
       "Atmospheric palette redesign 2026: Redesigned all palette definitions — classic now uses realistic sky blue (#87CEEB) with golden sun (#FFD700); warm renamed to vivid with saturated purple-night tones; cold renamed to pastel with soft pastel tones; original unchanged. Added migration for old warm/cold stored IDs. Updated i18n palette display names (Realista/Realistic, Vívida/Vivid, Pastel/Pastel). E2E selectors updated, snapshots regenerated."
