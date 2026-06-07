@@ -30,6 +30,7 @@ const classic = {
 
         /* ── Night ───────────────────────────────────────── */
         nightFill:            '#1A2744',
+        minimapNightFill:     '#e7b9f7',
         nightTransitionMid:   '#FFDDBA',
         nightShadowColor:            'rgba(26, 39, 68, 0.15)',
         nightShadowColorTransparent: 'rgba(26, 39, 68, 0)',
@@ -88,6 +89,7 @@ const original = {
 
         /* ── Night ───────────────────────────────────────── */
         nightFill:            '#2D1B4D',
+        minimapNightFill:     '#e7b9f7',
         nightTransitionMid:   '#E8D0F0',
         nightShadowColor:            'rgba(45, 27, 77, 0.15)',
         nightShadowColorTransparent: 'rgba(45, 27, 77, 0)',
@@ -146,6 +148,7 @@ const warm = {
 
         /* ── Night ───────────────────────────────────────── */
         nightFill:            '#2D1B3D',
+        minimapNightFill:     '#e7b9f7',
         nightTransitionMid:   '#FFB088',
         nightShadowColor:            'rgba(45, 27, 61, 0.18)',
         nightShadowColorTransparent: 'rgba(45, 27, 61, 0)',
@@ -204,6 +207,7 @@ const cold = {
 
         /* ── Night ───────────────────────────────────────── */
         nightFill:            '#0D1B3E',
+        minimapNightFill:     '#e7b9f7',
         nightTransitionMid:   '#B3CCE6',
         nightShadowColor:            'rgba(13, 27, 62, 0.20)',
         nightShadowColorTransparent: 'rgba(13, 27, 62, 0)',

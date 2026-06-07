@@ -146,7 +146,7 @@ export class MinimapRenderer {
     ctx.fillStyle = getAtmosphericColor('daySky');
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = getAtmosphericColor('nightFill');
+    ctx.fillStyle = getAtmosphericColor('minimapNightFill');
     minimapData.forEach((d, i) => {
       if (d.isNight) ctx.fillRect(i * step, 0, step + 0.5, h);
     });
