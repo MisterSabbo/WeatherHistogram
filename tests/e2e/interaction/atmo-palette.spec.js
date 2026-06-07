@@ -31,7 +31,7 @@ test.describe('Atmospheric palette selector', () => {
     const sheet = page.locator('#atmo-palette-select-sheet')
     await expect(sheet).toBeVisible()
     const options = page.locator('#atmo-palette-options-container .theme-option')
-    await expect(options).toHaveCount(3)
+    await expect(options).toHaveCount(4)
   })
 
   test('selecting a palette updates state and closes sheet', async ({ page }) => {
