@@ -14,6 +14,11 @@
       "environment": {
         "MEMORY_FILE_PATH": "D:/Source/WeatherHistogram/memory.jsonl"
       }
+    },
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "{env:REPOSITORY_PATH}"],
+      "enabled": true
     }
   }
 }
