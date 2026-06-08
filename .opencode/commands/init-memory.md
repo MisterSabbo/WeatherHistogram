@@ -8,9 +8,7 @@ Escanea TODO el código fuente del proyecto WeatherHistogram (directorio `src/`)
 ## Pasos obligatorios
 
 ### 1. Descubrir archivos
-Ejecuta `find /path/to/WeatherHistogram/src -name "*.js" | sort` para listar todos los archivos JS del proyecto.
-
-Nota: el directorio raíz del proyecto es `/D:/Source/WeatherHistogram/`. Ajusta las rutas según corresponda.
+Lista todos los archivos JS del proyecto.
 
 ### 2. Leer cada archivo
 Lee el contenido de cada archivo encontrado para extraer la información necesaria.

@@ -2,12 +2,14 @@
 
 ## Commands (order: lint → typecheck → test → test:e2e)
 - `npm install` — install dependencies (CI uses `npm ci`)
-- `npm run dev` — Vite on port 3000
+- `npm run dev` — Vite on port 3000 (HMR disabled via `DISABLE_HMR=true` env)
 - `npm run build` — production build
+- `npm run preview` — Vite preview of built output
 - `npm run clean` — `rm -rf dist` (fails on Windows; use `Remove-Item -Recurse -Force dist`)
 - `npm run lint` — ESLint on `src/` (CI uses `--max-warnings 0`)
-- `npm run typecheck` — `tsc --noEmit`
-- `npm test` — Vitest unit tests (jsdom, `passWithNoTests: true`)
+- `npm run typecheck` — `tsc --noEmit` (JSDoc types, `checkJs: true`, `strict: false`)
+- `npm test` — Vitest unit tests (jsdom, `passWithNoTests: true`, tests in `src/**/*.test.js`)
+- `npm run test:watch` — Vitest watch mode
 - `npm run test:e2e` — Playwright (Chromium, single worker, webServer auto-starts dev on :3000, 7% pixel diff). Pre-requisite: `npx playwright install --with-deps chromium`
 - `npx playwright test --update-snapshots` — regenerate E2E screenshot baselines (Windows: npm intercepts the flag, use npx directly)
 
@@ -33,7 +35,7 @@
 - **Snapshots:** after any visual change (renderers, themes, backgrounds, clouds, minimap, CSS), regenerate with `npx playwright test --update-snapshots` and stage updated PNGs.
 - **README:** update if documented features or setup change.
 
-## Agent-rules (referenced by `opencode.json` — only 3 auto-loaded, rest read on demand)
+## Agent-rules (referenced by `opencode.json` — all 4 auto-loaded, rest read on demand)
 **Auto-loaded** via `opencode.json` `instructions`:
 - `agent-rules/subagents.md` — when to use subagents
 - `agent-rules/memory.md` — MCP memory persistence workflow
